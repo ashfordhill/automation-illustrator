@@ -1,6 +1,6 @@
 # Automation Pitch — Relay Handoff Ledger
 
-Append-only. Never rewrite or delete an earlier entry; add a correction entry instead. One entry per slice attempt, in chronological order. The user's approval and the commit hash are appended under the entry they approve.
+Append-only. Never rewrite or delete an earlier entry; add a correction entry instead. One entry per slice attempt, in chronological order. Each slice commits when it is done; the user reviews after the whole relay.
 
 Rules: `.docs/BUILD_PLAN.md` (Section 4) and `.cursor/rules/agent-handoff.mdc`. Contract: `.docs/GOAL.md`.
 
@@ -24,16 +24,13 @@ Copy this block to the end of the file and fill every field. Keep the headings; 
 - Evidence: `.docs/evidence/NN-<slug>/<file>.png` — <what it shows> (one line per screenshot)
 - Earlier-slice defects fixed: none | <what, why it blocked this slice>
 - Known limitations / follow-ups: none | <item — target Slice NN>
-- Status: AWAITING USER REVIEW
+- Status: COMPLETE
+- Commit: `feat(slice-NN): <short title>`
 ```
 
-After review, the same agent appends directly beneath its entry:
+The finishing agent commits that entry in the same slice commit (do not wait for review; do not add a second commit just to store `git log -1`'s hash). The next agent matches HEAD to this `Commit:` subject.
 
-```markdown
-- Approved by user <YYYY-MM-DD> — commit `<hash>`
-```
-
-Corrections requested during review get their own short entry:
+Corrections in the same chat before the next slice starts get their own short entry, then a new commit:
 
 ```markdown
 ## Slice NN — correction <k> — <YYYY-MM-DD>
@@ -41,7 +38,8 @@ Corrections requested during review get their own short entry:
 - Requested: <what the user asked to change>
 - Changed: <files / behavior>
 - Tests and exact results: <as above>
-- Status: AWAITING USER REVIEW
+- Status: COMPLETE
+- Commit: `feat(slice-NN): <short title>`
 ```
 
 ---
@@ -132,3 +130,24 @@ Corrections requested during review get their own short entry:
   - Demo IDs are still random `nid()` — Slice 5
 - Status: AWAITING USER REVIEW
 - Approved by user 2026-09-06
+
+## Protocol — drop per-slice review gate — 2026-09-06
+
+- Starting commit: `1cd2c0fb52b36fdd683806a347a3c705ba7af2a0` (`feat(slice-01): add contract-verified test harness`)
+- Working tree at start: clean
+- GOAL clauses addressed: n/a (relay protocol only; no product clauses)
+- Library research and decisions: n/a
+- Files changed:
+  - `.cursor/rules/agent-handoff.mdc`
+  - `.docs/BUILD_PLAN.md` (Section 0, Section 4, Section 6)
+  - This file's intro, template, and this entry
+- Behavior implemented: slices commit when done. No `approved — commit` wait. User review is after the full relay. Stop-and-ask for contract/dependency questions is unchanged. Slice 00 and 01 ledger lines are historical (old gate); do not rewrite them.
+- Tests and exact results:
+  - `npm run build` — not run (docs/protocol only)
+  - `npm run test:unit` — not run
+  - `npm run test:e2e` — not run (no browser flow affected)
+- Evidence: n/a
+- Earlier-slice defects fixed: none
+- Known limitations / follow-ups: none
+- Status: COMPLETE
+- Commit: `docs(relay): commit slices without waiting for review`

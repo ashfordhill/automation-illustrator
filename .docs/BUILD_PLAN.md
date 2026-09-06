@@ -1,11 +1,11 @@
-<!-- Canonical build plan for the Automation Pitch relay. Generated verbatim from the approved Cursor plan on 2026-09-06. Change only with user approval; record every change in .docs/handoff.md and, for contract clauses, under Amendments in .docs/GOAL.md. -->
+<!-- Canonical build plan for the Automation Pitch relay. Generated verbatim from the approved Cursor plan on 2026-09-06. Change only with user approval; record every change in .docs/handoff.md and, for contract clauses, under Amendments in .docs/GOAL.md. 2026-09-06: per-slice review-before-commit gate removed (user request); agents commit when the slice is done; user reviews after the relay. -->
 
 # Automation Pitch: Frozen Build Relay
 
 ## 0. Execution model
 
 - The user is the coordinator. Each slice runs in a **fresh Cursor chat** started by pasting the kickoff prompt from Section 4 with the slice number filled in. One slice per chat; never two slices in parallel.
-- The slice agent implements, tests, saves evidence, appends a handoff entry, summarizes, and **waits**. It commits only after the user replies `approved — commit`, then appends the approval line and commits with the fixed message format.
+- The slice agent implements, tests, saves evidence, appends a handoff entry, **commits**, and reports the hash so the user can start the next agent immediately. There is no per-slice review gate. The user reviews after the whole relay (Section 6).
 - `.docs/BUILD_PLAN.md` is the canonical plan and `.docs/GOAL.md` is the canonical contract. Both were generated from this plan during planning, together with `.docs/handoff.md` and `.cursor/rules/agent-handoff.mdc`, and are committed with the baseline in Slice 0. Agents never read `.cursor/plans/`.
 - The contract is frozen, not immutable: when an agent stops and asks and the user decides, the user (or the same agent on the user's instruction) appends a dated entry to the **Amendments** section at the end of `.docs/GOAL.md`, citing clause IDs. Original clauses are never edited in place.
 
@@ -358,19 +358,18 @@ Created during planning, committed with the baseline in Slice 0, verified agains
 - `.docs/GOAL.md` — Section 2 verbatim plus an `## Amendments` section.
 - `.docs/BUILD_PLAN.md` — this plan without the Cursor frontmatter; canonical.
 - `.docs/handoff.md` — append-only ledger seeded with the entry template; Slice 0 appends the first entry.
-- `.cursor/rules/agent-handoff.mdc` — concise `alwaysApply: true` relay rules (read the four files, verify HEAD, slice-only scope, stop-and-ask, evidence and handoff format, never commit without approval).
+- `.cursor/rules/agent-handoff.mdc` — concise `alwaysApply: true` relay rules (read the four files, verify HEAD, slice-only scope, stop-and-ask, evidence and handoff format, commit when the slice is done).
 
 ### Per-slice cycle
 
 1. The user opens a fresh Cursor chat and pastes the kickoff prompt below with `N` filled in.
-2. The agent reads `.docs/GOAL.md`, `.docs/BUILD_PLAN.md` (its slice section), all of `.docs/handoff.md`, and the rule; verifies HEAD equals the approved commit recorded for slice N−1 and the tree is clean; runs `npm install`, `npm run build`, `npm run test:unit`.
+2. The agent reads `.docs/GOAL.md`, `.docs/BUILD_PLAN.md` (its slice section), all of `.docs/handoff.md`, and the rule; verifies HEAD equals the COMPLETE commit recorded for slice N−1 and the tree is clean; runs `npm install`, `npm run build`, `npm run test:unit`.
 3. It inspects existing implementations and performs narrowly relevant library research before inventing infrastructure.
 4. If the contract is genuinely ambiguous or a new dependency/product choice is required, it stops and asks. It does not guess or broaden scope.
 5. It implements only its slice with proportionate tests. A defect in an earlier slice may be fixed minimally when it blocks the slice and must be recorded in the handoff; unrelated defects are logged for Slice 12.
-6. It runs the mandatory checks, saves evidence under `.docs/evidence/NN-<slug>/`, appends one handoff entry ending in `Status: AWAITING USER REVIEW`, and leaves everything uncommitted.
-7. It summarizes the diff, exact test results, and screenshot paths in its final message and waits.
-8. If changes are requested, the user continues the same chat; the agent appends a correction entry.
-9. On `approved — commit`, the same agent appends `Approved by user <date>` under its entry, commits as `feat(slice-NN): <short title>` (Slice 0 uses `chore: establish automation pitch baseline`), verifies a clean tree, and reports the hash. The user then opens the next fresh chat.
+6. It runs the mandatory checks, saves evidence under `.docs/evidence/NN-<slug>/`, and appends one handoff entry ending in `Status: COMPLETE` with the intended commit subject.
+7. It commits as `feat(slice-NN): <short title>` (Slice 0 uses `chore: establish automation pitch baseline`), verifies a clean tree, and reports the hash, tests, and evidence paths. Do not wait for review. Do not add a second commit just to store the hash; the next agent uses `git log -1`.
+8. The user opens the next fresh chat. If they send a correction in this chat before starting the next slice, append a correction entry, implement, and commit.
 
 Never run two slices at once.
 
@@ -381,14 +380,12 @@ You are the agent for Slice N of the Automation Pitch build relay. Work only on 
 
 Before changing anything:
 1. Read .docs/GOAL.md, .docs/BUILD_PLAN.md (Section 5, "Slice N"), every entry in .docs/handoff.md, and .cursor/rules/agent-handoff.mdc.
-2. Run `git status` and `git log -1`. HEAD must be the commit recorded as approved for Slice N-1 in handoff.md and the tree must be clean. If not, stop and report.
+2. Run `git status` and `git log -1`. HEAD must be the COMPLETE commit recorded for Slice N-1 in handoff.md and the tree must be clean. If not, stop and report.
 3. Run `npm install`, `npm run build`, and `npm run test:unit` to confirm a green start.
 
 Then implement Slice N exactly as specified, with proportionate tests, citing GOAL clause IDs in code comments only where a rule is enforced. If the contract is ambiguous or a new dependency is needed, stop and ask me; do not guess or widen scope. If an earlier slice's defect blocks you, fix it minimally and record it in your handoff entry.
 
-When done: run the mandatory checks (`npm run build`, `npm run test:unit`, and `npm run test:e2e` when any browser flow is affected), save review screenshots under .docs/evidence/NN-<slug>/, append one handoff entry ending in `Status: AWAITING USER REVIEW`, and leave everything uncommitted. Summarize the diff, exact test results, and screenshot paths in your final message. Do not commit until I reply "approved — commit".
-
-On "approved — commit": append `Approved by user <date>` under your entry, commit everything as `feat(slice-NN): <short title>`, run `git status` to confirm a clean tree, and report the commit hash.
+When done: run the mandatory checks (`npm run build`, `npm run test:unit`, and `npm run test:e2e` when any browser flow is affected), save review screenshots under .docs/evidence/NN-<slug>/, append one handoff entry ending in `Status: COMPLETE` with the intended commit subject, then commit everything as `feat(slice-NN): <short title>`. Confirm a clean tree. Summarize the hash, diff, exact test results, and screenshot paths in your final message so I can start Slice N+1 in a fresh chat. Do not wait for review. Never push, branch, or start the next slice yourself.
 ```
 
 For Slice 0 replace the three "Before changing anything" steps with: verify branch `main` and that the four contract files exist, run `npm install` and `npm run build`, and compare behavior with the baseline facts in Section 1.
@@ -406,7 +403,7 @@ Each entry includes:
 - Tests and exact command results
 - Evidence paths under `.docs/evidence/NN-<slug>/` and what each screenshot demonstrates
 - Known limitations or follow-up restricted to later slices, with the target slice number
-- `Status: AWAITING USER REVIEW`, later followed by `Approved by user <date>` and the commit hash
+- `Status: COMPLETE` and the commit subject used for `feat(slice-NN): …` (next agent matches `git log -1`)
 
 Handoff content is never rewritten or deleted.
 
@@ -419,7 +416,7 @@ Scripts defined in Slice 1 and used by every later slice:
 - `npm run test:e2e` — Playwright Chromium including the axe checks
 - `npm test` — both suites
 
-Run build and unit after every slice. Run e2e for any affected browser flow, and the complete suite in Slices 1, 6, 9, 10, 11, and 12 and whenever a shared shell, persistence, keyboard, routing, or projection change makes it relevant. Do not update visual snapshots without presenting the before/after result for user review. Visual baselines are generated and compared on the user's Windows machine only; there is no CI.
+Run build and unit after every slice. Run e2e for any affected browser flow, and the complete suite in Slices 1, 6, 9, 10, 11, and 12 and whenever a shared shell, persistence, keyboard, routing, or projection change makes it relevant. Visual baselines are generated, committed with the slice, and listed in the handoff; the user reviews them after the relay. There is no CI.
 
 ### Evidence
 
@@ -593,8 +590,8 @@ Acceptance: all checks pass; reviewed screenshots cover Before/After/Both and cr
 
 The relay is complete only when:
 
-- Slice 0 and all twelve slices have a user-approved commit on `main`.
-- `.docs/handoff.md` has a chronological implementation and approval record.
+- Slice 0 and all twelve slices have a COMPLETE commit on `main`.
+- `.docs/handoff.md` has a chronological implementation record.
 - The complete build/unit/browser/axe suite passes from a clean checkout.
 - Reviewed screenshots demonstrate the final supported desktop states in both themes and the reduced-motion alternative.
 - Version 1 migration and rejection, corrupt-data recovery, storage failure, replacement prompts, graph invariants, label shrink-back, Node restitching, comparison isolation, merge/unmerge with closure and convexity, and After-only Steps and Paths have executable coverage.

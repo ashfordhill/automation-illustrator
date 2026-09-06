@@ -1,16 +1,16 @@
 ---
-description: Relay rules for the Automation Pitch build - one slice per agent, frozen goal, append-only handoff, commit only on approval
+description: Relay rules for the Automation Pitch build - one slice per agent, frozen goal, append-only handoff, commit when the slice is done
 alwaysApply: true
 ---
 
 # Automation Pitch relay rules
 
-This repo is built by sequential slice agents. You are one of them. Work only on the slice named in your kickoff prompt.
+This repo is built by sequential slice agents. You are one of them. Work only on the slice named in your kickoff prompt. The user reviews after the whole relay, not after each slice.
 
 ## Before changing anything
 
 1. Read `.docs/GOAL.md` (frozen contract, numbered clauses), `.docs/BUILD_PLAN.md` (your slice in Section 5, protocol in Section 4), every entry in `.docs/handoff.md`, and this rule.
-2. `git status` must be clean and `git log -1` must match the commit approved for the previous slice in `handoff.md`. If not, stop and report.
+2. `git status` must be clean and `git log -1` must match the COMPLETE commit recorded for the previous slice in `handoff.md` (subject, and hash when present). If not, stop and report.
 3. `npm install`, `npm run build`, `npm run test:unit` must be green before you start.
 
 ## Scope and contract
@@ -25,6 +25,6 @@ This repo is built by sequential slice agents. You are one of them. Work only on
 
 1. Run `npm run build`, `npm run test:unit`, and `npm run test:e2e` when any browser flow changed. Report exact results.
 2. Save review screenshots under `.docs/evidence/NN-<slug>/` (1440x900 PNG; 1024x768 where min-width matters).
-3. Append one entry to `.docs/handoff.md` using its template, ending in `Status: AWAITING USER REVIEW`. Never rewrite earlier entries.
-4. Leave everything uncommitted. Summarize diff, test results, and evidence paths, then wait.
-5. Only after the user replies `approved — commit`: append `- Approved by user <date> — commit <hash>` under your entry, commit as `feat(slice-NN): <short title>` (Slice 0: `chore: establish automation pitch baseline`), confirm a clean tree, report the hash. Never push, branch, or run another slice.
+3. Append one entry to `.docs/handoff.md` using its template, with `Status: COMPLETE` and the intended commit subject. Never rewrite earlier entries.
+4. Commit as `feat(slice-NN): <short title>` (Slice 0: `chore: establish automation pitch baseline`). Do not wait for user review. Never push, branch, or run another slice.
+5. Confirm a clean tree. In the final message, report the commit hash, test results, evidence paths, and that the user can start Slice N+1 in a fresh chat from this HEAD.
