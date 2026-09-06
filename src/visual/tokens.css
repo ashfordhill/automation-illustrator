@@ -1,0 +1,303 @@
+/**
+ * Light/dark tokens. App sets document.documentElement.dataset.theme.
+ * --chrome is the header/sidebars (blue steel); --paper is the icy board stage.
+ * --ink is tile/board copy. --chrome-ink is ice type on the steel frame.
+ */
+:root,
+:root[data-theme="light"] {
+  --paper: #e8f4fa;
+  --paper-deep: #d4ecf5;
+  --ink: #071c28;
+  --ink-soft: #123a50;
+  --line: #123a50;
+  --cream: #f7fcfe;
+  --chrome: #0c3349;
+  --chrome-line: #5ec8e8;
+  --chrome-ink: #f3fbfe;
+  --chrome-ink-soft: #c5eaf6;
+  --shadow: 0 6px 0 rgba(7, 28, 40, 0.1), 0 1px 0 rgba(7, 28, 40, 0.14);
+  --chip-shadow: 0 3px 0 rgba(7, 28, 40, 0.1);
+  --btn-shadow: rgba(7, 28, 40, 0.16);
+  --yellow: #e8c14a;
+  --blue: #1a8fd4;
+  --blue-deep: #0e6ca8;
+  --grid-dot: #b7d7e4;
+  --plus: #1e8a62;
+  --plus-active: #176e4e;
+  --minus: #c4453a;
+  --minus-active: #9e3229;
+  --select-ring: rgba(26, 143, 212, 0.5);
+  --actor-empty: #cfe8f2;
+  --banner: #d4f0f8;
+  --mantine-color-dimmed: var(--ink-soft);
+}
+
+:root[data-theme="dark"] {
+  --paper: #152833;
+  --paper-deep: #101f28;
+  --ink: #e8f4fa;
+  --ink-soft: #b7d4e0;
+  --line: #7eabc0;
+  --cream: #1e3340;
+  --chrome: #071820;
+  --chrome-line: #3db8d9;
+  --chrome-ink: #f3fbfe;
+  --chrome-ink-soft: #b8e0ee;
+  --shadow: 0 6px 0 rgba(0, 0, 0, 0.28);
+  --chip-shadow: 0 3px 0 rgba(0, 0, 0, 0.3);
+  --btn-shadow: rgba(0, 0, 0, 0.38);
+  --yellow: #e2b84a;
+  --blue: #7eb6e0;
+  --blue-deep: #a8d0ee;
+  --grid-dot: #3d5564;
+  --plus: #3ea66a;
+  --plus-active: #2d8a54;
+  --minus: #e06a5e;
+  --minus-active: #c44d42;
+  --select-ring: rgba(126, 182, 224, 0.65);
+  --actor-empty: #2a4554;
+  --banner: #1e3f4e;
+  --mantine-color-dimmed: var(--ink-soft);
+}
+
+[data-mantine-color-scheme="light"],
+[data-mantine-color-scheme="dark"] {
+  --mantine-color-dimmed: var(--ink-soft);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  height: 100dvh;
+  margin: 0;
+  overflow: hidden;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.details-rail {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.details-rail-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding-bottom: 8px;
+}
+
+.details-score {
+  flex: 0 0 auto;
+  padding: 12px 14px 16px;
+  border-top: 2px solid var(--chrome-line);
+  color: var(--chrome-ink);
+  font-weight: 800;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.react-flow__attribution {
+  display: none !important;
+}
+
+.pointer-mode .react-flow__pane {
+  cursor: grab;
+}
+
+.pointer-mode .react-flow__pane:active {
+  cursor: grabbing;
+}
+
+.pointer-mode .react-flow__node {
+  cursor: pointer;
+  pointer-events: all;
+}
+
+.react-flow__handle {
+  width: 12px;
+  height: 12px;
+  border: 3px solid var(--ink);
+  background: var(--cream);
+  opacity: 0;
+}
+
+.react-flow__handle-left {
+  left: -7px;
+  border-radius: 3px 8px 8px 3px;
+}
+
+.react-flow__handle-right {
+  right: -7px;
+  border-radius: 8px 3px 3px 8px;
+}
+
+.react-flow__edge-path {
+  stroke: var(--line) !important;
+}
+
+.hand-mode .react-flow__node,
+.hand-mode .react-flow__edge {
+  pointer-events: none;
+}
+
+.present-mode .chrome-hide {
+  display: none !important;
+}
+
+.chrome-bar {
+  background: var(--chrome) !important;
+  border-color: var(--chrome-line) !important;
+  color: var(--chrome-ink);
+  --mantine-color-text: var(--chrome-ink);
+  --mantine-color-dimmed: var(--chrome-ink-soft);
+}
+
+/* Cream fields keep tile ink; labels above them stay chrome-ink.
+   Native file input in the toolbar is hidden. Beat Mantine scheme+variant --input-bg. */
+[data-mantine-color-scheme] .chrome-bar :is(input, textarea) {
+  color: var(--ink);
+  --input-color: var(--ink);
+  --input-bg: var(--cream);
+  --input-bd: var(--line);
+  background-color: var(--cream);
+}
+
+.hint-copy {
+  color: var(--ink-soft) !important;
+}
+
+.chrome-bar .hint-copy {
+  color: var(--chrome-ink) !important;
+}
+
+.board-banner {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 8;
+  background: var(--banner);
+  color: var(--ink);
+  border: 2.5px solid var(--chrome-line);
+  border-radius: 12px;
+  padding: 8px 14px;
+  font-weight: 800;
+  font-size: 13px;
+  max-width: min(640px, 90%);
+  text-align: center;
+  pointer-events: none;
+  box-shadow: var(--chip-shadow);
+}
+
+.canvas-helper {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 8;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  max-width: min(720px, calc(100% - 48px));
+  pointer-events: none;
+}
+
+.canvas-helper-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--cream);
+  color: var(--ink);
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  padding: 4px 10px 4px 6px;
+  font-weight: 800;
+  font-size: 12px;
+  box-shadow: var(--chip-shadow);
+}
+
+.canvas-helper-chip kbd {
+  font-family: inherit;
+  font-weight: 800;
+  font-size: 11px;
+  background: var(--paper);
+  border: 1.5px solid var(--line);
+  border-radius: 6px;
+  padding: 1px 6px;
+  min-width: 1.4em;
+  text-align: center;
+}
+
+.path-plus-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--cream);
+  color: var(--ink);
+  border: 2.5px solid var(--line);
+  border-radius: 12px;
+  padding: 6px;
+  box-shadow: var(--shadow);
+  min-width: 132px;
+}
+
+.path-plus-menu button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  background: transparent;
+  color: var(--ink);
+  font-family: inherit;
+  font-weight: 800;
+  font-size: 13px;
+  text-align: left;
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.path-plus-menu button:hover {
+  background: var(--paper);
+}
+
+.path-plus-menu kbd {
+  font-family: inherit;
+  font-weight: 800;
+  font-size: 11px;
+  background: var(--paper);
+  border: 1.5px solid var(--line);
+  border-radius: 6px;
+  padding: 1px 6px;
+  min-width: 1.4em;
+  text-align: center;
+}
+
+.react-flow__node {
+  overflow: visible;
+}
+
+@keyframes edge-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.28;
+  }
+}
+
+.edge-pick {
+  animation: edge-blink 0.7s ease-in-out infinite;
+}
+
+.edge-pick-on {
+  filter: drop-shadow(0 0 7px var(--blue));
+}

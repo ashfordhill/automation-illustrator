@@ -1,0 +1,138 @@
+# Automation Pitch — Frozen Goal
+
+Frozen contract for the build relay. The clause groups below are mirrored verbatim from Section 2 of `.docs/BUILD_PLAN.md` (generated 2026-09-06). Implementing agents never edit clauses. When the user decides a change, append it under **Amendments** with the date, the clause IDs affected, and the new wording; the original clause text stays in place. Handoff entries cite clause IDs.
+
+### Product (P)
+
+- **P-01** Automation Pitch is a responsive, self-explaining desktop workflow board for comparing a human-heavy Before process with a more automated After process. It uses an original chunky, playful visual and audio language; it does not copy Nintendo assets, sounds, typefaces, marks, or game interfaces.
+- **P-02** A first-time user can create, label, connect, remove, compare, merge, unmerge, save, and load without hidden graph knowledge.
+- **P-03** Interactions remain smooth with about 30 total Nodes and Paths on supported screens.
+- **P-04** The supported viewport is desktop/laptop at least 1024 CSS pixels wide. Smaller viewports show a clear unsupported-view message instead of a broken board.
+- **P-05** The approved top bar, right inspector, and hamburger placement remain. No new permanent panel is introduced except the small After merge dock. The right inspector may widen to at most 320 px; no other approved surface moves.
+- **P-06** The generic idle helper chips disappear. Contextual hints appear only while a selection or active task needs guidance.
+- **P-07** Present mode remains as the first hamburger item. Present hides the inspector, NodeToolbars, merge dock, and contextual hints; disables all editing; shows the automation score in the top bar; Space toggles Before/After. Exiting Present restores the previous view and selection state.
+- **P-08** The Pointer/Hand tool toggle is removed. Panning is drag on empty canvas, scroll/pinch zoom, and the pan keys. The upper-left group becomes Undo and the sound toggle.
+- **P-09** Light and dark themes remain (hamburger toggle). Every new or restyled surface is legible and passes contrast in both.
+- **P-10** Mantine 9 and Tabler icons remain the only UI kit and icon set.
+
+### Workflow graph (WG)
+
+- **WG-01** A brand-new board contains zero Nodes and the default actor roster (Alice, Roy, Jack, Missy, Robot). Its obvious empty-state action is **Add Step**, which creates the root assigned to the default Human.
+- **WG-02** The first Step becomes the sole root. Every nonempty document has exactly one root. The root has no incoming Paths; a connection into the root is rejected.
+- **WG-03** The workflow is a connected directed acyclic graph. Every Node is reachable from the root; reconvergence and multiple incoming Paths are allowed.
+- **WG-04** A proposed connection that would create a cycle, duplicate an existing Path, or violate the root/reachability rules is rejected before mutation with a concise visible explanation.
+- **WG-05** Paths are editable relationships, not independently removable objects. Selecting a Path and pressing Delete explains that the user must remove a Node and that the workflow will be reconnected. Backspace is not a removal key; it remains Undo.
+- **WG-06** The root Node cannot be removed. The UI explains why and recommends New for a clean board.
+- **WG-07** `+` opens Step, Data, and Connect existing. Clicking empty canvas while linking cancels the link; it never creates an implicit Node.
+- **WG-08** `−`, the Delete key, and the inspector Remove button enter the same Node-removal picker. The current Node and its directly connected Nodes are valid candidates subject to graph rules. Removal always requires an explicit confirmation (Enter or click) inside the picker.
+- **WG-09** For every entry point the first outgoing child is preselected; a leaf defaults to itself. Keyboard focus and a strong but tasteful visual highlight follow that default. Up/Down move between candidates; Escape cancels.
+- **WG-10** Removing a Node never leaves an unreachable Node. One predecessor with one successor reconnects automatically. One predecessor with many successors, or many predecessors with one successor, reconnects automatically as a full fan.
+- **WG-11** If the removed Node has two or more predecessors and two or more successors, the UI previews deterministic nearest visual pairings (vertical distance, then horizontal, then ID). The user may adjust pairings; a pairing set is valid only if every successor keeps at least one incoming Path. Confirmation applies that exact plan atomically.
+- **WG-12** When two removed-adjacent Paths collapse into one, trimmed nonempty conditions are preserved in traversal order and joined with ` + `. Empty values do not produce stray separators. If the collapsed Path would duplicate an existing Path, the existing Path is kept and the conditions are joined into it by the same rule.
+- **WG-13** A structural create, connect, remove, merge, or unmerge is one undo step. Text remains one undo step per committed keystroke, as explicitly chosen. History holds 500 entries. Undo and redo never change the active view.
+
+### Paths, conditions, and strokes (PC)
+
+- **PC-01** A Path's stroke carries meaning: **solid** means the Path is always visited; **dotted** means the Path is a choice (one of several).
+- **PC-02** A Step's Split sets the default stroke of its outgoing Paths: **One of** (stored `exclusive`) makes every outgoing Path dotted; **Every** (stored `parallel`) makes every outgoing Path solid. A Step with a single outgoing Path draws it solid regardless.
+- **PC-03** A Path may override its stroke individually (Always visited / Choice) so one Step can mix an always-visited Path with a set of choices. Changing the Step's Split re-applies the default to every outgoing Path.
+- **PC-04** A collapsed Path (WG-12) is dotted if any Path it replaces was dotted; otherwise solid.
+- **PC-05** Stroke and Split survive migration, projection (merged internals and projected boundary Paths included), and Smart Edge rendering.
+- **PC-06** Demo fixtures follow PC-01: both Oak Park amount conditions are choices and therefore dotted.
+
+### Nodes, actors, text, and inspector (NA)
+
+- **NA-01** Human actors have editable Name, Color, and Role. Robot actors have editable Name, Color, and Type (LLM / Agent / Script).
+- **NA-02** Actors may be deleted only when unused in either lane, including After-only Steps. A blocked deletion identifies the assigning Steps.
+- **NA-03** Robots may be assigned in Before (an existing workflow may already be partly automated). New Before-origin Steps default to the last-used Human, else Alice, else the first Human, in both lanes, so a new Step is not automated until its After Who changes. After-only Steps default to the default Robot.
+- **NA-04** The default Robot is the first Robot on the roster. If no Robot exists when After needs one (merge or After-only Step), a Robot named "Robot" of Type Script is created automatically inside the same undo step.
+- **NA-05** Step Type uses alphabetical fat buttons with Other last. Who uses accessible Human/Robot actor icon buttons; every actor is offered in both lanes.
+- **NA-06** Who assigns on primary click. A compact Manage actors action edits, adds, and deletes actors in the same right inspector; the removed inventory rail is not recreated.
+- **NA-07** The inspector calls an edge **Path / condition**, never Arrow/label. The stroke control reads "Always visited (solid) / Choice (dotted)"; the Step control reads "Split: One of / Every".
+- **NA-08** Enter on a selected Path or Data Node focuses its primary naming field and selects the current value. Enter on a Step does not guess among fields.
+- **NA-09** Native Tab and Shift+Tab order remains complete and logical across visible controls; closed/inert controls are skipped.
+- **NA-10** Actor name/role, Data label, Step title, and Step detail wrap and shrink only to a readable minimum, then clamp with ellipsis and expose the full value accessibly.
+- **NA-11** The old actor paintbrush assignment mode (select an actor, then click Steps) is removed; Who buttons are the single assignment interaction.
+- **NA-12** The inspector has no Path delete control. Its Node Remove button enters the WG-08 picker.
+
+### Canvas experience (CX)
+
+- **CX-01** Tile-local controls use React Flow `NodeToolbar` so hit targets are not covered by drag surfaces.
+- **CX-02** Condition labels remain clickable at all zoom levels and do not accidentally trigger edge selection.
+- **CX-03** Path routing avoids Node rectangles and reduces collisions through `@tisoap/react-flow-smart-edge` v5, preserving the approved orthogonal/stepped look and dotted strokes.
+- **CX-04** Label placement is a custom deterministic stage after routing: choose the clearest segment, avoid Nodes and previously placed labels, then wrap/clamp within an explicit maximum width.
+- **CX-05** Label-aware spacing is derived for each rendered lane and excluded from the saved document and undo history. Long labels may expand the lane; shortening them contracts it smoothly back toward canonical positions.
+- **CX-06** Node removal has a quick squash/pop animation and a connector-stretch restitch animation. `prefers-reduced-motion` receives an immediate, non-flashing equivalent.
+- **CX-07** Selection, hover, focus, keyboard focus, removal candidacy, and proposed restitches are distinguishable without relying on color alone.
+- **CX-08** Empty-canvas click cancels any transient canvas interaction and clears selection. Escape always returns to idle.
+
+### Before, After, and Both (BA)
+
+- **BA-01** Workflow document version 2 stores one shared base workflow plus an After overlay containing After assignments, merge groups, After-only Steps, and After-only Paths.
+- **BA-02** Before-origin field values (Step Type, title, detail, Data label, conditions, strokes, Split, positions) are shared. Editing one from Before or After updates the same base value, reflected immediately in both views and inside merged internals. Who is lane-specific by design and is the only per-lane value on a Before-origin Step.
+- **BA-03** Before is the only view that may remove a Before-origin non-root Node.
+- **BA-04** After may not remove Before-origin Steps; it represents them individually or in merge groups. `−`/Delete on a Before-origin Step in After explains this; on a merged tile it offers Unmerge.
+- **BA-05** Both is read-only comparison: no NodeToolbars, no merge dock, no inspector editing. Before and After have independent pan/zoom viewports. Pan keys act on the lane that last received pointer or keyboard focus.
+- **BA-06** In After, `+` offers After-only Step and Connect existing; `+ Data` is not offered. Connect existing in After creates an After-only Path, which may join any two Nodes visible in After (base or After-only), subject to WG-04 evaluated on the After projection. After-only Paths never appear in Before.
+- **BA-07** After-only Steps default to the default Robot, exist only in After, are never merge members, and may be removed in After through the same picker; reconnection applies the WG-10..12 rules to After-only Paths on the After projection.
+- **BA-08** After-only Steps are omitted entirely from the automation score. The score counts Before-origin Steps whose Before actor is not a Robot and whose After actor is a Robot, counting merged members individually rather than one giant tile.
+- **BA-09** Removing a Before-origin Node also removes After-only Paths touching it and reconnects on the After projection by the same fan rules so no After-only Step becomes unreachable; merge groups are pruned per MG-10.
+
+### Merge groups (MG)
+
+- **MG-01** The merge dock appears only in editable After view. It uses Merge and Unmerge buttons with compact guidance.
+- **MG-02** A group contains one or more Before-origin Steps. Data Nodes and After-only Steps cannot be selected as members.
+- **MG-03** A selection expands to its closure: every Node on a base path between two selected Steps is included, Steps as members and Data Nodes as supporting internals. The expanded group is previewed before confirmation.
+- **MG-04** A group must be convex: no base path may leave the group and re-enter it. Closure expansion makes any connected selection convex. A selection whose Steps are not connected by base paths is rejected with an explanation.
+- **MG-05** Selecting a Step already in a group plus additional Steps extends that group; selecting members from multiple groups flattens them into one group. Nested groups are never created.
+- **MG-06** A merge group uses the default Robot. Choosing another Who for the giant Step updates every swallowed Step.
+- **MG-07** Unmerge restores the entire group; partial unmerge is not supported. Member robot assignments remain after unmerge.
+- **MG-08** A merged tile displays a compact, scroll-free internal flow using icon plus title/target, condition branching, and strokes, without System/detail text. The Robot figure stays normal size.
+- **MG-09** External Paths are projected through the merged tile without rewriting the base graph. Conditions remain attached to their underlying Paths. Distinct parallel boundary Paths keep their own conditions.
+- **MG-10** A Before connection that would break an existing group's convexity is rejected with an explanation naming the group (unmerge first). A residual group left noncontiguous by a Before removal dissolves with a notice. A group dissolves when no member remains.
+
+### Shell, demos, sound, and data safety (SH)
+
+- **SH-01** The shell becomes more contrast-rich and chunky without moving approved controls or adding decorative UI, in both themes.
+- **SH-02** Before/After/Both is visually prominent, keyboard accessible, and keeps the existing Before/After/Both information architecture.
+- **SH-03** Sound is a new feature, off by default. The upper-left sound toggle (after Undo) turns locally synthesized UI feedback on or off, persists the preference, and has a visible and announced state.
+- **SH-04** Cues are original Web Audio synthesis at a fixed low volume, never copied samples: soft blip for create/connect, pop for remove, low buzz for a rejected action, two-note for merge/unmerge, tick when sound is turned on. Reduced-motion users may still use sound; sound remains independently controllable.
+- **SH-05** The hamburger keeps Present, New, Import, Keybinds, and Light/Dark mode in place. Demo becomes a chooser (Oak Park Invoice, Robot Mailroom) and moves to the bottom. No Export item is added.
+- **SH-06** New, Demo, and Import share a Save copy / Discard / Cancel gate before replacing the current document.
+- **SH-07** The two demos are Oak Park Invoice and Robot Mailroom (Appendix A). Robot Mailroom is a compact showcase with a preconfigured merge and an After-only Robot Step. Demo IDs are deterministic; user-created IDs are collision-safe.
+- **SH-08** Saved and imported JSON is validated at runtime with Zod 4. Valid version 1 data migrates deterministically to version 2.
+- **SH-09** A version 1 document whose graph violates WG-02..WG-04 (multiple roots, unreachable Nodes, cycles) is not repaired. It is rejected into recovery with a list of the specific violations.
+- **SH-10** If saved browser data cannot migrate, its raw value is preserved under its original key and never overwritten. The user sees Download recovery copy and Start fresh.
+- **SH-11** If localStorage fails, editing continues in memory and one persistent unobtrusive Not saved warning appears until a successful save.
+- **SH-12** Successful New, Demo, and Import clear undo/redo history so Undo cannot cross document boundaries.
+- **SH-13** The duplicate `export-json` CLI and its README instructions are removed; Save copy is the supported JSON download.
+- **SH-14** The existing rebindable Keybinds catalog remains the single source for single-key actions and the Keybinds modal. Backspace stays Undo. Pointer/Hand actions are retired; detach becomes Remove Node (`-`), path-confirm becomes Confirm (Enter); Merge (`m`) and Unmerge (`u`) are added. Saved keymaps ignore unknown or retired actions.
+- **SH-15** Nunito is bundled locally and the Google Fonts link is removed.
+
+### Accessibility and quality (AQ)
+
+- **AQ-01** All pointer actions used outside the hamburger have keyboard equivalents registered in the Keybinds catalog or native focus order.
+- **AQ-02** Semantic names describe actions truthfully; icon-only controls have visible tooltips and accessible labels.
+- **AQ-03** Focus is restored predictably after menus, dialogs, linking, removal, merge, and recovery actions.
+- **AQ-04** WCAG 2.2 AA is the target. Playwright plus `@axe-core/playwright` covers critical states; manually reviewed keyboard and contrast checks remain required.
+- **AQ-05** Motion honors `prefers-reduced-motion`; any blinking edge behavior becomes static emphasis in that mode.
+- **AQ-06** Critical graph, schema, migration, projection, condition-join, stroke, merge-closure, and recovery rules have Vitest coverage.
+- **AQ-07** Critical create/connect/remove/replace/compare/merge flows have Playwright Chromium coverage and reviewed screenshots.
+
+### Explicit non-goals (NG)
+
+- **NG-01** No mobile/tablet authoring UI.
+- **NG-02** No free-form draggable canonical layout or multi-root forests.
+- **NG-03** No direct Path deletion.
+- **NG-04** No nested or partial merge groups.
+- **NG-05** No After-specific copies of shared Before fields (Who is lane-specific, not a copy).
+- **NG-06** No merging of After-only Steps.
+- **NG-07** No Export menu item or command-line exporter.
+- **NG-08** No new UI kit, permanent left palette, actor inventory, redo button, minimap, background grid, speculative dashboard, or Pointer/Hand tool.
+- **NG-09** No automatic repair of invalid version 1 graphs.
+
+## Amendments
+
+Append only, newest last. Format: `- YYYY-MM-DD — <clause IDs> — <decision and new wording> — approved by user`.
+
+_None yet._
