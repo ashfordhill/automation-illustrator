@@ -18,6 +18,7 @@ import {
   ROBOT_KIND_LABEL,
   STEP_KINDS,
   STEP_KIND_META,
+  laneAssignments,
   type RobotKind as RobotKindT,
   type StepKind,
 } from "../../workflow/types";
@@ -52,7 +53,7 @@ export function DetailsPanel() {
         </Stack>
       );
     }
-    const actorId = workflow.assignments[lane][n.id] ?? "";
+    const actorId = laneAssignments(workflow, lane)[n.id] ?? "";
     const humans = workflow.actors.filter((a) => a.kind === ActorKind.Human);
     const robots = workflow.actors.filter((a) => a.kind === ActorKind.Robot);
     const actorOptions =

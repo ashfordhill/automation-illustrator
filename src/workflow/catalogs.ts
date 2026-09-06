@@ -4,8 +4,11 @@
  * type for annotations. JSON on disk still stores the string values.
  */
 
-/** Workflow document version written by state/persistence.ts. */
-export const WORKFLOW_VERSION = 1 as const;
+/** Version 1 on-disk documents; migrate.ts maps them to WORKFLOW_VERSION. */
+export const WORKFLOW_VERSION_V1 = 1 as const;
+
+/** Workflow document version written by state/persistence.ts (BA-01). */
+export const WORKFLOW_VERSION = 2 as const;
 
 /** Board tiles in the saved document (React Flow uses a parallel ReactFlowNodeKind). */
 export const WorkflowNodeKind = {

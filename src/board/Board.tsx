@@ -70,13 +70,18 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
 
   useEffect(() => {
     if (!focusId) return;
-    const n = workflow.nodes.find((x) => x.id === focusId);
-    if (!n) return;
-    const w = n.type === WorkflowNodeKind.Step ? STEP_W : FIELD_W;
-    const h = n.type === WorkflowNodeKind.Step ? STEP_H : FIELD_H;
-    void rf.setCenter(n.position.x + w / 2, n.position.y + h / 2, {
-      duration: 280,
-      zoom: 1,
+    const id = focusId;
+    const n = workflow.nodes.find((x) => x.id === id);
+    if (n) {
+      const w = n.type === WorkflowNodeKind.Step ? STEP_W : FIELD_W;
+      const h = n.type === WorkflowNodeKind.Step ? STEP_H : FIELD_H;
+      void rf.setCenter(n.position.x + w / 2, n.position.y + h / 2, {
+        duration: 280,
+        zoom: 1,
+      });
+    }
+    queueMicrotask(() => {
+      useStore.getState().consumeFocus(id);
     });
   }, [focusId, rf, workflow.nodes]);
 

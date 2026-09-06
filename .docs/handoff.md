@@ -189,3 +189,44 @@ Corrections in the same chat before the next slice starts get their own short en
   - Pointer/Hand tool, idle helper chips, implicit empty-canvas Step, Path delete, inspector “Arrow” copy — later slices per BUILD_PLAN
 - Status: COMPLETE
 - Commit: `feat(slice-02): reorganize source into feature folders`
+
+## Slice 03 — workflow v2 schema, migration, persistence status, and recovery core — 2026-09-06
+
+- Starting commit: `44b23816b06035ddfbb25915a632858b9bb01538` (`feat(slice-02): reorganize source into feature folders`)
+- Working tree at start: clean, branch `main`, 4 commits ahead of `origin/main` (not pushed)
+- GOAL clauses addressed: BA-01 (v2 document + sparse After overlay), SH-08 (Zod 4 validation and deterministic v1→v2 migration), SH-09 (invalid graphs rejected with a violation list, not repaired), SH-10 (failed startup raw kept under the original key), SH-11 (persist status `saved`/`dirty`/`unavailable`; no notice spam), WG-02, WG-03, WG-04 (validate single root, reachability, acyclicity, duplicate Paths — connect-time enforcement remains Slice 4), AQ-06 (unit coverage of schema, migration, graph violations, storage, recovery)
+- Library research and decisions: added approved `zod@4.5.4`. Schemas use `z.object` + `z.discriminatedUnion` for actors/nodes; graph invariants run as named `validateWorkflow` / `validateWorkflowV1` after shape parse and also as Zod `superRefine` on the exported full schemas. Graph algorithms live in `workflow/graph.ts` so Slice 4 can share them with commands. No other runtime dependency.
+- Files changed:
+  - Types/catalog: `src/workflow/types.ts`, `src/workflow/catalogs.ts` (`WORKFLOW_VERSION = 2`, `AfterOverlay`, `MergeGroupDto`, lane accessors)
+  - New: `src/workflow/schema.ts`, `src/workflow/migrate.ts`
+  - Graph invariants: `src/workflow/graph.ts` (`validateWorkflow`, `validateGraphInvariants`, SH-09 codes)
+  - Persistence/store: `src/state/persistence.ts`, `src/state/store.ts` (hydrate, persist status, recovery hold, `importRaw`, `requestFocus`/`consumeFocus`)
+  - Integration: `src/demos/oakParkInvoice.ts`, `src/workflow/scoring.ts`, `src/app/inspector/SelectedItemForm.tsx`, `src/app/components/Toolbar.tsx`, `src/board/Board.tsx`
+  - Tests: `src/workflow/schema.test.ts`, `src/workflow/migrate.test.ts`, `src/state/persistence.test.ts`, `src/state/store.persist.test.ts`, `src/state/history.test.ts`, `e2e/schema.spec.ts`
+  - Evidence: `.docs/evidence/03-schema/`
+  - Lockfile: `package.json`, `package-lock.json` (zod)
+  - This handoff entry
+- Behavior implemented: saved and imported JSON is validated; valid v1 boards migrate to v2 (Before map → `assignments`, After map → `after.assignments`, empty overlay, stub dropped, missing Human role → `worker`) and are rewritten only after success. Invalid startup JSON stays on `automation-pitch.workflow` with recovery state in the store (no recovery UI yet); the Oak Park demo loads in memory as `dirty`. localStorage failures keep editing in memory as `unavailable`. Import parses a full candidate before any store mutation. Focus requests replace the previous id and are consumed after the board centers. The board still looks and edits like Slice 2.
+- Tests and exact results:
+  - `npm install` at start — up to date, audited 134 packages, 0 vulnerabilities
+  - `npm run build` at start — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning)
+  - `npm run test:unit` at start — pass (3 files, 7 tests)
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; built in 1.07s; existing chunk-size warning; client `index-74AehRd7.js` 789.45 kB from Zod)
+  - `npm run test:unit` — pass (7 files, 25 tests)
+  - `npm run test:e2e` — pass (9 passed, Chromium, 15.6s including webServer)
+- Evidence:
+  - `.docs/evidence/03-schema/before-light-1440.png` — demo Before after v2 persist; inspector idle copy (1440×900)
+  - `.docs/evidence/03-schema/after-light-1440.png` — After lane; Robot on automated Steps (1440×900)
+  - `.docs/evidence/03-schema/both-light-1440.png` — stacked Before/After (1440×900)
+  - `.docs/evidence/03-schema/before-light-1024.png` — same Before board at 1024×768
+- Earlier-slice defects fixed: sticky `focusId` never cleared after the camera moved, so tiles could stay highlighted; `requestFocus` now replaces the current request and `consumeFocus` clears only a matching id (Board consumes after centering).
+- Known limitations / follow-ups:
+  - Recovery UI (Download recovery copy / Start fresh) and the visible Not saved chip — Slice 5
+  - `validateWorkflow` is shared with the schema; connect/remove commands and history cap 500 — Slice 4
+  - After overlay fields exist but are unused in rendering/editing — Slices 10–11
+  - Step `stub` no longer exists on the document; detach no longer deletes a placeholder leaf (was in-session only) — Slice 6
+  - Demo IDs are still random `nid()` — Slice 5
+  - Pointer/Hand tool, idle helper chips, implicit empty-canvas Step, Path delete, inspector “Arrow” copy — later slices per BUILD_PLAN
+- Status: COMPLETE
+- Commit: `feat(slice-03): add v2 schema, migration, and recovery core`
+

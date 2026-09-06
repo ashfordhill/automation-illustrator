@@ -5,7 +5,6 @@
 import { GRID } from "../board/layout/tileMetrics";
 import { aliceId, defaultActors, defaultRobotId } from "../workflow/actors";
 import {
-  AssignmentLane,
   IdPrefix,
   SplitKind,
   StepKind,
@@ -13,7 +12,7 @@ import {
   WORKFLOW_VERSION,
 } from "../workflow/catalogs";
 import { nid } from "../workflow/ids";
-import { type WorkflowDoc } from "../workflow/types";
+import { emptyAfterOverlay, type WorkflowDoc } from "../workflow/types";
 
 /** Read → (amount split) Search → Account # → Enter → Review. */
 export function oakParkInvoice(): WorkflowDoc {
@@ -92,11 +91,10 @@ export function oakParkInvoice(): WorkflowDoc {
       { id: nid(IdPrefix.Edge), source: acct, target: enter, label: "", dashed: false },
       { id: nid(IdPrefix.Edge), source: enter, target: review, label: "", dashed: false },
     ],
-    assignments: {
-      [AssignmentLane.Before]: Object.fromEntries(
-        Object.values(steps).map((id) => [id, alice]),
-      ),
-      [AssignmentLane.After]: {
+    assignments: Object.fromEntries(Object.values(steps).map((id) => [id, alice])),
+    after: {
+      ...emptyAfterOverlay(),
+      assignments: {
         [read]: robot,
         [web]: robot,
         [fs]: robot,
@@ -127,9 +125,10 @@ export function freshBoard(): WorkflowDoc {
       },
     ],
     edges: [],
-    assignments: {
-      [AssignmentLane.Before]: alice ? { [id]: alice } : {},
-      [AssignmentLane.After]: alice ? { [id]: alice } : {},
+    assignments: alice ? { [id]: alice } : {},
+    after: {
+      ...emptyAfterOverlay(),
+      assignments: alice ? { [id]: alice } : {},
     },
   };
 }

@@ -2,14 +2,14 @@
  * Copy for the right-rail footer (and Present toolbar): how many steps
  * flip from a person Before to a robot After.
  */
-import { ActorKind, AssignmentLane, WorkflowNodeKind } from "./catalogs";
+import { ActorKind, WorkflowNodeKind } from "./catalogs";
 import type { WorkflowDoc } from "./types";
 
 export function automationScore(workflow: WorkflowDoc): string {
   const steps = workflow.nodes.filter((n) => n.type === WorkflowNodeKind.Step);
   const automated = steps.filter((n) => {
-    const beforeId = workflow.assignments[AssignmentLane.Before][n.id];
-    const afterId = workflow.assignments[AssignmentLane.After][n.id];
+    const beforeId = workflow.assignments[n.id];
+    const afterId = workflow.after.assignments[n.id];
     const before = workflow.actors.find((a) => a.id === beforeId);
     const after = workflow.actors.find((a) => a.id === afterId);
     return before?.kind !== ActorKind.Robot && after?.kind === ActorKind.Robot;

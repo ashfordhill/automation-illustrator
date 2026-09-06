@@ -58,6 +58,8 @@ import {
   isRobot,
   isStepNode,
   STEP_KIND_META,
+  laneAssignments,
+  withLaneAssignments,
   type ActorDto,
   type Assignments,
   type ColorScheme as ColorSchemeT,
@@ -69,7 +71,15 @@ import {
   type WorkflowDoc,
 } from "../workflow/types";
 import { commitHistory, redoHistory, undoHistory } from "./history";
-import { loadStoredWorkflow, loadTheme, persistWorkflow, saveTheme } from "./persistence";
+import {
+  hydratePersistedWorkflow,
+  loadTheme,
+  saveTheme,
+  writeWorkflow,
+  type PersistStatus,
+  type RecoveryState,
+} from "./persistence";
+import { parseDocument, type ParseResult } from "../workflow/migrate";
 
 /** Right-hand inspector target, or null when nothing is selected. */
 export type Selection =
@@ -82,23 +92,31 @@ export type Selection =
 export type PathPick = { sourceId: string; index: number };
 
 /** Demo or last saved board, with labels already given room. */
-function loadStart(): WorkflowDoc {
-  let w = loadStoredWorkflow() ?? oakParkInvoice();
-  w = room(w);
-  persistWorkflow(w);
-  return w;
+function loadStart(): {
+  workflow: WorkflowDoc;
+  persistStatus: PersistStatus;
+  recovery: RecoveryState | null;
+} {
+  const boot = hydratePersistedWorkflow(oakParkInvoice);
+  const workflow = room(boot.workflow);
+  if (boot.recovery || boot.persistStatus === "unavailable") {
+    return { workflow, persistStatus: boot.persistStatus, recovery: boot.recovery };
+  }
+  return { workflow, persistStatus: writeWorkflow(workflow), recovery: null };
 }
 
-/** Push tiles apart so long edge labels (e.g. invoice > $50,000) fit. */
+function persistIfAllowed(doc: WorkflowDoc, recovery: RecoveryState | null): PersistStatus {
+  if (recovery) return "dirty";
+  return writeWorkflow(doc);
+}
+
+/** Push tiles apart so long Path conditions (e.g. invoice > $50,000) fit. */
 function room(w: WorkflowDoc): WorkflowDoc {
   const nodes = spreadForLabels(w.nodes, w.edges);
   return nodes === w.nodes ? w : { ...w, nodes };
 }
 
-/** Stub steps from + on empty board — detach deletes them if they become orphaned. */
-function isStubStep(n: NodeDto | undefined) {
-  return !!n && isStepNode(n) && !!n.stub;
-}
+const started = loadStart();
 
 export const useStore = create<{
   workflow: WorkflowDoc;
@@ -118,6 +136,8 @@ export const useStore = create<{
   pathPick: PathPick | null;
   colorScheme: ColorSchemeT;
   newConfirmOpen: boolean;
+  persistStatus: PersistStatus;
+  recovery: RecoveryState | null;
   commit: (next: WorkflowDoc) => void;
   undo: () => void;
   redo: () => void;
@@ -162,9 +182,13 @@ export const useStore = create<{
   setNewConfirmOpen: (v: boolean) => void;
   confirmNew: () => void;
   loadDoc: (doc: WorkflowDoc) => void;
+  importRaw: (raw: string) => ParseResult;
   resetDemo: () => void;
+  requestFocus: (id: string) => void;
+  consumeFocus: (id: string) => void;
+  clearRecoveryHold: () => void;
 }>((set, get) => ({
-  workflow: loadStart(),
+  workflow: started.workflow,
   past: [],
   future: [],
   view: ViewMode.Before,
@@ -181,33 +205,37 @@ export const useStore = create<{
   pathPick: null,
   colorScheme: loadTheme(),
   newConfirmOpen: false,
+  persistStatus: started.persistStatus,
+  recovery: started.recovery,
 
-  /** Snapshot current board onto the undo stack, persist, clear redo. */
+  /** Snapshot current board onto the undo stack, persist unless recovery holds the raw key. */
   commit: (next) => {
-    const { workflow, past } = get();
+    const { workflow, past, recovery } = get();
     const placed = room(next);
-    persistWorkflow(placed);
-    set(commitHistory(workflow, past, placed));
+    const persistStatus = persistIfAllowed(placed, recovery);
+    set({ ...commitHistory(workflow, past, placed), persistStatus });
   },
   undo: () => {
-    const { past, workflow, future } = get();
+    const { past, workflow, future, recovery } = get();
     const stacks = undoHistory(past, workflow, future);
     if (!stacks) return;
-    persistWorkflow(stacks.workflow);
+    const persistStatus = persistIfAllowed(stacks.workflow, recovery);
     set({
       ...stacks,
+      persistStatus,
       linkFrom: null,
       linkMenu: null,
       pathPick: null,
     });
   },
   redo: () => {
-    const { past, workflow, future } = get();
+    const { past, workflow, future, recovery } = get();
     const stacks = redoHistory(past, workflow, future);
     if (!stacks) return;
-    persistWorkflow(stacks.workflow);
+    const persistStatus = persistIfAllowed(stacks.workflow, recovery);
     set({
       ...stacks,
+      persistStatus,
       linkFrom: null,
       linkMenu: null,
       pathPick: null,
@@ -254,7 +282,7 @@ export const useStore = create<{
   actorFor: (stepId, lane) => {
     const { workflow, assignmentLane } = get();
     const L = lane ?? assignmentLane();
-    const id = workflow.assignments[L][stepId];
+    const id = laneAssignments(workflow, L)[stepId];
     return workflow.actors.find((a) => a.id === id);
   },
 
@@ -283,12 +311,13 @@ export const useStore = create<{
       actors,
       nodes: [...workflow.nodes, node],
       assignments: {
-        [AssignmentLane.Before]: {
-          ...workflow.assignments[AssignmentLane.Before],
-          ...(hid ? { [id]: hid } : {}),
-        },
-        [AssignmentLane.After]: {
-          ...workflow.assignments[AssignmentLane.After],
+        ...workflow.assignments,
+        ...(hid ? { [id]: hid } : {}),
+      },
+      after: {
+        ...workflow.after,
+        assignments: {
+          ...workflow.after.assignments,
           ...(hid ? { [id]: hid } : {}),
         },
       },
@@ -333,14 +362,7 @@ export const useStore = create<{
     const { workflow, commit } = get();
     let nodes = workflow.nodes.map((n) => {
       if (n.id !== id) return n;
-      const next = { ...n, ...patch } as NodeDto;
-      if (
-        isStepNode(next) &&
-        ["stepKind", "title", "detail"].some((k) => k in patch)
-      ) {
-        next.stub = false;
-      }
-      return next;
+      return { ...n, ...patch } as NodeDto;
     });
     let edges = workflow.edges;
     if ("split" in patch) {
@@ -370,13 +392,7 @@ export const useStore = create<{
     const lane = assignmentLane();
     const actor = workflow.actors.find((a) => a.id === actorId);
     if (lane === AssignmentLane.Before && isRobot(actor)) return;
-    commit({
-      ...workflow,
-      assignments: {
-        ...workflow.assignments,
-        [lane]: { ...workflow.assignments[lane], [stepId]: actorId },
-      },
-    });
+    commit(withLaneAssignments(workflow, lane, { ...laneAssignments(workflow, lane), [stepId]: actorId }));
     if (isHuman(actor)) set({ lastHumanId: actorId });
   },
   connect: (source, target, label = "") => {
@@ -411,10 +427,8 @@ export const useStore = create<{
         ...workflow,
         nodes: workflow.nodes.filter((n) => n.id !== id),
         edges: workflow.edges.filter((e) => e.source !== id && e.target !== id),
-        assignments: {
-          [AssignmentLane.Before]: dropAssign(workflow.assignments[AssignmentLane.Before]),
-          [AssignmentLane.After]: dropAssign(workflow.assignments[AssignmentLane.After]),
-        },
+        assignments: dropAssign(workflow.assignments),
+        after: { ...workflow.after, assignments: dropAssign(workflow.after.assignments) },
       });
     } else if (selected.type === SelectionKind.Edge) {
       commit({
@@ -422,8 +436,8 @@ export const useStore = create<{
         edges: workflow.edges.filter((e) => e.id !== selected.id),
       });
     } else {
-      const used = Object.values(workflow.assignments[AssignmentLane.Before])
-        .concat(Object.values(workflow.assignments[AssignmentLane.After]))
+      const used = Object.values(workflow.assignments)
+        .concat(Object.values(workflow.after.assignments))
         .includes(selected.id);
       if (used) return;
       commit({
@@ -476,8 +490,8 @@ export const useStore = create<{
         linkFrom: null,
         linkMenu: null,
         selected: { type: SelectionKind.Node, id },
-        focusId: id,
       });
+      get().requestFocus(id);
       return id;
     }
     const id = nid(IdPrefix.Step);
@@ -493,7 +507,6 @@ export const useStore = create<{
       title: STEP_KIND_META[StepKind.Other].defaultTitle,
       detail: "",
       split: SplitKind.Exclusive,
-      stub: true,
     };
     const edges = [
       ...workflow.edges,
@@ -505,12 +518,13 @@ export const useStore = create<{
       nodes,
       edges,
       assignments: {
-        [AssignmentLane.Before]: {
-          ...workflow.assignments[AssignmentLane.Before],
-          ...(human ? { [id]: human } : {}),
-        },
-        [AssignmentLane.After]: {
-          ...workflow.assignments[AssignmentLane.After],
+        ...workflow.assignments,
+        ...(human ? { [id]: human } : {}),
+      },
+      after: {
+        ...workflow.after,
+        assignments: {
+          ...workflow.after.assignments,
           ...(human ? { [id]: human } : {}),
         },
       },
@@ -519,8 +533,8 @@ export const useStore = create<{
       linkFrom: null,
       linkMenu: null,
       selected: { type: SelectionKind.Node, id },
-      focusId: id,
     });
+    get().requestFocus(id);
     return id;
   },
   beginLinkFrom: (sourceId) => {
@@ -545,10 +559,10 @@ export const useStore = create<{
       linkFrom: null,
       linkMenu: null,
       selected: { type: SelectionKind.Node, id: targetId },
-      focusId: targetId,
     });
+    get().requestFocus(targetId);
   },
-  /** Empty-pane click while linking existing: spawn a stub step. */
+  /** Empty-pane click while linking existing: spawn a Step. */
   completeLinkNew: () => {
     const { linkFrom, spawnBranch } = get();
     if (!linkFrom) return;
@@ -617,14 +631,7 @@ export const useStore = create<{
     const edge = workflow.edges.find((e) => e.id === edgeId);
     if (!edge) return;
     let edges = workflow.edges.filter((e) => e.id !== edgeId);
-    let nodes = workflow.nodes;
-    const tgt = nodes.find((n) => n.id === edge.target);
-    const stillIn = edges.some((e) => e.target === edge.target);
-    if (isStubStep(tgt) && !stillIn) {
-      nodes = nodes.filter((n) => n.id !== tgt!.id);
-      edges = edges.filter((e) => e.source !== tgt!.id && e.target !== tgt!.id);
-    }
-    commit({ ...workflow, nodes, edges });
+    commit({ ...workflow, edges });
     set({ pathPick: null });
   },
 
@@ -654,5 +661,19 @@ export const useStore = create<{
     get().commit(doc);
     set({ selected: null, linkFrom: null, linkMenu: null, pathPick: null });
   },
+  importRaw: (raw) => {
+    const parsed = parseDocument(raw);
+    if (!parsed.ok) return parsed;
+    get().loadDoc(parsed.doc);
+    return parsed;
+  },
   resetDemo: () => get().loadDoc(oakParkInvoice()),
+  requestFocus: (id) => set({ focusId: id }),
+  consumeFocus: (id) => {
+    if (get().focusId === id) set({ focusId: null });
+  },
+  clearRecoveryHold: () => {
+    const persistStatus = writeWorkflow(get().workflow);
+    set({ recovery: null, persistStatus });
+  },
 }));

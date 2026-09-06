@@ -25,7 +25,6 @@ import {
   IconSun,
 } from "@tabler/icons-react";
 import { prettyKey, KeyAction } from "../../keyboard/bindings";
-import { fromJson } from "../../state/persistence";
 import { useStore } from "../../state/store";
 import {
   ColorScheme,
@@ -119,7 +118,9 @@ export function Toolbar() {
               const file = e.target.files?.[0];
               e.target.value = "";
               if (!file) return;
-              void file.text().then((t) => useStore.getState().loadDoc(fromJson(t)));
+              void file.text().then((t) => {
+                useStore.getState().importRaw(t);
+              });
             }}
           />
           <Menu shadow="md" width={200} position="bottom-end">

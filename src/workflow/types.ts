@@ -11,6 +11,7 @@ import {
   StepKind,
   WorkflowNodeKind,
   WORKFLOW_VERSION,
+  WORKFLOW_VERSION_V1,
 } from "./catalogs";
 
 export {
@@ -25,6 +26,7 @@ export {
   ViewMode,
   WorkflowNodeKind,
   WORKFLOW_VERSION,
+  WORKFLOW_VERSION_V1,
 } from "./catalogs";
 
 /** Ordered list for inspector selects — keep in display order. */
@@ -82,8 +84,6 @@ export type StepNodeDto = {
   title: string;
   detail: string;
   split: SplitKind;
-  /** True when created via + as a placeholder; detach may delete it. */
-  stub?: boolean;
 };
 
 export type DataFieldNodeDto = {
@@ -107,13 +107,68 @@ export type EdgeDto = {
 /** stepId → actorId for one Before/After lane. */
 export type Assignments = Record<string, string>;
 
-export type WorkflowDoc = {
+/** Ordered Before-origin Step ids swallowed by one After merge tile (MG-02). */
+export type MergeGroupDto = {
+  id: string;
+  memberIds: string[];
+};
+
+/** Sparse After overlay on a v2 document (BA-01). */
+export type AfterOverlay = {
+  assignments: Assignments;
+  groups: MergeGroupDto[];
+  extraNodes: StepNodeDto[];
+  extraEdges: EdgeDto[];
+};
+
+/** Version 2 document: shared base workflow plus one After overlay (BA-01). */
+export type WorkflowDocV2 = {
   version: typeof WORKFLOW_VERSION;
   actors: ActorDto[];
   nodes: NodeDto[];
   edges: EdgeDto[];
+  /** Before-lane Who for base Steps. */
+  assignments: Assignments;
+  after: AfterOverlay;
+};
+
+export type WorkflowDoc = WorkflowDocV2;
+
+/** Version 1 on-disk shape before migrate.ts (lane maps, optional Human role, optional stub). */
+export type WorkflowDocV1 = {
+  version: typeof WORKFLOW_VERSION_V1;
+  actors: Array<RobotDto | (Omit<HumanDto, "role"> & { role?: string })>;
+  nodes: Array<NodeDto | (StepNodeDto & { stub?: boolean })>;
+  edges: EdgeDto[];
   assignments: Record<AssignmentLane, Assignments>;
 };
+
+/** Empty After overlay used by New boards and v1 migration. */
+export function emptyAfterOverlay(): AfterOverlay {
+  return {
+    assignments: {},
+    groups: [],
+    extraNodes: [],
+    extraEdges: [],
+  };
+}
+
+/** Who map for the active lane (Before is the base map; After is the overlay). */
+export function laneAssignments(doc: WorkflowDoc, lane: AssignmentLane): Assignments {
+  return lane === AssignmentLane.After ? doc.after.assignments : doc.assignments;
+}
+
+/** Replace one lane's Who map without touching the other. */
+export function withLaneAssignments(
+  doc: WorkflowDoc,
+  lane: AssignmentLane,
+  assignments: Assignments,
+): WorkflowDoc {
+  if (lane === AssignmentLane.After) {
+    return { ...doc, after: { ...doc.after, assignments } };
+  }
+  return { ...doc, assignments };
+}
 
 /** Narrow a board tile to a Step (the human/robot + task card). */
 export function isStepNode(n: NodeDto): n is StepNodeDto {
@@ -135,17 +190,15 @@ export function isRobot(a: ActorDto | undefined): a is RobotDto {
   return a?.kind === ActorKind.Robot;
 }
 
-/** Empty document used when parsing JSON that is missing fields. */
+/** Empty document used by history tests and as a valid zero-Node board (WG-01). */
 export function emptyWorkflow(): WorkflowDoc {
   return {
     version: WORKFLOW_VERSION,
     actors: [],
     nodes: [],
     edges: [],
-    assignments: {
-      [AssignmentLane.Before]: {},
-      [AssignmentLane.After]: {},
-    },
+    assignments: {},
+    after: emptyAfterOverlay(),
   };
 }
 
