@@ -1,29 +1,21 @@
 /**
  * Zustand board state: workflow document, undo stack, tools, linking, theme.
- * Canvas (board/Board.tsx) and chrome (Toolbar, DetailsPanel, CanvasHelper)
- * all read/write through here. persist/workflowJson.ts handles localStorage JSON.
+ * Canvas (board/Board.tsx) and app shell (Toolbar, DetailsPanel, CanvasHelper)
+ * all read/write through here. persistence.ts handles localStorage JSON.
  *
- * commit / undo / redo — history
+ * commit / undo / redo — history.ts
  * addStep / addField — first step is New board; later tiles spawn from +
- * addHuman / addRobot — details + New person / + New robot
+ * addHuman / addRobot — inspector + New person / + New robot
  * openLinkMenu / spawnBranch / beginLinkFrom — tile +
  * beginPathPick / detachPath — tile −
- * toggleSelectedDash — selected path solid/dotted
- * assignActor — details Who select
+ * toggleSelectedDash — selected Path solid/dotted
+ * assignActor — inspector Who select
  * requestNew / confirmNew — hamburger New (undoable via commit)
  */
 import { create } from "zustand";
-import { applyDashForSplit, defaultDashed, edgeIsDotted, maybeExclusiveSplit, nextPortIndex, outgoingSorted, spreadForLabels } from "../board/pathGeometry";
-import { clearDockPosition, snapToGrid, vacantSpot } from "../board/tileMetrics";
-import {
-  aliceId,
-  defaultActors,
-  makeHuman,
-  makeRobot,
-  oakParkInvoice,
-  freshBoard,
-} from "../demo/oakParkInvoice";
-import { clone, nid } from "../identity/ids";
+import { spreadForLabels } from "../board/layout/spreadForLabels";
+import { clearDockPosition, snapToGrid, vacantSpot } from "../board/layout/tileMetrics";
+import { oakParkInvoice, freshBoard } from "../demos/oakParkInvoice";
 import {
   ARROW_PRESET,
   WASD_PRESET,
@@ -32,6 +24,12 @@ import {
   type KeyAction,
   type Keymap,
 } from "../keyboard/bindings";
+import {
+  aliceId,
+  defaultActors,
+  makeHuman,
+  makeRobot,
+} from "../workflow/actors";
 import {
   ActorKind,
   AssignmentLane,
@@ -45,7 +43,16 @@ import {
   Tool,
   ViewMode,
   WorkflowNodeKind,
-} from "../model/catalogs";
+} from "../workflow/catalogs";
+import {
+  applyDashForSplit,
+  defaultDashed,
+  edgeIsDotted,
+  maybeExclusiveSplit,
+  nextPortIndex,
+  outgoingSorted,
+} from "../workflow/graph";
+import { nid } from "../workflow/ids";
 import {
   isHuman,
   isRobot,
@@ -60,16 +67,11 @@ import {
   type Tool as ToolT,
   type ViewMode as ViewModeT,
   type WorkflowDoc,
-} from "../model/types";
-import {
-  fromJson,
-  loadTheme,
-  LS_WORKFLOW,
-  saveTheme,
-  toJson,
-} from "../persist/workflowJson";
+} from "../workflow/types";
+import { commitHistory, redoHistory, undoHistory } from "./history";
+import { loadStoredWorkflow, loadTheme, persistWorkflow, saveTheme } from "./persistence";
 
-/** Right-hand details panel target, or null when nothing is selected. */
+/** Right-hand inspector target, or null when nothing is selected. */
 export type Selection =
   | { type: typeof SelectionKind.Node; id: string }
   | { type: typeof SelectionKind.Edge; id: string }
@@ -81,20 +83,10 @@ export type PathPick = { sourceId: string; index: number };
 
 /** Demo or last saved board, with labels already given room. */
 function loadStart(): WorkflowDoc {
-  let w: WorkflowDoc;
-  try {
-    const raw = localStorage.getItem(LS_WORKFLOW);
-    w = raw ? fromJson(raw) : oakParkInvoice();
-  } catch {
-    w = oakParkInvoice();
-  }
+  let w = loadStoredWorkflow() ?? oakParkInvoice();
   w = room(w);
-  persist(w);
+  persistWorkflow(w);
   return w;
-}
-
-function persist(w: WorkflowDoc) {
-  localStorage.setItem(LS_WORKFLOW, toJson(w));
 }
 
 /** Push tiles apart so long edge labels (e.g. invoice > $50,000) fit. */
@@ -194,22 +186,16 @@ export const useStore = create<{
   commit: (next) => {
     const { workflow, past } = get();
     const placed = room(next);
-    persist(placed);
-    set({
-      workflow: placed,
-      past: [...past, clone(workflow)].slice(-80),
-      future: [],
-    });
+    persistWorkflow(placed);
+    set(commitHistory(workflow, past, placed));
   },
   undo: () => {
     const { past, workflow, future } = get();
-    const prev = past.at(-1);
-    if (!prev) return;
-    persist(prev);
+    const stacks = undoHistory(past, workflow, future);
+    if (!stacks) return;
+    persistWorkflow(stacks.workflow);
     set({
-      workflow: prev,
-      past: past.slice(0, -1),
-      future: [clone(workflow), ...future],
+      ...stacks,
       linkFrom: null,
       linkMenu: null,
       pathPick: null,
@@ -217,13 +203,11 @@ export const useStore = create<{
   },
   redo: () => {
     const { past, workflow, future } = get();
-    const nxt = future[0];
-    if (!nxt) return;
-    persist(nxt);
+    const stacks = redoHistory(past, workflow, future);
+    if (!stacks) return;
+    persistWorkflow(stacks.workflow);
     set({
-      workflow: nxt,
-      past: [...past, clone(workflow)],
-      future: future.slice(1),
+      ...stacks,
       linkFrom: null,
       linkMenu: null,
       pathPick: null,

@@ -4,7 +4,7 @@
  */
 import { Button, Group, Kbd, Modal, Stack, Text } from "@mantine/core";
 import { ACTION_LABELS, prettyKey, type KeyAction } from "./bindings";
-import { KeyPreset } from "../model/catalogs";
+import { KeyPreset } from "../workflow/catalogs";
 import { useStore } from "../state/store";
 
 const ACTIONS = Object.keys(ACTION_LABELS) as KeyAction[];

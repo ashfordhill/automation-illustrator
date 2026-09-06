@@ -3,8 +3,8 @@
  * Consumed by useAppKeys.ts (runtime) and KeybindsModal.tsx (rebind UI).
  * Store holds the live map; Toolbar shows prettyKey in tooltips.
  */
-import { KeyAction, KeyPreset } from "../model/catalogs";
-import { LS_KEYMAP } from "../persist/workflowJson";
+import { KeyAction, KeyPreset } from "../workflow/catalogs";
+import { LS_KEYMAP } from "../state/persistence";
 
 export { KeyAction, KeyPreset };
 

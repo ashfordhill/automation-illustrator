@@ -1,10 +1,10 @@
 /**
  * Global keydown handler for tools, undo, pan, help, present toggle, path pick,
- * + submenu, and path label / dash. Mounted once from App.tsx.
+ * + submenu, and path label / dash. Mounted once from app/App.tsx.
  */
 import { useEffect } from "react";
-import { KeyAction, SelectionKind, Tool, ViewMode, WorkflowNodeKind } from "../model/catalogs";
-import { panBy } from "../state/reactFlowBridge";
+import { panBy } from "../board/reactFlowBridge";
+import { KeyAction, SelectionKind, Tool, ViewMode, WorkflowNodeKind } from "../workflow/catalogs";
 import { useStore } from "../state/store";
 import { actionFor, eventKey, keyIs, type KeyAction as KeyActionT } from "./bindings";
 

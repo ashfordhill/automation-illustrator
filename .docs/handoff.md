@@ -151,3 +151,41 @@ Corrections in the same chat before the next slice starts get their own short en
 - Known limitations / follow-ups: none
 - Status: COMPLETE
 - Commit: `docs(relay): commit slices without waiting for review`
+
+## Slice 02 — feature-oriented source structure — 2026-09-06
+
+- Starting commit: `8f74bb8b2d5215a590392c99b44f9e1512b749c0` (`docs(relay): commit slices without waiting for review`)
+- Working tree at start: clean, branch `main`, 3 commits ahead of `origin/main` (not pushed)
+- GOAL clauses addressed: n/a (mechanical source layout; no product-clause behavior change). P-10 stack unchanged. Section 3 source layout only.
+- Library research and decisions: no new dependencies. `workflow/` stays framework-free (no React / React Flow / Mantine / `board/` imports). No index barrels. `projection.ts` and `interaction.ts` were not created (Slices 10 and 6).
+- Files changed:
+  - Moves per BUILD_PLAN Section 3 mapping: `app/` (App, components, inspector, styles), `board/` (nodes, tiles, controls, routing, layout, reactFlowBridge), `workflow/` (types, catalogs, scoring, ids), `demos/oakParkInvoice.ts`, `state/persistence.ts` (from `persist/workflowJson.ts`)
+  - Split: `src/workflow/graph.ts` (outgoingSorted, edgeIsDotted, defaultDashed, applyDashForSplit, nextPortIndex, maybeExclusiveSplit); `src/board/layout/spreadForLabels.ts` (interim until Slice 9)
+  - Combined: `src/workflow/actors.ts` (`colors.ts` plus `defaultActors`, `makeHuman`, `makeRobot`, `aliceId`, `defaultRobotId`)
+  - Extracted: `src/state/history.ts` (commit/undo/redo stacks, cap 80) and persist helpers on `state/persistence.ts`; store calls them with unchanged behavior
+  - Removed obsolete top-level folders: `chrome`, `details`, `tiles`, `model`, `persist`, `identity`, `actors`, `visual`, `demo`; deleted `pathGeometry.ts` and `colors.ts` (no compatibility wrappers)
+  - Tests: `src/app/App.test.tsx` (moved with App), `src/workflow/graph.test.ts`, `src/state/history.test.ts`, `e2e/structure.spec.ts`
+  - Evidence: `.docs/evidence/02-structure/`
+  - This handoff entry
+- Behavior implemented: none for users. Same Oak Park demo, views, inspector, and hamburger. Production CSS chunk hash unchanged (`index-D8rVQ0Dg.css`); JS chunk grew slightly from extra modules (`index-92BucQUc.js` 693.96 kB vs Slice 1 `index-qUQ12B_w.js` 693.72 kB).
+- Tests and exact results:
+  - `npm install` at start — up to date, audited 134 packages, 0 vulnerabilities
+  - `npm run build` at start — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning)
+  - `npm run test:unit` at start — pass (1 file, 3 tests)
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; built in 1.01s; existing chunk-size warning)
+  - `npm run test:unit` — pass (3 files, 7 tests)
+  - `npm run test:e2e` — pass (7 passed, Chromium, 13.4s including webServer)
+- Evidence:
+  - `.docs/evidence/02-structure/before-light-1440.png` — demo Before, inspector idle copy, score footer (1440×900)
+  - `.docs/evidence/02-structure/after-light-1440.png` — After selected; Robot on automated Steps, Alice on Review (1440×900)
+  - `.docs/evidence/02-structure/both-light-1440.png` — stacked Before/After (1440×900)
+  - `.docs/evidence/02-structure/hamburger-keyboard-1440.png` — Menu opened from the keyboard; Present first (1440×900)
+  - `.docs/evidence/02-structure/before-light-1024.png` — same Before board at 1024×768
+- Earlier-slice defects fixed: none
+- Known limitations / follow-ups:
+  - CSS tokens/classes still named `--chrome-*` / `chrome-bar` (visual language, Slice 8)
+  - Document is v1; connect allows cycles/orphans; history cap 80; destructive demo fallback — Slices 3–4
+  - Demo IDs are still random `nid()` — Slice 5
+  - Pointer/Hand tool, idle helper chips, implicit empty-canvas Step, Path delete, inspector “Arrow” copy — later slices per BUILD_PLAN
+- Status: COMPLETE
+- Commit: `feat(slice-02): reorganize source into feature folders`

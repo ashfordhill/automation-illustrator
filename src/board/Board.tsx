@@ -20,14 +20,14 @@ import {
   SelectionKind,
   Tool,
   WorkflowNodeKind,
-} from "../model/catalogs";
-import { isStepNode } from "../model/types";
-import { bindReactFlow } from "../state/reactFlowBridge";
+} from "../workflow/catalogs";
+import { isStepNode } from "../workflow/types";
+import { bindReactFlow } from "./reactFlowBridge";
 import { useStore } from "../state/store";
-import { edgeTypes, nodeTypes, type Lane } from "./reactFlowRegistry";
-import { FIELD_H, FIELD_W, GRID, STEP_H, STEP_W } from "./tileMetrics";
+import { edgeTypes, nodeTypes, type Lane } from "./nodes/reactFlowRegistry";
+import { FIELD_H, FIELD_W, GRID, STEP_H, STEP_W } from "./layout/tileMetrics";
 
-/** Clicking a tile should send Delete to the board, not a leftover details field. */
+/** Clicking a tile should send Delete to the board, not a leftover inspector field. */
 function blurDetailsFocus() {
   queueMicrotask(() => {
     const ae = document.activeElement;
