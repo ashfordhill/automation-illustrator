@@ -230,3 +230,43 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(slice-03): add v2 schema, migration, and recovery core`
 
+## Slice 04 — graph invariants, pure commands, removal planning, and history — 2026-09-06
+
+- Starting commit: `7e48136f0a43f96036fea3c9cefaac054f7049e4` (`feat(slice-03): add v2 schema, migration, and recovery core`)
+- Working tree at start: clean, branch `main`, 5 commits ahead of `origin/main` (not pushed)
+- GOAL clauses addressed: WG-01 (first Step is the root), WG-02 (sole root; no incoming Path), WG-03 / WG-04 (connect rejects cycles, duplicates, and root/reachability violations before mutation), WG-05 (Paths are not independently removable; Delete explains Node removal), WG-06 (root cannot be removed), WG-10 (1:1 / 1:N / N:1 auto restitch), WG-11 (M:N nearest pairings generated and validated; store blocks apply until the Slice 6 picker), WG-12 (condition join with ` + `, duplicate collapse), WG-13 (500 history; one structural entry; one text entry per keystroke; undo/redo do not change view), PC-04 (collapsed Path dotted if any replaced Path was dotted), BA-09 / MG-10 (pruneAfterOverlay skeleton), AQ-06 (command, pairing, history, store invariant tests)
+- Library research and decisions: no new dependencies. Commands stay in framework-free `workflow/commands.ts` and reuse Slice 3 `validateWorkflow`. New Path ids use existing `nid(IdPrefix.Edge)`. History stays document snapshots (not a new library); `replaceHistory` is the New/Demo/Import boundary.
+- Files changed:
+  - Commands/graph: `src/workflow/commands.ts` (new), `src/workflow/graph.ts` (`rootNodeId`, `reachableFrom`, `wouldCreateCycle`, `incomingSorted`)
+  - History/store: `src/state/history.ts` (cap 500, `commitStructural` / `commitText` / `replaceHistory`), `src/state/store.ts` (command wiring, `hintNotice`, no Path detach/delete)
+  - UI: `src/app/inspector/SelectedItemForm.tsx` (Path Delete button removed), `src/app/components/CanvasHelper.tsx` (notice chip), `src/app/styles/tokens.css`, `src/board/controls/OutgoingPathPad.tsx`, `src/keyboard/useAppKeys.ts` (Backspace no longer deletes)
+  - Tests: `src/workflow/commands.test.ts`, `src/workflow/graph.test.ts`, `src/state/history.test.ts`, `src/state/store.commands.test.ts`, `e2e/commands.spec.ts`
+  - Evidence: `.docs/evidence/04-commands/`
+  - This handoff entry
+- Behavior implemented: connecting two Nodes is rejected with a visible hint when it would cycle, duplicate, or enter the root. The first Step on an empty board is the sole root; a disconnected second Node is refused. Node Delete (inspector / Delete key) applies the auto restitch plan for leaf, 1:1, 1:N, and N:1. Root removal and many-to-many removal are blocked with a hint. Selecting a Path and pressing Delete (or confirming −) explains that a Node must be removed instead. New / Demo / Import clear undo history. Undo/redo never change Before/After/Both.
+- Tests and exact results:
+  - `npm install` at start — up to date, audited 135 packages, 0 vulnerabilities
+  - `npm run build` at start — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning)
+  - `npm run test:unit` at start — pass (7 files, 25 tests)
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; built in 1.01s; existing chunk-size warning; client `index-C2U4kTeD.js` 796.70 kB)
+  - `npm run test:unit` — pass (9 files, 54 tests)
+  - `npm run test:e2e` — pass (13 passed, Chromium, 16.6s including webServer)
+- Evidence:
+  - `.docs/evidence/04-commands/before-light-1440.png` — demo Before after command wiring (1440×900)
+  - `.docs/evidence/04-commands/after-light-1440.png` — After lane; Robot on automated Steps (1440×900)
+  - `.docs/evidence/04-commands/both-light-1440.png` — stacked Before/After (1440×900)
+  - `.docs/evidence/04-commands/before-light-1024.png` — same Before board at 1024×768
+  - `.docs/evidence/04-commands/path-no-delete-1440.png` — Path selected; inspector has no Delete; hint says Paths cannot be removed (1440×900)
+  - `.docs/evidence/04-commands/root-blocked-1440.png` — root Step selected, Delete blocked with root explanation in the hint strip (1440×900)
+- Earlier-slice defects fixed: Backspace was handled as Delete before the Undo binding, so the default Undo key removed Nodes. Delete is now the only removal key; Backspace remains Undo (WG-05, SH-14). Direct Path deletion and `detachPath` could leave invalid graphs; both mutations are gone (WG-05).
+- Known limitations / follow-ups:
+  - `−` / Delete / inspector still lack the WG-08 picker, first-child highlight, and M:N pairing UI; store blocks M:N with a hint — Slice 6
+  - After-only Path restitch on the After projection (full BA-09) — Slice 10
+  - `connectAfter`, merge convexity on Before connect, After-only create — Slice 11
+  - Recovery UI and empty-board Add Step — Slice 5
+  - Inspector still titles a Path “Arrow”; Path / condition copy — Slice 7
+  - Pointer/Hand tool, idle helper chips, implicit empty-canvas Step — later slices per BUILD_PLAN
+  - Demo IDs are still random `nid()` — Slice 5
+- Status: COMPLETE
+- Commit: `feat(slice-04): add graph commands and bounded history`
+

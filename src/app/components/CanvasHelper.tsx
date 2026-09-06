@@ -27,11 +27,14 @@ function hintsFor(): Hint[] {
   const k = s.keymap;
   const pk = (a: (typeof KeyAction)[keyof typeof KeyAction]) => prettyKey(k[a]);
 
+  if (s.hintNotice) {
+    return [{ key: "Note", label: s.hintNotice }];
+  }
   if (s.pathPick) {
     return [
       { key: pk(KeyAction.PanUp), label: "Previous path" },
       { key: pk(KeyAction.PanDown), label: "Next path" },
-      { key: pk(KeyAction.PathConfirm), label: "Detach" },
+      { key: pk(KeyAction.PathConfirm), label: "Paths aren't removed" },
       { key: "Esc", label: "Cancel" },
     ];
   }
@@ -39,7 +42,7 @@ function hintsFor(): Hint[] {
     return [
       { key: "Click", label: "Connect existing tile" },
       { key: "Click", label: "Empty board → new step" },
-      { key: pk(KeyAction.DetachPath), label: "Detach instead" },
+      { key: pk(KeyAction.DetachPath), label: "Can't remove a Path" },
       { key: "Esc", label: "Cancel" },
     ];
   }
@@ -48,15 +51,15 @@ function hintsFor(): Hint[] {
       { key: pk(KeyAction.AddBranchStep), label: "New step" },
       { key: pk(KeyAction.AddBranchData), label: "New data" },
       { key: pk(KeyAction.LinkExisting), label: "Link existing" },
-      { key: pk(KeyAction.DetachPath), label: "Detach path" },
+      { key: pk(KeyAction.DetachPath), label: "Can't remove a Path" },
       { key: "Esc", label: "Cancel" },
     ];
   }
   if (s.selected?.type === SelectionKind.Edge) {
     return [
       { key: pk(KeyAction.ToggleDash), label: "Solid / dotted" },
-      { key: pk(KeyAction.PathConfirm), label: "Edit label" },
-      { key: pk(KeyAction.Delete), label: "Delete path" },
+      { key: pk(KeyAction.PathConfirm), label: "Edit condition" },
+      { key: pk(KeyAction.Delete), label: "Can't remove a Path" },
     ];
   }
   if (s.selected?.type === SelectionKind.Node) {
@@ -65,7 +68,7 @@ function hintsFor(): Hint[] {
     const items: Hint[] = [
       { key: pk(KeyAction.AddPath), label: "Add path" },
     ];
-    if (outs) items.push({ key: pk(KeyAction.DetachPath), label: "Detach path" });
+    if (outs) items.push({ key: pk(KeyAction.DetachPath), label: "Can't remove a Path" });
     items.push({ key: pk(KeyAction.Delete), label: n?.type === WorkflowNodeKind.DataField ? "Delete data" : "Delete step" });
     return items;
   }
@@ -83,6 +86,7 @@ export function CanvasHelper() {
   useStore((s) => s.linkFrom);
   useStore((s) => s.pathPick);
   useStore((s) => s.keymap);
+  useStore((s) => s.hintNotice);
   if (present) return null;
   const items = hintsFor();
   return (

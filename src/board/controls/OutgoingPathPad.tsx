@@ -50,7 +50,7 @@ export function OutgoingPathPad({ nodeId }: { nodeId: string }) {
         </button>
         <button
           type="button"
-          title="Choose a path to detach"
+          title="Paths cannot be removed directly"
           onClick={() => useStore.getState().beginPathPick(nodeId)}
           disabled={count === 0}
           style={{

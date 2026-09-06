@@ -221,6 +221,9 @@ body,
   font-weight: 800;
   font-size: 12px;
   box-shadow: var(--chip-shadow);
+  max-width: 100%;
+  white-space: normal;
+  text-align: left;
 }
 
 .canvas-helper-chip kbd {

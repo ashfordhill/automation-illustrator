@@ -169,7 +169,7 @@ export function useAppKeys() {
 
       if (
         s.selected &&
-        (isDeleteKey(e) || action === KeyAction.Delete || e.key === "Backspace")
+        (isDeleteKey(e) || action === KeyAction.Delete)
       ) {
         e.preventDefault();
         s.deleteSelection();

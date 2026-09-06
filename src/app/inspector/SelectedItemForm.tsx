@@ -167,9 +167,6 @@ export function DetailsPanel() {
             { value: "dotted", label: "Dotted" },
           ]}
         />
-        <Button color="red" variant="light" size="xs" onClick={() => useStore.getState().deleteSelection()}>
-          Delete
-        </Button>
       </Stack>
     );
   }

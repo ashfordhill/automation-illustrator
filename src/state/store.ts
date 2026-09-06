@@ -3,14 +3,14 @@
  * Canvas (board/Board.tsx) and app shell (Toolbar, DetailsPanel, CanvasHelper)
  * all read/write through here. persistence.ts handles localStorage JSON.
  *
- * commit / undo / redo — history.ts
- * addStep / addField — first step is New board; later tiles spawn from +
+ * commit / undo / redo — history.ts (500; replaceDoc is a document boundary)
+ * addStep — first Step is the root (WG-01); later tiles spawn from +
  * addHuman / addRobot — inspector + New person / + New robot
  * openLinkMenu / spawnBranch / beginLinkFrom — tile +
- * beginPathPick / detachPath — tile −
+ * beginPathPick — tile − (Path detach removed; picker is Slice 6)
  * toggleSelectedDash — selected Path solid/dotted
  * assignActor — inspector Who select
- * requestNew / confirmNew — hamburger New (undoable via commit)
+ * requestNew / confirmNew — hamburger New (history boundary)
  */
 import { create } from "zustand";
 import { spreadForLabels } from "../board/layout/spreadForLabels";
@@ -45,12 +45,19 @@ import {
   WorkflowNodeKind,
 } from "../workflow/catalogs";
 import {
+  MSG,
+  addConnectedNode,
+  applyNodeRemoval,
+  connectNodes,
+  createRootStep,
+  planNodeRemoval,
+} from "../workflow/commands";
+import {
   applyDashForSplit,
-  defaultDashed,
   edgeIsDotted,
-  maybeExclusiveSplit,
   nextPortIndex,
   outgoingSorted,
+  validateWorkflow,
 } from "../workflow/graph";
 import { nid } from "../workflow/ids";
 import {
@@ -61,16 +68,23 @@ import {
   laneAssignments,
   withLaneAssignments,
   type ActorDto,
-  type Assignments,
   type ColorScheme as ColorSchemeT,
   type NodeDto,
   type RobotKind as RobotKindT,
   type StepKind as StepKindT,
+  type StepNodeDto,
   type Tool as ToolT,
   type ViewMode as ViewModeT,
   type WorkflowDoc,
 } from "../workflow/types";
-import { commitHistory, redoHistory, undoHistory } from "./history";
+import {
+  commitStructural,
+  commitText,
+  redoHistory,
+  replaceHistory,
+  undoHistory,
+  type HistoryKind,
+} from "./history";
 import {
   hydratePersistedWorkflow,
   loadTheme,
@@ -138,7 +152,9 @@ export const useStore = create<{
   newConfirmOpen: boolean;
   persistStatus: PersistStatus;
   recovery: RecoveryState | null;
-  commit: (next: WorkflowDoc) => void;
+  hintNotice: string | null;
+  commit: (next: WorkflowDoc, kind?: HistoryKind) => void;
+  replaceDoc: (next: WorkflowDoc) => void;
   undo: () => void;
   redo: () => void;
   setView: (v: ViewModeT) => void;
@@ -177,7 +193,6 @@ export const useStore = create<{
   cyclePathPick: (dir: -1 | 1) => void;
   confirmPathPick: () => void;
   pickPathByEdge: (edgeId: string) => void;
-  detachPath: (edgeId: string) => void;
   requestNew: () => void;
   setNewConfirmOpen: (v: boolean) => void;
   confirmNew: () => void;
@@ -207,13 +222,41 @@ export const useStore = create<{
   newConfirmOpen: false,
   persistStatus: started.persistStatus,
   recovery: started.recovery,
+  hintNotice: null,
 
   /** Snapshot current board onto the undo stack, persist unless recovery holds the raw key. */
-  commit: (next) => {
+  commit: (next, kind = "structural") => {
+    const violations = validateWorkflow(next);
+    if (violations.length) {
+      set({ hintNotice: violations[0]!.message });
+      return;
+    }
     const { workflow, past, recovery } = get();
     const placed = room(next);
     const persistStatus = persistIfAllowed(placed, recovery);
-    set({ ...commitHistory(workflow, past, placed), persistStatus });
+    const stacks =
+      kind === "text"
+        ? commitText(workflow, past, placed)
+        : commitStructural(workflow, past, placed);
+    set({ ...stacks, persistStatus, hintNotice: null });
+  },
+  replaceDoc: (next) => {
+    const violations = validateWorkflow(next);
+    if (violations.length) {
+      set({ hintNotice: violations[0]!.message });
+      return;
+    }
+    const placed = room(next);
+    const persistStatus = persistIfAllowed(placed, get().recovery);
+    set({
+      ...replaceHistory(placed),
+      persistStatus,
+      selected: null,
+      linkFrom: null,
+      linkMenu: null,
+      pathPick: null,
+      hintNotice: null,
+    });
   },
   undo: () => {
     const { past, workflow, future, recovery } = get();
@@ -226,6 +269,7 @@ export const useStore = create<{
       linkFrom: null,
       linkMenu: null,
       pathPick: null,
+      hintNotice: null,
     });
   },
   redo: () => {
@@ -239,6 +283,7 @@ export const useStore = create<{
       linkFrom: null,
       linkMenu: null,
       pathPick: null,
+      hintNotice: null,
     });
   },
   setView: (view) => set({ view }),
@@ -253,7 +298,7 @@ export const useStore = create<{
       linkMenu: null,
       pathPick: null,
     }),
-  select: (selected) => set({ selected, linkMenu: null }),
+  select: (selected) => set({ selected, linkMenu: null, hintNotice: null }),
   setHelp: (helpOpen) => set({ helpOpen, capturing: helpOpen ? get().capturing : null }),
   setCapturing: (capturing) => set({ capturing }),
   setKey: (action, key) => {
@@ -287,15 +332,19 @@ export const useStore = create<{
   },
 
   addStep: (position, kind = StepKind.Other) => {
-    const { workflow, commit, lastHumanId } = get();
-    if (!position && workflow.nodes.some(isStepNode)) return "";
+    const { workflow, lastHumanId } = get();
+    if (workflow.nodes.length) {
+      if (!position && workflow.nodes.some(isStepNode)) return "";
+      set({ hintNotice: MSG.notEmpty });
+      return "";
+    }
     const id = nid(IdPrefix.Step);
     const human =
       lastHumanId ??
       aliceId(workflow.actors) ??
       workflow.actors.find((a) => a.kind === ActorKind.Human)?.id;
     const pos = position ?? vacantSpot(workflow.nodes, WorkflowNodeKind.Step);
-    const node: NodeDto = {
+    const node: StepNodeDto = {
       id,
       type: WorkflowNodeKind.Step,
       position: { x: snapToGrid(pos.x), y: snapToGrid(pos.y) },
@@ -306,43 +355,23 @@ export const useStore = create<{
     };
     const actors = workflow.actors.length ? workflow.actors : defaultActors();
     const hid = human ?? aliceId(actors);
-    commit({
-      ...workflow,
-      actors,
-      nodes: [...workflow.nodes, node],
-      assignments: {
-        ...workflow.assignments,
-        ...(hid ? { [id]: hid } : {}),
-      },
-      after: {
-        ...workflow.after,
-        assignments: {
-          ...workflow.after.assignments,
-          ...(hid ? { [id]: hid } : {}),
-        },
-      },
-    });
+    const result = createRootStep(
+      { ...workflow, actors },
+      node,
+      hid ? { beforeId: hid, afterId: hid } : undefined,
+    );
+    if (!result.ok) {
+      set({ hintNotice: result.message });
+      return "";
+    }
+    get().commit(result.value);
     set({ selected: { type: SelectionKind.Node, id }, lastHumanId: hid ?? lastHumanId });
     return id;
   },
-  addField: (position) => {
-    const id = nid(IdPrefix.DataField);
-    const { workflow, commit } = get();
-    const pos = position ?? vacantSpot(workflow.nodes, WorkflowNodeKind.DataField);
-    commit({
-      ...workflow,
-      nodes: [
-        ...workflow.nodes,
-        {
-          id,
-          type: WorkflowNodeKind.DataField,
-          position: { x: snapToGrid(pos.x), y: snapToGrid(pos.y) },
-          label: "Data",
-        },
-      ],
-    });
-    set({ selected: { type: SelectionKind.Node, id } });
-    return id;
+  addField: () => {
+    const { workflow } = get();
+    set({ hintNotice: workflow.nodes.length ? MSG.notEmpty : MSG.notStep });
+    return "";
   },
   addHuman: (name) => {
     const actor = makeHuman(name);
@@ -368,23 +397,27 @@ export const useStore = create<{
     if ("split" in patch) {
       edges = applyDashForSplit(nodes, edges, id);
     }
-    commit({ ...workflow, nodes, edges });
+    const textOnly =
+      !("split" in patch) && !("stepKind" in patch) && !("position" in patch);
+    commit({ ...workflow, nodes, edges }, textOnly ? "text" : "structural");
   },
   updateEdge: (id, patch) => {
     const { workflow, commit } = get();
+    const kind: HistoryKind = patch.dashed !== undefined ? "structural" : "text";
     commit({
       ...workflow,
       edges: workflow.edges.map((e) => (e.id === id ? { ...e, ...patch } : e)),
-    });
+    }, kind);
   },
   updateActor: (id, patch) => {
     const { workflow, commit } = get();
+    const textOnly = !("color" in patch) && !("robotKind" in patch) && !("kind" in patch);
     commit({
       ...workflow,
       actors: workflow.actors.map((a) =>
         a.id === id ? ({ ...a, ...patch } as ActorDto) : a,
       ),
-    });
+    }, textOnly ? "text" : "structural");
   },
   /** Before lane refuses robots; lastHumanId remembers who to stamp on new steps. */
   assignActor: (stepId, actorId) => {
@@ -396,59 +429,58 @@ export const useStore = create<{
     if (isHuman(actor)) set({ lastHumanId: actorId });
   },
   connect: (source, target, label = "") => {
-    if (source === target) return;
-    const { workflow, commit } = get();
-    if (workflow.edges.some((e) => e.source === source && e.target === target)) return;
-    let nodes = workflow.nodes;
-    const edges = [
-      ...workflow.edges,
-      {
-        id: nid(IdPrefix.Edge),
-        source,
-        target,
-        label,
-        dashed: defaultDashed(workflow.edges, source),
-      },
-    ];
-    nodes = maybeExclusiveSplit(nodes, edges, source);
-    commit({ ...workflow, nodes, edges });
+    const { workflow } = get();
+    const result = connectNodes(workflow, source, target, { label });
+    if (!result.ok) {
+      set({ hintNotice: result.message });
+      return;
+    }
+    get().commit(result.value);
   },
   deleteSelection: () => {
-    const { selected, workflow, commit } = get();
+    const { selected, workflow } = get();
     if (!selected) return;
     if (selected.type === SelectionKind.Node) {
-      const id = selected.id;
-      const dropAssign = (lane: Assignments) => {
-        const next = { ...lane };
-        delete next[id];
-        return next;
-      };
-      commit({
-        ...workflow,
-        nodes: workflow.nodes.filter((n) => n.id !== id),
-        edges: workflow.edges.filter((e) => e.source !== id && e.target !== id),
-        assignments: dropAssign(workflow.assignments),
-        after: { ...workflow.after, assignments: dropAssign(workflow.after.assignments) },
+      const planned = planNodeRemoval(workflow, selected.id);
+      if (!planned.ok) {
+        set({ hintNotice: planned.message });
+        return;
+      }
+      if (planned.value.mode === "preview") {
+        set({ hintNotice: MSG.manyToMany });
+        return;
+      }
+      const applied = applyNodeRemoval(workflow, planned.value);
+      if (!applied.ok) {
+        set({ hintNotice: applied.message });
+        return;
+      }
+      get().commit(applied.value);
+      set({
+        selected: null,
+        linkFrom: null,
+        linkMenu: null,
+        pathPick: null,
+        hintNotice: planned.value.overlayEffects.notices[0] ?? null,
       });
-    } else if (selected.type === SelectionKind.Edge) {
-      commit({
-        ...workflow,
-        edges: workflow.edges.filter((e) => e.id !== selected.id),
-      });
-    } else {
-      const used = Object.values(workflow.assignments)
-        .concat(Object.values(workflow.after.assignments))
-        .includes(selected.id);
-      if (used) return;
-      commit({
-        ...workflow,
-        actors: workflow.actors.filter((a) => a.id !== selected.id),
-      });
+      return;
     }
+    if (selected.type === SelectionKind.Edge) {
+      set({ hintNotice: MSG.pathRemoval });
+      return;
+    }
+    const used = Object.values(workflow.assignments)
+      .concat(Object.values(workflow.after.assignments))
+      .includes(selected.id);
+    if (used) return;
+    get().commit({
+      ...workflow,
+      actors: workflow.actors.filter((a) => a.id !== selected.id),
+    });
     set({ selected: null, linkFrom: null, linkMenu: null, pathPick: null });
   },
 
-  closeBoardModes: () => set({ linkFrom: null, linkMenu: null, pathPick: null }),
+  closeBoardModes: () => set({ linkFrom: null, linkMenu: null, pathPick: null, hintNotice: null }),
   openLinkMenu: (sourceId) => {
     const { linkMenu } = get();
     if (linkMenu === sourceId) {
@@ -463,7 +495,7 @@ export const useStore = create<{
     });
   },
   spawnBranch: (sourceId, type) => {
-    const { workflow, commit, lastHumanId } = get();
+    const { workflow, lastHumanId } = get();
     const src = workflow.nodes.find((n) => n.id === sourceId);
     if (!src) {
       set({ linkMenu: null, linkFrom: null });
@@ -471,21 +503,19 @@ export const useStore = create<{
     }
     const port = nextPortIndex(workflow.edges, sourceId);
     const pos = clearDockPosition(src, type, port, workflow.nodes);
-    const dashed = defaultDashed(workflow.edges, sourceId);
     if (type === WorkflowNodeKind.DataField) {
       const id = nid(IdPrefix.DataField);
-      const node: NodeDto = {
+      const result = addConnectedNode(workflow, sourceId, {
         id,
         type: WorkflowNodeKind.DataField,
         position: pos,
         label: "Data",
-      };
-      const edges = [
-        ...workflow.edges,
-        { id: nid(IdPrefix.Edge), source: sourceId, target: id, label: "", dashed },
-      ];
-      const nodes = maybeExclusiveSplit([...workflow.nodes, node], edges, sourceId);
-      commit({ ...workflow, nodes, edges });
+      });
+      if (!result.ok) {
+        set({ hintNotice: result.message });
+        return "";
+      }
+      get().commit(result.value);
       set({
         linkFrom: null,
         linkMenu: null,
@@ -499,36 +529,25 @@ export const useStore = create<{
       lastHumanId ??
       aliceId(workflow.actors) ??
       workflow.actors.find((a) => a.kind === ActorKind.Human)?.id;
-    const node: NodeDto = {
-      id,
-      type: WorkflowNodeKind.Step,
-      position: pos,
-      stepKind: StepKind.Other,
-      title: STEP_KIND_META[StepKind.Other].defaultTitle,
-      detail: "",
-      split: SplitKind.Exclusive,
-    };
-    const edges = [
-      ...workflow.edges,
-      { id: nid(IdPrefix.Edge), source: sourceId, target: id, label: "", dashed },
-    ];
-    const nodes = maybeExclusiveSplit([...workflow.nodes, node], edges, sourceId);
-    commit({
-      ...workflow,
-      nodes,
-      edges,
-      assignments: {
-        ...workflow.assignments,
-        ...(human ? { [id]: human } : {}),
+    const result = addConnectedNode(
+      workflow,
+      sourceId,
+      {
+        id,
+        type: WorkflowNodeKind.Step,
+        position: pos,
+        stepKind: StepKind.Other,
+        title: STEP_KIND_META[StepKind.Other].defaultTitle,
+        detail: "",
+        split: SplitKind.Exclusive,
       },
-      after: {
-        ...workflow.after,
-        assignments: {
-          ...workflow.after.assignments,
-          ...(human ? { [id]: human } : {}),
-        },
-      },
-    });
+      human ? { beforeId: human, afterId: human } : undefined,
+    );
+    if (!result.ok) {
+      set({ hintNotice: result.message });
+      return "";
+    }
+    get().commit(result.value);
     set({
       linkFrom: null,
       linkMenu: null,
@@ -552,9 +571,11 @@ export const useStore = create<{
   },
   cancelLinkFrom: () => set({ linkFrom: null, linkMenu: null }),
   completeLinkTo: (targetId) => {
-    const { linkFrom, connect } = get();
+    const { linkFrom, workflow } = get();
     if (!linkFrom || linkFrom === targetId) return;
-    connect(linkFrom, targetId);
+    const before = workflow;
+    get().connect(linkFrom, targetId);
+    if (get().workflow === before) return;
     set({
       linkFrom: null,
       linkMenu: null,
@@ -613,26 +634,15 @@ export const useStore = create<{
     set({ pathPick: { ...pathPick, index } });
   },
   confirmPathPick: () => {
-    const { pathPick, workflow, detachPath } = get();
-    if (!pathPick) return;
-    const outs = outgoingSorted(workflow.nodes, workflow.edges, pathPick.sourceId);
-    const edge = outs[pathPick.index];
-    if (edge) detachPath(edge.id);
+    if (!get().pathPick) return;
+    set({ pathPick: null, hintNotice: MSG.pathRemoval });
   },
   pickPathByEdge: (edgeId) => {
-    const { pathPick, workflow, detachPath } = get();
+    const { pathPick, workflow } = get();
     if (!pathPick) return;
     const outs = outgoingSorted(workflow.nodes, workflow.edges, pathPick.sourceId);
     if (!outs.some((e) => e.id === edgeId)) return;
-    detachPath(edgeId);
-  },
-  detachPath: (edgeId) => {
-    const { workflow, commit } = get();
-    const edge = workflow.edges.find((e) => e.id === edgeId);
-    if (!edge) return;
-    let edges = workflow.edges.filter((e) => e.id !== edgeId);
-    commit({ ...workflow, edges });
-    set({ pathPick: null });
+    set({ pathPick: null, hintNotice: MSG.pathRemoval });
   },
 
   requestNew: () => {
@@ -647,19 +657,15 @@ export const useStore = create<{
   confirmNew: () => {
     const doc = freshBoard();
     const first = doc.nodes[0];
-    get().commit(doc);
+    get().replaceDoc(doc);
     set({
       newConfirmOpen: false,
       selected: first ? { type: SelectionKind.Node, id: first.id } : null,
-      linkFrom: null,
-      pathPick: null,
       view: ViewMode.Before,
-      linkMenu: null,
     });
   },
   loadDoc: (doc) => {
-    get().commit(doc);
-    set({ selected: null, linkFrom: null, linkMenu: null, pathPick: null });
+    get().replaceDoc(doc);
   },
   importRaw: (raw) => {
     const parsed = parseDocument(raw);

@@ -1,11 +1,15 @@
 /**
  * Undo/redo stacks for the workflow document.
- * Extracted from store.ts unchanged (capacity 80 until Slice 4).
+ * Structural create/connect/remove and per-keystroke text each push one entry.
+ * Replace actions (New / Demo / Import) use replaceHistory so undo cannot cross
+ * a document boundary (WG-13, SH-12).
  */
 import { clone } from "../workflow/ids";
 import type { WorkflowDoc } from "../workflow/types";
 
-const HISTORY_LIMIT = 80;
+export const HISTORY_LIMIT = 500;
+
+export type HistoryKind = "structural" | "text";
 
 export type HistoryStacks = {
   workflow: WorkflowDoc;
@@ -24,6 +28,27 @@ export function commitHistory(
     past: [...past, clone(workflow)].slice(-HISTORY_LIMIT),
     future: [],
   };
+}
+
+export function commitStructural(
+  workflow: WorkflowDoc,
+  past: WorkflowDoc[],
+  next: WorkflowDoc,
+): HistoryStacks {
+  return commitHistory(workflow, past, next);
+}
+
+export function commitText(
+  workflow: WorkflowDoc,
+  past: WorkflowDoc[],
+  next: WorkflowDoc,
+): HistoryStacks {
+  return commitHistory(workflow, past, next);
+}
+
+/** Explicit history boundary: the new document cannot undo into the previous one. */
+export function replaceHistory(next: WorkflowDoc): HistoryStacks {
+  return { workflow: clone(next), past: [], future: [] };
 }
 
 export function undoHistory(

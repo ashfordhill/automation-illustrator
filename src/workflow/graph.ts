@@ -95,9 +95,62 @@ export function applyDashForSplit(
   });
 }
 
+/** Incoming Paths of a tile, top-to-bottom (then left-to-right) by source position. */
+export function incomingSorted(nodes: NodeDto[], edges: EdgeDto[], targetId: string) {
+  return edges
+    .filter((e) => e.target === targetId)
+    .slice()
+    .sort((a, b) => {
+      const na = nodeOf(nodes, a.source);
+      const nb = nodeOf(nodes, b.source);
+      const ya = na?.position.y ?? 0;
+      const yb = nb?.position.y ?? 0;
+      if (ya !== yb) return ya - yb;
+      const xa = na?.position.x ?? 0;
+      const xb = nb?.position.x ?? 0;
+      if (xa !== xb) return xa - xb;
+      return a.source < b.source ? -1 : a.source > b.source ? 1 : 0;
+    });
+}
+
 /** Next stacked port index when adding another outgoing Path from a tile. */
 export function nextPortIndex(edges: EdgeDto[], sourceId: string) {
   return edges.filter((e) => e.source === sourceId).length;
+}
+
+/** The unique Node with no incoming Path, or null when empty / not unique (WG-02). */
+export function rootNodeId(nodes: NodeDto[], edges: EdgeDto[]): string | null {
+  if (!nodes.length) return null;
+  const incoming = new Set(edges.map((e) => e.target));
+  const roots = nodes.map((n) => n.id).filter((id) => !incoming.has(id));
+  return roots.length === 1 ? roots[0]! : null;
+}
+
+/** Nodes reachable by following Paths forward from `start` (includes `start`). */
+export function reachableFrom(start: string, edges: EdgeDto[]): Set<string> {
+  const outgoing = new Map<string, string[]>();
+  for (const e of edges) {
+    const list = outgoing.get(e.source);
+    if (list) list.push(e.target);
+    else outgoing.set(e.source, [e.target]);
+  }
+  const seen = new Set<string>([start]);
+  const queue = [start];
+  while (queue.length) {
+    const id = queue.shift()!;
+    for (const next of outgoing.get(id) ?? []) {
+      if (seen.has(next)) continue;
+      seen.add(next);
+      queue.push(next);
+    }
+  }
+  return seen;
+}
+
+/** True when source→target would close a directed cycle (self-loop included). */
+export function wouldCreateCycle(edges: EdgeDto[], source: string, target: string): boolean {
+  if (source === target) return true;
+  return reachableFrom(target, edges).has(source);
 }
 
 /** Mark a Step Exclusive once it has two or more outgoing Paths (unless already Parallel). */
