@@ -90,3 +90,45 @@ Corrections requested during review get their own short entry:
   - Pointer/Hand tool, idle helper chips, implicit empty-canvas Step, Path delete, inspector “Arrow” copy — later slices per BUILD_PLAN
 - Status: AWAITING USER REVIEW
 - Approved by user 2026-09-06 — commit subject `chore(slice-00): establish automation pitch baseline`
+
+## Slice 01 — contract verification and test harness — 2026-09-06
+
+- Starting commit: `ea4eb5d19f18197e4ad080fdf8855bfaef501b70` (`chore(slice-00): establish automation pitch baseline`). Slice 00's approval line recorded the subject only; HEAD matched that commit and the tree was clean.
+- Working tree at start: clean, branch `main`, 1 commit ahead of `origin/main` (not pushed).
+- GOAL clauses addressed: AQ-04 (axe smoke on the initial demo), AQ-07 (Playwright smoke for mount / view switch / demo), AQ-01 (keyboard reachability of the top bar), AQ-02 (icon-only Pointer/Hand/Undo names, only as needed for axe), P-04 (1024×768 screenshot)
+- Library research and decisions:
+  - GOAL.md Product..NG clauses match BUILD_PLAN Section 2 exactly (no transcription edits).
+  - Vitest 5.0.0 (Vite 8 compatible; Node >= 22.12). DOM environment via jsdom.
+  - jsdom 29.1.1 rather than 30: this machine is Node v22.17.1; jsdom 30 requires `^22.22.2`. Vitest 5 lists jsdom ^29.1.1 as its own test dependency.
+  - `@playwright/test` 1.63.0, Chromium only, `webServer` on `127.0.0.1:4177` (strictPort, no reuse) so e2e does not collide with a local `npm run dev`.
+  - `@axe-core/playwright` 4.13.0 with WCAG 2.2 AA tags.
+  - No `@testing-library/*`; unit tests render with `react-dom/client`. No other runtime libraries.
+- Files changed:
+  - Config/scripts: `package.json`, `package-lock.json`, `vite.config.ts` (Vitest `test` block), `playwright.config.ts`, `e2e/tsconfig.json`, `.gitignore` (Playwright/Vitest artifacts)
+  - Tests: `src/vitest.setup.ts`, `src/App.test.tsx`, `e2e/smoke.spec.ts`
+  - Product (minimal, axe): `src/chrome/Toolbar.tsx` — `aria-label` on Pointer, Hand, and Undo
+  - Evidence: `.docs/evidence/01-harness/*.png`
+  - This handoff entry
+- Behavior implemented: no graph or interaction changes. First visit still loads the Oak Park demo. The four scripts exist: `build`, `test:unit` (`vitest run`), `test:e2e` (`playwright test`), `test` (unit then e2e). Smoke coverage: App mount, Before/After/Both, Tab into the header and Enter on Menu, demo tiles (`Read invoice.pdf`), axe on the initial state.
+- Tests and exact results:
+  - `npm install` at start — up to date (69 packages); after adding harness, 134 packages, 0 vulnerabilities
+  - `npm run test:unit` at start — fail (`Missing script: "test:unit"`, expected until this slice)
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; built in 1.45s; existing chunk-size warning; client `index-qUQ12B_w.js` 693.72 kB from the aria-label strings)
+  - `npm run test:unit` — pass (1 file, 3 tests, 5.41s on the cached rerun)
+  - `npm run test:e2e` — pass (5 passed, Chromium, 9.8s including webServer)
+  - `npm test` — pass (both suites)
+- Evidence:
+  - `.docs/evidence/01-harness/before-light-1440.png` — demo Before, inspector idle copy, score footer (1440×900)
+  - `.docs/evidence/01-harness/after-light-1440.png` — After selected; Robot on automated Steps, Alice on Review (1440×900)
+  - `.docs/evidence/01-harness/both-light-1440.png` — stacked Before/After (1440×900)
+  - `.docs/evidence/01-harness/hamburger-keyboard-1440.png` — Menu opened from the keyboard; Present first (1440×900)
+  - `.docs/evidence/01-harness/before-light-1024.png` — same Before board at 1024×768
+- Earlier-slice defects fixed: Pointer, Hand, and Undo were icon-only with tooltip text but no accessible name. Axe `button-name` would fail on the initial state. Added `aria-label` matching the existing tooltips (no visual or click-behavior change).
+- Known limitations / follow-ups:
+  - Axe smoke excludes `.mantine-SegmentedControl-root`. Selected Before is white on Mantine cyan `#15aabf` (contrast 2.78:1). Restyle is Slice 8 (SH-01, P-09), not a harness-slice chrome redesign.
+  - First machine needs `npx playwright install chromium` (browsers are not in the repo).
+  - Source folders still `chrome`/`details`/`model`/… — Slice 2
+  - Document is v1; connect allows cycles/orphans; history cap 80; destructive demo fallback — Slices 3–4
+  - Demo IDs are still random `nid()` — Slice 5
+- Status: AWAITING USER REVIEW
+- Approved by user 2026-09-06

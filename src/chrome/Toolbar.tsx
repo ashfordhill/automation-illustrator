@@ -62,6 +62,7 @@ export function Toolbar() {
             <ActionIcon
               variant={tool === Tool.Pointer ? "filled" : "default"}
               color="cyan"
+              aria-label={`Pointer (${prettyKey(keymap[KeyAction.ToolPointer])})`}
               onClick={() => useStore.getState().setTool(Tool.Pointer)}
             >
               <IconPointer size={18} />
@@ -71,6 +72,7 @@ export function Toolbar() {
             <ActionIcon
               variant={tool === Tool.Hand ? "filled" : "default"}
               color="cyan"
+              aria-label={`Hand (${prettyKey(keymap[KeyAction.ToolHand])}) — pan, including over tiles`}
               onClick={() => useStore.getState().setTool(Tool.Hand)}
             >
               <IconHandStop size={18} />
@@ -80,6 +82,7 @@ export function Toolbar() {
             <ActionIcon
               variant="default"
               disabled={!past.length}
+              aria-label={`Undo (${prettyKey(keymap[KeyAction.Undo])} / Ctrl+Z)`}
               onClick={() => useStore.getState().undo()}
             >
               <IconArrowBackUp size={18} />
