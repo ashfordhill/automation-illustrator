@@ -14,8 +14,10 @@ import { CanvasHelper } from "./components/CanvasHelper";
 import { EmptyBoardCta } from "./components/EmptyBoardCta";
 import { ImportErrorModal } from "./components/ImportErrorModal";
 import { RecoveryModal } from "./components/RecoveryModal";
+import { RemovePickerHud } from "./components/RemovePickerHud";
 import { ReplaceDocumentModal } from "./components/ReplaceDocumentModal";
 import { Toolbar } from "./components/Toolbar";
+import { TransientNotice } from "./components/TransientNotice";
 import { DetailsPanel } from "./inspector/SelectedItemForm";
 
 const theme = createTheme({
@@ -146,6 +148,8 @@ export default function App() {
             <CanvasArea />
             <EmptyBoardCta />
             <CanvasHelper />
+            <TransientNotice />
+            <RemovePickerHud />
           </div>
         </AppShell.Main>
       </AppShell>

@@ -1,6 +1,7 @@
 /**
- * Top bar: pointer/hand, undo, Not saved, Before/After/Both, hamburger.
+ * Top bar: Undo, Not saved, Before/After/Both, hamburger.
  * Present keeps the automation score here because the right rail is hidden.
+ * Pointer/Hand were removed (P-08); sound toggle arrives in Slice 8.
  */
 import { useRef } from "react";
 import {
@@ -14,10 +15,8 @@ import {
 import {
   IconArrowBackUp,
   IconFileImport,
-  IconHandStop,
   IconMenu2,
   IconMoon,
-  IconPointer,
   IconPresentation,
   IconQuestionMark,
   IconSun,
@@ -27,7 +26,6 @@ import { prettyKey, KeyAction } from "../../keyboard/bindings";
 import { useStore } from "../../state/store";
 import {
   ColorScheme,
-  Tool,
   ViewMode,
 } from "../../workflow/catalogs";
 import { automationScore } from "../../workflow/scoring";
@@ -35,7 +33,6 @@ import { PersistStatusChip } from "./PersistStatusChip";
 
 export function Toolbar() {
   const view = useStore((s) => s.view);
-  const tool = useStore((s) => s.tool);
   const present = useStore((s) => s.present);
   const workflow = useStore((s) => s.workflow);
   const keymap = useStore((s) => s.keymap);
@@ -57,26 +54,6 @@ export function Toolbar() {
       >
         <Group gap="xs" wrap="nowrap">
           <Group gap="xs" className="chrome-hide" wrap="nowrap">
-            <Tooltip label={`Pointer (${prettyKey(keymap[KeyAction.ToolPointer])})`}>
-              <ActionIcon
-                variant={tool === Tool.Pointer ? "filled" : "default"}
-                color="cyan"
-                aria-label={`Pointer (${prettyKey(keymap[KeyAction.ToolPointer])})`}
-                onClick={() => useStore.getState().setTool(Tool.Pointer)}
-              >
-                <IconPointer size={18} />
-              </ActionIcon>
-            </Tooltip>
-            <Tooltip label={`Hand (${prettyKey(keymap[KeyAction.ToolHand])}) — pan, including over tiles`}>
-              <ActionIcon
-                variant={tool === Tool.Hand ? "filled" : "default"}
-                color="cyan"
-                aria-label={`Hand (${prettyKey(keymap[KeyAction.ToolHand])}) — pan, including over tiles`}
-                onClick={() => useStore.getState().setTool(Tool.Hand)}
-              >
-                <IconHandStop size={18} />
-              </ActionIcon>
-            </Tooltip>
             <Tooltip label={`Undo (${prettyKey(keymap[KeyAction.Undo])} / Ctrl+Z)`}>
               <ActionIcon
                 variant="default"

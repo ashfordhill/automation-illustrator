@@ -1,11 +1,12 @@
 /**
- * Global keydown handler for tools, undo, pan, help, present toggle, path pick,
- * + submenu, and path label / dash. Mounted once from app/App.tsx.
+ * Global keydown handler for undo, pan, help, present toggle, + menu,
+ * Connect existing, and the Node-removal picker. Mounted once from app/App.tsx.
  */
 import { useEffect } from "react";
 import { panBy } from "../board/reactFlowBridge";
-import { KeyAction, SelectionKind, Tool, ViewMode, WorkflowNodeKind } from "../workflow/catalogs";
+import { KeyAction, SelectionKind, ViewMode, WorkflowNodeKind } from "../workflow/catalogs";
 import { useStore } from "../state/store";
+import { isTransient } from "../state/interaction";
 import { actionFor, eventKey, keyIs, type KeyAction as KeyActionT } from "./bindings";
 
 /** True when Delete/Backspace should edit the field instead of the board. */
@@ -69,7 +70,7 @@ export function useAppKeys() {
       }
 
       if (e.key === "Escape") {
-        if (s.linkFrom || s.pathPick || s.linkMenu) {
+        if (isTransient(s.interaction)) {
           e.preventDefault();
           s.closeBoardModes();
           return;
@@ -87,63 +88,69 @@ export function useAppKeys() {
         return;
       }
 
-      if (s.pathPick) {
+      if (s.interaction.kind === "remove-pick") {
         const up =
           keyIs(map, KeyAction.PanUp, e) ||
-          e.key === "w" ||
-          e.key === "ArrowUp" ||
-          e.key === "W";
+          e.key === "ArrowUp";
         const down =
           keyIs(map, KeyAction.PanDown, e) ||
-          e.key === "s" ||
-          e.key === "ArrowDown" ||
-          e.key === "S";
+          e.key === "ArrowDown";
         if (up) {
           e.preventDefault();
-          s.cyclePathPick(-1);
+          s.cycleRemoveCandidate(-1);
           return;
         }
         if (down) {
           e.preventDefault();
-          s.cyclePathPick(1);
+          s.cycleRemoveCandidate(1);
           return;
         }
-        if (keyIs(map, KeyAction.PathConfirm, e) || e.key === "Enter") {
+        if (keyIs(map, KeyAction.Confirm, e) || e.key === "Enter" || isDeleteKey(e)) {
           e.preventDefault();
-          s.confirmPathPick();
-          return;
-        }
-      }
-
-      if (s.linkMenu) {
-        e.preventDefault();
-        if (keyIs(map, KeyAction.AddBranchStep, e)) {
-          s.spawnBranch(s.linkMenu, WorkflowNodeKind.Step);
-          return;
-        }
-        if (keyIs(map, KeyAction.AddBranchData, e)) {
-          s.spawnBranch(s.linkMenu, WorkflowNodeKind.DataField);
-          return;
-        }
-        if (keyIs(map, KeyAction.LinkExisting, e)) {
-          s.beginLinkFrom(s.linkMenu);
-          return;
-        }
-        if (keyIs(map, KeyAction.DetachPath, e)) {
-          s.beginPathPick(s.linkMenu);
-          return;
-        }
-        if (keyIs(map, KeyAction.AddPath, e)) {
-          s.openLinkMenu(s.linkMenu);
+          s.confirmRemove();
           return;
         }
         return;
       }
 
-      if (s.linkFrom) {
-        if (keyIs(map, KeyAction.DetachPath, e)) {
+      if (s.interaction.kind === "remove-preview") {
+        if (keyIs(map, KeyAction.Confirm, e) || e.key === "Enter") {
           e.preventDefault();
-          s.beginPathPick(s.linkFrom);
+          s.confirmRemove();
+          return;
+        }
+        return;
+      }
+
+      if (s.interaction.kind === "add-menu") {
+        e.preventDefault();
+        if (keyIs(map, KeyAction.AddBranchStep, e)) {
+          s.spawnBranch(s.interaction.sourceId, WorkflowNodeKind.Step);
+          return;
+        }
+        if (keyIs(map, KeyAction.AddBranchData, e)) {
+          s.spawnBranch(s.interaction.sourceId, WorkflowNodeKind.DataField);
+          return;
+        }
+        if (keyIs(map, KeyAction.LinkExisting, e)) {
+          s.beginLinkFrom(s.interaction.sourceId);
+          return;
+        }
+        if (keyIs(map, KeyAction.RemoveNode, e)) {
+          s.beginRemovePick(s.interaction.sourceId);
+          return;
+        }
+        if (keyIs(map, KeyAction.AddPath, e)) {
+          s.openLinkMenu(s.interaction.sourceId);
+          return;
+        }
+        return;
+      }
+
+      if (s.interaction.kind === "connect-existing") {
+        if (keyIs(map, KeyAction.RemoveNode, e)) {
+          e.preventDefault();
+          s.beginRemovePick(s.interaction.sourceId);
           return;
         }
         return;
@@ -155,7 +162,7 @@ export function useAppKeys() {
           s.toggleSelectedDash();
           return;
         }
-        if (keyIs(map, KeyAction.PathConfirm, e) || e.key === "Enter") {
+        if (keyIs(map, KeyAction.Confirm, e) || e.key === "Enter") {
           e.preventDefault();
           s.focusPathLabel();
           return;
@@ -168,9 +175,9 @@ export function useAppKeys() {
           s.openLinkMenu(s.selected.id);
           return;
         }
-        if (keyIs(map, KeyAction.DetachPath, e)) {
+        if (keyIs(map, KeyAction.RemoveNode, e)) {
           e.preventDefault();
-          s.beginPathPick(s.selected.id);
+          s.beginRemovePick(s.selected.id);
           return;
         }
       }
@@ -184,14 +191,6 @@ export function useAppKeys() {
         return;
       }
 
-      if (action === KeyAction.ToolPointer) {
-        s.setTool(Tool.Pointer);
-        return;
-      }
-      if (action === KeyAction.ToolHand) {
-        s.setTool(Tool.Hand);
-        return;
-      }
       if (action === KeyAction.Undo) {
         e.preventDefault();
         s.undo();

@@ -79,7 +79,7 @@ export function dockPosition(
 
 /**
  * Same as dockPosition, then walk down the column until the slot is empty.
- * Used by store.completeLinkNew.
+ * Used by store.spawnBranch when + creates a connected Node.
  */
 export function clearDockPosition(
   source: Placed,

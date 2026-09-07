@@ -47,8 +47,8 @@ export function DetailsPanel() {
             value={n.label}
             onChange={(e) => useStore.getState().updateNode(n.id, { label: e.target.value })}
           />
-          <Button color="red" variant="light" size="xs" onClick={() => useStore.getState().deleteSelection()}>
-            Delete
+          <Button color="red" variant="light" size="xs" onClick={() => useStore.getState().beginRemovePick(n.id)}>
+            Remove
           </Button>
         </Stack>
       );
@@ -136,8 +136,8 @@ export function DetailsPanel() {
             }
           />
         ) : null}
-        <Button color="red" variant="light" size="xs" onClick={() => useStore.getState().deleteSelection()}>
-          Delete
+        <Button color="red" variant="light" size="xs" onClick={() => useStore.getState().beginRemovePick(n.id)}>
+          Remove
         </Button>
       </Stack>
     );

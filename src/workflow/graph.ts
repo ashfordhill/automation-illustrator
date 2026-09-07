@@ -113,6 +113,40 @@ export function incomingSorted(nodes: NodeDto[], edges: EdgeDto[], targetId: str
     });
 }
 
+/**
+ * WG-08: the host plus Nodes on incident Paths, excluding the root (WG-06).
+ * Order is outgoing children, then the host, then predecessors.
+ */
+export function removalCandidateIds(nodes: NodeDto[], edges: EdgeDto[], hostId: string): string[] {
+  const root = rootNodeId(nodes, edges);
+  const seen = new Set<string>();
+  const ids: string[] = [];
+  const add = (id: string) => {
+    if (!id || seen.has(id) || id === root) return;
+    if (!nodes.some((n) => n.id === id)) return;
+    seen.add(id);
+    ids.push(id);
+  };
+  for (const e of outgoingSorted(nodes, edges, hostId)) add(e.target);
+  add(hostId);
+  for (const e of incomingSorted(nodes, edges, hostId)) add(e.source);
+  return ids;
+}
+
+/** WG-09: first outgoing child; a leaf defaults to itself when it is removable. */
+export function defaultRemovalCandidateId(
+  nodes: NodeDto[],
+  edges: EdgeDto[],
+  hostId: string,
+): string | null {
+  const candidates = removalCandidateIds(nodes, edges, hostId);
+  if (!candidates.length) return null;
+  const firstChild = outgoingSorted(nodes, edges, hostId)[0]?.target;
+  if (firstChild && candidates.includes(firstChild)) return firstChild;
+  if (candidates.includes(hostId)) return hostId;
+  return candidates[0] ?? null;
+}
+
 /** Next stacked port index when adding another outgoing Path from a tile. */
 export function nextPortIndex(edges: EdgeDto[], sourceId: string) {
   return edges.filter((e) => e.source === sourceId).length;

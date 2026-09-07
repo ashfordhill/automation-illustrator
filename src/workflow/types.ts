@@ -22,7 +22,6 @@ export {
   SelectionKind,
   SplitKind,
   StepKind,
-  Tool,
   ViewMode,
   WorkflowNodeKind,
   WORKFLOW_VERSION,

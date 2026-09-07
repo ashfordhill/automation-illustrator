@@ -23,8 +23,8 @@ export function KeybindsModal() {
       size="lg"
     >
       <Text size="sm" className="hint-copy" mb="sm">
-      Click a key to rebind it. The board helper at the top of the canvas uses these
-      mappings. During path detach, Up/Down or W/S cycle the flashing arrows.
+      Click a key to rebind it. Contextual hints on the canvas use these mappings.
+      During Node removal, Up/Down choose a candidate and Enter confirms.
       </Text>
       <Group mb="sm">
         <Button
@@ -55,7 +55,7 @@ export function KeybindsModal() {
           </Group>
         ))}
         <Group justify="space-between">
-          <Text size="sm">Cancel link / detach</Text>
+          <Text size="sm">Cancel link / remove picker</Text>
           <Kbd>Esc</Kbd>
         </Group>
       </Stack>

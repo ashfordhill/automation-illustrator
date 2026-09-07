@@ -2,7 +2,7 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { DemoId } from "../demos/catalog";
 import { freshBoard, isEmptyBoard, OAK_PARK_IDS } from "../demos/oakParkInvoice";
 import { MAILROOM_IDS } from "../demos/robotMailroom";
-import { ColorScheme, Tool, ViewMode } from "../workflow/catalogs";
+import { ColorScheme, ViewMode } from "../workflow/catalogs";
 import * as persist from "./persistence";
 import { useStore } from "./store";
 
@@ -11,7 +11,6 @@ function resetSession() {
   const s = useStore.getState();
   s.resetDemo();
   s.setView(ViewMode.Before);
-  s.setTool(Tool.Pointer);
   s.setPresent(false);
   s.select(null);
   s.setHelp(false);

@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import { SplitKind, StepKind, WorkflowNodeKind } from "./catalogs";
-import { edgeIsDotted, outgoingSorted, rootNodeId, wouldCreateCycle } from "./graph";
+import { edgeIsDotted, defaultRemovalCandidateId, outgoingSorted, removalCandidateIds, rootNodeId, wouldCreateCycle } from "./graph";
 import type { EdgeDto, NodeDto } from "./types";
 
 function step(id: string, y: number): NodeDto {
@@ -49,4 +49,19 @@ test("wouldCreateCycle detects self-loops and paths back to the source", () => {
   expect(wouldCreateCycle(edges, "c", "a")).toBe(true);
   expect(wouldCreateCycle(edges, "a", "a")).toBe(true);
   expect(wouldCreateCycle(edges, "a", "c")).toBe(false);
+});
+
+test("removal candidates skip the root; leaf defaults to itself (WG-08, WG-09)", () => {
+  const nodes = [step("r", 0), step("a", 10), step("b", 40)];
+  const edges: EdgeDto[] = [
+    { id: "e1", source: "r", target: "a", label: "" },
+    { id: "e2", source: "a", target: "b", label: "" },
+  ];
+  expect(removalCandidateIds(nodes, edges, "r")).toEqual(["a"]);
+  expect(defaultRemovalCandidateId(nodes, edges, "r")).toBe("a");
+  expect(removalCandidateIds(nodes, edges, "b")).toEqual(["b", "a"]);
+  expect(defaultRemovalCandidateId(nodes, edges, "b")).toBe("b");
+  expect(removalCandidateIds(nodes, edges, "a")).toEqual(["b", "a"]);
+  expect(defaultRemovalCandidateId(nodes, edges, "a")).toBe("b");
+  expect(defaultRemovalCandidateId([step("r", 0)], [], "r")).toBeNull();
 });

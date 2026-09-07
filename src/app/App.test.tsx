@@ -3,7 +3,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, expect, test } from "vitest";
 import "@mantine/core/styles.css";
 import { useStore } from "../state/store";
-import { ColorScheme, Tool, ViewMode } from "../workflow/catalogs";
+import { ColorScheme, ViewMode } from "../workflow/catalogs";
 import { isStepNode } from "../workflow/types";
 import App from "./App";
 import "./styles/tokens.css";
@@ -16,7 +16,6 @@ function resetSession() {
   const s = useStore.getState();
   s.resetDemo();
   s.setView(ViewMode.Before);
-  s.setTool(Tool.Pointer);
   s.setPresent(false);
   s.select(null);
   s.setHelp(false);

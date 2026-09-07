@@ -1,11 +1,11 @@
 /**
  * Orthogonal flow Path between tiles.
  * Stroke is edge.dashed, or exclusive-split fallback (graph.edgeIsDotted).
- * During − pick, matching Paths flash (.edge-pick / .edge-pick-on in tokens.css).
+ * Proposed restitches (remove-preview) use a static pattern, not a blink (AQ-05).
  */
 import { BaseEdge, EdgeLabelRenderer, type EdgeProps } from "@xyflow/react";
 import { useStore } from "../../state/store";
-import { edgeIsDotted, outgoingSorted } from "../../workflow/graph";
+import { edgeIsDotted } from "../../workflow/graph";
 import { GRID } from "../layout/tileMetrics";
 
 /** Right-angle path with a label anchor at the elbow / midpoint. */
@@ -38,19 +38,24 @@ export function FlowArrow({
   targetX,
   targetY,
   selected,
+  data,
 }: EdgeProps) {
   const workflow = useStore((s) => s.workflow);
-  const pathPick = useStore((s) => s.pathPick);
-  const edge = workflow.edges.find((e) => e.id === id);
-  const dotted = edge ? edgeIsDotted(workflow.nodes, workflow.edges, edge) : false;
+  const restitch = Boolean(data && (data as { restitch?: boolean }).restitch);
+  const restitchCondition =
+    restitch && typeof (data as { condition?: string }).condition === "string"
+      ? (data as { condition: string }).condition
+      : "";
+  const restitchDashed = restitch ? Boolean((data as { dashed?: boolean }).dashed) : false;
+  const edge = restitch ? undefined : workflow.edges.find((e) => e.id === id);
+  const dotted = restitch
+    ? restitchDashed
+    : edge
+      ? edgeIsDotted(workflow.nodes, workflow.edges, edge)
+      : false;
   const [path, labelX, labelY] = orthogonalPath(sourceX, sourceY, targetX, targetY);
-  const outs = pathPick
-    ? outgoingSorted(workflow.nodes, workflow.edges, pathPick.sourceId)
-    : [];
-  const pickIndex = outs.findIndex((e) => e.id === id);
-  const flashing = pickIndex >= 0;
-  const pickOn = flashing && pickIndex === pathPick?.index;
-  const className = pickOn ? "edge-pick-on" : flashing ? "edge-pick" : undefined;
+  const label = restitch ? restitchCondition : edge?.label;
+  const className = restitch ? "edge-restitch" : undefined;
 
   return (
     <>
@@ -59,13 +64,13 @@ export function FlowArrow({
         path={path}
         className={className}
         style={{
-          stroke: pickOn ? "var(--blue-deep)" : "var(--line)",
-          strokeWidth: selected || pickOn ? 4 : 2.75,
-          strokeDasharray: dotted ? "8 7" : undefined,
+          stroke: restitch ? "var(--blue-deep)" : "var(--line)",
+          strokeWidth: selected || restitch ? 4 : 2.75,
+          strokeDasharray: restitch ? "10 6" : dotted ? "8 7" : undefined,
           strokeLinecap: "square",
         }}
       />
-      {edge?.label ? (
+      {label ? (
         <EdgeLabelRenderer>
           <div
             className="nopan"
@@ -73,18 +78,18 @@ export function FlowArrow({
               position: "absolute",
               transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
               background: "var(--cream)",
-              border: "3px solid var(--line)",
+              border: restitch ? "3px dashed var(--line)" : "3px solid var(--line)",
               borderRadius: 10,
               padding: "3px 9px",
               fontSize: 12,
               fontWeight: 800,
               whiteSpace: "nowrap",
-              pointerEvents: "all",
+              pointerEvents: restitch ? "none" : "all",
               color: "var(--ink)",
               boxShadow: "var(--chip-shadow)",
             }}
           >
-            {edge.label}
+            {label}
           </div>
         </EdgeLabelRenderer>
       ) : null}

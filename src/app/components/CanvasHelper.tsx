@@ -1,15 +1,15 @@
 /**
- * Excalidraw-style hint strip at the top of the board.
- * Keys come from store.keymap so rebinds stay the source of truth.
- * Content follows selection / + menu / − pick / link-existing.
+ * Contextual hint strip at the top of the board (P-06).
+ * Idle has no chips. Hints appear only for a selection or an active task.
+ * Rejections use TransientNotice instead of this strip.
  */
 import { prettyKey, KeyAction } from "../../keyboard/bindings";
 import { useStore } from "../../state/store";
 import {
   SelectionKind,
+  ViewMode,
   WorkflowNodeKind,
 } from "../../workflow/catalogs";
-import { outgoingSorted } from "../../workflow/graph";
 
 type Hint = { key: string; label: string };
 
@@ -27,68 +27,65 @@ function hintsFor(): Hint[] {
   const k = s.keymap;
   const pk = (a: (typeof KeyAction)[keyof typeof KeyAction]) => prettyKey(k[a]);
 
-  if (s.hintNotice) {
-    return [{ key: "Note", label: s.hintNotice }];
-  }
-  if (s.pathPick) {
+  if (s.interaction.kind === "remove-pick") {
     return [
-      { key: pk(KeyAction.PanUp), label: "Previous path" },
-      { key: pk(KeyAction.PanDown), label: "Next path" },
-      { key: pk(KeyAction.PathConfirm), label: "Paths aren't removed" },
+      { key: pk(KeyAction.PanUp), label: "Previous Node" },
+      { key: pk(KeyAction.PanDown), label: "Next Node" },
+      { key: pk(KeyAction.Confirm), label: "Confirm remove" },
       { key: "Esc", label: "Cancel" },
     ];
   }
-  if (s.linkFrom) {
+  if (s.interaction.kind === "remove-preview") {
     return [
-      { key: "Click", label: "Connect existing tile" },
-      { key: "Click", label: "Empty board → new step" },
-      { key: pk(KeyAction.DetachPath), label: "Can't remove a Path" },
+      { key: pk(KeyAction.Confirm), label: "Apply pairings" },
       { key: "Esc", label: "Cancel" },
     ];
   }
-  if (s.linkMenu) {
+  if (s.interaction.kind === "connect-existing") {
     return [
-      { key: pk(KeyAction.AddBranchStep), label: "New step" },
-      { key: pk(KeyAction.AddBranchData), label: "New data" },
-      { key: pk(KeyAction.LinkExisting), label: "Link existing" },
-      { key: pk(KeyAction.DetachPath), label: "Can't remove a Path" },
+      { key: "Click", label: "Connect existing Node" },
+      { key: "Esc", label: "Cancel" },
+    ];
+  }
+  if (s.interaction.kind === "add-menu") {
+    return [
+      { key: pk(KeyAction.AddBranchStep), label: "New Step" },
+      { key: pk(KeyAction.AddBranchData), label: "New Data" },
+      { key: pk(KeyAction.LinkExisting), label: "Connect existing" },
       { key: "Esc", label: "Cancel" },
     ];
   }
   if (s.selected?.type === SelectionKind.Edge) {
     return [
       { key: pk(KeyAction.ToggleDash), label: "Solid / dotted" },
-      { key: pk(KeyAction.PathConfirm), label: "Edit condition" },
-      { key: pk(KeyAction.Delete), label: "Can't remove a Path" },
+      { key: pk(KeyAction.Confirm), label: "Edit condition" },
+      { key: pk(KeyAction.Delete), label: "Paths aren't removed" },
     ];
   }
   if (s.selected?.type === SelectionKind.Node) {
-    const outs = outgoingSorted(s.workflow.nodes, s.workflow.edges, s.selected.id).length;
     const n = s.workflow.nodes.find((x) => x.id === s.selected!.id);
-    const items: Hint[] = [
-      { key: pk(KeyAction.AddPath), label: "Add path" },
-    ];
-    if (outs) items.push({ key: pk(KeyAction.DetachPath), label: "Can't remove a Path" });
-    items.push({ key: pk(KeyAction.Delete), label: n?.type === WorkflowNodeKind.DataField ? "Delete data" : "Delete step" });
+    const items: Hint[] = [];
+    if (s.view !== ViewMode.After) {
+      items.push({ key: pk(KeyAction.AddPath), label: "Add Path" });
+    }
+    items.push({
+      key: pk(KeyAction.RemoveNode),
+      label: n?.type === WorkflowNodeKind.DataField ? "Remove Data" : "Remove Step",
+    });
     return items;
   }
-  return [
-    { key: pk(KeyAction.ToolPointer), label: "Pointer" },
-    { key: pk(KeyAction.ToolHand), label: "Hand" },
-    { key: pk(KeyAction.Undo), label: "Undo" },
-  ];
+  return [];
 }
 
 export function CanvasHelper() {
   const present = useStore((s) => s.present);
   useStore((s) => s.selected);
-  useStore((s) => s.linkMenu);
-  useStore((s) => s.linkFrom);
-  useStore((s) => s.pathPick);
+  useStore((s) => s.interaction);
   useStore((s) => s.keymap);
-  useStore((s) => s.hintNotice);
+  useStore((s) => s.view);
   if (present) return null;
   const items = hintsFor();
+  if (!items.length) return null;
   return (
     <div className="canvas-helper" aria-live="polite">
       {items.map((item) => (

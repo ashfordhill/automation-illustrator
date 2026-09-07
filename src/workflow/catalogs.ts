@@ -93,12 +93,6 @@ export const AssignmentLane = {
 export type AssignmentLane =
   (typeof AssignmentLane)[keyof typeof AssignmentLane];
 
-export const Tool = {
-  Pointer: "pointer",
-  Hand: "hand",
-} as const;
-export type Tool = (typeof Tool)[keyof typeof Tool];
-
 export const ColorScheme = {
   Light: "light",
   Dark: "dark",
@@ -129,24 +123,24 @@ export const KeyPreset = {
 } as const;
 export type KeyPreset = (typeof KeyPreset)[keyof typeof KeyPreset];
 
-/** Actions in keyboard/bindings.ts — the Keybinds modal rebinds these. */
+/** Actions in keyboard/bindings.ts — the Keybinds modal rebinds these (SH-14). */
 export const KeyAction = {
   Undo: "undo",
-  ToolPointer: "toolPointer",
-  ToolHand: "toolHand",
   PanLeft: "panLeft",
   PanRight: "panRight",
   PanUp: "panUp",
   PanDown: "panDown",
   Help: "help",
   ToggleView: "toggleView",
-  PathConfirm: "pathConfirm",
+  Confirm: "confirm",
   Delete: "delete",
   AddPath: "addPath",
-  DetachPath: "detachPath",
+  RemoveNode: "removeNode",
   ToggleDash: "toggleDash",
   AddBranchStep: "addBranchStep",
   AddBranchData: "addBranchData",
   LinkExisting: "linkExisting",
+  Merge: "merge",
+  Unmerge: "unmerge",
 } as const;
 export type KeyAction = (typeof KeyAction)[keyof typeof KeyAction];

@@ -9,7 +9,13 @@ import { DataTile } from "../tiles/DataTile";
 import { PathHostFrame } from "../controls/PathHostFrame";
 
 export function DataFieldNode({ id, selected, dragging }: NodeProps) {
-  const node = useStore((s) => s.workflow.nodes.find((n) => n.id === id));
+  const departing = useStore((s) => s.departing?.node.id === id);
+  const node = useStore((s) => {
+    const live = s.workflow.nodes.find((n) => n.id === id);
+    if (live) return live;
+    const ghost = s.departing?.node;
+    return ghost?.id === id ? ghost : undefined;
+  });
   const focusId = useStore((s) => s.focusId);
   const storeOn = useStore(
     (s) => s.selected?.type === SelectionKind.Node && s.selected.id === id,
@@ -17,9 +23,9 @@ export function DataFieldNode({ id, selected, dragging }: NodeProps) {
   if (!node || node.type !== WorkflowNodeKind.DataField) return null;
   const on = !!(storeOn || selected || focusId === id);
   return (
-    <PathHostFrame id={id} selected={on}>
+    <PathHostFrame id={id} selected={on} departing={departing}>
       <Handle type="target" position={Position.Left} />
-      <DataTile label={node.label} selected={on} lifted={dragging} />
+      <DataTile label={node.label} selected={on && !departing} lifted={dragging} />
       <Handle type="source" position={Position.Right} />
     </PathHostFrame>
   );

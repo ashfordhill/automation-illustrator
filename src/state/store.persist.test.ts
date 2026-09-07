@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
-import { ColorScheme, Tool, ViewMode } from "../workflow/catalogs";
+import { ColorScheme, ViewMode } from "../workflow/catalogs";
 import { emptyAfterOverlay } from "../workflow/types";
 import { useStore } from "./store";
 
@@ -8,7 +8,6 @@ function resetSession() {
   const s = useStore.getState();
   s.resetDemo();
   s.setView(ViewMode.Before);
-  s.setTool(Tool.Pointer);
   s.setPresent(false);
   s.select(null);
   s.setHelp(false);

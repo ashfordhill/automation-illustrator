@@ -1,63 +1,53 @@
 /**
- * + / − on the right of a tile (PathHostFrame).
- * + opens a Step / Data / existing-tile submenu; − starts pathPick.
- * Hidden in Present and Hand tool.
+ * + / − in a React Flow NodeToolbar (CX-01) so pads are not covered by the tile.
+ * + opens Step / Data / Connect existing; − enters the Node-removal picker (WG-08).
+ * Hidden in Present. + is hidden in After until Slice 11.
  */
 import { type CSSProperties } from "react";
 import { prettyKey, KeyAction } from "../../keyboard/bindings";
 import { useStore } from "../../state/store";
-import { WorkflowNodeKind } from "../../workflow/catalogs";
-import { outgoingSorted } from "../../workflow/graph";
+import { ViewMode, WorkflowNodeKind } from "../../workflow/catalogs";
 
 export function OutgoingPathPad({ nodeId }: { nodeId: string }) {
-  const count = useStore(
-    (s) => outgoingSorted(s.workflow.nodes, s.workflow.edges, nodeId).length,
-  );
-  const linking = useStore((s) => s.linkFrom === nodeId);
-  const picking = useStore((s) => s.pathPick?.sourceId === nodeId);
-  const menuOpen = useStore((s) => s.linkMenu === nodeId);
+  const interaction = useStore((s) => s.interaction);
   const keymap = useStore((s) => s.keymap);
+  const view = useStore((s) => s.view);
+  const linking = interaction.kind === "connect-existing" && interaction.sourceId === nodeId;
+  const picking = interaction.kind === "remove-pick" && interaction.hostId === nodeId;
+  const menuOpen = interaction.kind === "add-menu" && interaction.sourceId === nodeId;
   const plusOn = linking || menuOpen;
+  const showPlus = view !== ViewMode.After;
   return (
     <div
       className="nopan nowheel outgoing-path-pad"
       onPointerDown={(e) => e.stopPropagation()}
       onClick={(e) => e.stopPropagation()}
-      style={{
-        position: "absolute",
-        right: -22,
-        top: "50%",
-        transform: "translateY(-50%)",
-        display: "flex",
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 8,
-        zIndex: 4,
-      }}
     >
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {showPlus ? (
+          <button
+            type="button"
+            aria-label="Add Step, Data, or Connect existing"
+            title="Add a Path: new Step, new Data, or Connect existing"
+            onClick={() => useStore.getState().openLinkMenu(nodeId)}
+            style={{
+              ...padBtn,
+              background: plusOn ? "var(--plus-active)" : "var(--plus)",
+              color: "#f4fff6",
+            }}
+          >
+            +
+          </button>
+        ) : null}
         <button
           type="button"
-          title="Add a path: new Step, new Data, or link an existing tile"
-          onClick={() => useStore.getState().openLinkMenu(nodeId)}
-          style={{
-            ...padBtn,
-            background: plusOn ? "var(--plus-active)" : "var(--plus)",
-            color: "#f4fff6",
-          }}
-        >
-          +
-        </button>
-        <button
-          type="button"
-          title="Paths cannot be removed directly"
-          onClick={() => useStore.getState().beginPathPick(nodeId)}
-          disabled={count === 0}
+          aria-label="Remove Node"
+          title="Remove a Node. The workflow will be reconnected."
+          onClick={() => useStore.getState().beginRemovePick(nodeId)}
           style={{
             ...padBtn,
             background: picking ? "var(--minus-active)" : "var(--minus)",
             color: "#fff5f5",
-            opacity: count === 0 ? 0.35 : 1,
           }}
         >
           −
@@ -87,7 +77,7 @@ export function OutgoingPathPad({ nodeId }: { nodeId: string }) {
             onClick={() => useStore.getState().beginLinkFrom(nodeId)}
           >
             <kbd>{prettyKey(keymap[KeyAction.LinkExisting])}</kbd>
-            Existing
+            Connect existing
           </button>
         </div>
       ) : null}

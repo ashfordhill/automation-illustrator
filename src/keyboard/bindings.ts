@@ -11,24 +11,32 @@ export { KeyAction, KeyPreset };
 /** action id → KeyboardEvent key (lowercase, Space is `" "`). */
 export type Keymap = Record<KeyAction, string>;
 
+/** Retired Slice 4 ids: Pointer/Hand, path-confirm, detach. Ignored on load (SH-14). */
+export const RETIRED_KEY_ACTIONS = [
+  "toolPointer",
+  "toolHand",
+  "pathConfirm",
+  "detachPath",
+] as const;
+
 export const ARROW_PRESET: Keymap = {
   [KeyAction.Undo]: "backspace",
-  [KeyAction.ToolPointer]: "v",
-  [KeyAction.ToolHand]: "h",
   [KeyAction.PanLeft]: "arrowleft",
   [KeyAction.PanRight]: "arrowright",
   [KeyAction.PanUp]: "arrowup",
   [KeyAction.PanDown]: "arrowdown",
   [KeyAction.Help]: "?",
   [KeyAction.ToggleView]: " ",
-  [KeyAction.PathConfirm]: "enter",
+  [KeyAction.Confirm]: "enter",
   [KeyAction.Delete]: "delete",
   [KeyAction.AddPath]: "=",
-  [KeyAction.DetachPath]: "-",
+  [KeyAction.RemoveNode]: "-",
   [KeyAction.ToggleDash]: ".",
   [KeyAction.AddBranchStep]: "1",
   [KeyAction.AddBranchData]: "2",
   [KeyAction.LinkExisting]: "3",
+  [KeyAction.Merge]: "m",
+  [KeyAction.Unmerge]: "u",
 };
 
 export const WASD_PRESET: Keymap = {
@@ -41,22 +49,22 @@ export const WASD_PRESET: Keymap = {
 
 export const ACTION_LABELS: Record<KeyAction, string> = {
   [KeyAction.Undo]: "Undo last",
-  [KeyAction.ToolPointer]: "Pointer",
-  [KeyAction.ToolHand]: "Hand (pan)",
   [KeyAction.PanLeft]: "Pan left",
   [KeyAction.PanRight]: "Pan right",
-  [KeyAction.PanUp]: "Pan up / previous path",
-  [KeyAction.PanDown]: "Pan down / next path",
+  [KeyAction.PanUp]: "Pan up",
+  [KeyAction.PanDown]: "Pan down",
   [KeyAction.Help]: "Keybinds",
   [KeyAction.ToggleView]: "Toggle Before/After (present)",
-  [KeyAction.PathConfirm]: "Label path, or detach while choosing −",
-  [KeyAction.Delete]: "Delete selected tile or arrow",
-  [KeyAction.AddPath]: "Open + path menu on selected tile",
-  [KeyAction.DetachPath]: "Detach a path (−) on selected tile",
-  [KeyAction.ToggleDash]: "Toggle path solid / dotted",
-  [KeyAction.AddBranchStep]: "New step path (inside + menu)",
-  [KeyAction.AddBranchData]: "New data path (inside + menu)",
-  [KeyAction.LinkExisting]: "Link existing tile (inside + menu)",
+  [KeyAction.Confirm]: "Confirm",
+  [KeyAction.Delete]: "Remove selected Node (picker)",
+  [KeyAction.AddPath]: "Open + menu on selected Node",
+  [KeyAction.RemoveNode]: "Remove Node picker (−)",
+  [KeyAction.ToggleDash]: "Toggle Path solid / dotted",
+  [KeyAction.AddBranchStep]: "New Step (inside + menu)",
+  [KeyAction.AddBranchData]: "New Data (inside + menu)",
+  [KeyAction.LinkExisting]: "Connect existing (inside + menu)",
+  [KeyAction.Merge]: "Merge (After)",
+  [KeyAction.Unmerge]: "Unmerge (After)",
 };
 
 /** Normalize a keydown into the string we store in Keymap. */
@@ -86,18 +94,21 @@ export function loadKeymap(): Keymap {
   try {
     const raw = localStorage.getItem(LS_KEYMAP);
     if (!raw) return { ...ARROW_PRESET };
-    const saved = JSON.parse(raw) as Partial<Keymap>;
+    const saved = JSON.parse(raw) as Record<string, unknown>;
     return { ...ARROW_PRESET, ...pickKnown(saved) };
   } catch {
     return { ...ARROW_PRESET };
   }
 }
 
-/** Ignore unknown keys from older localStorage maps. */
-function pickKnown(saved: Partial<Keymap>): Partial<Keymap> {
+/** Ignore unknown and retired keys from older localStorage maps (SH-14). */
+export function pickKnown(saved: Record<string, unknown>): Partial<Keymap> {
   const next: Partial<Keymap> = {};
+  const retired = new Set<string>(RETIRED_KEY_ACTIONS);
   for (const key of Object.keys(ARROW_PRESET) as KeyAction[]) {
-    if (saved[key]) next[key] = saved[key];
+    if (retired.has(key)) continue;
+    const value = saved[key];
+    if (typeof value === "string" && value.length) next[key] = value;
   }
   return next;
 }

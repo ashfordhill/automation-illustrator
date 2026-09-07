@@ -63,8 +63,11 @@ test.describe("slice 4 command evidence", () => {
       animations: "disabled",
     });
 
+    await page.keyboard.press("Escape");
     await page.getByText("Review BS&A Software").first().click();
     await page.keyboard.press("Delete");
+    await expect(page.getByRole("dialog", { name: "Remove Node" })).toBeVisible();
+    await page.keyboard.press("Enter");
     await expect(page.getByText("Review BS&A Software")).toHaveCount(0);
     await expect(page.getByText(DEMO_STEP).first()).toBeVisible();
   });

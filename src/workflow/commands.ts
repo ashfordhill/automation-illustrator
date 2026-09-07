@@ -90,7 +90,7 @@ function succeed(doc: WorkflowDoc): CommandResult<WorkflowDoc> {
   return ok(doc);
 }
 
-function uniqueIds(edges: EdgeDto[], key: "source" | "target"): string[] {
+export function uniqueIds(edges: EdgeDto[], key: "source" | "target"): string[] {
   const seen = new Set<string>();
   const ids: string[] = [];
   for (const e of edges) {
@@ -223,7 +223,36 @@ function collapsedPairing(
   };
 }
 
-function nearestPairings(
+/** Incident Paths and unique neighbor ids for a Node (WG-10 / WG-11). */
+export function removalNeighborhood(doc: WorkflowDoc, nodeId: string) {
+  const incoming = incomingSorted(doc.nodes, doc.edges, nodeId);
+  const outgoing = outgoingSorted(doc.nodes, doc.edges, nodeId);
+  return {
+    incoming,
+    outgoing,
+    predecessorIds: uniqueIds(incoming, "source"),
+    successorIds: uniqueIds(outgoing, "target"),
+  };
+}
+
+/** WG-12 / PC-04 pairing for one predecessor → successor through a removed Node. */
+export function pairingBetween(
+  doc: WorkflowDoc,
+  removedId: string,
+  predecessorId: string,
+  successorId: string,
+): RemovalPairing | null {
+  const incoming = incomingSorted(doc.nodes, doc.edges, removedId).find(
+    (e) => e.source === predecessorId,
+  );
+  const outgoing = outgoingSorted(doc.nodes, doc.edges, removedId).find(
+    (e) => e.target === successorId,
+  );
+  if (!incoming || !outgoing) return null;
+  return collapsedPairing(doc.nodes, doc.edges, incoming, outgoing);
+}
+
+export function nearestPairings(
   nodes: NodeDto[],
   edges: EdgeDto[],
   incoming: EdgeDto[],
@@ -249,7 +278,7 @@ function nearestPairings(
   return pairings;
 }
 
-function fanPairings(
+export function fanPairings(
   nodes: NodeDto[],
   edges: EdgeDto[],
   incoming: EdgeDto[],

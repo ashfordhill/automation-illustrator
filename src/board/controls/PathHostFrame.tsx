@@ -1,9 +1,10 @@
 /**
- * Wrapper around a React Flow node: hover shows OutgoingPathPad,
- * click selects (RF onNodeClick is unreliable) or completes a link-existing.
+ * Wrapper around a React Flow node: NodeToolbar for +/−,
+ * click selects or completes Connect existing / picks a removal candidate.
  */
 import { useState, type ReactNode } from "react";
-import { SelectionKind, Tool } from "../../workflow/catalogs";
+import { NodeToolbar, Position } from "@xyflow/react";
+import { SelectionKind } from "../../workflow/catalogs";
 import { isStepNode } from "../../workflow/types";
 import { useStore } from "../../state/store";
 import { OutgoingPathPad } from "./OutgoingPathPad";
@@ -11,30 +12,42 @@ import { OutgoingPathPad } from "./OutgoingPathPad";
 export function PathHostFrame({
   id,
   selected,
+  departing,
   children,
 }: {
   id: string;
   selected: boolean;
+  departing?: boolean;
   children: ReactNode;
 }) {
   const [hover, setHover] = useState(false);
   const present = useStore((s) => s.present);
-  const tool = useStore((s) => s.tool);
-  const showPad = !present && tool !== Tool.Hand && (selected || hover);
+  const interaction = useStore((s) => s.interaction);
+  const showPad =
+    !present &&
+    !departing &&
+    interaction.kind !== "remove-pick" &&
+    interaction.kind !== "remove-preview" &&
+    (selected || hover || (interaction.kind === "add-menu" && interaction.sourceId === id));
   return (
     <div
-      className="nopan"
+      className={`nopan${departing ? " node-squash-inner" : ""}`}
       style={{ position: "relative", width: "100%", height: "100%" }}
+      aria-hidden={departing || undefined}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       onClick={() => {
         const s = useStore.getState();
-        if (s.present || s.tool === Tool.Hand) return;
-        if (s.linkFrom) {
-          if (s.linkFrom !== id) s.completeLinkTo(id);
+        if (s.present || departing) return;
+        if (s.interaction.kind === "connect-existing") {
+          if (s.interaction.sourceId !== id) s.completeLinkTo(id);
           return;
         }
-        if (s.pathPick) return;
+        if (s.interaction.kind === "remove-pick") {
+          s.setRemoveCandidate(id);
+          return;
+        }
+        if (s.interaction.kind === "remove-preview") return;
         if (s.selected?.type === SelectionKind.Actor) {
           const node = s.workflow.nodes.find((x) => x.id === id);
           if (node && isStepNode(node)) {
@@ -42,6 +55,9 @@ export function PathHostFrame({
             s.select({ type: SelectionKind.Node, id });
             return;
           }
+        }
+        if (s.interaction.kind === "add-menu" && s.interaction.sourceId !== id) {
+          s.closeBoardModes();
         }
         s.select({ type: SelectionKind.Node, id });
         queueMicrotask(() => {
@@ -51,7 +67,16 @@ export function PathHostFrame({
       }}
     >
       {children}
-      {showPad && <OutgoingPathPad nodeId={id} />}
+      {showPad ? (
+        <NodeToolbar
+          isVisible
+          position={Position.Right}
+          offset={14}
+          className="nopan nowheel node-path-toolbar"
+        >
+          <OutgoingPathPad nodeId={id} />
+        </NodeToolbar>
+      ) : null}
     </div>
   );
 }

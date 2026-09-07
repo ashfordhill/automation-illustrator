@@ -311,3 +311,50 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(slice-05): add replacement gate, demos, and recovery UI`
 
+## Slice 06 — create, connect, and remove canvas UX — 2026-09-06
+
+- Starting commit: `e1f0ec383909bede3af03f53dfc145e6526f2e53` (`feat(slice-05): add replacement gate, demos, and recovery UI`)
+- Working tree at start: clean tracked files on `main` (7 commits ahead of `origin/main`, not pushed). Untracked planner drafts `.docs/draft-to-give-planner-agent.*` were left untouched and are not in this commit.
+- GOAL clauses addressed: P-06 (no idle chips), P-07 (Present hides NodeToolbars and hints; editing stays off), P-08 (Pointer/Hand removed; pan on empty canvas, scroll/pinch zoom, pan keys; upper-left is Undo), WG-02..WG-04 (connect rejections via one accessible notice), WG-05 (Path Delete explains Node removal), WG-06 (root explanation; New for a clean board), WG-07 (`+` Step/Data/Connect existing; empty-canvas click cancels, never creates a Node), WG-08..WG-12 (shared −/Delete/inspector Remove picker; first-child default; leaf defaults to itself; Up/Down; Enter confirm; Escape cancel; M:N pairing preview then atomic apply), CX-01 (React Flow NodeToolbar), CX-06 (squash/pop; reduced-motion is immediate), CX-07 (candidate vs selected-candidate vs restitch without color alone), CX-08 (empty canvas and Escape return to idle), SH-14 (retired Pointer/Hand/detach/path-confirm; Remove Node `-`; Confirm Enter; Merge `m` / Unmerge `u`; saved maps ignore unknown/retired), AQ-01 / AQ-02 / AQ-03 / AQ-05 / AQ-06 / AQ-07
+- Library research and decisions: no new dependencies. Used `@xyflow/react` 12 `NodeToolbar` (`Position.Right`, explicit `isVisible`) so +/− sit outside the tile transform and are not covered by drag surfaces. Animate squash/pop on an inner wrapper (not the RF node `transform`). Rejections use one `role="status"` `aria-live="assertive"` notice with a short auto-clear. Merge/Unmerge are in the keymap only; handlers stay no-ops until Slice 11.
+- Files changed:
+  - Interaction: new `src/state/interaction.ts`; `src/state/store.ts` (discriminated `interaction`, `notice`, departing ghost; removal picker/preview; no implicit canvas Step)
+  - Graph/commands: `src/workflow/graph.ts` (`removalCandidateIds`, `defaultRemovalCandidateId`), `src/workflow/commands.ts` (`removalNeighborhood`, `pairingBetween`, exported fan/nearest pairings)
+  - Keybinds: `src/workflow/catalogs.ts` (retired `Tool`; SH-14 actions), `src/keyboard/bindings.ts`, `src/keyboard/useAppKeys.ts`, `src/keyboard/KeybindsModal.tsx`, `src/workflow/types.ts` (dropped `Tool` re-export)
+  - Board: `src/board/controls/OutgoingPathPad.tsx`, `PathHostFrame.tsx` (NodeToolbar), `src/board/Board.tsx`, `src/board/nodes/StepNode.tsx`, `DataFieldNode.tsx`, `src/board/routing/FlowArrow.tsx` (static restitch preview)
+  - Shell: `src/app/components/Toolbar.tsx` (Pointer/Hand gone), `CanvasHelper.tsx` (selection/task hints only), new `TransientNotice.tsx`, new `RemovePickerHud.tsx`, `src/app/App.tsx`, `src/app/inspector/SelectedItemForm.tsx` (Remove enters picker), `src/app/styles/tokens.css`
+  - Tests: `src/state/store.commands.test.ts`, `src/workflow/graph.test.ts`, new `src/keyboard/bindings.test.ts`, `src/app/App.test.tsx`, persist/replace session helpers, `e2e/canvas.spec.ts`, `e2e/commands.spec.ts`
+  - Evidence: `.docs/evidence/06-canvas/`; earlier e2e suites recaptured 01–05 screenshots (Undo-only chrome, Remove picker)
+  - This handoff entry
+- Behavior implemented: Tile +/− live in a NodeToolbar. `+` offers Step, Data, and Connect existing on Before (hidden on After until Slice 11). Clicking empty canvas while linking cancels; it does not spawn a Step. Connect rejections use one transient notice. `−`, Delete, and inspector Remove open the same picker: first outgoing child is preselected, a leaf defaults to itself, root is excluded with an explanation, Up/Down move, Enter/Confirm applies, Escape cancels. Many-to-many opens pairing preview (nearest by default, adjustable) then applies atomically. Removed Nodes squash/pop unless reduced motion. Idle chips are gone. Pointer/Hand and the Tool catalog are gone; panning is empty-canvas drag, scroll/pinch zoom, and pan keys. Present still disables editing. Backspace remains Undo.
+- Tests and exact results:
+  - `npm install` at start — up to date, audited 135 packages, 0 vulnerabilities
+  - `npm run build` at start — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning)
+  - `npm run test:unit` at start — pass (11 files, 67 tests)
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; built in 1.18s; existing chunk-size warning; client `index-6TGK1Tdt.js` 812.73 kB)
+  - `npm run test:unit` — pass (12 files, 71 tests)
+  - `npm run test:e2e` — pass (26 passed, Chromium, 30.9s including webServer)
+- Evidence:
+  - `.docs/evidence/06-canvas/before-light-1440.png` — Before; Undo-only upper-left; NodeToolbar +/−; no idle Pointer/Hand chips (1440×900)
+  - `.docs/evidence/06-canvas/plus-menu-1440.png` — + menu: Step, Data, Connect existing (1440×900)
+  - `.docs/evidence/06-canvas/after-light-1440.png` — After lane (1440×900)
+  - `.docs/evidence/06-canvas/after-no-plus-1440.png` — After selected tile has − only; no + (1440×900)
+  - `.docs/evidence/06-canvas/both-light-1440.png` — stacked Before/After (1440×900)
+  - `.docs/evidence/06-canvas/remove-pick-1440.png` — removal picker; first-child default; candidate highlight (1440×900)
+  - `.docs/evidence/06-canvas/remove-mn-preview-1440.png` — many-to-many pairing preview (1440×900)
+  - `.docs/evidence/06-canvas/remove-cancel-1440.png` — picker open; Escape leaves the Node (1440×900)
+  - `.docs/evidence/06-canvas/root-blocked-1440.png` — Delete on root opens picker of children with WG-06 copy (1440×900)
+  - `.docs/evidence/06-canvas/path-no-delete-1440.png` — Path selected; Delete explains Node removal (1440×900)
+  - `.docs/evidence/06-canvas/before-light-1024.png` — Before at 1024×768
+- Earlier-slice defects fixed: none that blocked this slice. Slice 4 already stopped Backspace from deleting; this slice keeps Backspace as Undo in the new picker flow.
+- Known limitations / follow-ups:
+  - Merge (`m`) / Unmerge (`u`) are catalogued and ignored until the After dock exists — Slice 11
+  - `+` stays hidden in After until After-only Step/Path creation — Slice 11
+  - Connector-stretch restitch animation — Slice 9
+  - Inspector still titles a Path “Arrow”; Path / condition, stroke, Split, Who buttons — Slice 7
+  - Both is still editable; After still mutates the shared base graph — Slice 10
+  - Sound toggle after Undo — Slice 8
+  - Robot Mailroom merge / After-only Step still not projected — Slices 10–11
+- Status: COMPLETE
+- Commit: `feat(slice-06): add create, connect, and remove canvas UX`
+

@@ -1,15 +1,13 @@
 /**
- * Zustand board state: workflow document, undo stack, tools, linking, theme.
+ * Zustand board state: workflow document, undo stack, interaction, theme.
  * Canvas (board/Board.tsx) and app shell (Toolbar, DetailsPanel, CanvasHelper)
  * all read/write through here. persistence.ts handles localStorage JSON.
  *
  * commit / undo / redo — history.ts (500; replaceDoc is a document boundary)
  * addStep — first Step is the root (WG-01); later tiles spawn from +
- * addHuman / addRobot — inspector + New person / + New robot
- * openLinkMenu / spawnBranch / beginLinkFrom — tile +
- * beginPathPick — tile − (Path detach removed; picker is Slice 6)
+ * openLinkMenu / spawnBranch / beginLinkFrom — tile + (hidden in After until Slice 11)
+ * beginRemovePick / confirmRemove — − / Delete / inspector Remove picker (WG-08..11)
  * toggleSelectedDash — selected Path solid/dotted
- * assignActor — inspector Who select
  * requestNew / requestDemo / importRaw — replacement gate (SH-06, SH-12)
  * startFresh / downloadHeldRecovery — corrupt-storage recovery (SH-10)
  */
@@ -42,7 +40,6 @@ import {
   SelectionKind,
   SplitKind,
   StepKind,
-  Tool,
   ViewMode,
   WorkflowNodeKind,
 } from "../workflow/catalogs";
@@ -52,13 +49,21 @@ import {
   applyNodeRemoval,
   connectNodes,
   createRootStep,
+  fanPairings,
+  nearestPairings,
+  pairingBetween,
   planNodeRemoval,
+  removalNeighborhood,
+  validatePairings,
+  type RemovalPairing,
+  type RemovalPlan,
 } from "../workflow/commands";
 import {
   applyDashForSplit,
+  defaultRemovalCandidateId,
   edgeIsDotted,
   nextPortIndex,
-  outgoingSorted,
+  removalCandidateIds,
   validateWorkflow,
 } from "../workflow/graph";
 import { nid } from "../workflow/ids";
@@ -75,7 +80,6 @@ import {
   type RobotKind as RobotKindT,
   type StepKind as StepKindT,
   type StepNodeDto,
-  type Tool as ToolT,
   type ViewMode as ViewModeT,
   type WorkflowDoc,
 } from "../workflow/types";
@@ -87,6 +91,7 @@ import {
   undoHistory,
   type HistoryKind,
 } from "./history";
+import { IDLE, type DepartingTile, type Interaction } from "./interaction";
 import {
   downloadRecoveryCopy,
   downloadWorkflowCopy,
@@ -105,9 +110,6 @@ export type Selection =
   | { type: typeof SelectionKind.Edge; id: string }
   | { type: typeof SelectionKind.Actor; id: string }
   | null;
-
-/** Which outgoing arrow is highlighted during − detach. */
-export type PathPick = { sourceId: string; index: number };
 
 /** Pending New / Demo / Import replacement (SH-06). */
 export type PendingReplace =
@@ -146,6 +148,11 @@ function room(w: WorkflowDoc): WorkflowDoc {
   return nodes === w.nodes ? w : { ...w, nodes };
 }
 
+function prefersReducedMotion() {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") return true;
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
 const started = loadStart();
 
 export const useStore = create<{
@@ -153,7 +160,6 @@ export const useStore = create<{
   past: WorkflowDoc[];
   future: WorkflowDoc[];
   view: ViewModeT;
-  tool: ToolT;
   present: boolean;
   selected: Selection;
   keymap: Keymap;
@@ -161,21 +167,20 @@ export const useStore = create<{
   capturing: KeyAction | null;
   lastHumanId: string | null;
   focusId: string | null;
-  linkFrom: string | null;
-  linkMenu: string | null;
-  pathPick: PathPick | null;
+  interaction: Interaction;
+  departing: DepartingTile | null;
   colorScheme: ColorSchemeT;
   persistStatus: PersistStatus;
   recovery: RecoveryState | null;
   pendingReplace: PendingReplace | null;
   importError: string | null;
-  hintNotice: string | null;
+  notice: string | null;
+  noticeId: number;
   commit: (next: WorkflowDoc, kind?: HistoryKind) => void;
   replaceDoc: (next: WorkflowDoc) => void;
   undo: () => void;
   redo: () => void;
   setView: (v: ViewModeT) => void;
-  setTool: (t: ToolT) => void;
   setPresent: (p: boolean) => void;
   select: (s: Selection) => void;
   setHelp: (v: boolean) => void;
@@ -184,6 +189,8 @@ export const useStore = create<{
   applyPreset: (which: KeyPreset) => void;
   setColorScheme: (c: ColorSchemeT) => void;
   toggleColorScheme: () => void;
+  setNotice: (message: string | null) => void;
+  clearDeparting: () => void;
   assignmentLane: () => AssignmentLane;
   actorFor: (stepId: string, lane?: AssignmentLane) => ActorDto | undefined;
   addStep: (position?: { x: number; y: number }, kind?: StepKindT) => string;
@@ -200,16 +207,16 @@ export const useStore = create<{
   closeBoardModes: () => void;
   spawnBranch: (sourceId: string, type: typeof WorkflowNodeKind.Step | typeof WorkflowNodeKind.DataField) => string;
   beginLinkFrom: (sourceId: string) => void;
-  cancelLinkFrom: () => void;
   completeLinkTo: (targetId: string) => void;
-  completeLinkNew: () => void;
   toggleSelectedDash: () => void;
   focusPathLabel: () => void;
-  beginPathPick: (sourceId: string) => void;
-  cancelPathPick: () => void;
-  cyclePathPick: (dir: -1 | 1) => void;
-  confirmPathPick: () => void;
-  pickPathByEdge: (edgeId: string) => void;
+  beginRemovePick: (hostId: string) => void;
+  cycleRemoveCandidate: (dir: -1 | 1) => void;
+  setRemoveCandidate: (candidateId: string) => void;
+  confirmRemove: () => void;
+  setPreviewSuccessorPred: (successorId: string, predecessorId: string) => void;
+  useNearestPreviewPairings: () => void;
+  useFanPreviewPairings: () => void;
   requestNew: () => void;
   requestDemo: (demoId: DemoId) => void;
   cancelReplace: () => void;
@@ -229,7 +236,6 @@ export const useStore = create<{
   past: [],
   future: [],
   view: ViewMode.Before,
-  tool: Tool.Pointer,
   present: false,
   selected: null,
   keymap: loadKeymap(),
@@ -237,21 +243,21 @@ export const useStore = create<{
   capturing: null,
   lastHumanId: null,
   focusId: null,
-  linkFrom: null,
-  linkMenu: null,
-  pathPick: null,
+  interaction: IDLE,
+  departing: null,
   colorScheme: loadTheme(),
   persistStatus: started.persistStatus,
   recovery: started.recovery,
   pendingReplace: null,
   importError: null,
-  hintNotice: null,
+  notice: null,
+  noticeId: 0,
 
   /** Snapshot current board onto the undo stack, persist unless recovery holds the raw key. */
   commit: (next, kind = "structural") => {
     const violations = validateWorkflow(next);
     if (violations.length) {
-      set({ hintNotice: violations[0]!.message });
+      get().setNotice(violations[0]!.message);
       return;
     }
     const { workflow, past, recovery } = get();
@@ -261,12 +267,12 @@ export const useStore = create<{
       kind === "text"
         ? commitText(workflow, past, placed)
         : commitStructural(workflow, past, placed);
-    set({ ...stacks, persistStatus, hintNotice: null });
+    set({ ...stacks, persistStatus });
   },
   replaceDoc: (next) => {
     const violations = validateWorkflow(next);
     if (violations.length) {
-      set({ hintNotice: violations[0]!.message });
+      get().setNotice(violations[0]!.message);
       return;
     }
     const placed = room(next);
@@ -275,10 +281,9 @@ export const useStore = create<{
       ...replaceHistory(placed),
       persistStatus,
       selected: null,
-      linkFrom: null,
-      linkMenu: null,
-      pathPick: null,
-      hintNotice: null,
+      interaction: IDLE,
+      departing: null,
+      notice: null,
       pendingReplace: null,
       importError: null,
       lastHumanId: null,
@@ -293,10 +298,9 @@ export const useStore = create<{
     set({
       ...stacks,
       persistStatus,
-      linkFrom: null,
-      linkMenu: null,
-      pathPick: null,
-      hintNotice: null,
+      interaction: IDLE,
+      departing: null,
+      notice: null,
     });
   },
   redo: () => {
@@ -307,25 +311,21 @@ export const useStore = create<{
     set({
       ...stacks,
       persistStatus,
-      linkFrom: null,
-      linkMenu: null,
-      pathPick: null,
-      hintNotice: null,
+      interaction: IDLE,
+      departing: null,
+      notice: null,
     });
   },
-  setView: (view) => set({ view }),
-  setTool: (tool) => set({ tool, linkFrom: null, linkMenu: null, pathPick: null }),
+  setView: (view) => set({ view, interaction: IDLE }),
   setPresent: (present) =>
     set({
       present,
-      tool: present ? Tool.Hand : Tool.Pointer,
       helpOpen: present ? false : get().helpOpen,
       selected: present ? null : get().selected,
-      linkFrom: null,
-      linkMenu: null,
-      pathPick: null,
+      interaction: IDLE,
+      departing: null,
     }),
-  select: (selected) => set({ selected, linkMenu: null, hintNotice: null }),
+  select: (selected) => set({ selected }),
   setHelp: (helpOpen) => set({ helpOpen, capturing: helpOpen ? get().capturing : null }),
   setCapturing: (capturing) => set({ capturing }),
   setKey: (action, key) => {
@@ -348,6 +348,14 @@ export const useStore = create<{
     saveTheme(colorScheme);
     set({ colorScheme });
   },
+  setNotice: (notice) => {
+    if (!notice) {
+      set({ notice: null });
+      return;
+    }
+    set({ notice, noticeId: get().noticeId + 1 });
+  },
+  clearDeparting: () => set({ departing: null }),
   /** Both view still edits the Before assignment map. */
   assignmentLane: () =>
     get().view === ViewMode.After ? AssignmentLane.After : AssignmentLane.Before,
@@ -362,7 +370,7 @@ export const useStore = create<{
     const { workflow, lastHumanId } = get();
     if (workflow.nodes.length) {
       if (!position && workflow.nodes.some(isStepNode)) return "";
-      set({ hintNotice: MSG.notEmpty });
+      get().setNotice(MSG.notEmpty);
       return "";
     }
     const id = nid(IdPrefix.Step);
@@ -388,16 +396,20 @@ export const useStore = create<{
       hid ? { beforeId: hid, afterId: hid } : undefined,
     );
     if (!result.ok) {
-      set({ hintNotice: result.message });
+      get().setNotice(result.message);
       return "";
     }
     get().commit(result.value);
-    set({ selected: { type: SelectionKind.Node, id }, lastHumanId: hid ?? lastHumanId });
+    set({
+      selected: { type: SelectionKind.Node, id },
+      lastHumanId: hid ?? lastHumanId,
+      interaction: IDLE,
+    });
     return id;
   },
   addField: () => {
     const { workflow } = get();
-    set({ hintNotice: workflow.nodes.length ? MSG.notEmpty : MSG.notStep });
+    get().setNotice(workflow.nodes.length ? MSG.notEmpty : MSG.notStep);
     return "";
   },
   addHuman: (name) => {
@@ -459,41 +471,24 @@ export const useStore = create<{
     const { workflow } = get();
     const result = connectNodes(workflow, source, target, { label });
     if (!result.ok) {
-      set({ hintNotice: result.message });
+      get().setNotice(result.message);
       return;
     }
     get().commit(result.value);
   },
   deleteSelection: () => {
-    const { selected, workflow } = get();
+    const { selected, workflow, interaction } = get();
+    if (interaction.kind === "remove-pick" || interaction.kind === "remove-preview") {
+      get().confirmRemove();
+      return;
+    }
     if (!selected) return;
     if (selected.type === SelectionKind.Node) {
-      const planned = planNodeRemoval(workflow, selected.id);
-      if (!planned.ok) {
-        set({ hintNotice: planned.message });
-        return;
-      }
-      if (planned.value.mode === "preview") {
-        set({ hintNotice: MSG.manyToMany });
-        return;
-      }
-      const applied = applyNodeRemoval(workflow, planned.value);
-      if (!applied.ok) {
-        set({ hintNotice: applied.message });
-        return;
-      }
-      get().commit(applied.value);
-      set({
-        selected: null,
-        linkFrom: null,
-        linkMenu: null,
-        pathPick: null,
-        hintNotice: planned.value.overlayEffects.notices[0] ?? null,
-      });
+      get().beginRemovePick(selected.id);
       return;
     }
     if (selected.type === SelectionKind.Edge) {
-      set({ hintNotice: MSG.pathRemoval });
+      get().setNotice(MSG.pathRemoval);
       return;
     }
     const used = Object.values(workflow.assignments)
@@ -504,28 +499,28 @@ export const useStore = create<{
       ...workflow,
       actors: workflow.actors.filter((a) => a.id !== selected.id),
     });
-    set({ selected: null, linkFrom: null, linkMenu: null, pathPick: null });
+    set({ selected: null, interaction: IDLE });
   },
 
-  closeBoardModes: () => set({ linkFrom: null, linkMenu: null, pathPick: null, hintNotice: null }),
+  closeBoardModes: () => set({ interaction: IDLE }),
   openLinkMenu: (sourceId) => {
-    const { linkMenu } = get();
-    if (linkMenu === sourceId) {
-      set({ linkMenu: null });
+    if (get().present || get().view === ViewMode.After) return;
+    const { interaction } = get();
+    if (interaction.kind === "add-menu" && interaction.sourceId === sourceId) {
+      set({ interaction: IDLE });
       return;
     }
     set({
-      linkMenu: sourceId,
-      linkFrom: null,
-      pathPick: null,
+      interaction: { kind: "add-menu", sourceId },
       selected: { type: SelectionKind.Node, id: sourceId },
     });
   },
   spawnBranch: (sourceId, type) => {
+    if (get().present || get().view === ViewMode.After) return "";
     const { workflow, lastHumanId } = get();
     const src = workflow.nodes.find((n) => n.id === sourceId);
     if (!src) {
-      set({ linkMenu: null, linkFrom: null });
+      set({ interaction: IDLE });
       return "";
     }
     const port = nextPortIndex(workflow.edges, sourceId);
@@ -539,13 +534,12 @@ export const useStore = create<{
         label: "Data",
       });
       if (!result.ok) {
-        set({ hintNotice: result.message });
+        get().setNotice(result.message);
         return "";
       }
       get().commit(result.value);
       set({
-        linkFrom: null,
-        linkMenu: null,
+        interaction: IDLE,
         selected: { type: SelectionKind.Node, id },
       });
       get().requestFocus(id);
@@ -571,50 +565,41 @@ export const useStore = create<{
       human ? { beforeId: human, afterId: human } : undefined,
     );
     if (!result.ok) {
-      set({ hintNotice: result.message });
+      get().setNotice(result.message);
       return "";
     }
     get().commit(result.value);
     set({
-      linkFrom: null,
-      linkMenu: null,
+      interaction: IDLE,
       selected: { type: SelectionKind.Node, id },
     });
     get().requestFocus(id);
     return id;
   },
   beginLinkFrom: (sourceId) => {
-    const { linkFrom } = get();
-    if (linkFrom === sourceId) {
-      set({ linkFrom: null, linkMenu: null });
+    if (get().present || get().view === ViewMode.After) return;
+    const { interaction } = get();
+    if (interaction.kind === "connect-existing" && interaction.sourceId === sourceId) {
+      set({ interaction: IDLE });
       return;
     }
     set({
-      linkFrom: sourceId,
-      linkMenu: null,
-      pathPick: null,
+      interaction: { kind: "connect-existing", sourceId },
       selected: { type: SelectionKind.Node, id: sourceId },
     });
   },
-  cancelLinkFrom: () => set({ linkFrom: null, linkMenu: null }),
   completeLinkTo: (targetId) => {
-    const { linkFrom, workflow } = get();
-    if (!linkFrom || linkFrom === targetId) return;
+    const { interaction, workflow } = get();
+    if (interaction.kind !== "connect-existing") return;
+    if (interaction.sourceId === targetId) return;
     const before = workflow;
-    get().connect(linkFrom, targetId);
+    get().connect(interaction.sourceId, targetId);
     if (get().workflow === before) return;
     set({
-      linkFrom: null,
-      linkMenu: null,
+      interaction: IDLE,
       selected: { type: SelectionKind.Node, id: targetId },
     });
     get().requestFocus(targetId);
-  },
-  /** Empty-pane click while linking existing: spawn a Step. */
-  completeLinkNew: () => {
-    const { linkFrom, spawnBranch } = get();
-    if (!linkFrom) return;
-    spawnBranch(linkFrom, WorkflowNodeKind.Step);
   },
   toggleSelectedDash: () => {
     const { selected, workflow, updateEdge } = get();
@@ -633,43 +618,109 @@ export const useStore = create<{
     });
   },
 
-  beginPathPick: (sourceId) => {
-    const outs = outgoingSorted(get().workflow.nodes, get().workflow.edges, sourceId);
-    if (!outs.length) return;
-    const { pathPick } = get();
-    if (pathPick?.sourceId === sourceId) {
-      set({ pathPick: null });
+  beginRemovePick: (hostId) => {
+    if (get().present) return;
+    const { workflow } = get();
+    if (!workflow.nodes.some((n) => n.id === hostId)) return;
+    const candidates = removalCandidateIds(workflow.nodes, workflow.edges, hostId);
+    const candidateId = defaultRemovalCandidateId(workflow.nodes, workflow.edges, hostId);
+    if (!candidates.length || !candidateId) {
+      get().setNotice(MSG.rootRemoval);
+      set({ interaction: IDLE, selected: { type: SelectionKind.Node, id: hostId } });
       return;
     }
     set({
-      pathPick: { sourceId, index: 0 },
-      linkFrom: null,
-      linkMenu: null,
-      selected: { type: SelectionKind.Node, id: sourceId },
+      interaction: { kind: "remove-pick", hostId, candidateId },
+      selected: { type: SelectionKind.Node, id: hostId },
     });
   },
-  cancelPathPick: () => set({ pathPick: null }),
-  cyclePathPick: (dir) => {
-    const { pathPick, workflow } = get();
-    if (!pathPick) return;
-    const outs = outgoingSorted(workflow.nodes, workflow.edges, pathPick.sourceId);
-    if (!outs.length) {
-      set({ pathPick: null });
+  cycleRemoveCandidate: (dir) => {
+    const { interaction, workflow } = get();
+    if (interaction.kind !== "remove-pick") return;
+    const candidates = removalCandidateIds(workflow.nodes, workflow.edges, interaction.hostId);
+    if (!candidates.length) {
+      set({ interaction: IDLE });
       return;
     }
-    const index = (pathPick.index + dir + outs.length) % outs.length;
-    set({ pathPick: { ...pathPick, index } });
+    const current = Math.max(0, candidates.indexOf(interaction.candidateId));
+    const index = (current + dir + candidates.length) % candidates.length;
+    set({
+      interaction: { ...interaction, candidateId: candidates[index]! },
+    });
   },
-  confirmPathPick: () => {
-    if (!get().pathPick) return;
-    set({ pathPick: null, hintNotice: MSG.pathRemoval });
+  setRemoveCandidate: (candidateId) => {
+    const { interaction, workflow } = get();
+    if (interaction.kind !== "remove-pick") return;
+    const candidates = removalCandidateIds(workflow.nodes, workflow.edges, interaction.hostId);
+    if (!candidates.includes(candidateId)) return;
+    set({ interaction: { ...interaction, candidateId } });
   },
-  pickPathByEdge: (edgeId) => {
-    const { pathPick, workflow } = get();
-    if (!pathPick) return;
-    const outs = outgoingSorted(workflow.nodes, workflow.edges, pathPick.sourceId);
-    if (!outs.some((e) => e.id === edgeId)) return;
-    set({ pathPick: null, hintNotice: MSG.pathRemoval });
+  confirmRemove: () => {
+    const { interaction, workflow } = get();
+    if (interaction.kind === "remove-preview") {
+      applyPlannedRemoval(get, set, interaction.plan, interaction.plan.pairings);
+      return;
+    }
+    if (interaction.kind !== "remove-pick") return;
+    const planned = planNodeRemoval(workflow, interaction.candidateId);
+    if (!planned.ok) {
+      get().setNotice(planned.message);
+      return;
+    }
+    if (planned.value.mode === "preview") {
+      set({ interaction: { kind: "remove-preview", plan: planned.value } });
+      return;
+    }
+    applyPlannedRemoval(get, set, planned.value, planned.value.pairings);
+  },
+  setPreviewSuccessorPred: (successorId, predecessorId) => {
+    const { interaction, workflow } = get();
+    if (interaction.kind !== "remove-preview") return;
+    const pairing = pairingBetween(
+      workflow,
+      interaction.plan.nodeId,
+      predecessorId,
+      successorId,
+    );
+    if (!pairing) return;
+    const pairings = [
+      ...interaction.plan.pairings.filter((p) => p.successorId !== successorId),
+      pairing,
+    ];
+    set({
+      interaction: {
+        kind: "remove-preview",
+        plan: { ...interaction.plan, pairings },
+      },
+    });
+  },
+  useNearestPreviewPairings: () => {
+    const { interaction, workflow } = get();
+    if (interaction.kind !== "remove-preview") return;
+    const { incoming, outgoing } = removalNeighborhood(workflow, interaction.plan.nodeId);
+    set({
+      interaction: {
+        kind: "remove-preview",
+        plan: {
+          ...interaction.plan,
+          pairings: nearestPairings(workflow.nodes, workflow.edges, incoming, outgoing),
+        },
+      },
+    });
+  },
+  useFanPreviewPairings: () => {
+    const { interaction, workflow } = get();
+    if (interaction.kind !== "remove-preview") return;
+    const { incoming, outgoing } = removalNeighborhood(workflow, interaction.plan.nodeId);
+    set({
+      interaction: {
+        kind: "remove-preview",
+        plan: {
+          ...interaction.plan,
+          pairings: fanPairings(workflow.nodes, workflow.edges, incoming, outgoing),
+        },
+      },
+    });
   },
 
   requestNew: () => {
@@ -730,10 +781,9 @@ export const useStore = create<{
       recovery: null,
       persistStatus,
       selected: null,
-      linkFrom: null,
-      linkMenu: null,
-      pathPick: null,
-      hintNotice: null,
+      interaction: IDLE,
+      departing: null,
+      notice: null,
       pendingReplace: null,
       importError: null,
       lastHumanId: null,
@@ -741,3 +791,49 @@ export const useStore = create<{
     });
   },
 }));
+
+function applyPlannedRemoval(
+  get: () => {
+    workflow: WorkflowDoc;
+    actorFor: (stepId: string) => ActorDto | undefined;
+    commit: (next: WorkflowDoc) => void;
+    setNotice: (message: string | null) => void;
+  },
+  set: (partial: {
+    interaction: Interaction;
+    selected: Selection;
+    departing: DepartingTile | null;
+    notice: string | null;
+    noticeId?: number;
+  }) => void,
+  plan: RemovalPlan,
+  pairings: RemovalPairing[],
+) {
+  const { workflow } = get();
+  const node = workflow.nodes.find((n) => n.id === plan.nodeId);
+  const actor = node && isStepNode(node) ? get().actorFor(node.id) : undefined;
+  const { predecessorIds, successorIds } = removalNeighborhood(workflow, plan.nodeId);
+  if (successorIds.length) {
+    const checked = validatePairings(pairings, predecessorIds, successorIds);
+    if (!checked.ok) {
+      get().setNotice(checked.message);
+      return;
+    }
+  }
+  const applied = applyNodeRemoval(workflow, plan, pairings);
+  if (!applied.ok) {
+    get().setNotice(applied.message);
+    return;
+  }
+  const before = get().workflow;
+  get().commit(applied.value);
+  if (get().workflow === before) return;
+  const overlay = plan.overlayEffects.notices[0] ?? null;
+  const reduced = prefersReducedMotion();
+  set({
+    interaction: IDLE,
+    selected: null,
+    departing: reduced || !node ? null : { node, actor },
+    notice: overlay,
+  });
+}

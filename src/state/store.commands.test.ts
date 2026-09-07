@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, expect, test } from "vitest";
-import { ColorScheme, SelectionKind, Tool, ViewMode, WorkflowNodeKind } from "../workflow/catalogs";
+import { ColorScheme, SelectionKind, ViewMode, WorkflowNodeKind } from "../workflow/catalogs";
 import { MSG } from "../workflow/commands";
-import { validateWorkflow } from "../workflow/graph";
+import { defaultRemovalCandidateId, validateWorkflow } from "../workflow/graph";
 import { emptyAfterOverlay, type WorkflowDoc } from "../workflow/types";
+import { IDLE } from "./interaction";
 import { useStore } from "./store";
 
 function resetSession() {
@@ -10,13 +11,13 @@ function resetSession() {
   const s = useStore.getState();
   s.resetDemo();
   s.setView(ViewMode.Before);
-  s.setTool(Tool.Pointer);
   s.setPresent(false);
   s.select(null);
   s.setHelp(false);
   s.cancelReplace();
   s.clearImportError();
   s.closeBoardModes();
+  s.setNotice(null);
   s.setColorScheme(ColorScheme.Light);
   if (s.recovery) s.clearRecoveryHold();
 }
@@ -52,27 +53,34 @@ test("store actions keep a valid workflow (WG-02..WG-04)", () => {
   s.select({ type: SelectionKind.Node, id: root });
   s.deleteSelection();
   expect(useStore.getState().workflow.nodes.some((n) => n.id === root)).toBe(true);
-  expect(useStore.getState().hintNotice).toBe(MSG.rootRemoval);
+  const pick = useStore.getState().interaction;
+  expect(pick.kind).toBe("remove-pick");
+  if (pick.kind === "remove-pick") expect(pick.candidateId).not.toBe(root);
   expect(validateWorkflow(useStore.getState().workflow)).toEqual([]);
+  s.closeBoardModes();
 
   const edge = useStore.getState().workflow.edges[0]!;
   s.select({ type: SelectionKind.Edge, id: edge.id });
   const edgeCount = useStore.getState().workflow.edges.length;
   s.deleteSelection();
   expect(useStore.getState().workflow.edges).toHaveLength(edgeCount);
-  expect(useStore.getState().hintNotice).toBe(MSG.pathRemoval);
+  expect(useStore.getState().notice).toBe(MSG.pathRemoval);
 
   s.select({ type: SelectionKind.Node, id: leaf });
   s.deleteSelection();
+  expect(useStore.getState().interaction.kind).toBe("remove-pick");
+  s.confirmRemove();
   expect(useStore.getState().workflow.nodes.some((n) => n.id === leaf)).toBe(false);
   expect(validateWorkflow(useStore.getState().workflow)).toEqual([]);
 });
 
-test("1:N / N:1 auto removal restitches; M:N stays blocked in the store", () => {
+test("1:N / N:1 auto removal restitches after confirm; M:N opens pairing preview", () => {
   const s = useStore.getState();
   const account = dataId(s.workflow);
   s.select({ type: SelectionKind.Node, id: account });
   s.deleteSelection();
+  s.setRemoveCandidate(account);
+  s.confirmRemove();
   expect(useStore.getState().workflow.nodes.some((n) => n.id === account)).toBe(false);
   expect(validateWorkflow(useStore.getState().workflow)).toEqual([]);
 
@@ -152,7 +160,13 @@ test("1:N / N:1 auto removal restitches; M:N stays blocked in the store", () => 
   useStore.getState().select({ type: SelectionKind.Node, id: "n" });
   useStore.getState().deleteSelection();
   expect(useStore.getState().workflow.nodes.some((n) => n.id === "n")).toBe(true);
-  expect(useStore.getState().hintNotice).toBe(MSG.manyToMany);
+  expect(useStore.getState().interaction.kind).toBe("remove-pick");
+  useStore.getState().setRemoveCandidate("n");
+  useStore.getState().confirmRemove();
+  expect(useStore.getState().interaction.kind).toBe("remove-preview");
+  expect(useStore.getState().workflow.nodes.some((n) => n.id === "n")).toBe(true);
+  useStore.getState().confirmRemove();
+  expect(useStore.getState().workflow.nodes.some((n) => n.id === "n")).toBe(false);
   expect(validateWorkflow(useStore.getState().workflow)).toEqual([]);
 });
 
@@ -163,7 +177,7 @@ test("connect rejects a cycle without mutating; spawnBranch stays valid", () => 
   const edgesBefore = s.workflow.edges.length;
   s.connect(leaf, root);
   expect(useStore.getState().workflow.edges).toHaveLength(edgesBefore);
-  expect(useStore.getState().hintNotice).toBe(MSG.rootIncoming);
+  expect(useStore.getState().notice).toBe(MSG.rootIncoming);
 
   const id = useStore.getState().spawnBranch(leaf, WorkflowNodeKind.Step);
   expect(id).toBeTruthy();
@@ -176,6 +190,7 @@ test("undo does not change the active view; replaceDoc is a history boundary", (
   const leaf = leafId(s.workflow);
   s.select({ type: SelectionKind.Node, id: leaf });
   s.deleteSelection();
+  s.confirmRemove();
   expect(useStore.getState().past.length).toBeGreaterThan(0);
   s.undo();
   expect(useStore.getState().view).toBe(ViewMode.After);
@@ -188,15 +203,15 @@ test("undo does not change the active view; replaceDoc is a history boundary", (
   expect(useStore.getState().future).toEqual([]);
 });
 
-test("confirmPathPick no longer removes a Path", () => {
+test("empty-canvas connect does not spawn a Node; Escape returns to idle", () => {
   const s = useStore.getState();
   const source = s.workflow.edges[0]!.source;
-  const count = s.workflow.edges.length;
-  s.beginPathPick(source);
-  s.confirmPathPick();
-  expect(useStore.getState().workflow.edges).toHaveLength(count);
-  expect(useStore.getState().hintNotice).toBe(MSG.pathRemoval);
-  expect(useStore.getState().pathPick).toBeNull();
+  const count = s.workflow.nodes.length;
+  s.beginLinkFrom(source);
+  expect(useStore.getState().interaction.kind).toBe("connect-existing");
+  s.closeBoardModes();
+  expect(useStore.getState().interaction).toEqual(IDLE);
+  expect(useStore.getState().workflow.nodes).toHaveLength(count);
 });
 
 test("addStep on a nonempty board does not create a second root", () => {
@@ -204,6 +219,27 @@ test("addStep on a nonempty board does not create a second root", () => {
   const count = s.workflow.nodes.length;
   expect(s.addStep({ x: 10, y: 10 })).toBe("");
   expect(useStore.getState().workflow.nodes).toHaveLength(count);
-  expect(useStore.getState().hintNotice).toBe(MSG.notEmpty);
+  expect(useStore.getState().notice).toBe(MSG.notEmpty);
   expect(validateWorkflow(useStore.getState().workflow)).toEqual([]);
+});
+
+test("root-only board explains WG-06; leaf picker defaults to itself (WG-09)", () => {
+  const s = useStore.getState();
+  s.requestNew();
+  s.confirmReplaceDiscard();
+  const id = useStore.getState().addStep();
+  expect(id).toBeTruthy();
+  useStore.getState().beginRemovePick(id);
+  expect(useStore.getState().notice).toBe(MSG.rootRemoval);
+  expect(useStore.getState().interaction).toEqual(IDLE);
+  expect(useStore.getState().workflow.nodes).toHaveLength(1);
+
+  s.resetDemo();
+  const leaf = leafId(useStore.getState().workflow);
+  const def = defaultRemovalCandidateId(
+    useStore.getState().workflow.nodes,
+    useStore.getState().workflow.edges,
+    leaf,
+  );
+  expect(def).toBe(leaf);
 });
