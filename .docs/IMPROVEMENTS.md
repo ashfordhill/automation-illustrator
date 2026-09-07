@@ -247,6 +247,58 @@ When done: run `npm run build`, `npm run test:unit`, `npm run test:e2e`; save sc
 
 ---
 
-# Follow-up (not Improvement 01)
+# Improvement 02 — merge tile, stretchy +, Path-pull, insert (COMPLETE)
 
-Merge-group tile chrome, drag-to-insert / drag-to-trash, Path `−` on fan-outs only, and the `+` tab drop-palette are specified in [`.docs/merge-tile-and-drag.plan.md`](merge-tile-and-drag.plan.md) for a later agent. Visual reference for the `+` tab: `.docs/menu-tab-plus.png` and `.docs/menu-tab-plus.svg`.
+Shipped as `feat(improve-02): add merge tile type and tile drag`. Spec was [`.docs/merge-tile-and-drag.plan.md`](merge-tile-and-drag.plan.md) (Path `−` was dropped in favor of selected-tile X). Visual reference for the `+` tab: `.docs/menu-tab-plus.png` and `.docs/menu-tab-plus.svg`.
+
+---
+
+# Improvement 03 — polish, Path stroke, on-canvas label
+
+Approved 2026-09-07. **Do not implement Improvement 04 in the same chat.**
+
+Full spec: [`.docs/improve-03-polish-and-path.plan.md`](improve-03-polish-and-path.plan.md).
+
+Commit: `feat(improve-03): polish chrome Path stroke and on-canvas label`.  
+Evidence: `.docs/evidence/improve-03-polish/`.
+
+### Kickoff prompt for the implementing agent
+
+```text
+You are the agent for Improvement 03 of the Automation Pitch project. Work only on Improvement 03 as specified in .docs/improve-03-polish-and-path.plan.md. Do not implement Improvement 04.
+
+Before changing anything:
+1. Read .docs/GOAL.md (including Amendments), .docs/BUILD_PLAN.md Sections 3-4, .docs/IMPROVEMENTS.md, .docs/improve-03-polish-and-path.plan.md, every entry in .docs/handoff.md, and .cursor/rules/agent-handoff.mdc.
+2. Run `git status` and `git log -1`. HEAD must be the COMPLETE commit of the latest handoff entry and the tree must be clean. If not, stop and report.
+3. Run `npm install`, `npm run build`, `npm run test:unit` to confirm a green start.
+
+Then implement Improvement 03 exactly as specified in that plan (locked decisions, GOAL amendments, work items 5.1–5.9, tests). Locked decisions are not open for redesign. If something in the spec is impossible or contradictory, stop and ask; do not widen scope. Do not start Improvement 04.
+
+When done: run `npm run build`, `npm run test:unit`, `npm run test:e2e`; save screenshots under .docs/evidence/improve-03-polish/; append one handoff entry ending in `Status: COMPLETE`; commit everything as `feat(improve-03): polish chrome Path stroke and on-canvas label`; confirm a clean tree; report the hash, exact test results, and evidence paths. Never push, branch, or start other work.
+```
+
+---
+
+# Improvement 04 — insert-on-Path live preview
+
+Approved 2026-09-07. Start only after Improvement 03 is COMPLETE.
+
+Full spec: [`.docs/improve-04-insert-preview.plan.md`](improve-04-insert-preview.plan.md).
+
+Commit: `feat(improve-04): preview tile insert on Path while dragging`.  
+Evidence: `.docs/evidence/improve-04-insert-preview/`.
+
+### Kickoff prompt for the implementing agent
+
+```text
+You are the agent for Improvement 04 of the Automation Pitch project. Work only on Improvement 04 as specified in .docs/improve-04-insert-preview.plan.md. Do not reopen Improvement 03 polish.
+
+Before changing anything:
+1. Read .docs/GOAL.md (including Amendments), .docs/BUILD_PLAN.md Sections 3-4, .docs/IMPROVEMENTS.md, .docs/improve-04-insert-preview.plan.md, every entry in .docs/handoff.md, and .cursor/rules/agent-handoff.mdc.
+2. Run `git status` and `git log -1`. HEAD must be the COMPLETE commit of Improvement 03 and the tree must be clean. If not, stop and report.
+3. Run `npm install`, `npm run build`, `npm run test:unit` to confirm a green start.
+
+Then implement Improvement 04 exactly as specified in that plan. Do not run ELK on pointer move. Do not call insertNodeOnPath until drop. Locked decisions are not open for redesign. If something in the spec is impossible or contradictory, stop and ask; do not widen scope.
+
+When done: run `npm run build`, `npm run test:unit`, `npm run test:e2e`; save screenshots under .docs/evidence/improve-04-insert-preview/; append one handoff entry ending in `Status: COMPLETE`; commit everything as `feat(improve-04): preview tile insert on Path while dragging`; confirm a clean tree; report the hash, exact test results, and evidence paths. Never push, branch, or start other work.
+```

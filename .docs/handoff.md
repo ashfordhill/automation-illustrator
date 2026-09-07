@@ -842,3 +842,25 @@ Corrections in the same chat before the next slice starts get their own short en
 - Known limitations / follow-ups: After-only insert-on-Path not implemented (Before-origin insert in After is rejected). Path connect is pointer-only (AQ-01 exception, user approved). Insert-on-Path has unit coverage, not a dedicated e2e drag. Nested/partial unmerge still out of scope.
 - Status: COMPLETE
 - Commit: `feat(improve-02): add merge tile type and tile drag`
+
+## Planning — Improvements 03 and 04 — 2026-09-07
+
+- Starting commit: `8315e5298ddaeb6e0548601390e040a9b7853ed7` (`feat(improve-02): add merge tile type and tile drag`)
+- Working tree at start: clean product tree; two untracked ELK planner dumps left uncommitted
+- GOAL clauses addressed: n/a (planning only; implementing agents append amendments)
+- Library research and decisions: User approved a two-agent split after Improvement 02 review: 03 polish + Path editing; 04 insert-on-Path live preview (no ELK-on-move). No product code in this commit.
+- Files changed:
+  - `.docs/improve-03-polish-and-path.plan.md`
+  - `.docs/improve-04-insert-preview.plan.md`
+  - `.docs/IMPROVEMENTS.md` (02 marked complete; 03/04 kickoffs)
+  - This handoff entry
+- Behavior implemented: none. Next agent is Improvement 03 only.
+- Tests and exact results:
+  - `npm run build` — not run (docs only)
+  - `npm run test:unit` — not run (docs only)
+  - `npm run test:e2e` — not run (docs only)
+- Evidence: n/a
+- Earlier-slice defects fixed: none
+- Known limitations / follow-ups: Improvement 03 then 04, sequential. Path `−`, free-form layout, nested unmerge, After-only insert remain out of scope.
+- Status: COMPLETE
+- Commit: `docs: add improve-03 polish and improve-04 insert-preview plans`
