@@ -64,7 +64,7 @@ test.describe("slice 10 After projection and comparison", () => {
     await waitForLayout(page);
     await expect(page.getByText("BEFORE", { exact: true })).toBeVisible();
     await expect(page.getByText("AFTER", { exact: true })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Add Step, Data, or Connect existing" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Add Step or Data" })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Remove Node" })).toHaveCount(0);
 
     await page.getByText(DEMO_STEP).first().click();
@@ -94,7 +94,7 @@ test.describe("slice 10 After projection and comparison", () => {
     await viewLabel(page, "After").click();
     await waitForLayout(page);
     await page.getByText(DEMO_STEP).first().click();
-    await page.getByRole("button", { name: "Remove Node" }).click();
+    await page.getByRole("button", { name: `Remove ${DEMO_STEP}` }).click();
     await expect(page.getByText("After cannot remove a Before-origin Step.")).toBeVisible();
     await screenshotBoard(page, `${EVIDENCE}/after-origin-blocked-1440.png`);
   });

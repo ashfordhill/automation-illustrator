@@ -670,6 +670,7 @@ body,
 .node-remove-x-btn {
   width: 40px;
   height: 40px;
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -697,6 +698,182 @@ body,
 .node-remove-x-btn:focus-visible {
   outline: 3px solid var(--yellow);
   outline-offset: 2px;
+}
+
+.tile-remove-x {
+  position: absolute;
+  top: -14px;
+  left: -14px;
+  right: auto;
+  z-index: 6;
+}
+
+.plus-tab,
+.path-tab {
+  position: absolute;
+  right: -18px;
+  z-index: 5;
+  width: 36px;
+  height: 36px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 10px;
+  border: 3px solid var(--line);
+  font-weight: 800;
+  font-size: 22px;
+  line-height: 1;
+  cursor: grab;
+  font-family: inherit;
+  box-shadow: 0 3px 0 var(--btn-shadow);
+}
+
+.plus-tab {
+  top: 8px;
+  background: var(--plus);
+  color: #f4fff6;
+}
+
+.path-tab {
+  top: 68px;
+  background: color-mix(in srgb, var(--blue) 42%, var(--paper-deep));
+  color: #071c28;
+}
+
+.plus-tab.is-hidden-rest,
+.path-tab.is-hidden-rest,
+.tile-chrome-host.is-pulling .plus-tab,
+.tile-chrome-host.is-pulling .path-tab,
+.tile-chrome-host.is-pulling .tile-remove-x {
+  visibility: hidden;
+}
+
+.plus-pull-layer,
+.path-pull-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 4000;
+  pointer-events: none;
+}
+
+.plus-taffy {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.plus-preview {
+  pointer-events: auto;
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+  border: 3px solid var(--line);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--cream) 82%, transparent);
+  box-shadow: 0 4px 0 var(--btn-shadow);
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--ink);
+}
+
+.plus-preview.is-hover {
+  background: var(--cream);
+  transform: translate(-50%, -50%) scale(1.06);
+}
+
+.plus-preview-thumb {
+  width: 72px;
+  height: 44px;
+  border: 2.5px solid var(--line);
+  border-radius: 8px;
+  display: flex;
+  overflow: hidden;
+  background: var(--cream);
+}
+
+.plus-preview-thumb.is-step {
+  flex-direction: row;
+}
+
+.plus-preview-who {
+  width: 22px;
+  background: var(--actor-empty);
+  border-right: 2.5px solid var(--line);
+}
+
+.plus-preview-task {
+  flex: 1;
+  background: var(--cream);
+}
+
+.plus-preview-data {
+  flex: 1;
+  background: color-mix(in srgb, var(--data) 35%, var(--cream));
+}
+
+.plus-preview-name {
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.plus-tab-ghost,
+.path-tab-ghost {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  border: 3px solid var(--line);
+  font-weight: 800;
+  font-size: 22px;
+  box-shadow: 0 3px 0 var(--btn-shadow);
+}
+
+.plus-tab-ghost {
+  background: var(--plus);
+  color: #f4fff6;
+}
+
+.path-tab-ghost {
+  background: color-mix(in srgb, var(--blue) 42%, var(--paper-deep));
+  color: #071c28;
+}
+
+.tile-drag-ghost {
+  position: fixed;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 4000;
+  border: 3px dashed var(--line);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--cream) 55%, transparent);
+}
+
+.react-flow__node.path-drop-target {
+  outline: 4px dashed var(--blue);
+  outline-offset: 8px;
+}
+
+.react-flow__edge-path.path-insert-band {
+  stroke: var(--blue) !important;
+  stroke-width: 8px !important;
+  stroke-dasharray: 14 8 !important;
+  opacity: 0.7;
+}
+
+.tile-pickup {
+  width: 100%;
+  height: 100%;
 }
 
 @keyframes squash-pop {

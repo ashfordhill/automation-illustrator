@@ -1,21 +1,19 @@
 /**
- * React Flow node for a Step tile (actor + task).
- * Lane in node.data chooses Before vs After assignment (actorFor).
- * After-only Steps and merge-group tiles are supplied via projection data.
+ * Dedicated React Flow node for a merge group (MG-08).
+ * Own measured box — not a StepNode wrapping MergedStepTile.
  */
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import { AssignmentLane, SelectionKind } from "../../workflow/catalogs";
 import { useStore } from "../../state/store";
-import { StepTile } from "../tiles/StepTile";
+import { MergedStepTile } from "../tiles/MergedStepTile";
 import { PathHostFrame } from "../controls/PathHostFrame";
 import { findNode } from "../../workflow/selectors";
 import { isStepNode, laneAssignments, type StepNodeDto } from "../../workflow/types";
 import type { GroupInternals } from "../../state/projection";
 
-export type StepNodeData = {
+export type MergeGroupNodeData = {
   lane?: AssignmentLane;
   node?: StepNodeDto;
-  projectedKind?: "base" | "extra" | "group";
   originId?: string;
   memberIds?: string[];
   supportingIds?: string[];
@@ -23,12 +21,11 @@ export type StepNodeData = {
   departing?: boolean;
 };
 
-export function StepNode({ id, selected, dragging, data }: NodeProps) {
-  const payload = (data ?? {}) as StepNodeData;
+export function MergeGroupNode({ id, selected, dragging, data }: NodeProps) {
+  const payload = (data ?? {}) as MergeGroupNodeData;
   const lane = payload.lane ?? AssignmentLane.Before;
   const memberIds = payload.memberIds;
-  const lookupId =
-    payload.projectedKind === "group" ? (memberIds?.[0] ?? payload.originId ?? id) : (payload.originId ?? id);
+  const lookupId = memberIds?.[0] ?? payload.originId ?? id;
   const departing = useStore((s) => (s.departing?.node.id === id ? s.departing : null));
   const live = useStore((s) => {
     const found = findNode(s.workflow, lookupId);
@@ -44,17 +41,18 @@ export function StepNode({ id, selected, dragging, data }: NodeProps) {
   const storeOn = useStore(
     (s) => s.selected?.type === SelectionKind.Node && s.selected.id === id,
   );
+  const workflow = useStore((s) => s.workflow);
   const node = live && isStepNode(live) ? live : payload.node;
-  if (!node || !isStepNode(node)) return null;
+  const internals = payload.internals;
+  if (!node || !internals) return null;
   const on = !!(storeOn || selected || focusId === id);
   return (
     <PathHostFrame id={id} selected={on} departing={!!departing}>
       <Handle type="target" position={Position.Left} />
-      <StepTile
+      <MergedStepTile
         actor={actor}
-        kind={node.stepKind}
-        title={node.title}
-        detail={node.detail}
+        doc={workflow}
+        internals={internals}
         selected={on && !departing}
         lifted={dragging}
       />

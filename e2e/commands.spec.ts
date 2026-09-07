@@ -68,8 +68,6 @@ test.describe("slice 4 command evidence", () => {
     await page.keyboard.press("Escape");
     await page.getByText("Review BS&A Software").first().click();
     await page.keyboard.press("Delete");
-    await expect(page.getByRole("button", { name: "Remove Review BS&A Software" })).toBeVisible();
-    await page.keyboard.press("Enter");
     await expect(page.getByText("Review BS&A Software")).toHaveCount(0);
     await expect(page.getByText(DEMO_STEP).first()).toBeVisible();
   });

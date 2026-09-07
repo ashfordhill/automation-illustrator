@@ -145,11 +145,29 @@ export function FlowArrow({
   const lines = label ? wrapConditionLines(label) : [];
   const className = restitch ? "edge-restitch" : stretch && stretched ? "edge-stretch" : undefined;
 
+  const insertHover = useStore(
+    (s) => s.interaction.kind === "tile-drag" && s.interaction.hoverEdgeId === originId,
+  );
   const stroke = restitch ? "var(--blue-deep)" : "var(--line)";
-  const strokeWidth = selected || restitch ? 4 : 2.75;
+  const strokeWidth = selected || restitch || insertHover ? 4 : 2.75;
 
   return (
     <>
+      {insertHover ? (
+        <BaseEdge
+          id={`${id}-insert-hover`}
+          path={path}
+          className="path-insert-band"
+          interactionWidth={0}
+          style={{
+            stroke: "var(--blue)",
+            strokeWidth: 8,
+            strokeDasharray: "14 8",
+            strokeLinecap: "butt",
+            opacity: 0.55,
+          }}
+        />
+      ) : null}
       <BaseEdge
         id={id}
         path={path}

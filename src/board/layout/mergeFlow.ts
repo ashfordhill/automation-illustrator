@@ -11,7 +11,10 @@ import {
   type WorkflowDoc,
 } from "../../workflow/types";
 import type { GroupInternals } from "../../state/projection";
-import { ACTOR_W, STEP_H } from "./tileMetrics";
+import { ACTOR_W } from "./tileMetrics";
+
+/** Who column: figure + name card, not a stretched STEP_H ActorColumn (MG-08). */
+export const MERGE_WHO_H = 148;
 
 export const MERGE_STEP_W = 76;
 export const MERGE_STEP_H = 40;
@@ -172,7 +175,7 @@ export function layoutMergeFlow(doc: WorkflowDoc, internals: GroupInternals): Me
   }
 
   const width = ACTOR_W + MERGE_PAD * 2 + flowW;
-  const height = Math.max(STEP_H, flowH + MERGE_PAD * 2);
+  const height = Math.max(MERGE_WHO_H, flowH + MERGE_PAD * 2);
   return {
     width,
     height,
@@ -192,5 +195,5 @@ export function mergeTileSize(doc: WorkflowDoc, internals: GroupInternals): { w:
 
 /** Fallback when internals are missing: a normal Step footprint. */
 export function defaultMergeTileSize(): { w: number; h: number } {
-  return { w: ACTOR_W + MERGE_PAD * 2 + MERGE_STEP_W, h: STEP_H };
+  return { w: ACTOR_W + MERGE_PAD * 2 + MERGE_STEP_W, h: MERGE_WHO_H };
 }

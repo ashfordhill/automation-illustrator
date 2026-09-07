@@ -8,9 +8,10 @@ import type { RemovalPlan } from "../workflow/commands";
 
 export type Interaction =
   | { kind: "idle" }
-  | { kind: "add-menu"; sourceId: string }
+  | { kind: "plus-pull"; sourceId: string }
+  | { kind: "path-pull"; sourceId: string; hoverTargetId: string | null }
+  | { kind: "tile-drag"; nodeId: string; hoverEdgeId: string | null }
   | { kind: "connect-existing"; sourceId: string }
-  | { kind: "remove-pick"; hostId: string; candidateId: string }
   | { kind: "remove-preview"; plan: RemovalPlan }
   | { kind: "merge-pick"; memberIds: string[] };
 
@@ -26,17 +27,20 @@ export function isTransient(interaction: Interaction): boolean {
 }
 
 export function addMenuSource(interaction: Interaction): string | null {
-  return interaction.kind === "add-menu" ? interaction.sourceId : null;
+  return interaction.kind === "plus-pull" ? interaction.sourceId : null;
 }
 
 export function connectSource(interaction: Interaction): string | null {
-  return interaction.kind === "connect-existing" ? interaction.sourceId : null;
+  if (interaction.kind === "connect-existing" || interaction.kind === "path-pull") {
+    return interaction.sourceId;
+  }
+  return null;
 }
 
-export function removePickHost(interaction: Interaction): string | null {
-  return interaction.kind === "remove-pick" ? interaction.hostId : null;
+export function removePickHost(_interaction: Interaction): string | null {
+  return null;
 }
 
-export function removePickCandidate(interaction: Interaction): string | null {
-  return interaction.kind === "remove-pick" ? interaction.candidateId : null;
+export function removePickCandidate(_interaction: Interaction): string | null {
+  return null;
 }

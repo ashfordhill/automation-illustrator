@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { expectAxeClean } from "./axe";
-import { DEMO_STEP, loadOakPark, screenshotBoard, waitForLayout, confirmRemoveNode } from "./ready";
+import { DEMO_STEP, loadOakPark, screenshotBoard, waitForLayout } from "./ready";
 
 const EVIDENCE = ".docs/evidence/12-release";
 const MAIL_STEP = "Read incoming mail";
@@ -298,7 +298,6 @@ test.describe("slice 12 accessibility and reduced motion", () => {
     await loadOakPark(page);
     await page.getByText("Write BS&A Software").first().click();
     await page.keyboard.press("Delete");
-    await confirmRemoveNode(page, "Write BS&A Software");
     await expect(page.getByText("Write BS&A Software")).toHaveCount(0);
     await expect(page.getByText("Review BS&A Software").first()).toBeVisible();
     await waitForLayout(page);

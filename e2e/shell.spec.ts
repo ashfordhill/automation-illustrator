@@ -39,7 +39,7 @@ test.describe("slice 8 shell, typography, and sound", () => {
     await page.getByRole("menuitem", { name: "Present" }).click();
     await expect(page.locator("aside")).toHaveCount(0);
     await expect(page.getByText(/will become automated/)).toBeVisible();
-    await expect(page.getByRole("button", { name: "Add Step, Data, or Connect existing" })).toHaveCount(
+    await expect(page.getByRole("button", { name: "Add Step or Data" })).toHaveCount(
       0,
     );
     await page.screenshot({

@@ -138,7 +138,7 @@ export function DetailsPanel() {
             onChange={(e) => useStore.getState().updateNode(n.id, { label: e.target.value })}
           />
           {showRemove ? (
-            <Button color="red" variant="light" size="xs" onClick={() => useStore.getState().beginRemovePick(n.id)}>
+            <Button color="red" variant="light" size="xs" onClick={() => useStore.getState().removeTarget(n.id)}>
               Remove
             </Button>
           ) : null}
@@ -203,7 +203,7 @@ export function DetailsPanel() {
         />
         {readOnly ? null : <ManageActorsButton />}
         {showRemove ? (
-          <Button color="red" variant="light" size="xs" onClick={() => useStore.getState().beginRemovePick(n.id)}>
+          <Button color="red" variant="light" size="xs" onClick={() => useStore.getState().removeTarget(n.id)}>
             Remove
           </Button>
         ) : null}

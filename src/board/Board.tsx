@@ -16,6 +16,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import {
   ReactFlowEdgeKind,
+  ReactFlowNodeKind,
   ViewMode,
   reactFlowTypeFor,
   SelectionKind,
@@ -37,7 +38,6 @@ import { measureLabelBox, type LabelBox } from "./layout/labelBox";
 import type { TileSizes } from "./layout/elkGraph";
 import { useLaneLayout } from "./layout/useLaneLayout";
 import { pointAt, useAnimatedLayout } from "./layout/useAnimatedLayout";
-import { afterAwareRemovalCandidateIds } from "../workflow/merge";
 import { LaneLayoutContext } from "./routing/LaneLayoutContext";
 import { pathIsDotted, type FlowPathData } from "./routing/FlowArrow";
 
@@ -56,7 +56,6 @@ function blurDetailsFocus() {
 function nodeClassName(
   id: string,
   interaction: ReturnType<typeof useStore.getState>["interaction"],
-  candidates: string[],
   departingId: string | null,
   merge?: boolean,
   mergePicked?: boolean,
@@ -64,11 +63,11 @@ function nodeClassName(
   const parts = ["nopan"];
   if (merge) parts.push("is-merge-group");
   if (departingId === id) parts.push("node-departing");
-  if (interaction.kind === "remove-pick" && candidates.includes(id)) {
-    parts.push(interaction.candidateId === id ? "remove-candidate-on" : "remove-candidate");
-  }
   if (interaction.kind === "remove-preview" && interaction.plan.nodeId === id) {
     parts.push("remove-candidate-on");
+  }
+  if (interaction.kind === "path-pull" && interaction.hoverTargetId === id) {
+    parts.push("path-drop-target");
   }
   if (interaction.kind === "merge-pick" && mergePicked) {
     parts.push("merge-candidate-on");
@@ -86,14 +85,9 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
   const departing = useStore((s) => s.departing);
   const focusedLane = useStore((s) => s.focusedLane);
   const view = useStore((s) => s.view);
-  const laneLayoutPositions = useStore((s) => s.laneLayoutPositions);
   const initialViewport = useRef(useStore.getState().laneViewports[lane]);
   const rf = useReactFlow();
   const editing = !present;
-  const hostId = interaction.kind === "remove-pick" ? interaction.hostId : null;
-  const candidates = hostId
-    ? afterAwareRemovalCandidateIds(workflow, hostId, laneLayoutPositions[lane])
-    : [];
 
   const projection = useMemo(() => projectLane(workflow, lane), [workflow, lane]);
 
@@ -188,7 +182,7 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
     const internals = projection.internals.find((g) => g.groupId === n.id);
     return {
       id: n.id,
-      type: reactFlowTypeFor(n.type),
+      type: n.projectedKind === "group" ? ReactFlowNodeKind.MergeGroup : reactFlowTypeFor(n.type),
       position: pos,
       data: {
         lane,
@@ -205,7 +199,6 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
       className: nodeClassName(
         n.id,
         interaction,
-        candidates,
         null,
         n.projectedKind === "group",
         mergePicked,
@@ -228,7 +221,7 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
       data: { lane, node: n, departing: true },
       draggable: false,
       selectable: false,
-      className: nodeClassName(n.id, interaction, [], n.id),
+      className: nodeClassName(n.id, interaction, n.id),
       width: size.w,
       height: size.h,
       measured: { width: size.w, height: size.h },
@@ -270,8 +263,12 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
       source: e.source,
       target: e.target,
       type: ReactFlowEdgeKind.Flow,
-      selectable: editing && interaction.kind !== "remove-pick" && interaction.kind !== "remove-preview",
+      selectable: editing && interaction.kind !== "remove-preview" && interaction.kind !== "tile-drag",
       selected: isSelected,
+      className:
+        interaction.kind === "tile-drag" && interaction.hoverEdgeId === e.originId
+          ? "path-insert-hover"
+          : undefined,
       data: stretching && via ? { stretch: true, viaX: via.x, viaY: via.y, originId: e.originId } : { originId: e.originId },
     };
     return { rfEdge, isSelected, dotted: pathIsDotted(workflow, e.originId) };
@@ -305,8 +302,11 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
       s.completeLinkTo(n.id);
       return;
     }
-    if (s.interaction.kind === "remove-pick") {
-      s.setRemoveCandidate(n.id);
+    if (s.interaction.kind === "path-pull") {
+      s.completePathPull(n.id);
+      return;
+    }
+    if (s.interaction.kind === "plus-pull" || s.interaction.kind === "tile-drag") {
       return;
     }
     if (s.interaction.kind === "merge-pick") {
@@ -378,7 +378,7 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
             const s = useStore.getState();
             s.setFocusedLane(lane);
             if (s.present) return;
-            if (s.interaction.kind === "remove-pick" || s.interaction.kind === "remove-preview") {
+            if (s.interaction.kind === "remove-preview" || s.interaction.kind === "tile-drag") {
               return;
             }
             const originId = (e.data as FlowPathData | undefined)?.originId;

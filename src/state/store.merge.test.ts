@@ -83,9 +83,7 @@ test("After + creates an After-only Step and hides Data (BA-06, BA-07)", () => {
 test("After-only Step can be removed in After (BA-07)", () => {
   loadMailroom();
   const s = useStore.getState();
-  s.beginRemovePick(MAILROOM_IDS.receipt);
-  expect(useStore.getState().interaction.kind).toBe("remove-pick");
-  s.confirmRemove();
+  s.removeTarget(MAILROOM_IDS.receipt);
   expect(useStore.getState().workflow.after.extraNodes).toEqual([]);
 });
 

@@ -10,6 +10,7 @@ import {
   joinConditions,
   planNodeRemoval,
   pruneAfterOverlay,
+  insertNodeOnPath,
   validatePairings,
   type RemovalPairing,
 } from "./commands";
@@ -561,4 +562,39 @@ test("removing a Data Node uses the same 1:1 restitch rules", () => {
     label: "in + out",
   });
   expect(validateWorkflow(applied.value)).toEqual([]);
+});
+
+test("insertNodeOnPath keeps the condition on S→T and leaves T→U unlabeled", () => {
+  const board = doc(
+    [step("r"), step("a", 0, 40), step("b", 0, 80), step("c", 40, 40)],
+    [path("e1", "r", "a"), path("e2", "a", "b", "go"), path("e3", "r", "c")],
+  );
+  const result = insertNodeOnPath(board, "c", "e2");
+  expect(result.ok).toBe(true);
+  if (!result.ok) return;
+  expect(validateWorkflow(result.value)).toEqual([]);
+  expect(result.value.nodes.map((n) => n.id).sort()).toEqual(["a", "b", "c", "r"]);
+  expect(result.value.edges.some((e) => e.source === "r" && e.target === "c")).toBe(false);
+  const inPath = result.value.edges.find((e) => e.source === "a" && e.target === "c");
+  const outPath = result.value.edges.find((e) => e.source === "c" && e.target === "b");
+  expect(inPath?.label).toBe("go");
+  expect(outPath?.label).toBe("");
+});
+
+test("insertNodeOnPath rejects the root, a self-drop, and a missing Path", () => {
+  const board = doc(
+    [step("r"), step("a", 0, 40), step("b", 0, 80)],
+    [path("e1", "r", "a"), path("e2", "a", "b")],
+  );
+  const root = insertNodeOnPath(board, "r", "e2");
+  expect(root.ok).toBe(false);
+  if (!root.ok) expect(root.message).toBe(MSG.rootInsert);
+
+  const self = insertNodeOnPath(board, "a", "e1");
+  expect(self.ok).toBe(false);
+  if (!self.ok) expect(self.message).toBe(MSG.insertSelf);
+
+  const missing = insertNodeOnPath(board, "a", "nope");
+  expect(missing.ok).toBe(false);
+  if (!missing.ok) expect(missing.message).toBe(MSG.missingPath);
 });

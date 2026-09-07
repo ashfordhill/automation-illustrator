@@ -26,7 +26,7 @@ export async function screenshotBoard(page: Page, path: string) {
   await page.screenshot({ path, animations: "disabled" });
 }
 
-/** Click the on-tile red X, or press Enter for the highlighted default candidate. */
+/** Click the on-tile red X for the selected Node. */
 export async function confirmRemoveNode(page: Page, candidateName?: string) {
   if (candidateName) {
     const btn = page.getByRole("button", { name: `Remove ${candidateName}`, exact: true });
@@ -34,7 +34,24 @@ export async function confirmRemoveNode(page: Page, candidateName?: string) {
     await btn.click();
     return;
   }
-  await page.keyboard.press("Enter");
+  await page.getByRole("button", { name: /^Remove / }).first().click();
+}
+
+/** Drag the selected-tile + tab onto a Step / Data preview (36px pull, then drop). */
+export async function pullPlusPreview(page: Page, preview: string) {
+  const plus = page.getByRole("button", { name: /Add Step or Data|Add After-only Step/ }).first();
+  await expect(plus).toBeVisible();
+  const box = await plus.boundingBox();
+  if (!box) throw new Error("plus tab has no box");
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width / 2 + 140, box.y + box.height / 2, { steps: 12 });
+  const previewBtn = page.getByRole("button", { name: preview });
+  await expect(previewBtn).toBeVisible();
+  const pb = await previewBtn.boundingBox();
+  if (!pb) throw new Error("plus preview has no box");
+  await page.mouse.move(pb.x + pb.width / 2, pb.y + pb.height / 2, { steps: 8 });
+  await page.mouse.up();
 }
 
 /** Current React Flow zoom (translate/scale or matrix). Defaults to the first lane. */

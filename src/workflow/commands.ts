@@ -76,6 +76,10 @@ export const MSG = {
   mergeDisconnected: "Those Steps are not connected by base Paths.",
   mergeMissing: "Select a merged Step to Unmerge.",
   mergeInternalPath: "That Path would stay inside the merge group.",
+  insertSelf: "Drop the Node onto a Path that does not already touch it.",
+  rootInsert: "The root cannot be moved onto a Path.",
+  insertHostGone: "That Path is gone after reconnecting the Node’s old neighborhood.",
+  missingPath: "That Path is not on the board.",
 } as const;
 
 export function fail<T>(code: string, message: string): CommandResult<T> {
@@ -652,4 +656,87 @@ export function applyNodeRemoval(
     assignments: dropAssign(doc.assignments, plan.nodeId),
     after: overlayEffects.after,
   });
+}
+
+/**
+ * Relocate an existing Node onto Path S→U: restitch the old neighborhood
+ * (WG-10..12, nearest pairings if M:N) then connect S→T and T→U in one step.
+ * The original condition stays on S→T (closer to the root).
+ */
+export function insertNodeOnPath(
+  doc: WorkflowDoc,
+  nodeId: string,
+  edgeId: string,
+  positions?: PositionMap,
+): CommandResult<WorkflowDoc> {
+  const valid = requireValid(doc);
+  if (!valid.ok) return valid;
+  const host = doc.edges.find((e) => e.id === edgeId);
+  if (!host) return fail("missing-ref", MSG.missingPath);
+  if (nodeId === host.source || nodeId === host.target) {
+    return fail("insert-self", MSG.insertSelf);
+  }
+  if (!doc.nodes.some((n) => n.id === nodeId)) {
+    return fail("missing-ref", MSG.missingNode);
+  }
+  const root = rootNodeId(doc.nodes, doc.edges);
+  if (root === nodeId) return fail("root-insert", MSG.rootInsert);
+
+  const planned = planNodeRemoval(doc, nodeId, positions);
+  if (!planned.ok) return planned;
+
+  const withoutIncident = doc.edges.filter((e) => e.source !== nodeId && e.target !== nodeId);
+  const restitched = applyPairings(doc.nodes, withoutIncident, planned.value.pairings);
+  const liveHost = restitched.find((e) => e.id === edgeId);
+  if (!liveHost) return fail("insert-host-gone", MSG.insertHostGone);
+
+  const rest = restitched.filter((e) => e.id !== edgeId);
+  const inId = nid(IdPrefix.Edge);
+  const outId = nid(IdPrefix.Edge);
+  const previousOutgoing = rest.filter((e) => e.source === liveHost.source).length;
+  const rawEdges: EdgeDto[] = [
+    ...rest,
+    {
+      id: inId,
+      source: liveHost.source,
+      target: nodeId,
+      label: liveHost.label,
+      dashed: liveHost.dashed,
+    },
+    {
+      id: outId,
+      source: nodeId,
+      target: liveHost.target,
+      label: "",
+      dashed: false,
+    },
+  ];
+  if (
+    wouldCreateCycle(rest, liveHost.source, nodeId) ||
+    wouldCreateCycle(
+      [...rest, { id: inId, source: liveHost.source, target: nodeId, label: "" }],
+      nodeId,
+      liveHost.target,
+    )
+  ) {
+    return fail("cycle", MSG.cycle);
+  }
+  const broken = doc.after.groups.find((g) => !isConvex(g.memberIds, doc.nodes, rawEdges));
+  if (broken) {
+    const names = broken.memberIds
+      .map((id) => {
+        const n = doc.nodes.find((x) => x.id === id);
+        return n && isStepNode(n) ? stepDisplayLabel(n.stepKind, n.title) : id;
+      })
+      .join(", ");
+    return fail(
+      "merge-convexity",
+      `That Path would leave merge group "${names || broken.id}" and re-enter it. Unmerge first.`,
+    );
+  }
+  let nodes = maybeExclusiveSplit(doc.nodes, rawEdges, liveHost.source);
+  nodes = maybeExclusiveSplit(nodes, rawEdges, nodeId);
+  let edges = applyConnectStroke(nodes, rawEdges, liveHost.source, inId, previousOutgoing);
+  edges = applyConnectStroke(nodes, edges, nodeId, outId, 0);
+  return succeed({ ...doc, nodes, edges });
 }

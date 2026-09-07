@@ -5,8 +5,9 @@
  *
  * commit / undo / redo — history.ts (500; replaceDoc is a document boundary)
  * addStep — first Step is the root (WG-01); later tiles spawn from +
- * openLinkMenu / spawnBranch / beginLinkFrom — tile + (After: After-only Step / Connect existing)
- * beginRemovePick / confirmRemove / removePickedNode — − / Delete / inspector Remove; on-tile X (WG-08..11)
+ * spawnBranch / plus-pull / path-pull — stretchy + tab and Path knot
+ * removeTarget / confirmRemove — selected-tile X / Delete; M:N pairing preview
+ * insertOnPath — drop a tile onto a Path
  * beginMerge / confirmMerge / unmerge — After merge dock (MG-01..MG-07)
  * toggleSelectedDash — selected Path solid/dotted
  * requestNew / requestDemo / importRaw — replacement gate (SH-06, SH-12)
@@ -52,6 +53,7 @@ import {
   connectNodes,
   createRootStep,
   fanPairings,
+  insertNodeOnPath,
   nearestPairings,
   pairingBetween,
   planNodeRemoval,
@@ -65,7 +67,6 @@ import {
   applyAfterOnlyRemoval,
   assignMergeGroupWho,
   createMergeGroup,
-  afterAwareRemovalCandidateIds,
   expandMergeSelection,
   planAfterOnlyRemoval,
   removeMergeGroup,
@@ -76,12 +77,8 @@ import { projectAfter } from "./projection";
 import {
   afterGraph,
   applyDashForSplit,
-  defaultRemovalCandidateId,
   edgeIsDotted,
   nextPortIndex,
-  outgoingSorted,
-  removalCandidateIds,
-  rootNodeId,
   validateWorkflow,
 } from "../workflow/graph";
 import { nid } from "../workflow/ids";
@@ -259,19 +256,23 @@ export const useStore = create<{
   assignActor: (stepId: string, actorId: string) => void;
   connect: (source: string, target: string, label?: string) => void;
   deleteSelection: () => void;
-  openLinkMenu: (sourceId: string) => void;
   closeBoardModes: () => void;
   spawnBranch: (sourceId: string, type: typeof WorkflowNodeKind.Step | typeof WorkflowNodeKind.DataField) => string;
+  beginPlusPull: (sourceId: string) => void;
+  beginPathPull: (sourceId: string) => void;
+  setPathPullHover: (targetId: string | null) => void;
+  completePathPull: (targetId: string) => void;
+  beginTileDrag: (nodeId: string) => void;
+  setTileDragHover: (edgeId: string | null) => void;
+  insertOnPath: (nodeId: string, edgeId: string) => void;
   beginLinkFrom: (sourceId: string) => void;
   completeLinkTo: (targetId: string) => void;
   toggleSelectedDash: () => void;
   focusPathLabel: () => void;
   focusDataLabel: () => void;
+  removeTarget: (nodeId: string) => void;
   beginRemovePick: (hostId: string) => void;
-  cycleRemoveCandidate: (dir: -1 | 1) => void;
-  setRemoveCandidate: (candidateId: string) => void;
   confirmRemove: () => void;
-  removePickedNode: (candidateId: string) => void;
   setPreviewSuccessorPred: (successorId: string, predecessorId: string) => void;
   useNearestPreviewPairings: () => void;
   useFanPreviewPairings: () => void;
@@ -715,13 +716,13 @@ export const useStore = create<{
   deleteSelection: () => {
     if (get().present || get().view === ViewMode.Both) return;
     const { selected, interaction } = get();
-    if (interaction.kind === "remove-pick" || interaction.kind === "remove-preview") {
+    if (interaction.kind === "remove-preview") {
       get().confirmRemove();
       return;
     }
     if (!selected) return;
     if (selected.type === SelectionKind.Node) {
-      get().beginRemovePick(selected.id);
+      get().removeTarget(selected.id);
       return;
     }
     if (selected.type === SelectionKind.Edge) {
@@ -732,24 +733,88 @@ export const useStore = create<{
   },
 
   closeBoardModes: () => set({ interaction: IDLE }),
-  openLinkMenu: (sourceId) => {
+  beginPlusPull: (sourceId) => {
     if (get().present || get().view === ViewMode.Both) return;
+    set({
+      interaction: { kind: "plus-pull", sourceId },
+      selected: { type: SelectionKind.Node, id: sourceId },
+    });
+  },
+  beginPathPull: (sourceId) => {
+    if (get().present || get().view === ViewMode.Both) return;
+    set({
+      interaction: { kind: "path-pull", sourceId, hoverTargetId: null },
+      selected: { type: SelectionKind.Node, id: sourceId },
+    });
+  },
+  setPathPullHover: (targetId) => {
     const { interaction } = get();
-    if (interaction.kind === "add-menu" && interaction.sourceId === sourceId) {
+    if (interaction.kind !== "path-pull") return;
+    if (interaction.hoverTargetId === targetId) return;
+    set({ interaction: { ...interaction, hoverTargetId: targetId } });
+  },
+  completePathPull: (targetId) => {
+    const { interaction } = get();
+    if (interaction.kind !== "path-pull") return;
+    if (interaction.sourceId === targetId) {
+      set({ interaction: IDLE });
+      return;
+    }
+    const before = get().workflow;
+    get().connect(interaction.sourceId, targetId);
+    if (get().workflow === before) {
       set({ interaction: IDLE });
       return;
     }
     set({
-      interaction: { kind: "add-menu", sourceId },
-      selected: { type: SelectionKind.Node, id: sourceId },
+      interaction: IDLE,
+      selected: { type: SelectionKind.Node, id: targetId },
     });
+    get().requestFocus(targetId);
+  },
+  beginTileDrag: (nodeId) => {
+    if (get().present || get().view === ViewMode.Both) return;
+    set({
+      interaction: { kind: "tile-drag", nodeId, hoverEdgeId: null },
+      selected: { type: SelectionKind.Node, id: nodeId },
+    });
+  },
+  setTileDragHover: (edgeId) => {
+    const { interaction } = get();
+    if (interaction.kind !== "tile-drag") return;
+    if (interaction.hoverEdgeId === edgeId) return;
+    set({ interaction: { ...interaction, hoverEdgeId: edgeId } });
+  },
+  insertOnPath: (nodeId, edgeId) => {
+    if (get().present || get().view === ViewMode.Both) return;
+    const { workflow, view } = get();
+    if (view === ViewMode.After) {
+      if (isBeforeOriginNode(workflow, nodeId) && !isAfterOnlyNode(workflow, nodeId)) {
+        get().setNotice("Switch to Before to move a Before-origin Node.");
+        set({ interaction: IDLE });
+        return;
+      }
+    }
+    const result = insertNodeOnPath(workflow, nodeId, edgeId, get().activePositions());
+    if (!result.ok) {
+      get().setNotice(result.message);
+      set({ interaction: IDLE });
+      return;
+    }
+    get().commit(result.value);
+    playCueWhen(get().soundEnabled, "blip");
+    set({
+      interaction: IDLE,
+      selected: { type: SelectionKind.Node, id: nodeId },
+    });
+    get().requestFocus(nodeId);
   },
   spawnBranch: (sourceId, type) => {
     if (get().present || get().view === ViewMode.Both) return "";
     const { workflow, lastHumanId, view } = get();
     if (view === ViewMode.After) {
       if (type === WorkflowNodeKind.DataField) {
-        get().setNotice("After does not add Data. Add an After-only Step or Connect existing.");
+        get().setNotice("After does not add Data. Pull + onto Step, or press 1.");
         return "";
       }
       const resolved = resolveAfterEndpoint(workflow, sourceId, "source");
@@ -895,99 +960,27 @@ export const useStore = create<{
     focusNamedField("data-label-field");
   },
 
-  beginRemovePick: (hostId) => {
+  removeTarget: (nodeId) => {
     if (get().present || get().view === ViewMode.Both) return;
     const { workflow, view } = get();
-    const group = findMergeGroup(workflow, hostId);
+    const group = findMergeGroup(workflow, nodeId);
     if (group) {
       if (view === ViewMode.After) get().unmerge(group.id);
       return;
     }
-    const positions = get().activePositions();
-    if (isAfterOnlyNode(workflow, hostId)) {
-      if (view !== ViewMode.After) return;
-      const graph = afterGraph(workflow);
-      const candidates = afterAwareRemovalCandidateIds(workflow, hostId, positions);
-      const firstChild = outgoingSorted(graph.nodes, graph.edges, hostId, positions).find((e) =>
-        candidates.includes(e.target),
-      )?.target;
-      const candidateId =
-        (firstChild && candidates.includes(firstChild) ? firstChild : null) ??
-        (candidates.includes(hostId) ? hostId : candidates[0]);
-      if (!candidateId) return;
-      set({
-        interaction: { kind: "remove-pick", hostId, candidateId },
-        selected: { type: SelectionKind.Node, id: hostId },
-        manageActorsOpen: false,
-        manageActorId: null,
-      });
-      return;
-    }
-    if (view === ViewMode.After && isBeforeOriginNode(workflow, hostId)) {
+    if (view === ViewMode.After && isBeforeOriginNode(workflow, nodeId) && !isAfterOnlyNode(workflow, nodeId)) {
       get().setNotice(MSG.afterOriginRemoval);
       return;
     }
-    if (!workflow.nodes.some((n) => n.id === hostId)) return;
-    const candidates = removalCandidateIds(workflow.nodes, workflow.edges, hostId, positions);
-    const candidateId = defaultRemovalCandidateId(workflow.nodes, workflow.edges, hostId, positions);
-    if (!candidates.length || !candidateId) {
-      get().setNotice(MSG.rootRemoval);
-      set({ interaction: IDLE, selected: { type: SelectionKind.Node, id: hostId } });
-      return;
-    }
-    if (rootNodeId(workflow.nodes, workflow.edges) === hostId) {
-      get().setNotice(MSG.rootRemoval);
-    }
     set({
-      interaction: { kind: "remove-pick", hostId, candidateId },
-      selected: { type: SelectionKind.Node, id: hostId },
+      selected: { type: SelectionKind.Node, id: nodeId },
       manageActorsOpen: false,
       manageActorId: null,
     });
-  },
-  cycleRemoveCandidate: (dir) => {
-    const { interaction, workflow } = get();
-    if (interaction.kind !== "remove-pick") return;
-    const candidates = afterAwareRemovalCandidateIds(
-      workflow,
-      interaction.hostId,
-      get().activePositions(),
-    );
-    if (!candidates.length) {
-      set({ interaction: IDLE });
-      return;
-    }
-    const current = Math.max(0, candidates.indexOf(interaction.candidateId));
-    const index = (current + dir + candidates.length) % candidates.length;
-    set({
-      interaction: { ...interaction, candidateId: candidates[index]! },
-    });
-  },
-  setRemoveCandidate: (candidateId) => {
-    const { interaction, workflow } = get();
-    if (interaction.kind !== "remove-pick") return;
-    const candidates = afterAwareRemovalCandidateIds(
-      workflow,
-      interaction.hostId,
-      get().activePositions(),
-    );
-    if (!candidates.includes(candidateId)) return;
-    set({ interaction: { ...interaction, candidateId } });
-  },
-  confirmRemove: () => {
-    const { interaction, workflow } = get();
-    if (interaction.kind === "remove-preview") {
-      if (isAfterOnlyNode(workflow, interaction.plan.nodeId)) {
-        applyAfterOnlyPlanned(get, set, interaction.plan, interaction.plan.pairings);
-        return;
-      }
-      applyPlannedRemoval(get, set, interaction.plan, interaction.plan.pairings);
-      return;
-    }
-    if (interaction.kind !== "remove-pick") return;
     const positions = get().activePositions();
-    if (isAfterOnlyNode(workflow, interaction.candidateId)) {
-      const planned = planAfterOnlyRemoval(workflow, interaction.candidateId, positions);
+    if (isAfterOnlyNode(workflow, nodeId)) {
+      if (view !== ViewMode.After) return;
+      const planned = planAfterOnlyRemoval(workflow, nodeId, positions);
       if (!planned.ok) {
         get().setNotice(planned.message);
         return;
@@ -999,9 +992,11 @@ export const useStore = create<{
       applyAfterOnlyPlanned(get, set, planned.value, planned.value.pairings);
       return;
     }
-    const planned = planNodeRemoval(workflow, interaction.candidateId, positions);
+    if (!workflow.nodes.some((n) => n.id === nodeId)) return;
+    const planned = planNodeRemoval(workflow, nodeId, positions);
     if (!planned.ok) {
       get().setNotice(planned.message);
+      set({ interaction: IDLE, selected: { type: SelectionKind.Node, id: nodeId } });
       return;
     }
     if (planned.value.mode === "preview") {
@@ -1010,11 +1005,17 @@ export const useStore = create<{
     }
     applyPlannedRemoval(get, set, planned.value, planned.value.pairings);
   },
-  removePickedNode: (candidateId) => {
-    const { interaction } = get();
-    if (interaction.kind !== "remove-pick") return;
-    get().setRemoveCandidate(candidateId);
-    get().confirmRemove();
+  beginRemovePick: (hostId) => {
+    get().removeTarget(hostId);
+  },
+  confirmRemove: () => {
+    const { interaction, workflow } = get();
+    if (interaction.kind !== "remove-preview") return;
+    if (isAfterOnlyNode(workflow, interaction.plan.nodeId)) {
+      applyAfterOnlyPlanned(get, set, interaction.plan, interaction.plan.pairings);
+      return;
+    }
+    applyPlannedRemoval(get, set, interaction.plan, interaction.plan.pairings);
   },
   setPreviewSuccessorPred: (successorId, predecessorId) => {
     const { interaction, workflow } = get();

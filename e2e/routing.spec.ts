@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { DEMO_STEP, loadOakPark, screenshotBoard, waitForLayout, confirmRemoveNode } from "./ready";
+import { DEMO_STEP, loadOakPark, screenshotBoard, waitForLayout } from "./ready";
 
 const EVIDENCE = ".docs/evidence/improve-01-layout";
 
@@ -84,8 +84,7 @@ test.describe("ELK layout and bundled Path routing (Improvement 01)", () => {
     const review = page.getByText("Review BS&A Software").first();
     await review.click();
     const reviewBox = await review.boundingBox();
-    await page.getByRole("button", { name: "Add Step, Data, or Connect existing" }).first().click();
-    await page.getByRole("menuitem", { name: "1 Step" }).click();
+    await page.keyboard.press("1");
     const started = Date.now();
     await expect(page.locator(".board-lane")).toHaveAttribute("data-layout", "ready", { timeout: 2_000 });
     expect(Date.now() - started).toBeLessThan(2_000);
@@ -197,7 +196,6 @@ test.describe("ELK layout and bundled Path routing (Improvement 01)", () => {
     await loadOakPark(page);
     await page.getByText("Write BS&A Software").first().click();
     await page.keyboard.press("Delete");
-    await confirmRemoveNode(page, "Write BS&A Software");
     await expect(page.getByText("Write BS&A Software")).toHaveCount(0);
     await expect(page.getByText("Review BS&A Software").first()).toBeVisible();
     await waitForLayout(page);

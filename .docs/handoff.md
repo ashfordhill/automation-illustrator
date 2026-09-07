@@ -811,3 +811,34 @@ Corrections in the same chat before the next slice starts get their own short en
 - Evidence: `.docs/evidence/07-inspector/path-condition-1440.png` — Path rail is only the label field; `.docs/evidence/improve-01-layout/mailroom-dana-card-1440.png` — Dana cream card inset above the strip bottom
 - Status: COMPLETE
 - Commit: `feat(improve-01): simplify Path inspector and inset Who card`
+
+## Improvement 02 — merge tile, stretchy +, Path-pull, insert — 2026-09-07
+
+- Starting commit: `81994f8` (feat(improve-01): simplify Path inspector and inset Who card)
+- Working tree at start: dirty (in-progress Improvement 02 plus Path-inspector follow-up already at HEAD)
+- GOAL clauses addressed: WG-07, WG-08, WG-09, NA-12, MG-08, AQ-01, NG-02, NG-03 (amendments appended; frozen clause text unchanged)
+- Library research and decisions: No new runtime deps. Tile pickup and tab pulls use pointer capture + portals (React Flow `nodesDraggable` stays false so ELK keeps layout). Path-pull uses `elementFromPoint` onto `.react-flow__node`. Insert hit-tests ELK routes (`pathHit.ts`).
+- Files changed:
+  - Domain: `src/workflow/commands.ts` (`insertNodeOnPath`; condition stays on S→T), `src/workflow/catalogs.ts` (`ReactFlowNodeKind.MergeGroup`)
+  - State: `src/state/store.ts`, `src/state/interaction.ts` (plus-pull, path-pull, tile-drag; selected-only `removeTarget`; no add-menu / remove-pick)
+  - Board: `TileChrome.tsx`, `PathKnotIcon.tsx`, `PathHostFrame.tsx`, `Board.tsx`, `MergeGroupNode.tsx`, `MergeWhoColumn.tsx`, `MergedStepTile.tsx`, `mergeFlow.ts`, `FlowArrow.tsx`, `pathHit.ts`; deleted `OutgoingPathPad.tsx`
+  - Keys / inspector / CSS: `useAppKeys.ts`, `bindings.ts`, `CanvasHelper.tsx`, `SelectedItemForm.tsx`, `tokens.css`
+  - Tests: unit insert/remove; e2e canvas/merge/projection/commands/routing/shell/hardening
+  - Docs: `.docs/GOAL.md` amendments; evidence under `.docs/evidence/improve-02-merge-drag/`
+- Behavior implemented:
+  - Selected tile only: red X (no neighbor pick, no red outline). X / Delete / inspector Remove act on that Node; auto restitch is immediate; M:N still opens pairing preview. Root and After Before-origin explain. After merge-tile X is Unmerge. Tile `−` is gone.
+  - Stretchy `+` tab: click does nothing; pull fans Step/Data previews (After: Step only). `1` / `2` spawn immediately. Path knot tab: drag a string onto a Node to connect. No Path hotkey.
+  - Drag a selected Step/Data onto a Path to insert (Before); condition moves to S→T. Empty drop cancels. Dedicated merge RF node; Robot stays normal size.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2)
+  - `npm run test:unit` — pass (30 files, 156 tests)
+  - `npm run test:e2e` — pass (77 Chromium)
+- Evidence:
+  - `.docs/evidence/improve-02-merge-drag/selected-x-1440.png` — selected tile X top-left, + and Path tabs, no red outline, no −
+  - `.docs/evidence/improve-02-merge-drag/plus-pull-previews-1440.png` — stretchy + fanning Step and Data
+  - `.docs/evidence/improve-02-merge-drag/path-knot-pull-1440.png` — knot tab pulling a dashed Path string
+  - `.docs/evidence/improve-02-merge-drag/mailroom-after-1440.png` — Mailroom After merge tile with normal-size Robot
+- Earlier-slice defects fixed: Path inspector **label** field (already at starting HEAD). Removal picker neighbors/red outline replaced per this improvement.
+- Known limitations / follow-ups: After-only insert-on-Path not implemented (Before-origin insert in After is rejected). Path connect is pointer-only (AQ-01 exception, user approved). Insert-on-Path has unit coverage, not a dedicated e2e drag. Nested/partial unmerge still out of scope.
+- Status: COMPLETE
+- Commit: `feat(improve-02): add merge tile type and tile drag`

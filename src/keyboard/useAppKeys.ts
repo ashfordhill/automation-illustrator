@@ -1,6 +1,6 @@
 /**
- * Global keydown handler for undo, pan, help, present toggle, + menu,
- * Connect existing, and the Node-removal picker. Mounted once from app/App.tsx.
+ * Global keydown handler for undo, pan, help, present toggle,
+ * selected-tile 1/2 spawn, and Delete/Remove. Mounted once from app/App.tsx.
  */
 import { useEffect } from "react";
 import { panBy } from "../board/reactFlowBridge";
@@ -96,28 +96,12 @@ export function useAppKeys() {
 
       const readOnlyBoard = s.present || s.view === ViewMode.Both;
 
-      if (!readOnlyBoard && s.interaction.kind === "remove-pick") {
-        const up =
-          keyIs(map, KeyAction.PanUp, e) ||
-          e.key === "ArrowUp";
-        const down =
-          keyIs(map, KeyAction.PanDown, e) ||
-          e.key === "ArrowDown";
-        if (up) {
-          e.preventDefault();
-          s.cycleRemoveCandidate(-1);
-          return;
-        }
-        if (down) {
-          e.preventDefault();
-          s.cycleRemoveCandidate(1);
-          return;
-        }
-        if (keyIs(map, KeyAction.Confirm, e) || e.key === "Enter" || isDeleteKey(e)) {
-          e.preventDefault();
-          s.confirmRemove();
-          return;
-        }
+      if (
+        !readOnlyBoard &&
+        (s.interaction.kind === "plus-pull" ||
+          s.interaction.kind === "path-pull" ||
+          s.interaction.kind === "tile-drag")
+      ) {
         return;
       }
 
@@ -139,36 +123,10 @@ export function useAppKeys() {
         return;
       }
 
-      if (!readOnlyBoard && s.interaction.kind === "add-menu") {
-        e.preventDefault();
-        if (keyIs(map, KeyAction.AddBranchStep, e)) {
-          s.spawnBranch(s.interaction.sourceId, WorkflowNodeKind.Step);
-          return;
-        }
-        if (keyIs(map, KeyAction.AddBranchData, e)) {
-          if (s.view === ViewMode.After) return;
-          s.spawnBranch(s.interaction.sourceId, WorkflowNodeKind.DataField);
-          return;
-        }
-        if (keyIs(map, KeyAction.LinkExisting, e)) {
-          s.beginLinkFrom(s.interaction.sourceId);
-          return;
-        }
-        if (keyIs(map, KeyAction.RemoveNode, e)) {
-          s.beginRemovePick(s.interaction.sourceId);
-          return;
-        }
-        if (keyIs(map, KeyAction.AddPath, e)) {
-          s.openLinkMenu(s.interaction.sourceId);
-          return;
-        }
-        return;
-      }
-
       if (!readOnlyBoard && s.interaction.kind === "connect-existing") {
-        if (keyIs(map, KeyAction.RemoveNode, e)) {
+        if (keyIs(map, KeyAction.RemoveNode, e) || isDeleteKey(e) || action === KeyAction.Delete) {
           e.preventDefault();
-          s.beginRemovePick(s.interaction.sourceId);
+          s.removeTarget(s.interaction.sourceId);
           return;
         }
         return;
@@ -198,14 +156,24 @@ export function useAppKeys() {
           s.focusDataLabel();
           return;
         }
-        if (keyIs(map, KeyAction.AddPath, e)) {
+        if (keyIs(map, KeyAction.AddBranchStep, e)) {
           e.preventDefault();
-          s.openLinkMenu(s.selected.id);
+          s.spawnBranch(s.selected.id, WorkflowNodeKind.Step);
+          return;
+        }
+        if (keyIs(map, KeyAction.AddBranchData, e)) {
+          e.preventDefault();
+          if (s.view === ViewMode.After) return;
+          s.spawnBranch(s.selected.id, WorkflowNodeKind.DataField);
+          return;
+        }
+        if (keyIs(map, KeyAction.AddPath, e) || keyIs(map, KeyAction.LinkExisting, e)) {
+          e.preventDefault();
           return;
         }
         if (keyIs(map, KeyAction.RemoveNode, e)) {
           e.preventDefault();
-          s.beginRemovePick(s.selected.id);
+          s.removeTarget(s.selected.id);
           return;
         }
         if (action === KeyAction.Merge) {

@@ -27,11 +27,18 @@ function hintsFor(): Hint[] {
   const k = s.keymap;
   const pk = (a: (typeof KeyAction)[keyof typeof KeyAction]) => prettyKey(k[a]);
 
-  if (s.interaction.kind === "remove-pick") {
+  if (s.interaction.kind === "plus-pull") {
+    return [{ key: "Esc", label: "Cancel" }];
+  }
+  if (s.interaction.kind === "path-pull") {
     return [
-      { key: pk(KeyAction.PanUp), label: "Previous Node" },
-      { key: pk(KeyAction.PanDown), label: "Next Node" },
-      { key: pk(KeyAction.Confirm), label: "Remove highlighted Node" },
+      { key: "Release", label: "Connect to the Node under the knot" },
+      { key: "Esc", label: "Cancel" },
+    ];
+  }
+  if (s.interaction.kind === "tile-drag") {
+    return [
+      { key: "Drop", label: "Insert onto a Path" },
       { key: "Esc", label: "Cancel" },
     ];
   }
@@ -54,26 +61,11 @@ function hintsFor(): Hint[] {
       { key: "Esc", label: "Cancel" },
     ];
   }
-  if (s.interaction.kind === "add-menu") {
-    if (s.view === ViewMode.After) {
-      return [
-        { key: pk(KeyAction.AddBranchStep), label: "After-only Step" },
-        { key: pk(KeyAction.LinkExisting), label: "Connect existing" },
-        { key: "Esc", label: "Cancel" },
-      ];
-    }
-    return [
-      { key: pk(KeyAction.AddBranchStep), label: "New Step" },
-      { key: pk(KeyAction.AddBranchData), label: "New Data" },
-      { key: pk(KeyAction.LinkExisting), label: "Connect existing" },
-      { key: "Esc", label: "Cancel" },
-    ];
-  }
   if (s.selected?.type === SelectionKind.Edge) {
     if (s.view === ViewMode.Both) return [];
     return [
       { key: pk(KeyAction.ToggleDash), label: "Always visited / Choice" },
-      { key: pk(KeyAction.Confirm), label: "Edit condition" },
+      { key: pk(KeyAction.Confirm), label: "Edit label" },
       { key: pk(KeyAction.Delete), label: "Paths aren't removed" },
     ];
   }
@@ -85,7 +77,7 @@ function hintsFor(): Hint[] {
     const items: Hint[] = [];
     if (s.view === ViewMode.Both) return [];
     if (s.view === ViewMode.After) {
-      items.push({ key: pk(KeyAction.AddPath), label: "Add Path" });
+      items.push({ key: pk(KeyAction.AddBranchStep), label: "After-only Step" });
       items.push({ key: pk(KeyAction.Merge), label: "Merge" });
       if (group) {
         items.push({ key: pk(KeyAction.Unmerge), label: "Unmerge" });
@@ -94,7 +86,8 @@ function hintsFor(): Hint[] {
       }
       return items;
     }
-    items.push({ key: pk(KeyAction.AddPath), label: "Add Path" });
+    items.push({ key: pk(KeyAction.AddBranchStep), label: "New Step" });
+    items.push({ key: pk(KeyAction.AddBranchData), label: "New Data" });
     items.push({
       key: pk(KeyAction.RemoveNode),
       label: n?.type === WorkflowNodeKind.DataField ? "Remove Data" : "Remove Step",

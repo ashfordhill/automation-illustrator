@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { waitForLayout, laneZoom, waitForZoomIdle, confirmRemoveNode } from "./ready";
+import { waitForLayout, laneZoom, waitForZoomIdle } from "./ready";
 
 const DEMO_STEP = "Read invoice.pdf";
 const EVIDENCE = ".docs/evidence/06-canvas";
@@ -37,10 +37,6 @@ function viewLabel(page: Page, name: "Before" | "After" | "Both") {
   return page.locator("header").getByText(name, { exact: true });
 }
 
-async function confirmRemove(page: Page, candidateName?: string) {
-  await confirmRemoveNode(page, candidateName);
-}
-
 test.describe("slice 6 canvas create / connect / remove", () => {
   test("Before / After / Both; After hides +; Pointer/Hand are gone", async ({ page }) => {
     await loadDemo(page);
@@ -48,40 +44,84 @@ test.describe("slice 6 canvas create / connect / remove", () => {
     await expect(page.getByRole("button", { name: /^Pointer/ })).toHaveCount(0);
     await expect(page.getByRole("button", { name: /^Hand/ })).toHaveCount(0);
 
-    await expect(page.getByRole("button", { name: "Add Step, Data, or Connect existing" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Add Step or Data" })).toHaveCount(0);
     await page.getByText(DEMO_STEP).first().hover();
-    await expect(page.getByRole("button", { name: "Add Step, Data, or Connect existing" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Add Step or Data" })).toHaveCount(0);
     await page.getByText(DEMO_STEP).first().click();
-    await expect(page.getByRole("button", { name: "Add Step, Data, or Connect existing" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Add Step or Data" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Pull a Path to an existing Node" })).toBeVisible();
+    await expect(page.getByRole("button", { name: `Remove ${DEMO_STEP}` })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Remove Node" })).toHaveCount(0);
+    await expect(page.locator(".remove-candidate, .remove-candidate-on")).toHaveCount(0);
     await page.screenshot({
       path: `${EVIDENCE}/before-light-1440.png`,
       animations: "disabled",
     });
+    await page.screenshot({
+      path: ".docs/evidence/improve-02-merge-drag/selected-x-1440.png",
+      animations: "disabled",
+    });
 
-    await page.getByRole("button", { name: "Add Step, Data, or Connect existing" }).click();
-    await expect(page.getByRole("menuitem", { name: /Connect existing/ })).toBeVisible();
+    const plus = page.getByRole("button", { name: "Add Step or Data" });
+    const box = await plus.boundingBox();
+    expect(box).toBeTruthy();
+    await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(box!.x + box!.width / 2 + 140, box!.y + box!.height / 2, { steps: 12 });
+    await expect(page.getByRole("button", { name: "New Step" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "New Data" })).toBeVisible();
     await page.screenshot({
       path: `${EVIDENCE}/plus-menu-1440.png`,
       animations: "disabled",
     });
+    await page.screenshot({
+      path: ".docs/evidence/improve-02-merge-drag/plus-pull-previews-1440.png",
+      animations: "disabled",
+    });
+    await page.mouse.up();
+    await page.keyboard.press("Escape");
+
+    await page.getByText(DEMO_STEP).first().click();
+    const knot = page.getByRole("button", { name: "Pull a Path to an existing Node" });
+    const knotBox = await knot.boundingBox();
+    expect(knotBox).toBeTruthy();
+    await page.mouse.move(knotBox!.x + knotBox!.width / 2, knotBox!.y + knotBox!.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(knotBox!.x + knotBox!.width / 2 + 90, knotBox!.y + knotBox!.height / 2 + 20, {
+      steps: 10,
+    });
+    await page.screenshot({
+      path: ".docs/evidence/improve-02-merge-drag/path-knot-pull-1440.png",
+      animations: "disabled",
+    });
+    await page.mouse.up();
     await page.keyboard.press("Escape");
 
     await viewLabel(page, "After").click();
     await expect(page.getByText("AFTER", { exact: true })).toBeVisible();
     await page.getByText(DEMO_STEP).first().click();
-    await expect(page.getByRole("button", { name: "Add After-only Step or Connect existing" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Remove Node" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Add After-only Step" })).toBeVisible();
+    await expect(page.getByRole("button", { name: `Remove ${DEMO_STEP}` })).toBeVisible();
     await page.screenshot({
       path: `${EVIDENCE}/after-light-1440.png`,
       animations: "disabled",
     });
-    await page.getByRole("button", { name: "Add After-only Step or Connect existing" }).click();
-    await expect(page.getByRole("menuitem", { name: /After-only Step/ })).toBeVisible();
-    await expect(page.getByRole("menuitem", { name: /^Data$/ })).toHaveCount(0);
+    const afterPlus = page.getByRole("button", { name: "Add After-only Step" });
+    const afterBox = await afterPlus.boundingBox();
+    expect(afterBox).toBeTruthy();
+    await page.mouse.move(afterBox!.x + afterBox!.width / 2, afterBox!.y + afterBox!.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(afterBox!.x + afterBox!.width / 2 + 140, afterBox!.y + afterBox!.height / 2, {
+      steps: 12,
+    });
+    await expect(page.getByRole("button", { name: "After-only Step" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "New Data" })).toHaveCount(0);
     await page.screenshot({
       path: `${EVIDENCE}/after-no-plus-1440.png`,
       animations: "disabled",
     });
+    await page.mouse.up();
+    await page.keyboard.press("Escape");
 
     await viewLabel(page, "Both").click();
     await expect(page.getByText("BEFORE", { exact: true })).toBeVisible();
@@ -96,17 +136,16 @@ test.describe("slice 6 canvas create / connect / remove", () => {
     await loadDemo(page);
 
     await page.getByText("Review BS&A Software").first().click();
-    await page.keyboard.press("Delete");
     await expect(page.getByRole("button", { name: "Remove Review BS&A Software" })).toBeVisible();
-    await page.keyboard.press("Escape");
+    await page.locator(".react-flow__pane").click({ position: { x: 24, y: 24 }, force: true });
     await expect(page.getByText("Review BS&A Software").first()).toBeVisible();
     await page.screenshot({
       path: `${EVIDENCE}/remove-cancel-1440.png`,
       animations: "disabled",
     });
 
+    await page.getByText("Review BS&A Software").first().click();
     await page.keyboard.press("Delete");
-    await confirmRemove(page);
     await expect(page.getByText("Review BS&A Software")).toHaveCount(0);
 
     await page.keyboard.press("Backspace");
@@ -114,18 +153,16 @@ test.describe("slice 6 canvas create / connect / remove", () => {
 
     await page.getByText("Write BS&A Software").first().click();
     await page.keyboard.press("Delete");
-    await confirmRemove(page, "Write BS&A Software");
     await expect(page.getByText("Write BS&A Software")).toHaveCount(0);
     await expect(page.getByText("Review BS&A Software").first()).toBeVisible();
 
     await page.getByText("Account #").first().click();
-    await page.keyboard.press("Delete");
     await expect(page.getByRole("button", { name: "Remove Account #" })).toBeVisible();
     await page.screenshot({
       path: `${EVIDENCE}/remove-pick-1440.png`,
       animations: "disabled",
     });
-    await confirmRemove(page, "Account #");
+    await page.keyboard.press("Delete");
     await expect(page.getByText("Account #")).toHaveCount(0);
     await expect(page.getByText("Search website").first()).toBeVisible();
     await expect(page.getByText("Review BS&A Software").first()).toBeVisible();
@@ -134,15 +171,12 @@ test.describe("slice 6 canvas create / connect / remove", () => {
   test("1:N auto restitch after confirm", async ({ page }) => {
     await loadDemo(page);
     await page.getByText("Review BS&A Software").first().click();
-    await page.getByRole("button", { name: "Add Step, Data, or Connect existing" }).click();
     await page.keyboard.press("1");
     await page.getByText("Review BS&A Software").first().click();
-    await page.getByRole("button", { name: "Add Step, Data, or Connect existing" }).click();
     await page.keyboard.press("1");
 
     await page.getByText("Review BS&A Software").first().click();
     await page.keyboard.press("Delete");
-    await confirmRemove(page, "Review BS&A Software");
     await expect(page.getByText("Review BS&A Software")).toHaveCount(0);
     await expect(page.getByText("Write BS&A Software").first()).toBeVisible();
   });
@@ -164,7 +198,6 @@ test.describe("slice 6 canvas create / connect / remove", () => {
 
     await page.getByText("Other hub").first().click();
     await page.keyboard.press("Delete");
-    await confirmRemove(page, "Other hub");
     await expect(page.getByRole("dialog", { name: "Confirm Node removal pairings" })).toBeVisible();
     await page.screenshot({
       path: `${EVIDENCE}/remove-mn-preview-1440.png`,
@@ -204,9 +237,14 @@ test.describe("slice 6 canvas create / connect / remove", () => {
     await page.getByRole("button", { name: "Add Step" }).click();
     await expect(page.locator(".react-flow__node")).toHaveCount(1);
     await page.locator(".react-flow__node").click();
-    await page.getByRole("button", { name: "Add Step, Data, or Connect existing" }).click();
-    await page.getByRole("menuitem", { name: /Connect existing/ }).click();
-    await page.locator(".react-flow__pane").click({ position: { x: 40, y: 40 }, force: true });
+    await expect(page.getByRole("button", { name: "Add Step or Data" })).toBeVisible();
+    const pathTab = page.getByRole("button", { name: "Pull a Path to an existing Node" });
+    const tabBox = await pathTab.boundingBox();
+    expect(tabBox).toBeTruthy();
+    await page.mouse.move(tabBox!.x + tabBox!.width / 2, tabBox!.y + tabBox!.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(40, 40, { steps: 10 });
+    await page.mouse.up();
     await expect(page.locator(".react-flow__node")).toHaveCount(1);
   });
 });
@@ -217,7 +255,7 @@ test.describe("viewport stays user-driven", () => {
     await waitForZoomIdle(page);
     const beforeClick = await laneZoom(page);
     await page.getByText(DEMO_STEP).first().click();
-    await expect(page.getByRole("button", { name: "Add Step, Data, or Connect existing" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Add Step or Data" })).toBeVisible();
     expect(await laneZoom(page)).toBeCloseTo(beforeClick, 2);
 
     const samples = new Set<string>();

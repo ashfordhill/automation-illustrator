@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { loadOakPark, screenshotBoard, waitForLayout, confirmRemoveNode } from "./ready";
+import { loadOakPark, screenshotBoard, waitForLayout } from "./ready";
 
 const EVIDENCE = ".docs/evidence/11-merge";
 const MAIL_STEP = "Read incoming mail";
@@ -31,18 +31,25 @@ test.describe("slice 11 merge / unmerge and After-only Steps", () => {
     await expect(page.getByRole("region", { name: "Merge and Unmerge" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Merge", exact: true })).toBeVisible();
     await screenshotBoard(page, `${EVIDENCE}/after-mailroom-1440.png`);
+    await screenshotBoard(page, ".docs/evidence/improve-02-merge-drag/mailroom-after-1440.png");
   });
 
-  test("After + offers After-only Step and Connect existing, not Data", async ({ page }) => {
+  test("After + offers After-only Step, not Data", async ({ page }) => {
     await loadOakPark(page);
     await viewLabel(page, "After").click();
     await waitForLayout(page);
     await page.getByText("Read invoice.pdf").first().click();
-    await page.getByRole("button", { name: "Add After-only Step or Connect existing" }).click();
-    await expect(page.getByRole("menuitem", { name: /After-only Step/ })).toBeVisible();
-    await expect(page.getByRole("menuitem", { name: /Connect existing/ })).toBeVisible();
-    await expect(page.getByRole("menuitem", { name: /^Data$/ })).toHaveCount(0);
+    const afterPlus = page.getByRole("button", { name: "Add After-only Step" });
+    const box = await afterPlus.boundingBox();
+    expect(box).toBeTruthy();
+    await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(box!.x + box!.width / 2 + 140, box!.y + box!.height / 2, { steps: 12 });
+    await expect(page.getByRole("button", { name: "After-only Step" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "New Data" })).toHaveCount(0);
     await screenshotBoard(page, `${EVIDENCE}/after-plus-1440.png`);
+    await page.mouse.up();
+    await page.keyboard.press("Escape");
   });
 
   test("Merge preview then Unmerge restores Mailroom members", async ({ page }) => {
@@ -72,12 +79,10 @@ test.describe("slice 11 merge / unmerge and After-only Steps", () => {
     await viewLabel(page, "After").click();
     await waitForLayout(page);
     await page.getByText("Read invoice.pdf").first().click();
-    await page.getByRole("button", { name: "Add After-only Step or Connect existing" }).click();
-    await page.getByRole("menuitem", { name: /After-only Step/ }).click();
+    await page.keyboard.press("1");
     await waitForLayout(page);
     await expect(page.locator("aside").getByRole("button", { name: "Type Other" })).toBeVisible();
     await page.locator("aside").getByRole("button", { name: "Remove" }).click();
-    await confirmRemoveNode(page, "Other");
     await waitForLayout(page);
     await expect(page.locator("aside").getByRole("button", { name: "Manage actors" })).toBeVisible();
     await screenshotBoard(page, `${EVIDENCE}/after-only-removed-1440.png`);

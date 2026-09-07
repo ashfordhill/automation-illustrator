@@ -4,7 +4,7 @@
  */
 import type { GroupInternals } from "../../state/projection";
 import type { ActorDto, WorkflowDoc } from "../../workflow/types";
-import { ActorColumn } from "./ActorColumn";
+import { MergeWhoColumn } from "./MergeWhoColumn";
 import { DataChip } from "./DataChip";
 import { FitLabel } from "./FitLabel";
 import { StepKindIcon } from "./StepKindIcon";
@@ -32,10 +32,10 @@ export function MergedStepTile({
         width: layout.width,
         height: layout.height,
         display: "flex",
-        alignItems: "stretch",
+        alignItems: "flex-start",
         border: "3px solid var(--line)",
         borderRadius: 14,
-        overflow: "hidden",
+        overflow: "visible",
         background: "var(--cream)",
         boxShadow: lifted
           ? "0 10px 0 var(--btn-shadow), 0 18px 24px var(--btn-shadow)"
@@ -46,7 +46,7 @@ export function MergedStepTile({
         transition: "transform 140ms ease, box-shadow 140ms ease",
       }}
     >
-      <ActorColumn actor={actor} />
+      <MergeWhoColumn actor={actor} />
       <div
         className="merge-flow-pane"
         style={{

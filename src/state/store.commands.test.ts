@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, expect, test } from "vitest";
-import { AssignmentLane, ColorScheme, SelectionKind, ViewMode, WorkflowNodeKind } from "../workflow/catalogs";
+import { ColorScheme, SelectionKind, ViewMode, WorkflowNodeKind } from "../workflow/catalogs";
 import { MSG } from "../workflow/commands";
 import { defaultRemovalCandidateId, validateWorkflow } from "../workflow/graph";
 import { emptyAfterOverlay, type WorkflowDoc } from "../workflow/types";
@@ -53,11 +53,10 @@ test("store actions keep a valid workflow (WG-02..WG-04)", () => {
   s.select({ type: SelectionKind.Node, id: root });
   s.deleteSelection();
   expect(useStore.getState().workflow.nodes.some((n) => n.id === root)).toBe(true);
-  const pick = useStore.getState().interaction;
-  expect(pick.kind).toBe("remove-pick");
-  if (pick.kind === "remove-pick") expect(pick.candidateId).not.toBe(root);
+  expect(useStore.getState().interaction.kind).toBe("idle");
+  expect(useStore.getState().notice).toBe(MSG.rootRemoval);
   expect(validateWorkflow(useStore.getState().workflow)).toEqual([]);
-  s.closeBoardModes();
+  s.setNotice(null);
 
   const edge = useStore.getState().workflow.edges[0]!;
   s.select({ type: SelectionKind.Edge, id: edge.id });
@@ -68,9 +67,8 @@ test("store actions keep a valid workflow (WG-02..WG-04)", () => {
 
   s.select({ type: SelectionKind.Node, id: leaf });
   s.deleteSelection();
-  expect(useStore.getState().interaction.kind).toBe("remove-pick");
-  s.confirmRemove();
   expect(useStore.getState().workflow.nodes.some((n) => n.id === leaf)).toBe(false);
+  expect(useStore.getState().interaction.kind).toBe("idle");
   expect(validateWorkflow(useStore.getState().workflow)).toEqual([]);
 });
 
@@ -79,8 +77,6 @@ test("1:N / N:1 auto removal restitches after confirm; M:N opens pairing preview
   const account = dataId(s.workflow);
   s.select({ type: SelectionKind.Node, id: account });
   s.deleteSelection();
-  s.setRemoveCandidate(account);
-  s.confirmRemove();
   expect(useStore.getState().workflow.nodes.some((n) => n.id === account)).toBe(false);
   expect(validateWorkflow(useStore.getState().workflow)).toEqual([]);
 
@@ -160,11 +156,7 @@ test("1:N / N:1 auto removal restitches after confirm; M:N opens pairing preview
   useStore.getState().select({ type: SelectionKind.Node, id: "n" });
   useStore.getState().deleteSelection();
   expect(useStore.getState().workflow.nodes.some((n) => n.id === "n")).toBe(true);
-  expect(useStore.getState().interaction.kind).toBe("remove-pick");
-  useStore.getState().setRemoveCandidate("n");
-  useStore.getState().confirmRemove();
   expect(useStore.getState().interaction.kind).toBe("remove-preview");
-  expect(useStore.getState().workflow.nodes.some((n) => n.id === "n")).toBe(true);
   useStore.getState().confirmRemove();
   expect(useStore.getState().workflow.nodes.some((n) => n.id === "n")).toBe(false);
   expect(validateWorkflow(useStore.getState().workflow)).toEqual([]);
@@ -222,36 +214,14 @@ test("addStep on a nonempty board does not create a second root", () => {
   expect(validateWorkflow(useStore.getState().workflow)).toEqual([]);
 });
 
-test("beginRemovePick defaults to the displayed-topmost child (derived layout, WG-09)", () => {
+test("removeTarget on the root explains WG-06 and stays idle", () => {
   const s = useStore.getState();
-  const doc = s.workflow;
-  const root = rootId(doc);
-  const children = doc.edges.filter((e) => e.source === root).map((e) => e.target);
-  expect(children.length).toBeGreaterThanOrEqual(2);
-  const [first, second] = children as [string, string];
-
-  s.setLaneLayoutPositions(AssignmentLane.Before, {
-    [first]: { x: 400, y: 400 },
-    [second]: { x: 400, y: 0 },
-  });
-  expect(useStore.getState().activePositions()).toBeDefined();
-  s.beginRemovePick(root);
-  const pick = useStore.getState().interaction;
-  expect(pick.kind).toBe("remove-pick");
-  if (pick.kind === "remove-pick") expect(pick.candidateId).toBe(second);
-  s.closeBoardModes();
-
-  /* Flip the displayed order and the default flips with it; saved positions never change. */
-  const before = useStore.getState().workflow;
-  s.setLaneLayoutPositions(AssignmentLane.Before, {
-    [first]: { x: 400, y: 0 },
-    [second]: { x: 400, y: 400 },
-  });
-  s.beginRemovePick(root);
-  const again = useStore.getState().interaction;
-  if (again.kind === "remove-pick") expect(again.candidateId).toBe(first);
+  const root = rootId(s.workflow);
+  const before = s.workflow;
+  s.removeTarget(root);
+  expect(useStore.getState().notice).toBe(MSG.rootRemoval);
+  expect(useStore.getState().interaction).toEqual(IDLE);
   expect(useStore.getState().workflow).toBe(before);
-  s.closeBoardModes();
 });
 
 test("root-only board explains WG-06; leaf picker defaults to itself (WG-09)", () => {
@@ -260,7 +230,7 @@ test("root-only board explains WG-06; leaf picker defaults to itself (WG-09)", (
   s.confirmReplaceDiscard();
   const id = useStore.getState().addStep();
   expect(id).toBeTruthy();
-  useStore.getState().beginRemovePick(id);
+  useStore.getState().removeTarget(id);
   expect(useStore.getState().notice).toBe(MSG.rootRemoval);
   expect(useStore.getState().interaction).toEqual(IDLE);
   expect(useStore.getState().workflow.nodes).toHaveLength(1);
@@ -273,4 +243,31 @@ test("root-only board explains WG-06; leaf picker defaults to itself (WG-09)", (
     leaf,
   );
   expect(def).toBe(leaf);
+});
+
+test("insertOnPath relocates a leaf onto an existing Path", () => {
+  const board: WorkflowDoc = {
+    version: 2,
+    actors: [{ id: "h1", kind: "human", name: "Ada", color: "#f4c6d4", role: "worker" }],
+    nodes: [
+      { id: "r", type: "step", position: { x: 0, y: 40 }, stepKind: "other", title: "root", detail: "", split: "exclusive" },
+      { id: "a", type: "step", position: { x: 80, y: 0 }, stepKind: "other", title: "mid", detail: "", split: "exclusive" },
+      { id: "b", type: "step", position: { x: 160, y: 0 }, stepKind: "other", title: "tail", detail: "", split: "exclusive" },
+      { id: "c", type: "step", position: { x: 80, y: 80 }, stepKind: "other", title: "leaf", detail: "", split: "exclusive" },
+    ],
+    edges: [
+      { id: "e1", source: "r", target: "a", label: "" },
+      { id: "e2", source: "a", target: "b", label: "keep" },
+      { id: "e3", source: "r", target: "c", label: "" },
+    ],
+    assignments: { r: "h1", a: "h1", b: "h1", c: "h1" },
+    after: emptyAfterOverlay(),
+  };
+  useStore.getState().replaceDoc(board);
+  useStore.getState().insertOnPath("c", "e2");
+  const next = useStore.getState().workflow;
+  expect(next.edges.some((e) => e.source === "a" && e.target === "c" && e.label === "keep")).toBe(true);
+  expect(next.edges.some((e) => e.source === "c" && e.target === "b" && e.label === "")).toBe(true);
+  expect(next.edges.some((e) => e.source === "r" && e.target === "c")).toBe(false);
+  expect(validateWorkflow(next)).toEqual([]);
 });

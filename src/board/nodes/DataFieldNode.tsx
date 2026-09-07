@@ -1,6 +1,6 @@
 /**
  * React Flow node for a Data-field tile.
- * Same PathHostFrame as StepNode so +/− linking works on fields too.
+ * Same PathHostFrame as StepNode so + / Path-pull / X chrome works on fields too.
  */
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import { SelectionKind, WorkflowNodeKind } from "../../workflow/catalogs";
