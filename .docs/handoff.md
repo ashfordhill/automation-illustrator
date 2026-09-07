@@ -777,3 +777,20 @@ Corrections in the same chat before the next slice starts get their own short en
   - `npm run test:e2e` — pass (77 Chromium). One parallel run failed 2 specs that still expected the HUD root copy; after the root notice, those two re-ran passed.
 - Status: COMPLETE
 - Commit: `feat(improve-01): align dotted Paths and remove Nodes with X`
+
+## Improvement 01 — correction 5 — 2026-09-07
+
+- Requested: The Who card still did not match the Dana / Mail clerk mockup. Name must sit flush on a large nested title sub-box; that sub-box should be terracotta/warm brown (not grey, not magenta); cream parent with peach showing around it.
+- Changed:
+  - `src/board/tiles/FitLabel.tsx` — `hug` packs the name row (`height: auto`, line-height 1) so glyphs sit on the title chip.
+  - `src/board/tiles/ActorColumn.tsx` — name max 16px; title still `FIGURE_INK_ON_PASTEL`.
+  - `src/app/styles/tokens.css` — cream card, zero gap; title flex-fills the remaining height; fill is `oklch(from var(--actor-fill) 0.69 clamp(0.07, calc(c + 0.075), 0.13) h)` so Dana’s chip is ~`#d68547`.
+  - `e2e/routing.spec.ts` — Mailroom Before capture `mailroom-dana-card-1440.png`.
+  - Recaptured e2e evidence PNGs (Who column visible on tiles).
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2)
+  - `npm run test:unit` — pass (29 files, 152 tests)
+  - `npm run test:e2e` — pass (77 Chromium)
+- Evidence: `.docs/evidence/improve-01-layout/mailroom-dana-card-1440.png` — Mailroom Before; Dana cream card with terracotta Mail clerk sub-box packed under the name
+- Status: COMPLETE
+- Commit: `feat(improve-01): pack actor name against a terracotta title sub-box`

@@ -104,6 +104,7 @@ test.describe("ELK layout and bundled Path routing (Improvement 01)", () => {
     await page.getByRole("button", { name: "Discard" }).click();
     await expect(page.getByText(DEMO_STEP)).toHaveCount(0);
     await waitForLayout(page);
+    await screenshotBoard(page, `${EVIDENCE}/mailroom-dana-card-1440.png`);
     await viewLabel(page, "After").click();
     await expect(page.getByText("AFTER", { exact: true })).toBeVisible();
     await waitForLayout(page);
