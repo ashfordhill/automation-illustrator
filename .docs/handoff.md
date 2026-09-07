@@ -270,3 +270,44 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(slice-04): add graph commands and bounded history`
 
+## Slice 05 — replacement safety and demos — 2026-09-06
+
+- Starting commit: `a2872c369cade22321b89a16b1ceca93c31fd7bf` (`feat(slice-04): add graph commands and bounded history`)
+- Working tree at start: clean, branch `main`, 6 commits ahead of `origin/main` (not pushed)
+- GOAL clauses addressed: WG-01 (empty New board, on-canvas Add Step creates the root), SH-05 (hamburger Demo chooser at the bottom; no Export), SH-06 (shared Save copy / Discard / Cancel gate for New, Demo, Import), SH-07 (Oak Park + Robot Mailroom fixtures; Mailroom overlay authored), SH-10 (Download recovery copy / Start fresh), SH-11 (persistent Not saved chip), SH-12 (history cleared on successful replacement), SH-13 (CLI exporter and README export instructions removed; Save copy is the JSON download), PC-06 (both Oak Park amount Paths dotted), AQ-06 / AQ-07 (unit and Chromium coverage of replace, recovery, both demos)
+- Library research and decisions: no new dependencies. File download uses `Blob` + a temporary `<a download>` (Web platform; not a library). Replacement and recovery use existing Mantine 9 `Modal`. Demo chooser is a `Menu.Label` plus two items after a divider, not a nested submenu, so both fixtures stay keyboard-reachable as menuitems. First visit still hydrates Oak Park when storage is empty (showcase), not a blank board.
+- Files changed:
+  - Demos: `src/demos/oakParkInvoice.ts` (deterministic exporter IDs, both amount Paths dotted, `freshBoard` is empty), new `src/demos/robotMailroom.ts`, new `src/demos/catalog.ts`
+  - Persistence/store: `src/state/persistence.ts` (Save copy / recovery download helpers), `src/state/store.ts` (pending replace, import error, startFresh)
+  - Shell: `src/app/components/Toolbar.tsx` (hamburger order + Not saved), new `ReplaceDocumentModal.tsx`, `RecoveryModal.tsx`, `ImportErrorModal.tsx`, `EmptyBoardCta.tsx`, `PersistStatusChip.tsx`, `src/app/App.tsx`, `src/app/styles/tokens.css`, `src/keyboard/useAppKeys.ts`
+  - Removed: `scripts/export.mjs`, `package.json` `export-json` script; README CLI export instructions replaced with Save copy
+  - Tests: `src/demos/demos.test.ts`, `src/state/store.replace.test.ts`, `src/state/store.persist.test.ts`, `src/state/persistence.test.ts`, `src/workflow/schema.test.ts`, `src/app/App.test.tsx`, `e2e/replace.spec.ts`
+  - Evidence: `.docs/evidence/05-replace/`; existing e2e also recaptured 01–04 screenshots (dotted amount Paths, new hamburger)
+  - This handoff entry
+- Behavior implemented: New / Demo / Import share one accessible gate. Cancel never mutates. Save copy downloads the current v2 JSON then replaces. Discard replaces without downloading. New is a zero-Node board with Alice, Roy, Jack, Missy, and Robot; Add Step creates the root. Demo is Oak Park Invoice and Robot Mailroom at the bottom of the hamburger. Invalid import explains and leaves the live board and storage alone. Corrupt startup storage keeps the raw key and offers Download recovery copy / Start fresh. localStorage write failures show one Not saved chip until a successful save.
+- Tests and exact results:
+  - `npm install` at start — up to date, audited 135 packages, 0 vulnerabilities
+  - `npm run build` at start — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning)
+  - `npm run test:unit` at start — pass (9 files, 54 tests)
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; built in 9.13s; existing chunk-size warning; client `index-CTkkiKVj.js` 805.28 kB)
+  - `npm run test:unit` — pass (11 files, 67 tests)
+  - `npm run test:e2e` — pass (20 passed, Chromium, 56.3s including webServer)
+- Evidence:
+  - `.docs/evidence/05-replace/before-light-1440.png` — Oak Park Before; both amount Paths dotted (1440×900)
+  - `.docs/evidence/05-replace/after-light-1440.png` — Oak Park After (1440×900)
+  - `.docs/evidence/05-replace/both-light-1440.png` — stacked Before/After (1440×900)
+  - `.docs/evidence/05-replace/hamburger-1440.png` — Present, New, Import, Keybinds, Dark mode, then Demo chooser (Oak Park Invoice, Robot Mailroom); no Export (1440×900)
+  - `.docs/evidence/05-replace/replace-gate-1440.png` — Save copy / Discard / Cancel gate (1440×900)
+  - `.docs/evidence/05-replace/empty-new-1440.png` — empty New board with Add Step (1440×900)
+  - `.docs/evidence/05-replace/robot-mailroom-1440.png` — Robot Mailroom Before; score 3 of 6; overlay not projected yet (1440×900)
+  - `.docs/evidence/05-replace/recovery-1440.png` — corrupt storage recovery dialog (1440×900)
+  - `.docs/evidence/05-replace/before-light-1024.png` — Oak Park Before at 1024×768
+- Earlier-slice defects fixed: none
+- Known limitations / follow-ups:
+  - Robot Mailroom merge group and After-only receipt Step are stored on the overlay but After still draws the base graph — Slices 10–11
+  - `−` / Delete / inspector still lack the WG-08 picker; store blocks M:N with a hint — Slice 6
+  - Inspector still titles a Path “Arrow”; Path / condition copy — Slice 7
+  - Pointer/Hand tool, idle helper chips, implicit empty-canvas Step — Slice 6
+- Status: COMPLETE
+- Commit: `feat(slice-05): add replacement gate, demos, and recovery UI`
+

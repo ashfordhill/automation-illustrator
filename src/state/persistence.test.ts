@@ -1,12 +1,20 @@
-import { expect, test } from "vitest";
+import { afterEach, expect, test, vi } from "vitest";
 import {
+  downloadTextFile,
+  downloadWorkflowCopy,
   hydratePersistedWorkflow,
   LS_WORKFLOW,
+  SAVE_COPY_FILENAME,
   writeWorkflow,
   type StorageLike,
 } from "./persistence";
 import { emptyAfterOverlay, emptyWorkflow, type WorkflowDoc } from "../workflow/types";
 import { SplitKind, StepKind, WorkflowNodeKind } from "../workflow/catalogs";
+
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+});
 
 class MemoryStorage implements StorageLike {
   private data = new Map<string, string>();
@@ -145,4 +153,31 @@ test("setItem failure is unavailable; repeated writes stay a single status", () 
   expect(first.persistStatus).toBe("unavailable");
   const second = writeWorkflow(emptyWorkflow(), storage);
   expect(second).toBe("unavailable");
+});
+
+test("downloadWorkflowCopy writes a JSON attachment", () => {
+  const click = vi.fn();
+  const createObjectURL = vi.fn(() => "blob:test");
+  const revoke = vi.fn();
+  vi.stubGlobal("URL", { createObjectURL, revokeObjectURL: revoke });
+  const realCreate = document.createElement.bind(document);
+  vi.spyOn(document, "createElement").mockImplementation((tag: string) => {
+    if (tag === "a") {
+      return {
+        href: "",
+        download: "",
+        rel: "",
+        click,
+        remove: () => {},
+      } as unknown as HTMLAnchorElement;
+    }
+    return realCreate(tag);
+  });
+  vi.spyOn(document.body, "appendChild").mockImplementation((node) => node);
+  downloadWorkflowCopy(emptyWorkflow());
+  expect(createObjectURL).toHaveBeenCalled();
+  expect(click).toHaveBeenCalled();
+  expect(revoke).toHaveBeenCalled();
+  downloadTextFile(SAVE_COPY_FILENAME, "{}");
+  expect(click).toHaveBeenCalledTimes(2);
 });

@@ -14,7 +14,8 @@ function resetSession() {
   s.setPresent(false);
   s.select(null);
   s.setHelp(false);
-  s.setNewConfirmOpen(false);
+  s.cancelReplace();
+  s.clearImportError();
   s.closeBoardModes();
   s.setColorScheme(ColorScheme.Light);
   if (s.recovery) s.clearRecoveryHold();

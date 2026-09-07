@@ -11,6 +11,10 @@ import { useStore } from "../state/store";
 import { AssignmentLane, ViewMode } from "../workflow/catalogs";
 import { automationScore } from "../workflow/scoring";
 import { CanvasHelper } from "./components/CanvasHelper";
+import { EmptyBoardCta } from "./components/EmptyBoardCta";
+import { ImportErrorModal } from "./components/ImportErrorModal";
+import { RecoveryModal } from "./components/RecoveryModal";
+import { ReplaceDocumentModal } from "./components/ReplaceDocumentModal";
 import { Toolbar } from "./components/Toolbar";
 import { DetailsPanel } from "./inspector/SelectedItemForm";
 
@@ -140,11 +144,15 @@ export default function App() {
         >
           <div style={{ height: "100%", position: "relative" }}>
             <CanvasArea />
+            <EmptyBoardCta />
             <CanvasHelper />
           </div>
         </AppShell.Main>
       </AppShell>
       <KeybindsModal />
+      <ReplaceDocumentModal />
+      <RecoveryModal />
+      <ImportErrorModal />
     </MantineProvider>
   );
 }

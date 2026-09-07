@@ -20,7 +20,8 @@ function resetSession() {
   s.setPresent(false);
   s.select(null);
   s.setHelp(false);
-  s.setNewConfirmOpen(false);
+  s.cancelReplace();
+  s.clearImportError();
   s.closeBoardModes();
   s.setColorScheme(ColorScheme.Light);
 }
@@ -53,6 +54,27 @@ test("demo startup loads the Oak Park invoice workflow", () => {
   const { workflow } = useStore.getState();
   expect(workflow.nodes.some((n) => isStepNode(n) && n.title === "invoice.pdf")).toBe(true);
   expect(workflow.nodes.some((n) => !isStepNode(n) && n.label === "Account #")).toBe(true);
+});
+
+test("New discard shows the on-canvas Add Step empty state", () => {
+  act(() => {
+    useStore.getState().requestNew();
+    useStore.getState().confirmReplaceDiscard();
+  });
+  expect(host.textContent).toContain("This board is empty.");
+  expect(host.textContent).toContain("Add Step");
+  act(() => {
+    useStore.getState().addStep();
+  });
+  expect(useStore.getState().workflow.nodes).toHaveLength(1);
+  expect(host.textContent).not.toContain("This board is empty.");
+});
+
+test("unavailable persist status shows a Not saved chip", () => {
+  act(() => {
+    useStore.setState({ persistStatus: "unavailable" });
+  });
+  expect(host.textContent).toContain("Not saved");
 });
 
 test("view switching updates the on-canvas lane name", () => {

@@ -1,35 +1,75 @@
 /**
- * Oak Park invoice walkthrough — the board that loads on first visit
- * and from the hamburger Demo item. Wired through store.resetDemo / loadStart.
+ * Oak Park invoice walkthrough — first-visit board and hamburger Demo item.
+ * IDs match the retired CLI exporter (Slice 5). Both amount Paths are dotted (PC-06).
  */
-import { GRID } from "../board/layout/tileMetrics";
-import { aliceId, defaultActors, defaultRobotId } from "../workflow/actors";
+import { defaultActors, ROBOT_COLORS } from "../workflow/actors";
 import {
-  IdPrefix,
+  ActorKind,
+  RobotKind,
   SplitKind,
   StepKind,
   WorkflowNodeKind,
   WORKFLOW_VERSION,
 } from "../workflow/catalogs";
-import { nid } from "../workflow/ids";
 import { emptyAfterOverlay, type WorkflowDoc } from "../workflow/types";
+
+export const OAK_PARK_IDS = {
+  alice: "h_alice",
+  roy: "h_roy",
+  jack: "h_jack",
+  missy: "h_missy",
+  robot: "r_script",
+  read: "s_read",
+  web: "s_web",
+  fs: "s_fs",
+  acct: "d_acct",
+  enter: "s_enter",
+  review: "s_review",
+  gt: "e_gt",
+  lt: "e_lt",
+  webAcct: "e_web_acct",
+  fsAcct: "e_fs_acct",
+  acctEnter: "e_acct_enter",
+  enterReview: "e_enter_review",
+} as const;
 
 /** Read → (amount split) Search → Account # → Enter → Review. */
 export function oakParkInvoice(): WorkflowDoc {
-  const actors = defaultActors();
-  const alice = aliceId(actors)!;
-  const robot = defaultRobotId(actors)!;
-  const read = nid(IdPrefix.Step);
-  const web = nid(IdPrefix.Step);
-  const fs = nid(IdPrefix.Step);
-  const acct = nid(IdPrefix.DataField);
-  const enter = nid(IdPrefix.Step);
-  const review = nid(IdPrefix.Step);
-  const steps = { read, web, fs, enter, review };
+  const {
+    alice,
+    roy,
+    jack,
+    missy,
+    robot,
+    read,
+    web,
+    fs,
+    acct,
+    enter,
+    review,
+    gt,
+    lt,
+    webAcct,
+    fsAcct,
+    acctEnter,
+    enterReview,
+  } = OAK_PARK_IDS;
 
   return {
     version: WORKFLOW_VERSION,
-    actors,
+    actors: [
+      { id: alice, kind: ActorKind.Human, name: "Alice", color: "#f4c6d4", role: "worker" },
+      { id: roy, kind: ActorKind.Human, name: "Roy", color: "#c5d4ea", role: "worker" },
+      { id: jack, kind: ActorKind.Human, name: "Jack", color: "#c5e0d6", role: "worker" },
+      { id: missy, kind: ActorKind.Human, name: "Missy", color: "#d5c6e6", role: "worker" },
+      {
+        id: robot,
+        kind: ActorKind.Robot,
+        name: "Robot",
+        color: ROBOT_COLORS[RobotKind.Script],
+        robotKind: RobotKind.Script,
+      },
+    ],
     nodes: [
       {
         id: read,
@@ -84,14 +124,20 @@ export function oakParkInvoice(): WorkflowDoc {
       },
     ],
     edges: [
-      { id: nid(IdPrefix.Edge), source: read, target: web, label: "invoice > $50,000", dashed: false },
-      { id: nid(IdPrefix.Edge), source: read, target: fs, label: "invoice < $50,000", dashed: true },
-      { id: nid(IdPrefix.Edge), source: web, target: acct, label: "", dashed: false },
-      { id: nid(IdPrefix.Edge), source: fs, target: acct, label: "", dashed: false },
-      { id: nid(IdPrefix.Edge), source: acct, target: enter, label: "", dashed: false },
-      { id: nid(IdPrefix.Edge), source: enter, target: review, label: "", dashed: false },
+      { id: gt, source: read, target: web, label: "invoice > $50,000", dashed: true },
+      { id: lt, source: read, target: fs, label: "invoice < $50,000", dashed: true },
+      { id: webAcct, source: web, target: acct, label: "", dashed: false },
+      { id: fsAcct, source: fs, target: acct, label: "", dashed: false },
+      { id: acctEnter, source: acct, target: enter, label: "", dashed: false },
+      { id: enterReview, source: enter, target: review, label: "", dashed: false },
     ],
-    assignments: Object.fromEntries(Object.values(steps).map((id) => [id, alice])),
+    assignments: {
+      [read]: alice,
+      [web]: alice,
+      [fs]: alice,
+      [enter]: alice,
+      [review]: alice,
+    },
     after: {
       ...emptyAfterOverlay(),
       assignments: {
@@ -105,30 +151,24 @@ export function oakParkInvoice(): WorkflowDoc {
   };
 }
 
-/** Empty consulting board: people plus one Step. Later Steps spawn from + on a tile. */
+/** Empty consulting board: default roster, zero Nodes (WG-01). Add Step creates the root. */
 export function freshBoard(): WorkflowDoc {
   const actors = defaultActors();
-  const alice = aliceId(actors);
-  const id = nid(IdPrefix.Step);
   return {
     version: WORKFLOW_VERSION,
     actors,
-    nodes: [
-      {
-        id,
-        type: WorkflowNodeKind.Step,
-        position: { x: GRID, y: GRID * 5 },
-        stepKind: StepKind.Other,
-        title: "",
-        detail: "",
-        split: SplitKind.Exclusive,
-      },
-    ],
+    nodes: [],
     edges: [],
-    assignments: alice ? { [id]: alice } : {},
-    after: {
-      ...emptyAfterOverlay(),
-      assignments: alice ? { [id]: alice } : {},
-    },
+    assignments: {},
+    after: emptyAfterOverlay(),
   };
+}
+
+export function isEmptyBoard(doc: WorkflowDoc): boolean {
+  return (
+    doc.nodes.length === 0 &&
+    doc.edges.length === 0 &&
+    doc.after.extraNodes.length === 0 &&
+    doc.after.extraEdges.length === 0
+  );
 }

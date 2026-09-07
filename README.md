@@ -1,20 +1,13 @@
 # Automation Pitch
 
-A consulting board for showing office work **before** (people) and **after** (robots), with the same tiles and arrows.
+A consulting board for showing office work **before** (people) and **after** (robots), with the same tiles and Paths.
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open the URL Vite prints. The Oak Park invoice demo loads first. Use + on a tile to add a Step or Data path, or link an existing tile. Toggle Before / After / Both.
-
-To write the demo as JSON from the command line:
-
-```bash
-npm run export-json
-npm run export-json -- oak-park.json
-```
+Open the URL Vite prints. The Oak Park invoice demo loads first. Use + on a tile to add a Step or Data path, or link an existing tile. Toggle Before / After / Both. New starts an empty board. Save copy from the New / Demo / Import prompt downloads the current board as JSON.
 
 ---
 

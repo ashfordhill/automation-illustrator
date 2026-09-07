@@ -10,12 +10,14 @@
  * beginPathPick — tile − (Path detach removed; picker is Slice 6)
  * toggleSelectedDash — selected Path solid/dotted
  * assignActor — inspector Who select
- * requestNew / confirmNew — hamburger New (history boundary)
+ * requestNew / requestDemo / importRaw — replacement gate (SH-06, SH-12)
+ * startFresh / downloadHeldRecovery — corrupt-storage recovery (SH-10)
  */
 import { create } from "zustand";
 import { spreadForLabels } from "../board/layout/spreadForLabels";
 import { clearDockPosition, snapToGrid, vacantSpot } from "../board/layout/tileMetrics";
-import { oakParkInvoice, freshBoard } from "../demos/oakParkInvoice";
+import { type DemoId, workflowForDemo } from "../demos/catalog";
+import { freshBoard, isEmptyBoard, oakParkInvoice } from "../demos/oakParkInvoice";
 import {
   ARROW_PRESET,
   WASD_PRESET,
@@ -86,6 +88,8 @@ import {
   type HistoryKind,
 } from "./history";
 import {
+  downloadRecoveryCopy,
+  downloadWorkflowCopy,
   hydratePersistedWorkflow,
   loadTheme,
   saveTheme,
@@ -104,6 +108,18 @@ export type Selection =
 
 /** Which outgoing arrow is highlighted during − detach. */
 export type PathPick = { sourceId: string; index: number };
+
+/** Pending New / Demo / Import replacement (SH-06). */
+export type PendingReplace =
+  | { kind: "new" }
+  | { kind: "demo"; demoId: DemoId }
+  | { kind: "import"; doc: WorkflowDoc };
+
+function documentForPending(pending: PendingReplace): WorkflowDoc {
+  if (pending.kind === "new") return freshBoard();
+  if (pending.kind === "demo") return workflowForDemo(pending.demoId);
+  return pending.doc;
+}
 
 /** Demo or last saved board, with labels already given room. */
 function loadStart(): {
@@ -149,9 +165,10 @@ export const useStore = create<{
   linkMenu: string | null;
   pathPick: PathPick | null;
   colorScheme: ColorSchemeT;
-  newConfirmOpen: boolean;
   persistStatus: PersistStatus;
   recovery: RecoveryState | null;
+  pendingReplace: PendingReplace | null;
+  importError: string | null;
   hintNotice: string | null;
   commit: (next: WorkflowDoc, kind?: HistoryKind) => void;
   replaceDoc: (next: WorkflowDoc) => void;
@@ -194,14 +211,19 @@ export const useStore = create<{
   confirmPathPick: () => void;
   pickPathByEdge: (edgeId: string) => void;
   requestNew: () => void;
-  setNewConfirmOpen: (v: boolean) => void;
-  confirmNew: () => void;
+  requestDemo: (demoId: DemoId) => void;
+  cancelReplace: () => void;
+  confirmReplaceDiscard: () => void;
+  confirmReplaceSaveCopy: () => void;
   loadDoc: (doc: WorkflowDoc) => void;
   importRaw: (raw: string) => ParseResult;
+  clearImportError: () => void;
   resetDemo: () => void;
   requestFocus: (id: string) => void;
   consumeFocus: (id: string) => void;
   clearRecoveryHold: () => void;
+  downloadHeldRecovery: () => void;
+  startFresh: () => void;
 }>((set, get) => ({
   workflow: started.workflow,
   past: [],
@@ -219,9 +241,10 @@ export const useStore = create<{
   linkMenu: null,
   pathPick: null,
   colorScheme: loadTheme(),
-  newConfirmOpen: false,
   persistStatus: started.persistStatus,
   recovery: started.recovery,
+  pendingReplace: null,
+  importError: null,
   hintNotice: null,
 
   /** Snapshot current board onto the undo stack, persist unless recovery holds the raw key. */
@@ -256,6 +279,10 @@ export const useStore = create<{
       linkMenu: null,
       pathPick: null,
       hintNotice: null,
+      pendingReplace: null,
+      importError: null,
+      lastHumanId: null,
+      view: ViewMode.Before,
     });
   },
   undo: () => {
@@ -646,33 +673,40 @@ export const useStore = create<{
   },
 
   requestNew: () => {
-    const { workflow } = get();
-    if (!workflow.nodes.length && !workflow.edges.length) {
-      get().confirmNew();
-      return;
-    }
-    set({ newConfirmOpen: true });
+    if (get().recovery) return;
+    if (isEmptyBoard(get().workflow)) return;
+    set({ pendingReplace: { kind: "new" }, importError: null });
   },
-  setNewConfirmOpen: (newConfirmOpen) => set({ newConfirmOpen }),
-  confirmNew: () => {
-    const doc = freshBoard();
-    const first = doc.nodes[0];
-    get().replaceDoc(doc);
-    set({
-      newConfirmOpen: false,
-      selected: first ? { type: SelectionKind.Node, id: first.id } : null,
-      view: ViewMode.Before,
-    });
+  requestDemo: (demoId) => {
+    if (get().recovery) return;
+    set({ pendingReplace: { kind: "demo", demoId }, importError: null });
+  },
+  cancelReplace: () => set({ pendingReplace: null }),
+  confirmReplaceDiscard: () => {
+    const pending = get().pendingReplace;
+    if (!pending) return;
+    get().loadDoc(documentForPending(pending));
+  },
+  confirmReplaceSaveCopy: () => {
+    const pending = get().pendingReplace;
+    if (!pending) return;
+    downloadWorkflowCopy(get().workflow);
+    get().loadDoc(documentForPending(pending));
   },
   loadDoc: (doc) => {
     get().replaceDoc(doc);
   },
   importRaw: (raw) => {
     const parsed = parseDocument(raw);
-    if (!parsed.ok) return parsed;
-    get().loadDoc(parsed.doc);
+    if (!parsed.ok) {
+      set({ importError: parsed.message, pendingReplace: null });
+      return parsed;
+    }
+    if (get().recovery) return parsed;
+    set({ pendingReplace: { kind: "import", doc: parsed.doc }, importError: null });
     return parsed;
   },
+  clearImportError: () => set({ importError: null }),
   resetDemo: () => get().loadDoc(oakParkInvoice()),
   requestFocus: (id) => set({ focusId: id }),
   consumeFocus: (id) => {
@@ -681,5 +715,29 @@ export const useStore = create<{
   clearRecoveryHold: () => {
     const persistStatus = writeWorkflow(get().workflow);
     set({ recovery: null, persistStatus });
+  },
+  downloadHeldRecovery: () => {
+    const recovery = get().recovery;
+    if (!recovery) return;
+    downloadRecoveryCopy(recovery.raw);
+  },
+  startFresh: () => {
+    if (!get().recovery) return;
+    const placed = room(freshBoard());
+    const persistStatus = writeWorkflow(placed);
+    set({
+      ...replaceHistory(placed),
+      recovery: null,
+      persistStatus,
+      selected: null,
+      linkFrom: null,
+      linkMenu: null,
+      pathPick: null,
+      hintNotice: null,
+      pendingReplace: null,
+      importError: null,
+      lastHumanId: null,
+      view: ViewMode.Before,
+    });
   },
 }));

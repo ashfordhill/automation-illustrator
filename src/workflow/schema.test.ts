@@ -1,5 +1,6 @@
 import { expect, test } from "vitest";
 import { oakParkInvoice } from "../demos/oakParkInvoice";
+import { robotMailroom } from "../demos/robotMailroom";
 import { ActorKind, SplitKind, StepKind, WorkflowNodeKind } from "./catalogs";
 import { validateWorkflow, type GraphViolationCode } from "./graph";
 import { parseDocument } from "./migrate";
@@ -49,10 +50,12 @@ function parseCodes(raw: unknown) {
   return { ok: false as const, codes: result.violations.map((v) => v.code), message: result.message, result };
 }
 
-test("empty board and Oak Park demo are valid v2 documents", () => {
+test("empty board and both demos are valid v2 documents", () => {
   expect(validateWorkflow(emptyWorkflow())).toEqual([]);
   expect(validateWorkflow(oakParkInvoice())).toEqual([]);
+  expect(validateWorkflow(robotMailroom())).toEqual([]);
   expect(parseDocument(JSON.stringify(oakParkInvoice())).ok).toBe(true);
+  expect(parseDocument(JSON.stringify(robotMailroom())).ok).toBe(true);
 });
 
 test("invalid shape: missing fields, bad enums, empty color, non-object", () => {

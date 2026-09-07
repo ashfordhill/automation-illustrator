@@ -3,7 +3,8 @@
  * Theme and keybind keys live here so persist concerns stay in one module.
  *
  * Persistence status is saved / dirty / unavailable (SH-11). Failed startup
- * payloads stay under LS_WORKFLOW until recovery UI (Slice 5) discards them (SH-10).
+ * payloads stay under LS_WORKFLOW until the user downloads or starts fresh (SH-10).
+ * Save copy downloads the validated v2 document (SH-13).
  */
 import { ColorScheme } from "../workflow/catalogs";
 import { parseDocument } from "../workflow/migrate";
@@ -43,6 +44,35 @@ export function fromJson(raw: string): WorkflowDoc {
 export const LS_WORKFLOW = "automation-pitch.workflow";
 export const LS_KEYMAP = "automation-pitch.keymap";
 export const LS_THEME = "automation-pitch.theme";
+export const SAVE_COPY_FILENAME = "automation-pitch.json";
+export const RECOVERY_COPY_FILENAME = "automation-pitch.recovery.json";
+
+/** Trigger a JSON file download (Save copy / recovery). No-op when Blob URLs are missing. */
+export function downloadTextFile(filename: string, contents: string): void {
+  if (typeof document === "undefined" || typeof URL.createObjectURL !== "function") {
+    return;
+  }
+  const blob = new Blob([contents], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.rel = "noopener";
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+}
+
+/** Save copy of the live validated v2 document (SH-06, SH-13). */
+export function downloadWorkflowCopy(doc: WorkflowDoc): void {
+  downloadTextFile(SAVE_COPY_FILENAME, toJson(doc));
+}
+
+/** Download the untouched failed startup payload (SH-10). */
+export function downloadRecoveryCopy(raw: string): void {
+  downloadTextFile(RECOVERY_COPY_FILENAME, raw);
+}
 
 function browserStorage(): StorageLike | null {
   try {

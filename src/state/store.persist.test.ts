@@ -12,7 +12,8 @@ function resetSession() {
   s.setPresent(false);
   s.select(null);
   s.setHelp(false);
-  s.setNewConfirmOpen(false);
+  s.cancelReplace();
+  s.clearImportError();
   s.closeBoardModes();
   s.setColorScheme(ColorScheme.Light);
   if (s.recovery) s.clearRecoveryHold();
@@ -46,11 +47,14 @@ const tiny = JSON.stringify({
   after: emptyAfterOverlay(),
 });
 
-test("importRaw parses a candidate and only then replaces state", () => {
+test("importRaw parses a candidate and only then offers the replacement gate", () => {
   const before = useStore.getState().workflow;
   const failed = useStore.getState().importRaw("{");
   expect(failed.ok).toBe(false);
   expect(useStore.getState().workflow).toBe(before);
+  expect(useStore.getState().importError).toBeTruthy();
+  expect(useStore.getState().pendingReplace).toBeNull();
+  useStore.getState().clearImportError();
 
   const cyclic = JSON.stringify({
     version: 2,
@@ -85,10 +89,15 @@ test("importRaw parses a candidate and only then replaces state", () => {
   const blocked = useStore.getState().importRaw(cyclic);
   expect(blocked.ok).toBe(false);
   expect(useStore.getState().workflow).toBe(before);
+  expect(useStore.getState().pendingReplace).toBeNull();
 
   const ok = useStore.getState().importRaw(tiny);
   expect(ok.ok).toBe(true);
+  expect(useStore.getState().workflow).toBe(before);
+  expect(useStore.getState().pendingReplace?.kind).toBe("import");
+  useStore.getState().confirmReplaceDiscard();
   expect(useStore.getState().workflow.nodes.map((n) => n.id)).toEqual(["s_only"]);
+  expect(useStore.getState().pendingReplace).toBeNull();
 });
 
 test("requestFocus replaces a sticky id; consumeFocus only clears the matching request", () => {

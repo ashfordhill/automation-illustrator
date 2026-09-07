@@ -77,7 +77,15 @@ export function useAppKeys() {
       }
 
       if (editingText) return;
-      if (s.present || s.helpOpen || s.newConfirmOpen) return;
+      if (
+        s.present ||
+        s.helpOpen ||
+        s.pendingReplace ||
+        s.recovery ||
+        s.importError
+      ) {
+        return;
+      }
 
       if (s.pathPick) {
         const up =
