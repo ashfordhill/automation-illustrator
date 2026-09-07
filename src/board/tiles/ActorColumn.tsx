@@ -39,7 +39,7 @@ function Chip({
         minFontSizePx={minFontSizePx}
         mode={mode}
         maxLines={maxLines}
-        hug={tone === "name"}
+        hug
         color={tone === "role" ? FIGURE_INK_ON_PASTEL : "var(--ink)"}
       />
     </div>
@@ -64,7 +64,8 @@ export function ActorColumn({ actor }: { actor: ActorDto | undefined }) {
         display: "flex",
         flexDirection: "column",
         alignItems: "stretch",
-        justifyContent: "space-between",
+        justifyContent: "flex-start",
+        gap: 6,
         padding: "8px 8px 12px",
         boxSizing: "border-box",
         overflow: "hidden",

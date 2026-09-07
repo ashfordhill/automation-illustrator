@@ -29,6 +29,7 @@ export function DataTile({
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
+        gap: 6,
         color: "var(--ink)",
         boxShadow: lifted ? "0 10px 0 var(--btn-shadow)" : "0 5px 0 var(--btn-shadow)",
         outline: selected ? "3px solid var(--select-ring)" : "none",

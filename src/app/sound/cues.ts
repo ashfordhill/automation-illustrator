@@ -75,7 +75,7 @@ export function playCue(kind: CueKind): void {
       tone(ac, { type: "sine", freq: 480, start: t, dur: 0.09, freqEnd: 720, peak: 0.06 });
       break;
     case "pop":
-      tone(ac, { type: "triangle", freq: 240, start: t, dur: 0.07, freqEnd: 90, peak: 0.08 });
+      tone(ac, { type: "sine", freq: 420, start: t, dur: 0.06, freqEnd: 180, peak: 0.09 });
       break;
     case "buzz":
       tone(ac, { type: "sawtooth", freq: 96, start: t, dur: 0.16, peak: 0.045 });

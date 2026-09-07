@@ -125,7 +125,6 @@ import {
   findEdge,
   findMergeGroup,
   findNode,
-  isAfterOnlyEdge,
   isAfterOnlyNode,
   isBeforeOriginNode,
   mergeGroupForMember,
@@ -462,7 +461,17 @@ export const useStore = create<{
     set({ soundEnabled });
     if (soundEnabled) playCue("tick");
   },
-  select: (selected) => set({ selected, manageActorsOpen: false, manageActorId: null }),
+  select: (selected) => {
+    const { interaction } = get();
+    if (
+      interaction.kind === "path-label-edit" &&
+      (selected?.type !== SelectionKind.Edge || selected.id !== interaction.edgeId)
+    ) {
+      set({ selected, manageActorsOpen: false, manageActorId: null, interaction: IDLE });
+      return;
+    }
+    set({ selected, manageActorsOpen: false, manageActorId: null });
+  },
   setHelp: (helpOpen) => {
     set({ helpOpen, capturing: helpOpen ? get().capturing : null });
     if (!helpOpen) {
@@ -941,20 +950,22 @@ export const useStore = create<{
     get().requestFocus(targetId);
   },
   toggleSelectedDash: () => {
-    const { selected, workflow, updateEdge } = get();
+    const { selected, workflow, view, updateEdge } = get();
     if (!get().canvasEditable()) return;
     if (selected?.type !== SelectionKind.Edge) return;
     const edge = findEdge(workflow, selected.id);
     if (!edge) return;
-    const graph = isAfterOnlyEdge(workflow, edge.id)
-      ? afterGraph(workflow)
-      : { nodes: workflow.nodes, edges: workflow.edges };
+    const graph =
+      view === ViewMode.After ? afterGraph(workflow) : { nodes: workflow.nodes, edges: workflow.edges };
     const outs = graph.edges.filter((e) => e.source === edge.source).length;
     if (outs < 2) return;
     updateEdge(selected.id, { dashed: !edgeIsDotted(graph.nodes, graph.edges, edge) });
   },
   focusPathLabel: () => {
-    focusNamedField("path-condition-field");
+    if (!get().canvasEditable()) return;
+    const { selected } = get();
+    if (selected?.type !== SelectionKind.Edge) return;
+    set({ interaction: { kind: "path-label-edit", edgeId: selected.id } });
   },
   focusDataLabel: () => {
     focusNamedField("data-label-field");

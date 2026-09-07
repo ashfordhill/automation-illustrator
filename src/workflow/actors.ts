@@ -14,16 +14,16 @@ import {
 } from "./types";
 
 export const HUMAN_PRESETS = [
-  { name: "Alice", color: "#f4c6d4" },
-  { name: "Roy", color: "#c5d4ea" },
-  { name: "Jack", color: "#c5e0d6" },
-  { name: "Missy", color: "#d5c6e6" },
+  { name: "Alice", color: "#ff9fbf" },
+  { name: "Roy", color: "#7eb6f5" },
+  { name: "Jack", color: "#5ed4a4" },
+  { name: "Missy", color: "#c89bf5" },
 ] as const;
 
 export const ROBOT_COLORS = {
-  [RobotKind.Llm]: "#8eabc4",
-  [RobotKind.Agent]: "#7eaea0",
-  [RobotKind.Script]: "#8aa8b8",
+  [RobotKind.Llm]: "#5ec4d8",
+  [RobotKind.Agent]: "#4dceb0",
+  [RobotKind.Script]: "#6ab0c8",
 } as const;
 
 /** Stick-figure stroke on pastel actor fills (not theme ink, which goes light in dark mode). */

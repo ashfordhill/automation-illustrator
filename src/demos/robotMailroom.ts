@@ -3,7 +3,7 @@
  * Overlay (merge group + After-only Step) is projected in After.
  * Merge dock and After-only create/remove are live.
  */
-import { ROBOT_COLORS } from "../workflow/actors";
+import { HUMAN_PRESETS, ROBOT_COLORS } from "../workflow/actors";
 import {
   ActorKind,
   RobotKind,
@@ -49,21 +49,21 @@ export function robotMailroom(): WorkflowDoc {
         id: id.dana,
         kind: ActorKind.Human,
         name: "Dana",
-        color: "#f3d0b8",
+        color: "#f4a06a",
         role: "Mail clerk",
       },
       {
         id: id.omar,
         kind: ActorKind.Human,
         name: "Omar",
-        color: "#c5d4ea",
+        color: HUMAN_PRESETS[1].color,
         role: "Records",
       },
       {
         id: id.priya,
         kind: ActorKind.Human,
         name: "Priya",
-        color: "#d5c6e6",
+        color: HUMAN_PRESETS[3].color,
         role: "Accounts payable",
       },
       {

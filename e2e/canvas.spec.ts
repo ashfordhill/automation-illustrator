@@ -61,6 +61,10 @@ test.describe("slice 6 canvas create / connect / remove", () => {
       path: ".docs/evidence/improve-02-merge-drag/selected-x-1440.png",
       animations: "disabled",
     });
+    await page.screenshot({
+      path: ".docs/evidence/improve-03-polish/path-tab-1440.png",
+      animations: "disabled",
+    });
 
     const plus = page.getByRole("button", { name: "Add Step or Data" });
     const box = await plus.boundingBox();
@@ -70,12 +74,18 @@ test.describe("slice 6 canvas create / connect / remove", () => {
     await page.mouse.move(box!.x + box!.width / 2 + 140, box!.y + box!.height / 2, { steps: 12 });
     await expect(page.getByRole("button", { name: "New Step" })).toBeVisible();
     await expect(page.getByRole("button", { name: "New Data" })).toBeVisible();
+    await expect(page.locator('[data-plus-preview="data"] ellipse')).toBeVisible();
+    await expect(page.locator("[data-plus-wedge]")).toBeVisible();
     await page.screenshot({
       path: `${EVIDENCE}/plus-menu-1440.png`,
       animations: "disabled",
     });
     await page.screenshot({
       path: ".docs/evidence/improve-02-merge-drag/plus-pull-previews-1440.png",
+      animations: "disabled",
+    });
+    await page.screenshot({
+      path: ".docs/evidence/improve-03-polish/plus-wedge-1440.png",
       animations: "disabled",
     });
     await page.mouse.up();
@@ -246,6 +256,29 @@ test.describe("slice 6 canvas create / connect / remove", () => {
     await page.mouse.move(40, 40, { steps: 10 });
     await page.mouse.up();
     await expect(page.locator(".react-flow__node")).toHaveCount(1);
+  });
+
+  test("Data tile is a centered oval; Mailroom Dana Who card hugs the role", async ({ page }) => {
+    await loadDemo(page);
+    await page.getByText(DEMO_STEP).first().click();
+    await page.keyboard.press("2");
+    await waitForLayout(page);
+    await expect(page.getByText("Data", { exact: true }).first()).toBeVisible();
+    await page.getByText("Data", { exact: true }).first().click();
+    await page.screenshot({
+      path: ".docs/evidence/improve-03-polish/data-centered-1440.png",
+      animations: "disabled",
+    });
+
+    await page.getByRole("button", { name: "Menu" }).click();
+    await page.getByRole("menuitem", { name: "Robot Mailroom" }).click();
+    await page.getByRole("button", { name: "Discard" }).click();
+    await expect(page.getByText("Read incoming mail").first()).toBeVisible({ timeout: 15_000 });
+    await waitForLayout(page);
+    await page.screenshot({
+      path: ".docs/evidence/improve-03-polish/dana-card-1440.png",
+      animations: "disabled",
+    });
   });
 });
 

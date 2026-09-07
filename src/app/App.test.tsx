@@ -100,13 +100,15 @@ test("inspector Type buttons are alphabetical with Other last; Who offers every 
   ]);
   expect(host.querySelector('[aria-label="Who Alice"]')).not.toBeNull();
   expect(host.querySelector('[aria-label="Who Robot"]')).not.toBeNull();
+  expect(host.textContent).not.toMatch(/1 Path/);
+  expect(host.textContent).not.toMatch(/All Paths/);
   act(() => {
     host.querySelector<HTMLButtonElement>('[aria-label="Who Robot"]')?.click();
   });
   expect(useStore.getState().workflow.assignments[OAK_PARK_IDS.read]).toBe(OAK_PARK_IDS.robot);
 });
 
-test("Path inspector is only the label field (NA-07)", () => {
+test("Path inspector has label plus Dotted / Solid (NA-07)", () => {
   act(() => {
     useStore.getState().select({ type: SelectionKind.Edge, id: OAK_PARK_IDS.gt });
   });
@@ -115,6 +117,10 @@ test("Path inspector is only the label field (NA-07)", () => {
   expect(rail).not.toMatch(/\bArrow\b/);
   expect(rail).not.toMatch(/Always visited/);
   expect(rail).not.toMatch(/Choice \(dotted\)/);
+  expect(rail).not.toMatch(/1 Path/);
+  expect(rail).not.toMatch(/All Paths/);
+  expect(rail).toMatch(/Dotted/);
+  expect(rail).toMatch(/Solid/);
   expect(host.querySelector("#path-condition-field")).not.toBeNull();
 });
 

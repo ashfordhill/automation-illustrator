@@ -4,9 +4,9 @@
  * (PC-01, PC-05). Chips are independent hit targets (CX-02). Remove-preview
  * Paths are not laid out and fall back to a right-angle polyline.
  */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { BaseEdge, EdgeLabelRenderer, type EdgeProps } from "@xyflow/react";
-import { SelectionKind } from "../../workflow/catalogs";
+import { SelectionKind, ViewMode } from "../../workflow/catalogs";
 import { useStore } from "../../state/store";
 import { afterGraph, edgeIsDotted } from "../../workflow/graph";
 import { findEdge } from "../../workflow/selectors";
@@ -81,6 +81,37 @@ function useStretch(active: boolean, from: PolyPoint[], to: PolyPoint[]): PolyPo
   return lerpPolylines(from, to, t);
 }
 
+function PathChipEditor({
+  edgeId,
+  value,
+}: {
+  edgeId: string;
+  value: string;
+}) {
+  const ref = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.focus();
+    el.select();
+  }, [edgeId]);
+  return (
+    <input
+      ref={ref}
+      id="path-chip-editor"
+      className="path-chip-editor nopan nowheel"
+      aria-label="Path label"
+      autoComplete="off"
+      spellCheck={false}
+      value={value}
+      onChange={(e) => useStore.getState().updateEdge(edgeId, { label: e.target.value })}
+      onPointerDown={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
+      onDoubleClick={(e) => e.stopPropagation()}
+    />
+  );
+}
+
 export function FlowArrow({
   id,
   sourceX,
@@ -91,14 +122,18 @@ export function FlowArrow({
   data,
 }: EdgeProps) {
   const pathData = (data ?? {}) as FlowPathData;
+  const originId = typeof pathData.originId === "string" ? pathData.originId : id;
   const workflow = useStore((s) => s.workflow);
   const present = useStore((s) => s.present);
+  const view = useStore((s) => s.view);
+  const editingLabel = useStore(
+    (s) => s.interaction.kind === "path-label-edit" && s.interaction.edgeId === originId,
+  );
   const { layout } = useLaneLayoutContext();
   const restitch = Boolean(pathData.restitch);
   const stretch = Boolean(pathData.stretch);
   const restitchCondition = restitch && typeof pathData.condition === "string" ? pathData.condition : "";
   const restitchDashed = restitch ? Boolean(pathData.dashed) : false;
-  const originId = typeof pathData.originId === "string" ? pathData.originId : id;
   const edge = restitch ? undefined : findEdge(workflow, originId);
   const dotted = restitch ? restitchDashed : pathIsDotted(workflow, originId);
   const label = restitch ? restitchCondition : edge?.label;
@@ -198,7 +233,23 @@ export function FlowArrow({
             />
           ))
         : null}
-      {label && lines.length ? (
+      {editingLabel && !restitch && !present && view !== ViewMode.Both ? (
+        <EdgeLabelRenderer>
+          <div
+            className="nopan nowheel path-condition-wrap"
+            style={{
+              position: "absolute",
+              transform: `translate(-50%, -50%) translate(${chip.x}px, ${chip.y}px)`,
+              width: chip.w ?? 96,
+              height: chip.h ?? 48,
+              pointerEvents: "all",
+              zIndex: 8,
+            }}
+          >
+            <PathChipEditor edgeId={originId} value={label ?? ""} />
+          </div>
+        </EdgeLabelRenderer>
+      ) : label && lines.length ? (
         <EdgeLabelRenderer>
           <div
             className="nopan nowheel path-condition-wrap"
@@ -224,6 +275,14 @@ export function FlowArrow({
                 e.stopPropagation();
                 if (present || restitch) return;
                 useStore.getState().select({ type: SelectionKind.Edge, id: originId });
+              }}
+              onDoubleClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                if (present || restitch || view === ViewMode.Both) return;
+                const s = useStore.getState();
+                s.select({ type: SelectionKind.Edge, id: originId });
+                s.toggleSelectedDash();
               }}
             >
               {lines.map((line, i) => (

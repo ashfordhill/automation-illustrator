@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, expect, test } from "vitest";
-import { ColorScheme, SplitKind, ViewMode } from "../workflow/catalogs";
+import { ColorScheme, SelectionKind, SplitKind, ViewMode } from "../workflow/catalogs";
 import { OAK_PARK_IDS } from "../demos/oakParkInvoice";
 import { MAILROOM_IDS } from "../demos/robotMailroom";
 import { DemoId } from "../demos/catalog";
@@ -64,6 +64,35 @@ test("changing Split re-applies default strokes (PC-02, PC-03)", () => {
   expect(useStore.getState().workflow.edges.find((e) => e.id === gt)?.dashed).toBe(false);
   s.updateNode(read, { split: SplitKind.Exclusive });
   expect(useStore.getState().workflow.edges.find((e) => e.id === gt)?.dashed).toBe(true);
+});
+
+test("toggleSelectedDash no-ops for a lone outgoing Path; two-outgoing toggles only that Path", () => {
+  const { gt, lt, enterReview } = OAK_PARK_IDS;
+  const s = useStore.getState();
+  s.select({ type: SelectionKind.Edge, id: enterReview });
+  const loneBefore = useStore.getState().workflow.edges.find((e) => e.id === enterReview)?.dashed;
+  s.toggleSelectedDash();
+  expect(useStore.getState().workflow.edges.find((e) => e.id === enterReview)?.dashed).toBe(loneBefore);
+
+  s.select({ type: SelectionKind.Edge, id: gt });
+  expect(useStore.getState().workflow.edges.find((e) => e.id === gt)?.dashed).toBe(true);
+  expect(useStore.getState().workflow.edges.find((e) => e.id === lt)?.dashed).toBe(true);
+  s.toggleSelectedDash();
+  expect(useStore.getState().workflow.edges.find((e) => e.id === gt)?.dashed).toBe(false);
+  expect(useStore.getState().workflow.edges.find((e) => e.id === lt)?.dashed).toBe(true);
+  s.toggleSelectedDash();
+  expect(useStore.getState().workflow.edges.find((e) => e.id === gt)?.dashed).toBe(true);
+  expect(useStore.getState().workflow.edges.find((e) => e.id === lt)?.dashed).toBe(true);
+});
+
+test("focusPathLabel opens on-canvas Path label edit, not the inspector field", () => {
+  const { gt } = OAK_PARK_IDS;
+  const s = useStore.getState();
+  s.select({ type: SelectionKind.Edge, id: gt });
+  s.focusPathLabel();
+  const next = useStore.getState();
+  expect(next.interaction).toEqual({ kind: "path-label-edit", edgeId: gt });
+  expect(next.selected).toEqual({ type: SelectionKind.Edge, id: gt });
 });
 
 test("removeActor blocks used humans and deletes unused Priya (NA-02)", () => {

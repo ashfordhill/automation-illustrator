@@ -5,11 +5,10 @@
 import { Button, Stack, Text, TextInput } from "@mantine/core";
 import {
   SelectionKind,
-  SplitKind,
   ViewMode,
   WorkflowNodeKind,
 } from "../../workflow/catalogs";
-import { afterGraph } from "../../workflow/graph";
+import { afterGraph, edgeIsDotted } from "../../workflow/graph";
 import { isStepNode, laneAssignments } from "../../workflow/types";
 import { findEdge, findMergeGroup, findNode, isAfterOnlyNode } from "../../workflow/selectors";
 import { useStore } from "../../state/store";
@@ -146,8 +145,6 @@ export function DetailsPanel() {
       );
     }
     const actorId = laneAssignments(workflow, lane)[n.id] ?? "";
-    const graph = extra ? afterGraph(workflow) : { nodes: workflow.nodes, edges: workflow.edges };
-    const outs = graph.edges.filter((e) => e.source === n.id).length;
     return (
       <Stack gap="xs" p="sm" className="chrome-hide">
         <Text fw={800}>Step</Text>
@@ -159,25 +156,6 @@ export function DetailsPanel() {
           disabled={readOnly}
           onChange={(stepKind) => useStore.getState().updateNode(n.id, { stepKind })}
         />
-        {outs >= 2 ? (
-          <>
-            <Text size="sm" fw={700}>
-              Path
-            </Text>
-            <FatChoice
-              label="Path: 1 Path vs All Paths"
-              value={n.split}
-              disabled={readOnly}
-              onChange={(v) =>
-                useStore.getState().updateNode(n.id, { split: v as typeof n.split })
-              }
-              options={[
-                { value: SplitKind.Exclusive, label: "1 Path" },
-                { value: SplitKind.Parallel, label: "All Paths" },
-              ]}
-            />
-          </>
-        ) : null}
         <TextInput
           id="step-name-field"
           label="Name"
@@ -214,6 +192,10 @@ export function DetailsPanel() {
   if (selected.type === SelectionKind.Edge) {
     const e = findEdge(workflow, selected.id);
     if (!e) return null;
+    const graph =
+      view === ViewMode.After ? afterGraph(workflow) : { nodes: workflow.nodes, edges: workflow.edges };
+    const outs = graph.edges.filter((x) => x.source === e.source).length;
+    const dotted = edgeIsDotted(graph.nodes, graph.edges, e);
     return (
       <Stack gap="xs" p="sm" className="chrome-hide">
         <TextInput
@@ -223,6 +205,18 @@ export function DetailsPanel() {
           readOnly={readOnly}
           onChange={(ev) => useStore.getState().updateEdge(e.id, { label: ev.target.value })}
         />
+        {outs >= 2 ? (
+          <FatChoice
+            label="Path stroke"
+            value={dotted ? "dotted" : "solid"}
+            disabled={readOnly}
+            onChange={(v) => useStore.getState().updateEdge(e.id, { dashed: v === "dotted" })}
+            options={[
+              { value: "dotted", label: "Dotted" },
+              { value: "solid", label: "Solid" },
+            ]}
+          />
+        ) : null}
       </Stack>
     );
   }

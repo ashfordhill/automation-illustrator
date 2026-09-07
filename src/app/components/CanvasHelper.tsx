@@ -27,6 +27,9 @@ function hintsFor(): Hint[] {
   const k = s.keymap;
   const pk = (a: (typeof KeyAction)[keyof typeof KeyAction]) => prettyKey(k[a]);
 
+  if (s.interaction.kind === "path-label-edit") {
+    return [{ key: "Esc", label: "Close" }];
+  }
   if (s.interaction.kind === "plus-pull") {
     return [{ key: "Esc", label: "Cancel" }];
   }
@@ -64,7 +67,7 @@ function hintsFor(): Hint[] {
   if (s.selected?.type === SelectionKind.Edge) {
     if (s.view === ViewMode.Both) return [];
     return [
-      { key: pk(KeyAction.ToggleDash), label: "Always visited / Choice" },
+      { key: pk(KeyAction.ToggleDash), label: "Dotted / Solid" },
       { key: pk(KeyAction.Confirm), label: "Edit label" },
       { key: pk(KeyAction.Delete), label: "Paths aren't removed" },
     ];

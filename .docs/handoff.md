@@ -909,3 +909,40 @@ Corrections in the same chat before the next slice starts get their own short en
 - Known limitations / follow-ups: 03 → 04 → 05 → 06 → 07. Merge redesign is later, not 07.
 - Status: COMPLETE
 - Commit: `docs: add improve-06 shell and improve-07 no-merge plans`
+
+## Improvement 03 — polish, Path stroke, on-canvas label — 2026-09-07
+
+- Starting commit: `83be44e102cfa75ed62559888df82da2efaffa1f` (`docs: add improve-05 chrome plan and visual improvement log`). Kickoff asked for `ac66ed4`; latest COMPLETE at start was improve-05 planning. During this chat `e5ac9d8` (`docs: add improve-06 shell and improve-07 no-merge plans`) landed; this commit sits on that HEAD. Product work is Improvement 03 only (not 04–07).
+- Working tree at start: tracked files clean; untracked ELK planner dumps left uncommitted
+- GOAL clauses addressed: NA-07, PC-02, PC-03, NA-08, P-08, CX-06, WG-07, P-01, SH-04, CX-07, AQ-04 (amendments appended 2026-09-07; clauses not edited in place)
+- Library research and decisions: no new runtime dependency. Split stays in the document and still seeds new Paths (`maybeExclusiveSplit` / `applyConnectStroke` unchanged). Per-Path stroke is `updateEdge({ dashed })` / `toggleSelectedDash` and does not rewrite siblings. On-canvas Path editor is interaction `{ kind: "path-label-edit", edgeId }` plus an `EdgeLabelRenderer` input; inspector `#path-condition-field` stays in sync and is not focused. Plus-pull scrim uses an SVG hole over the source tile so the tile stays undimmed; wedge is a trapezoid from the tile’s right edge to the preview cluster (taffy path removed). Path-pull dashed string unchanged. Locked actor/`--data` hexes applied; Dana `#f4a06a`; Omar/Priya pick up Roy/Missy presets. If a locked hex had failed axe it would have been nudged; none did.
+- Files changed:
+  - Contract/docs: `.docs/GOAL.md` amendments; `.docs/IMPROVEMENTS.md` (03 marked COMPLETE); this handoff entry
+  - Chrome/tiles: `TileChrome.tsx`, `PathKnotIcon.tsx`, `tokens.css`, `ActorColumn.tsx`, `MergeWhoColumn.tsx`, `DataTile.tsx`
+  - Path UX: `Board.tsx`, `FlowArrow.tsx`, `SelectedItemForm.tsx`, `CanvasHelper.tsx`, `useAppKeys.ts`, `store.ts`, `interaction.ts`
+  - Color/sound: `actors.ts`, `oakParkInvoice.ts`, `robotMailroom.ts`, `cues.ts`
+  - Tests: `store.actors.test.ts`, `App.test.tsx`, `e2e/inspector.spec.ts`, `e2e/canvas.spec.ts`
+  - Evidence: `.docs/evidence/improve-03-polish/`; earlier e2e folders recaptured with new palette and chrome
+- Behavior implemented:
+  - `+` pull past threshold dims the board, keeps the source tile and previews undimmed, and draws a cream/green trapezoid wedge (After: Step only). Click still does nothing.
+  - Selected-tile X is ~45% opacity until hover/focus. Path-pull tab is teal with a knot+string glyph.
+  - Who name card hugs content; role chip pads to the type; task column is a centered stack. Data chip+label are a centered column; `+` Data preview is the oval `DataChip`.
+  - Path inspector is **label** plus Dotted/Solid (hidden for a single outgoing Path). Step inspector no longer shows Split. Double-click Path/chip toggles that Path’s stroke. Enter opens an on-canvas chip editor (Escape/click-away close; typing still per-keystroke).
+  - Node removal is a short bubble-pop; remove cue is a rounder sine pop.
+- Tests and exact results:
+  - `npm install` at start — up to date, 137 packages, 0 vulnerabilities
+  - `npm run build` at start — pass (`tsc --noEmit && vite build`; Vite 8.2.2)
+  - `npm run test:unit` at start — pass (30 files, 156 tests)
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning; client `index-BelJqt5A.js` 868.66 kB)
+  - `npm run test:unit` — pass (30 files, 158 tests)
+  - `npm run test:e2e` — pass (78 passed, Chromium, 3 workers, 37.9s including webServer)
+- Evidence:
+  - `.docs/evidence/improve-03-polish/plus-wedge-1440.png` — Oak Park `+` pulled; Step + Data; dim scrim and wedge (1440×900)
+  - `.docs/evidence/improve-03-polish/path-tab-1440.png` — selected tile; teal Path-pull tab readable (1440×900)
+  - `.docs/evidence/improve-03-polish/dana-card-1440.png` — Mailroom Before; Dana / Mail clerk packed (1440×900)
+  - `.docs/evidence/improve-03-polish/data-centered-1440.png` — Data tile with default “Data” copy, oval centered (1440×900)
+  - `.docs/evidence/improve-03-polish/path-type-on-chip-1440.png` — on-canvas Path label editor; inspector label mirrors; inspector input not focused (1440×900)
+- Earlier-slice defects fixed: none that blocked this improvement
+- Known limitations / follow-ups: insert-on-Path live preview — Improvement 04. Step-select jump and view-switch fill — Improvement 05. Inspector Who/trash/zoom/hamburger — Improvement 06. Merge removal — Improvement 07. Path `−` remains forbidden.
+- Status: COMPLETE
+- Commit: `feat(improve-03): polish chrome Path stroke and on-canvas label`

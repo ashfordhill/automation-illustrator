@@ -69,6 +69,9 @@ function nodeClassName(
   if (interaction.kind === "path-pull" && interaction.hoverTargetId === id) {
     parts.push("path-drop-target");
   }
+  if (interaction.kind === "plus-pull" && interaction.sourceId === id) {
+    parts.push("plus-pull-source");
+  }
   if (interaction.kind === "merge-pick" && mergePicked) {
     parts.push("merge-candidate-on");
   }
@@ -384,6 +387,15 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
             const originId = (e.data as FlowPathData | undefined)?.originId;
             s.select({ type: SelectionKind.Edge, id: typeof originId === "string" ? originId : e.id });
             blurDetailsFocus();
+          }}
+          onEdgeDoubleClick={(_, e) => {
+            const s = useStore.getState();
+            s.setFocusedLane(lane);
+            if (!s.canvasEditable()) return;
+            const originId = (e.data as FlowPathData | undefined)?.originId;
+            const id = typeof originId === "string" ? originId : e.id;
+            s.select({ type: SelectionKind.Edge, id });
+            s.toggleSelectedDash();
           }}
           className="board-pan"
           style={{ height: "100%", background: "transparent" }}

@@ -96,14 +96,15 @@ export function useAppKeys() {
 
       const readOnlyBoard = s.present || s.view === ViewMode.Both;
 
-      if (
-        !readOnlyBoard &&
-        (s.interaction.kind === "plus-pull" ||
-          s.interaction.kind === "path-pull" ||
-          s.interaction.kind === "tile-drag")
-      ) {
-        return;
-      }
+        if (
+          !readOnlyBoard &&
+          (s.interaction.kind === "plus-pull" ||
+            s.interaction.kind === "path-pull" ||
+            s.interaction.kind === "tile-drag" ||
+            s.interaction.kind === "path-label-edit")
+        ) {
+          return;
+        }
 
       if (!readOnlyBoard && s.interaction.kind === "remove-preview") {
         if (keyIs(map, KeyAction.Confirm, e) || e.key === "Enter") {

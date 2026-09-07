@@ -35,7 +35,8 @@ export function MergeWhoColumn({ actor }: { actor: ActorDto | undefined }) {
         display: "flex",
         flexDirection: "column",
         alignItems: "stretch",
-        justifyContent: "space-between",
+        justifyContent: "flex-start",
+        gap: 6,
         padding: "8px 8px 10px",
         boxSizing: "border-box",
         overflow: "visible",
@@ -49,7 +50,7 @@ export function MergeWhoColumn({ actor }: { actor: ActorDto | undefined }) {
           <RobotFigure size={42} color={FIGURE_INK_ON_PASTEL} />
         )}
       </div>
-      <div className="actor-card" style={{ minHeight: 72 }}>
+      <div className="actor-card">
         <div className="actor-chip actor-chip-name">
           <FitLabel
             text={actor?.name ?? "—"}
@@ -68,6 +69,7 @@ export function MergeWhoColumn({ actor }: { actor: ActorDto | undefined }) {
               minFontSizePx={9}
               mode="box"
               maxLines={2}
+              hug
               color={FIGURE_INK_ON_PASTEL}
             />
           </div>

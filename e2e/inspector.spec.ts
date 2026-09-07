@@ -27,6 +27,8 @@ test.describe("slice 7 inspector and actors", () => {
       "aria-pressed",
       "true",
     );
+    await expect(aside(page).getByRole("group", { name: "Path: 1 Path vs All Paths" })).toHaveCount(0);
+    await expect(aside(page).getByRole("button", { name: "1 Path" })).toHaveCount(0);
     await expect(aside(page).getByRole("button", { name: "Who Alice" })).toHaveAttribute(
       "aria-pressed",
       "true",
@@ -72,40 +74,40 @@ test.describe("slice 7 inspector and actors", () => {
     );
   });
 
-  test("Path inspector is the label field; Split still sets Path strokes", async ({ page }) => {
+  test("Path inspector is the label field plus Dotted / Solid; Enter edits on the chip", async ({ page }) => {
     await loadDemo(page);
     await page.getByText("invoice > $50,000").first().click();
     await expect(aside(page).locator("#path-condition-field")).toBeVisible();
     await expect(aside(page).getByText("Path / condition", { exact: true })).toHaveCount(0);
     await expect(aside(page).getByRole("button", { name: "Always visited (solid)" })).toHaveCount(0);
     await expect(aside(page).getByRole("button", { name: "Choice (dotted)" })).toHaveCount(0);
+    await expect(aside(page).getByRole("group", { name: "Path: 1 Path vs All Paths" })).toHaveCount(0);
+    await expect(aside(page).getByRole("button", { name: "1 Path" })).toHaveCount(0);
+    await expect(aside(page).getByRole("button", { name: "All Paths" })).toHaveCount(0);
     await expect(aside(page).getByRole("button", { name: "Delete" })).toHaveCount(0);
+    const stroke = aside(page).getByRole("group", { name: "Path stroke" });
+    await expect(stroke.getByRole("button", { name: "Dotted" })).toHaveAttribute("aria-pressed", "true");
+    await expect(stroke.getByRole("button", { name: "Solid" })).toBeVisible();
     await page.screenshot({
       path: `${EVIDENCE}/path-condition-1440.png`,
       animations: "disabled",
     });
 
     await page.keyboard.press("Enter");
-    await expect(page.locator("#path-condition-field")).toBeFocused();
+    await expect(page.locator("#path-condition-field")).not.toBeFocused();
+    await expect(page.locator("#path-chip-editor")).toBeFocused();
+    await page.screenshot({
+      path: ".docs/evidence/improve-03-polish/path-type-on-chip-1440.png",
+      animations: "disabled",
+    });
 
-    await page.getByText(DEMO_STEP).first().click();
-    const split = aside(page).getByRole("group", { name: "Path: 1 Path vs All Paths" });
-    await expect(split.getByRole("button", { name: "1 Path" })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
-    await split.getByRole("button", { name: "All Paths" }).click();
-    await page.getByText("invoice > $50,000").first().click();
+    await stroke.getByRole("button", { name: "Solid" }).click();
+    await expect(stroke.getByRole("button", { name: "Solid" })).toHaveAttribute("aria-pressed", "true");
     await expect(aside(page).locator("#path-condition-field")).toBeVisible();
     await page.screenshot({
       path: `${EVIDENCE}/split-every-1440.png`,
       animations: "disabled",
     });
-
-    await page.getByText(DEMO_STEP).first().click();
-    await aside(page).getByRole("group", { name: "Path: 1 Path vs All Paths" }).getByRole("button", { name: "1 Path" }).click();
-    await page.getByText("invoice > $50,000").first().click();
-    await expect(aside(page).locator("#path-condition-field")).toBeVisible();
   });
 
   test("Manage actors deletion blockers; unused Priya can be deleted", async ({ page }) => {

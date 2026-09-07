@@ -253,7 +253,7 @@ Shipped as `feat(improve-02): add merge tile type and tile drag`. Spec was [`.do
 
 ---
 
-# Improvement 03 — polish, Path stroke, on-canvas label
+# Improvement 03 — polish, Path stroke, on-canvas label (COMPLETE)
 
 Approved 2026-09-07. **Do not implement Improvements 04–07 in the same chat.**
 

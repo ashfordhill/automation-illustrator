@@ -2,7 +2,7 @@
  * Oak Park invoice walkthrough — first-visit board and hamburger Demo item.
  * IDs match the retired CLI exporter (Slice 5). Both amount Paths are dotted (PC-06).
  */
-import { defaultActors, ROBOT_COLORS } from "../workflow/actors";
+import { defaultActors, HUMAN_PRESETS, ROBOT_COLORS } from "../workflow/actors";
 import {
   ActorKind,
   RobotKind,
@@ -58,10 +58,10 @@ export function oakParkInvoice(): WorkflowDoc {
   return {
     version: WORKFLOW_VERSION,
     actors: [
-      { id: alice, kind: ActorKind.Human, name: "Alice", color: "#f4c6d4", role: "worker" },
-      { id: roy, kind: ActorKind.Human, name: "Roy", color: "#c5d4ea", role: "worker" },
-      { id: jack, kind: ActorKind.Human, name: "Jack", color: "#c5e0d6", role: "worker" },
-      { id: missy, kind: ActorKind.Human, name: "Missy", color: "#d5c6e6", role: "worker" },
+      { id: alice, kind: ActorKind.Human, name: "Alice", color: HUMAN_PRESETS[0].color, role: "worker" },
+      { id: roy, kind: ActorKind.Human, name: "Roy", color: HUMAN_PRESETS[1].color, role: "worker" },
+      { id: jack, kind: ActorKind.Human, name: "Jack", color: HUMAN_PRESETS[2].color, role: "worker" },
+      { id: missy, kind: ActorKind.Human, name: "Missy", color: HUMAN_PRESETS[3].color, role: "worker" },
       {
         id: robot,
         kind: ActorKind.Robot,
