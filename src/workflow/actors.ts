@@ -81,6 +81,17 @@ export function defaultRobotId(actors: ActorDto[]) {
   return actors.find((a) => a.kind === ActorKind.Robot)?.id;
 }
 
+/**
+ * After merge / After-only Step: use the default Robot, creating a Script
+ * Robot named "Robot" in the same undo step when the roster has none (NA-04).
+ */
+export function ensureDefaultRobot(doc: WorkflowDoc): { doc: WorkflowDoc; robotId: string } {
+  const existing = defaultRobotId(doc.actors);
+  if (existing) return { doc, robotId: existing };
+  const robot = makeRobot("Robot", RobotKind.Script);
+  return { doc: { ...doc, actors: [...doc.actors, robot] }, robotId: robot.id };
+}
+
 export type ActorUse = {
   stepId: string;
   lane: typeof AssignmentLane.Before | typeof AssignmentLane.After;

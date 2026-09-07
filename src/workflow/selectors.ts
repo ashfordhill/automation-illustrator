@@ -18,6 +18,11 @@ export function findMergeGroup(doc: WorkflowDoc, id: string): MergeGroupDto | un
   return doc.after.groups.find((g) => g.id === id);
 }
 
+/** Group that lists this Before-origin Step as a member. */
+export function mergeGroupForMember(doc: WorkflowDoc, stepId: string): MergeGroupDto | undefined {
+  return doc.after.groups.find((g) => g.memberIds.includes(stepId));
+}
+
 export function isAfterOnlyNode(doc: WorkflowDoc, id: string): boolean {
   return doc.after.extraNodes.some((n) => n.id === id);
 }

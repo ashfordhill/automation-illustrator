@@ -71,12 +71,15 @@ test.describe("slice 6 canvas create / connect / remove", () => {
     await viewLabel(page, "After").click();
     await expect(page.getByText("AFTER", { exact: true })).toBeVisible();
     await page.getByText(DEMO_STEP).first().click();
-    await expect(page.getByRole("button", { name: "Add Step, Data, or Connect existing" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Add After-only Step or Connect existing" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Remove Node" })).toBeVisible();
     await page.screenshot({
       path: `${EVIDENCE}/after-light-1440.png`,
       animations: "disabled",
     });
+    await page.getByRole("button", { name: "Add After-only Step or Connect existing" }).click();
+    await expect(page.getByRole("menuitem", { name: /After-only Step/ })).toBeVisible();
+    await expect(page.getByRole("menuitem", { name: /^Data$/ })).toHaveCount(0);
     await page.screenshot({
       path: `${EVIDENCE}/after-no-plus-1440.png`,
       animations: "disabled",

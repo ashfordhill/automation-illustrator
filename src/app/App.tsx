@@ -16,6 +16,7 @@ import { ImportErrorModal } from "./components/ImportErrorModal";
 import { RecoveryModal } from "./components/RecoveryModal";
 import { RemovePickerHud } from "./components/RemovePickerHud";
 import { ReplaceDocumentModal } from "./components/ReplaceDocumentModal";
+import { MergeDock } from "./components/MergeDock";
 import { Toolbar } from "./components/Toolbar";
 import { TransientNotice } from "./components/TransientNotice";
 import { DetailsPanel } from "./inspector/SelectedItemForm";
@@ -151,6 +152,7 @@ export default function App() {
             <CanvasHelper />
             <TransientNotice />
             <RemovePickerHud />
+            <MergeDock />
           </div>
         </AppShell.Main>
       </AppShell>

@@ -47,7 +47,21 @@ function hintsFor(): Hint[] {
       { key: "Esc", label: "Cancel" },
     ];
   }
+  if (s.interaction.kind === "merge-pick") {
+    return [
+      { key: "Click", label: "Add or remove a Step" },
+      { key: pk(KeyAction.Confirm), label: "Confirm merge" },
+      { key: "Esc", label: "Cancel" },
+    ];
+  }
   if (s.interaction.kind === "add-menu") {
+    if (s.view === ViewMode.After) {
+      return [
+        { key: pk(KeyAction.AddBranchStep), label: "After-only Step" },
+        { key: pk(KeyAction.LinkExisting), label: "Connect existing" },
+        { key: "Esc", label: "Cancel" },
+      ];
+    }
     return [
       { key: pk(KeyAction.AddBranchStep), label: "New Step" },
       { key: pk(KeyAction.AddBranchData), label: "New Data" },
@@ -64,14 +78,23 @@ function hintsFor(): Hint[] {
     ];
   }
   if (s.selected?.type === SelectionKind.Node) {
+    const group = s.workflow.after.groups.find((g) => g.id === s.selected!.id);
     const n =
       s.workflow.nodes.find((x) => x.id === s.selected!.id) ??
       s.workflow.after.extraNodes.find((x) => x.id === s.selected!.id);
     const items: Hint[] = [];
     if (s.view === ViewMode.Both) return [];
-    if (s.view !== ViewMode.After) {
+    if (s.view === ViewMode.After) {
       items.push({ key: pk(KeyAction.AddPath), label: "Add Path" });
+      items.push({ key: pk(KeyAction.Merge), label: "Merge" });
+      if (group) {
+        items.push({ key: pk(KeyAction.Unmerge), label: "Unmerge" });
+      } else if (s.workflow.after.extraNodes.some((x) => x.id === s.selected!.id)) {
+        items.push({ key: pk(KeyAction.RemoveNode), label: "Remove Step" });
+      }
+      return items;
     }
+    items.push({ key: pk(KeyAction.AddPath), label: "Add Path" });
     items.push({
       key: pk(KeyAction.RemoveNode),
       label: n?.type === WorkflowNodeKind.DataField ? "Remove Data" : "Remove Step",

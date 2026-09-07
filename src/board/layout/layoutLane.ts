@@ -22,6 +22,7 @@ export function layoutLane(
   nodes: NodeDto[],
   edges: EdgeDto[],
   labelBoxes: Record<string, LabelBox> = {},
+  sizes?: Record<string, { w: number; h: number }>,
 ): LanePositions {
   const positions: LanePositions = {};
   for (const n of nodes) positions[n.id] = { x: n.position.x, y: n.position.y };
@@ -45,7 +46,8 @@ export function layoutLane(
     if (!srcPos || !tgtPos) continue;
     const box = labelBoxes[e.id] ?? measureLabelBox(e.label);
     const need = needForBox(box);
-    const gap = tgtPos.x - (srcPos.x + nodeSize(src.type).w);
+    const srcW = sizes?.[src.id]?.w ?? nodeSize(src.type).w;
+    const gap = tgtPos.x - (srcPos.x + srcW);
     if (gap >= need) continue;
     const delta = need - gap;
     const threshold = tgtPos.x;

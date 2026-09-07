@@ -5,8 +5,9 @@
  *
  * commit / undo / redo — history.ts (500; replaceDoc is a document boundary)
  * addStep — first Step is the root (WG-01); later tiles spawn from +
- * openLinkMenu / spawnBranch / beginLinkFrom — tile + (hidden in After until Slice 11)
+ * openLinkMenu / spawnBranch / beginLinkFrom — tile + (After: After-only Step / Connect existing)
  * beginRemovePick / confirmRemove — − / Delete / inspector Remove picker (WG-08..11)
+ * beginMerge / confirmMerge / unmerge — After merge dock (MG-01..MG-07)
  * toggleSelectedDash — selected Path solid/dotted
  * requestNew / requestDemo / importRaw — replacement gate (SH-06, SH-12)
  * startFresh / downloadHeldRecovery — corrupt-storage recovery (SH-10)
@@ -60,6 +61,19 @@ import {
   type RemovalPlan,
 } from "../workflow/commands";
 import {
+  addAfterStep,
+  applyAfterOnlyRemoval,
+  assignMergeGroupWho,
+  createMergeGroup,
+  afterAwareRemovalCandidateIds,
+  expandMergeSelection,
+  planAfterOnlyRemoval,
+  removeMergeGroup,
+  resolveAfterEndpoint,
+  connectAfter,
+} from "../workflow/merge";
+import { projectAfter } from "./projection";
+import {
   afterGraph,
   applyDashForSplit,
   defaultRemovalCandidateId,
@@ -110,9 +124,11 @@ import { parseDocument, type ParseResult } from "../workflow/migrate";
 import {
   findEdge,
   findMergeGroup,
+  findNode,
   isAfterOnlyEdge,
   isAfterOnlyNode,
   isBeforeOriginNode,
+  mergeGroupForMember,
 } from "../workflow/selectors";
 
 /** Right-hand inspector target, or null when nothing is selected. */
@@ -250,6 +266,10 @@ export const useStore = create<{
   setPreviewSuccessorPred: (successorId: string, predecessorId: string) => void;
   useNearestPreviewPairings: () => void;
   useFanPreviewPairings: () => void;
+  beginMerge: () => void;
+  toggleMergeMember: (id: string) => void;
+  confirmMerge: () => void;
+  unmerge: (groupId?: string) => void;
   requestNew: () => void;
   requestDemo: (demoId: DemoId) => void;
   cancelReplace: () => void;
@@ -625,7 +645,16 @@ export const useStore = create<{
   assignActor: (stepId, actorId) => {
     if (get().present || get().view === ViewMode.Both) return;
     const { workflow, commit, assignmentLane } = get();
-    if (findMergeGroup(workflow, stepId)) return;
+    const group = findMergeGroup(workflow, stepId);
+    if (group) {
+      const result = assignMergeGroupWho(workflow, group.id, actorId);
+      if (!result.ok) {
+        get().setNotice(result.message);
+        return;
+      }
+      commit(result.value);
+      return;
+    }
     const lane = assignmentLane();
     const actor = workflow.actors.find((a) => a.id === actorId);
     if (!actor) return;
@@ -633,9 +662,12 @@ export const useStore = create<{
     if (isHuman(actor)) set({ lastHumanId: actorId });
   },
   connect: (source, target, label = "") => {
-    if (get().present || get().view !== ViewMode.Before) return;
-    const { workflow } = get();
-    const result = connectNodes(workflow, source, target, { label });
+    if (get().present || get().view === ViewMode.Both) return;
+    const { workflow, view } = get();
+    const result =
+      view === ViewMode.After
+        ? connectAfter(workflow, source, target, { label })
+        : connectNodes(workflow, source, target, { label });
     if (!result.ok) {
       get().setNotice(result.message);
       return;
@@ -664,7 +696,7 @@ export const useStore = create<{
 
   closeBoardModes: () => set({ interaction: IDLE }),
   openLinkMenu: (sourceId) => {
-    if (get().present || get().view !== ViewMode.Before) return;
+    if (get().present || get().view === ViewMode.Both) return;
     const { interaction } = get();
     if (interaction.kind === "add-menu" && interaction.sourceId === sourceId) {
       set({ interaction: IDLE });
@@ -676,8 +708,54 @@ export const useStore = create<{
     });
   },
   spawnBranch: (sourceId, type) => {
-    if (get().present || get().view !== ViewMode.Before) return "";
-    const { workflow, lastHumanId } = get();
+    if (get().present || get().view === ViewMode.Both) return "";
+    const { workflow, lastHumanId, view } = get();
+    if (view === ViewMode.After) {
+      if (type === WorkflowNodeKind.DataField) {
+        get().setNotice("After does not add Data. Add an After-only Step or Connect existing.");
+        return "";
+      }
+      const resolved = resolveAfterEndpoint(workflow, sourceId, "source");
+      if (!resolved.ok) {
+        get().setNotice(resolved.message);
+        return "";
+      }
+      const graph = afterGraph(workflow);
+      const srcNode =
+        projectAfter(workflow).nodes.find((n) => n.id === sourceId) ??
+        graph.nodes.find((n) => n.id === resolved.value);
+      if (!srcNode) {
+        set({ interaction: IDLE });
+        return "";
+      }
+      const port = nextPortIndex(graph.edges, resolved.value);
+      const pos = clearDockPosition(srcNode, WorkflowNodeKind.Step, port, [
+        ...graph.nodes,
+        ...projectAfter(workflow).nodes,
+      ]);
+      const id = nid(IdPrefix.Step);
+      const result = addAfterStep(workflow, sourceId, {
+        id,
+        type: WorkflowNodeKind.Step,
+        position: pos,
+        stepKind: StepKind.Other,
+        title: STEP_KIND_META[StepKind.Other].defaultTitle,
+        detail: "",
+        split: SplitKind.Exclusive,
+      });
+      if (!result.ok) {
+        get().setNotice(result.message);
+        return "";
+      }
+      get().commit(result.value);
+      playCueWhen(get().soundEnabled, "blip");
+      set({
+        interaction: IDLE,
+        selected: { type: SelectionKind.Node, id },
+      });
+      get().requestFocus(id);
+      return id;
+    }
     const src = workflow.nodes.find((n) => n.id === sourceId);
     if (!src) {
       set({ interaction: IDLE });
@@ -736,7 +814,7 @@ export const useStore = create<{
     return id;
   },
   beginLinkFrom: (sourceId) => {
-    if (get().present || get().view !== ViewMode.Before) return;
+    if (get().present || get().view === ViewMode.Both) return;
     const { interaction } = get();
     if (interaction.kind === "connect-existing" && interaction.sourceId === sourceId) {
       set({ interaction: IDLE });
@@ -782,9 +860,30 @@ export const useStore = create<{
 
   beginRemovePick: (hostId) => {
     if (get().present || get().view === ViewMode.Both) return;
-    const { workflow } = get();
-    if (findMergeGroup(workflow, hostId) || isAfterOnlyNode(workflow, hostId)) return;
-    if (get().view === ViewMode.After && isBeforeOriginNode(workflow, hostId)) {
+    const { workflow, view } = get();
+    const group = findMergeGroup(workflow, hostId);
+    if (group) {
+      if (view === ViewMode.After) get().unmerge(group.id);
+      return;
+    }
+    if (isAfterOnlyNode(workflow, hostId)) {
+      if (view !== ViewMode.After) return;
+      const graph = afterGraph(workflow);
+      const candidates = afterAwareRemovalCandidateIds(workflow, hostId);
+      const firstChild = graph.edges.find((e) => e.source === hostId && candidates.includes(e.target))?.target;
+      const candidateId =
+        (firstChild && candidates.includes(firstChild) ? firstChild : null) ??
+        (candidates.includes(hostId) ? hostId : candidates[0]);
+      if (!candidateId) return;
+      set({
+        interaction: { kind: "remove-pick", hostId, candidateId },
+        selected: { type: SelectionKind.Node, id: hostId },
+        manageActorsOpen: false,
+        manageActorId: null,
+      });
+      return;
+    }
+    if (view === ViewMode.After && isBeforeOriginNode(workflow, hostId)) {
       get().setNotice(MSG.afterOriginRemoval);
       return;
     }
@@ -806,7 +905,7 @@ export const useStore = create<{
   cycleRemoveCandidate: (dir) => {
     const { interaction, workflow } = get();
     if (interaction.kind !== "remove-pick") return;
-    const candidates = removalCandidateIds(workflow.nodes, workflow.edges, interaction.hostId);
+    const candidates = afterAwareRemovalCandidateIds(workflow, interaction.hostId);
     if (!candidates.length) {
       set({ interaction: IDLE });
       return;
@@ -820,17 +919,34 @@ export const useStore = create<{
   setRemoveCandidate: (candidateId) => {
     const { interaction, workflow } = get();
     if (interaction.kind !== "remove-pick") return;
-    const candidates = removalCandidateIds(workflow.nodes, workflow.edges, interaction.hostId);
+    const candidates = afterAwareRemovalCandidateIds(workflow, interaction.hostId);
     if (!candidates.includes(candidateId)) return;
     set({ interaction: { ...interaction, candidateId } });
   },
   confirmRemove: () => {
     const { interaction, workflow } = get();
     if (interaction.kind === "remove-preview") {
+      if (isAfterOnlyNode(workflow, interaction.plan.nodeId)) {
+        applyAfterOnlyPlanned(get, set, interaction.plan, interaction.plan.pairings);
+        return;
+      }
       applyPlannedRemoval(get, set, interaction.plan, interaction.plan.pairings);
       return;
     }
     if (interaction.kind !== "remove-pick") return;
+    if (isAfterOnlyNode(workflow, interaction.candidateId)) {
+      const planned = planAfterOnlyRemoval(workflow, interaction.candidateId);
+      if (!planned.ok) {
+        get().setNotice(planned.message);
+        return;
+      }
+      if (planned.value.mode === "preview") {
+        set({ interaction: { kind: "remove-preview", plan: planned.value } });
+        return;
+      }
+      applyAfterOnlyPlanned(get, set, planned.value, planned.value.pairings);
+      return;
+    }
     const planned = planNodeRemoval(workflow, interaction.candidateId);
     if (!planned.ok) {
       get().setNotice(planned.message);
@@ -889,6 +1005,97 @@ export const useStore = create<{
           pairings: fanPairings(workflow.nodes, workflow.edges, incoming, outgoing),
         },
       },
+    });
+  },
+  beginMerge: () => {
+    if (get().present || get().view !== ViewMode.After) return;
+    const { interaction, selected, workflow } = get();
+    if (interaction.kind === "merge-pick") {
+      get().confirmMerge();
+      return;
+    }
+    if (!selected || selected.type !== SelectionKind.Node) {
+      get().setNotice(MSG.mergeNeedSteps);
+      return;
+    }
+    const startIds = [selected.id];
+    const preview = expandMergeSelection(workflow, startIds);
+    if (!preview.ok) {
+      get().setNotice(preview.message);
+      return;
+    }
+    set({
+      interaction: { kind: "merge-pick", memberIds: preview.value.memberIds },
+      manageActorsOpen: false,
+      manageActorId: null,
+    });
+  },
+  toggleMergeMember: (id) => {
+    const { interaction, workflow } = get();
+    if (interaction.kind !== "merge-pick") return;
+    const group = findMergeGroup(workflow, id);
+    const ids = group ? group.memberIds : [id];
+    const next = new Set(interaction.memberIds);
+    const removing = ids.every((x) => next.has(x));
+    if (removing) {
+      for (const x of ids) next.delete(x);
+    } else {
+      const check = expandMergeSelection(workflow, [...interaction.memberIds, ...ids]);
+      if (!check.ok) {
+        get().setNotice(check.message);
+        return;
+      }
+      for (const x of ids) next.add(x);
+    }
+    if (!next.size) {
+      set({ interaction: IDLE });
+      return;
+    }
+    set({ interaction: { kind: "merge-pick", memberIds: [...next] } });
+  },
+  confirmMerge: () => {
+    const { interaction, workflow } = get();
+    if (interaction.kind !== "merge-pick") return;
+    const result = createMergeGroup(workflow, interaction.memberIds);
+    if (!result.ok) {
+      get().setNotice(result.message);
+      return;
+    }
+    const created = result.value.after.groups.find((g) =>
+      interaction.memberIds.every((id) => g.memberIds.includes(id)),
+    );
+    get().commit(result.value);
+    playCueWhen(get().soundEnabled, "twoNote");
+    set({
+      interaction: IDLE,
+      selected: created ? { type: SelectionKind.Node, id: created.id } : null,
+    });
+  },
+  unmerge: (groupId) => {
+    if (get().present || get().view !== ViewMode.After) return;
+    const { workflow, selected } = get();
+    const id =
+      groupId ??
+      (selected?.type === SelectionKind.Node
+        ? findMergeGroup(workflow, selected.id)?.id ?? mergeGroupForMember(workflow, selected.id)?.id
+        : undefined);
+    if (!id) {
+      get().setNotice(MSG.mergeMissing);
+      return;
+    }
+    const group = findMergeGroup(workflow, id);
+    const result = removeMergeGroup(workflow, id);
+    if (!result.ok) {
+      get().setNotice(result.message);
+      return;
+    }
+    get().commit(result.value);
+    playCueWhen(get().soundEnabled, "twoNote");
+    set({
+      interaction: IDLE,
+      selected: group?.memberIds[0]
+        ? { type: SelectionKind.Node, id: group.memberIds[0] }
+        : null,
     });
   },
 
@@ -1011,5 +1218,43 @@ function applyPlannedRemoval(
     selected: null,
     departing: reduced || !node ? null : { node, actor },
     notice: overlay,
+  });
+}
+
+function applyAfterOnlyPlanned(
+  get: () => {
+    workflow: WorkflowDoc;
+    actorFor: (stepId: string) => ActorDto | undefined;
+    commit: (next: WorkflowDoc) => void;
+    setNotice: (message: string | null) => void;
+    soundEnabled: boolean;
+  },
+  set: (partial: {
+    interaction: Interaction;
+    selected: Selection;
+    departing: DepartingTile | null;
+    notice: string | null;
+  }) => void,
+  plan: RemovalPlan,
+  pairings: RemovalPairing[],
+) {
+  const { workflow } = get();
+  const node = findNode(workflow, plan.nodeId);
+  const actor = node && isStepNode(node) ? get().actorFor(node.id) : undefined;
+  const applied = applyAfterOnlyRemoval(workflow, plan, pairings);
+  if (!applied.ok) {
+    get().setNotice(applied.message);
+    return;
+  }
+  const before = get().workflow;
+  get().commit(applied.value);
+  if (get().workflow === before) return;
+  playCueWhen(get().soundEnabled, "pop");
+  const reduced = prefersReducedMotion();
+  set({
+    interaction: IDLE,
+    selected: null,
+    departing: reduced || !node ? null : { node, actor },
+    notice: null,
   });
 }

@@ -130,6 +130,15 @@ export function useAppKeys() {
         return;
       }
 
+      if (!readOnlyBoard && s.interaction.kind === "merge-pick") {
+        if (keyIs(map, KeyAction.Confirm, e) || e.key === "Enter" || action === KeyAction.Merge) {
+          e.preventDefault();
+          s.confirmMerge();
+          return;
+        }
+        return;
+      }
+
       if (!readOnlyBoard && s.interaction.kind === "add-menu") {
         e.preventDefault();
         if (keyIs(map, KeyAction.AddBranchStep, e)) {
@@ -137,6 +146,7 @@ export function useAppKeys() {
           return;
         }
         if (keyIs(map, KeyAction.AddBranchData, e)) {
+          if (s.view === ViewMode.After) return;
           s.spawnBranch(s.interaction.sourceId, WorkflowNodeKind.DataField);
           return;
         }
@@ -198,6 +208,27 @@ export function useAppKeys() {
           s.beginRemovePick(s.selected.id);
           return;
         }
+        if (action === KeyAction.Merge) {
+          e.preventDefault();
+          s.beginMerge();
+          return;
+        }
+        if (action === KeyAction.Unmerge) {
+          e.preventDefault();
+          s.unmerge();
+          return;
+        }
+      }
+
+      if (!readOnlyBoard && action === KeyAction.Merge) {
+        e.preventDefault();
+        s.beginMerge();
+        return;
+      }
+      if (!readOnlyBoard && action === KeyAction.Unmerge) {
+        e.preventDefault();
+        s.unmerge();
+        return;
       }
 
       if (

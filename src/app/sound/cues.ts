@@ -62,7 +62,7 @@ function tone(
   };
 }
 
-/** Play one SH-04 cue. No-op when Web Audio is missing. Slice 11 should call `twoNote` on merge/unmerge. */
+/** Play one SH-04 cue. No-op when Web Audio is missing. Merge/unmerge plays `twoNote`. */
 export function playCue(kind: CueKind): void {
   const ac = audioContext();
   if (!ac) return;

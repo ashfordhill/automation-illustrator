@@ -114,6 +114,7 @@ export const IdPrefix = {
   Human: "h",
   Robot: "r",
   Edge: "e",
+  Group: "g",
 } as const;
 export type IdPrefix = (typeof IdPrefix)[keyof typeof IdPrefix];
 

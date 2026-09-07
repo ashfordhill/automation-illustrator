@@ -7,6 +7,7 @@ import {
   applyConnectStroke,
   edgeIsDotted,
   incomingSorted,
+  isConvex,
   maybeExclusiveSplit,
   outgoingSorted,
   rootNodeId,
@@ -16,6 +17,7 @@ import {
 import { nid } from "./ids";
 import {
   isStepNode,
+  stepDisplayLabel,
   type AfterOverlay,
   type Assignments,
   type EdgeDto,
@@ -66,13 +68,19 @@ export const MSG = {
   notStep: "The first Node on a board must be a Step.",
   missingNode: "That Node is not on the board.",
   invalidPairings: "Every successor needs at least one incoming Path after removal.",
+  mergeNeedSteps: "Select Before-origin Steps to merge.",
+  mergeData: "Data Nodes cannot be merge members.",
+  mergeAfterOnly: "After-only Steps cannot be merge members.",
+  mergeDisconnected: "Those Steps are not connected by base Paths.",
+  mergeMissing: "Select a merged Step to Unmerge.",
+  mergeInternalPath: "That Path would stay inside the merge group.",
 } as const;
 
-function fail<T>(code: string, message: string): CommandResult<T> {
+export function fail<T>(code: string, message: string): CommandResult<T> {
   return { ok: false, code, message };
 }
 
-function ok<T>(value: T): CommandResult<T> {
+export function ok<T>(value: T): CommandResult<T> {
   return { ok: true, value };
 }
 
@@ -84,7 +92,7 @@ function requireValid(doc: WorkflowDoc): CommandResult<WorkflowDoc> {
   return ok(doc);
 }
 
-function succeed(doc: WorkflowDoc): CommandResult<WorkflowDoc> {
+export function succeed(doc: WorkflowDoc): CommandResult<WorkflowDoc> {
   const violations = validateWorkflow(doc);
   if (violations.length) {
     return fail("invalid-document", violations[0]!.message);
@@ -213,6 +221,10 @@ export function pruneAfterOverlay(
     }
     if (!weaklyConnected(memberIds, remainingNodes, remainingEdges)) {
       notices.push(`Merge group "${g.id}" dissolved because it is no longer contiguous.`);
+      continue;
+    }
+    if (!isConvex(memberIds, remainingNodes, remainingEdges)) {
+      notices.push(`Merge group "${g.id}" dissolved because it is no longer convex.`);
       continue;
     }
     groups.push({ ...g, memberIds });
@@ -387,6 +399,23 @@ export function connectNodes(
   }
   if (wouldCreateCycle(doc.edges, source, target)) {
     return fail("cycle", MSG.cycle);
+  }
+  const trial: EdgeDto[] = [
+    ...doc.edges,
+    { id: "__trial__", source, target, label: "" },
+  ];
+  const broken = doc.after.groups.find((g) => !isConvex(g.memberIds, doc.nodes, trial));
+  if (broken) {
+    const names = broken.memberIds
+      .map((id) => {
+        const n = doc.nodes.find((x) => x.id === id);
+        return n && isStepNode(n) ? stepDisplayLabel(n.stepKind, n.title) : id;
+      })
+      .join(", ");
+    return fail(
+      "merge-convexity",
+      `That Path would leave merge group "${names || broken.id}" and re-enter it. Unmerge first.`,
+    );
   }
   const previousOutgoing = doc.edges.filter((e) => e.source === source).length;
   const edgeId = options?.id ?? nid(IdPrefix.Edge);

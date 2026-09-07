@@ -1,7 +1,7 @@
 /**
  * One discriminated canvas interaction (CX-08). Replaces overlapping
  * linkFrom / linkMenu / pathPick booleans. Escape and empty-canvas click
- * always return to idle. merge-pick is reserved for Slice 11.
+ * always return to idle. merge-pick collects Before-origin Steps before confirm.
  */
 import type { ActorDto, NodeDto } from "../workflow/types";
 import type { RemovalPlan } from "../workflow/commands";

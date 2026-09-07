@@ -28,9 +28,10 @@ import { useStore } from "../state/store";
 import { edgeTypes, nodeTypes, type Lane } from "./nodes/reactFlowRegistry";
 import { FIELD_H, FIELD_W, GRID, STEP_H, STEP_W, nodeSize } from "./layout/tileMetrics";
 import { layoutLane } from "./layout/layoutLane";
+import { mergeTileSize } from "./layout/mergeFlow";
 import { measureLabelBox } from "./layout/labelBox";
 import { pointAt, useModestMotion } from "./layout/useModestMotion";
-import { removalCandidateIds } from "../workflow/graph";
+import { afterAwareRemovalCandidateIds } from "../workflow/merge";
 import { PathLayoutProvider } from "./routing/PathLayout";
 import { smartProviderOptions } from "./routing/smartStep";
 import type { FlowPathData } from "./routing/FlowArrow";
@@ -51,6 +52,7 @@ function nodeClassName(
   candidates: string[],
   departingId: string | null,
   merge?: boolean,
+  mergePicked?: boolean,
 ): string {
   const parts = ["nopan"];
   if (merge) parts.push("is-merge-group");
@@ -60,6 +62,9 @@ function nodeClassName(
   }
   if (interaction.kind === "remove-preview" && interaction.plan.nodeId === id) {
     parts.push("remove-candidate-on");
+  }
+  if (interaction.kind === "merge-pick" && mergePicked) {
+    parts.push("merge-candidate-on");
   }
   return parts.join(" ");
 }
@@ -84,9 +89,7 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
   const rf = useReactFlow();
   const editing = !present;
   const hostId = interaction.kind === "remove-pick" ? interaction.hostId : null;
-  const candidates = hostId
-    ? removalCandidateIds(workflow.nodes, workflow.edges, hostId)
-    : [];
+  const candidates = hostId ? afterAwareRemovalCandidateIds(workflow, hostId) : [];
 
   const projection = useMemo(() => projectLane(workflow, lane), [workflow, lane]);
 
@@ -98,9 +101,17 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
     return boxes;
   }, [projection.edges]);
 
+  const tileSizes = useMemo(() => {
+    const sizes: Record<string, { w: number; h: number }> = {};
+    for (const g of projection.internals) {
+      sizes[g.groupId] = mergeTileSize(workflow, g);
+    }
+    return sizes;
+  }, [workflow, projection.internals]);
+
   const derived = useMemo(
-    () => layoutLane(projection.nodes, projection.edges, labelBoxes),
-    [projection.nodes, projection.edges, labelBoxes],
+    () => layoutLane(projection.nodes, projection.edges, labelBoxes, tileSizes),
+    [projection.nodes, projection.edges, labelBoxes, tileSizes],
   );
   const display = useModestMotion(derived);
   const lastPos = useRef(display);
@@ -155,7 +166,12 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
 
   const rfNodes: Node[] = projection.nodes.map((n) => {
     const pos = pointAt(display, n.id, n.position);
-    const size = tileSize(n.type);
+    const size = tileSizes[n.id] ?? tileSize(n.type);
+    const mergePicked =
+      interaction.kind === "merge-pick" &&
+      (interaction.memberIds.includes(n.id) ||
+        (n.memberIds ?? []).some((id) => interaction.memberIds.includes(id)));
+    const internals = projection.internals.find((g) => g.groupId === n.id);
     return {
       id: n.id,
       type: reactFlowTypeFor(n.type),
@@ -166,11 +182,20 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
         projectedKind: n.projectedKind,
         originId: n.originId,
         memberIds: n.memberIds,
+        supportingIds: n.supportingIds,
+        internals,
       },
       draggable: false,
       selectable: editing,
       selected: selected?.type === SelectionKind.Node && selected.id === n.id,
-      className: nodeClassName(n.id, interaction, candidates, null, n.projectedKind === "group"),
+      className: nodeClassName(
+        n.id,
+        interaction,
+        candidates,
+        null,
+        n.projectedKind === "group",
+        mergePicked,
+      ),
       width: size.w,
       height: size.h,
       measured: { width: size.w, height: size.h },
@@ -215,7 +240,7 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
     () =>
       projection.nodes.map((n) => {
         const pos = pointAt(display, n.id, n.position);
-        const size = nodeSize(n.type);
+        const size = tileSizes[n.id] ?? nodeSize(n.type);
         return { id: n.id, x: pos.x, y: pos.y, w: size.w, h: size.h };
       }),
     // displayKey captures modest-motion frames without a new identity each rAF.
@@ -245,9 +270,8 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
     const n = projection.nodes.find((x) => x.id === id || x.originId === id);
     if (n) {
       const pos = pointAt(display, n.id, n.position);
-      const w = n.type === WorkflowNodeKind.Step ? STEP_W : FIELD_W;
-      const h = n.type === WorkflowNodeKind.Step ? STEP_H : FIELD_H;
-      void rf.setCenter(pos.x + w / 2, pos.y + h / 2, {
+      const size = tileSizes[n.id] ?? tileSize(n.type);
+      void rf.setCenter(pos.x + size.w / 2, pos.y + size.h / 2, {
         duration: 280,
         zoom: 1,
       });
@@ -303,6 +327,10 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
     }
     if (s.interaction.kind === "remove-pick") {
       s.setRemoveCandidate(n.id);
+      return;
+    }
+    if (s.interaction.kind === "merge-pick") {
+      s.toggleMergeMember(n.id);
       return;
     }
     if (s.interaction.kind === "remove-preview") return;

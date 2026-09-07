@@ -461,6 +461,20 @@ test("pruneAfterOverlay drops extra Paths, Who, and empty or split groups", () =
   expect(pruned.after.extraNodes).toHaveLength(1);
 });
 
+test("pruneAfterOverlay dissolves a group that is no longer convex (MG-10)", () => {
+  const remaining = [step("r"), step("a", 0, 40), step("out", 80, 40), step("c", 0, 80)];
+  const remainingEdges = [path("e0", "r", "a"), path("e1", "a", "out"), path("e2", "out", "c")];
+  const after = {
+    assignments: { a: "r1", out: "h1", c: "r1" },
+    groups: [{ id: "g_bent", memberIds: ["a", "c"] }],
+    extraNodes: [] as StepNodeDto[],
+    extraEdges: [] as EdgeDto[],
+  };
+  const pruned = pruneAfterOverlay(after, "gone", remaining, remainingEdges);
+  expect(pruned.after.groups).toEqual([]);
+  expect(pruned.notices.some((n) => n.includes("g_bent") && n.includes("convex"))).toBe(true);
+});
+
 test("BA-09 restitch keeps After-only Steps reachable after a Before-origin removal", () => {
   const originalNodes = [step("r"), step("mid", 0, 40), step("tail", 0, 80)];
   const originalEdges = [path("e1", "r", "mid"), path("e2", "mid", "tail")];

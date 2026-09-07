@@ -29,6 +29,7 @@ export function PathHostFrame({
     !departing &&
     interaction.kind !== "remove-pick" &&
     interaction.kind !== "remove-preview" &&
+    interaction.kind !== "merge-pick" &&
     (selected || hover || (interaction.kind === "add-menu" && interaction.sourceId === id));
   return (
     <div
@@ -37,7 +38,7 @@ export function PathHostFrame({
       aria-hidden={departing || undefined}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
-      onClick={() => {
+      onClick={(e) => {
         const s = useStore.getState();
         if (s.present || departing) return;
         if (s.interaction.kind === "connect-existing") {
@@ -46,6 +47,11 @@ export function PathHostFrame({
         }
         if (s.interaction.kind === "remove-pick") {
           s.setRemoveCandidate(id);
+          return;
+        }
+        if (s.interaction.kind === "merge-pick") {
+          e.stopPropagation();
+          s.toggleMergeMember(id);
           return;
         }
         if (s.interaction.kind === "remove-preview") return;

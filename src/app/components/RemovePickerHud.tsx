@@ -10,8 +10,10 @@ import {
   removalNeighborhood,
   validatePairings,
 } from "../../workflow/commands";
-import { removalCandidateIds, rootNodeId } from "../../workflow/graph";
+import { rootNodeId } from "../../workflow/graph";
+import { afterAwareRemovalCandidateIds } from "../../workflow/merge";
 import { isDataFieldNode, isStepNode, stepDisplayLabel } from "../../workflow/types";
+import { findNode } from "../../workflow/selectors";
 import type { NodeDto } from "../../workflow/types";
 
 function caption(node: NodeDto | undefined, fallback: string) {
@@ -49,7 +51,7 @@ export function RemovePickerHud() {
       successorIds,
     );
     const predLabel = (id: string) =>
-      caption(workflow.nodes.find((n) => n.id === id), id);
+      caption(findNode(workflow, id), id);
     const bySucc = new Map(interaction.plan.pairings.map((p) => [p.successorId, p.predecessorId]));
     return (
       <div className="remove-picker-hud" role="dialog" aria-label="Confirm Node removal pairings">
@@ -100,11 +102,7 @@ export function RemovePickerHud() {
     );
   }
 
-  const candidates = removalCandidateIds(
-    workflow.nodes,
-    workflow.edges,
-    interaction.hostId,
-  );
+  const candidates = afterAwareRemovalCandidateIds(workflow, interaction.hostId);
   const root = rootNodeId(workflow.nodes, workflow.edges);
   const hostIsRoot = root === interaction.hostId;
   return (
@@ -119,7 +117,7 @@ export function RemovePickerHud() {
       ) : null}
       <div className="remove-picker-list">
         {candidates.map((id) => {
-          const node = workflow.nodes.find((n) => n.id === id);
+          const node = findNode(workflow, id);
           const on = id === interaction.candidateId;
           return (
             <button
@@ -128,7 +126,7 @@ export function RemovePickerHud() {
               className={on ? "remove-picker-item on" : "remove-picker-item"}
               onClick={() => useStore.getState().setRemoveCandidate(id)}
             >
-              {caption(node, id)}
+            {caption(node, id)}
             </button>
           );
         })}

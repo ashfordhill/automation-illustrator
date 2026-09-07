@@ -33,8 +33,8 @@ test.describe("slice 10 After projection and comparison", () => {
     await expect(page.getByText("AFTER", { exact: true })).toBeVisible();
     await waitForRouting(page);
     await expect(page.getByText(RECEIPT).first()).toBeVisible();
-    await expect(page.getByText("Search staff directory")).toHaveCount(0);
-    await expect(page.getByText("Email PDF to recipient")).toHaveCount(0);
+    await expect(page.locator("[data-merge-group]").first()).toBeVisible();
+    await expect(page.getByText("Scan letter to PDF").first()).toBeVisible();
     await screenshotBoard(page, `${EVIDENCE}/after-light-1440.png`);
 
     await page.getByRole("button", { name: "Menu" }).click();

@@ -574,3 +574,43 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(slice-10): add After projection and comparison`
 
+## Slice 11 — merge/unmerge and After-only Steps — 2026-09-06
+
+- Starting commit: `7e24f688a006d1c927234f2b62199b79d6050cc2` (`feat(slice-10): add After projection and comparison`)
+- Working tree at start: clean tracked files on `main`. This machine had no Node/`node_modules`; Node 24.19.0 was installed, then `npm install` (137 packages) so Slice 10 HEAD could be verified green before edits.
+- GOAL clauses addressed: MG-01..MG-10, BA-04 (Unmerge on a merged tile), BA-06, BA-07, NA-04, P-07 (Present hides the merge dock), BA-05 (Both hides the merge dock)
+- Library research and decisions: no new runtime dependency. The Merge/Unmerge control is a compact left overlay (`role="region"`), not a new permanent panel (P-05). Giant-Step internals are a custom condensed flow (icon + title, strokes, conditions) beside a normal-size Robot — not a second React Flow instance. After-only restitch writes extra Paths only; it does not rewrite base Split/strokes so Before stays unchanged. Group connect endpoints store real Node ids, not group render ids. Flatten keeps the first intersecting group id. Merge-pick seeds are user clicks; the HUD/confirm re-run closure expansion.
+- Files changed:
+  - Domain: `src/workflow/merge.ts`, `merge.test.ts`; `graph.ts` (`isConvex`, `supportingInternalIds`); `commands.ts` (MG-10 connect reject, group dissolution); `actors.ts` (`ensureDefaultRobot`); `selectors.ts`; `catalogs.ts` (`IdPrefix.Group`)
+  - Projection / store: `src/state/projection.ts`, `store.ts`, `interaction.ts`, `store.merge.test.ts`
+  - UI: `MergeDock.tsx`, `MergedStepTile.tsx`, `mergeFlow.ts`, `Board.tsx`, `StepNode.tsx`, `OutgoingPathPad.tsx`, `PathHostFrame.tsx`, `layoutLane.ts`, `SelectedItemForm.tsx`, `CanvasHelper.tsx`, `RemovePickerHud.tsx`, `App.tsx`, `useAppKeys.ts`, `tokens.css`, `StepKindIcon.tsx`, `cues.ts`
+  - Demo: `src/demos/robotMailroom.ts` (live overlay comment)
+  - Tests: `e2e/merge.spec.ts`; `e2e/canvas.spec.ts` / `projection.spec.ts` (After `+`, internals visible); `commands.test.ts`
+  - Evidence: `.docs/evidence/11-merge/`; earlier After screenshots recaptured with the dock and giant Step
+  - This handoff entry
+- Behavior implemented: Editable After shows a Merge/Unmerge dock. Selecting Before-origin Steps expands to the closure (Steps as members, Data as supporting internals), previews, and confirms a convex connected group; disconnected selections explain. Extending/flattening never nests groups. The giant Step shows a normal-size Robot plus condensed internals with strokes; Who on the group updates every swallowed Step and survives Unmerge. After `+` offers After-only Step (default Robot, auto-created if needed) and Connect existing; `+ Data` is hidden. After-only Steps remove through the same picker. A Before Path that would break convexity is rejected with the group named and “Unmerge first”; residual noncontiguous/non-convex groups dissolve with a notice. Present/Before/Both hide the dock. Robot Mailroom After shows `g_mail_sort` internals, Recipient as supporting, and the receipt After-only Step.
+- Tests and exact results:
+  - `npm install` at start — 137 packages
+  - `npm run build` at start — pass (`tsc --noEmit && vite build`; Vite 8.2.2)
+  - `npm run test:unit` at start — pass (25 files, 115 tests)
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning; client `index-DVblke2V.js` 903.73 kB)
+  - `npm run test:unit` — pass (27 files, 132 tests)
+  - `npm run test:e2e` — pass (59 passed, Chromium, 3 workers, 24.2s including webServer)
+- Evidence:
+  - `.docs/evidence/11-merge/after-mailroom-1440.png` — After: giant Step internals, receipt, merge dock (1440×900)
+  - `.docs/evidence/11-merge/after-mailroom-1024.png` — same After at 1024×768
+  - `.docs/evidence/11-merge/after-mailroom-dark-1440.png` — Mailroom After in dark (1440×900)
+  - `.docs/evidence/11-merge/after-plus-1440.png` — After `+` menu: After-only Step / Connect existing, no Data (1440×900)
+  - `.docs/evidence/11-merge/after-unmerged-1440.png` — Unmerge restored individual Mailroom Steps (1440×900)
+  - `.docs/evidence/11-merge/after-remerged-1440.png` — merge preview confirmed; giant Step restored (1440×900)
+  - `.docs/evidence/11-merge/after-only-removed-1440.png` — After-only Step removed via picker (1440×900)
+  - `.docs/evidence/11-merge/merge-rejected-1440.png` — disconnected sibling Steps explained (1440×900)
+  - `.docs/evidence/11-merge/present-hides-dock-1440.png` — Present After hides the merge dock (1440×900)
+- Earlier-slice defects fixed: After-only Remove picker listed Before-graph candidates (empty HUD) — it now uses the After graph and only After-only Nodes. Merge-pick clicks toggled twice (PathHostFrame + React Flow `onNodeClick`) so adding a Step was a no-op. Dock buttons included the shortcut `kbd` in the accessible name so “Unmerge” matched a `Merge` query.
+- Known limitations / follow-ups:
+  - Under-1024 unsupported-view message (P-04) — Slice 12
+  - Full hardening, axe/visual/performance pass, dead-code sweep, README rewrite — Slice 12
+  - Mailroom giant-Step internals are compact (four columns); condition text inside the tile truncates past 22 characters
+  - After-only extra outgoing from a base Step does not rewrite that Step’s base Split/strokes (would leak into Before)
+- Status: COMPLETE
+- Commit: `feat(slice-11): add merge, unmerge, and After-only Steps`

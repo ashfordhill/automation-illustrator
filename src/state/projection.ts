@@ -3,7 +3,7 @@
  * Layout and React Flow consume these graphs; the saved document is unchanged.
  */
 import { AssignmentLane, WorkflowNodeKind } from "../workflow/catalogs";
-import { reachableFrom } from "../workflow/graph";
+import { supportingInternalIds } from "../workflow/graph";
 import { isStepNode, type EdgeDto, type NodeDto, type StepNodeDto, type WorkflowDoc } from "../workflow/types";
 
 export type ProjectedKind = "base" | "extra" | "group";
@@ -43,57 +43,24 @@ function asProjectedEdge(edge: EdgeDto): ProjectedEdge {
   return { ...edge, originId: edge.id };
 }
 
-/** Data (and any other non-member) Nodes that sit on a base path between two members (MG-03). */
-export function supportingInternalIds(
-  memberIds: string[],
-  nodes: NodeDto[],
-  edges: EdgeDto[],
-): string[] {
-  const members = new Set(memberIds);
-  if (members.size < 2) return [];
-  const fromMember = new Map<string, Set<string>>();
-  for (const id of memberIds) {
-    fromMember.set(id, reachableFrom(id, edges));
-  }
-  const supporting: string[] = [];
-  for (const n of nodes) {
-    if (members.has(n.id)) continue;
-    const fromHere = reachableFrom(n.id, edges);
-    let onPath = false;
-    for (const a of memberIds) {
-      if (!fromMember.get(a)?.has(n.id)) continue;
-      for (const b of memberIds) {
-        if (a === b) continue;
-        if (fromHere.has(b)) {
-          onPath = true;
-          break;
-        }
-      }
-      if (onPath) break;
-    }
-    if (onPath) supporting.push(n.id);
-  }
-  return supporting;
-}
+export { supportingInternalIds } from "../workflow/graph";
 
-function averagePosition(nodes: NodeDto[]): { x: number; y: number } {
+function groupPosition(nodes: NodeDto[]): { x: number; y: number } {
   if (!nodes.length) return { x: 0, y: 0 };
-  let x = 0;
-  let y = 0;
-  for (const n of nodes) {
-    x += n.position.x;
-    y += n.position.y;
-  }
-  return { x: x / nodes.length, y: y / nodes.length };
+  return {
+    x: Math.min(...nodes.map((n) => n.position.x)),
+    y: Math.min(...nodes.map((n) => n.position.y)),
+  };
 }
 
 function groupTile(
   groupId: string,
   members: StepNodeDto[],
   hidden: NodeDto[],
+  supportingIds: string[],
 ): ProjectedNode {
   const first = members[0]!;
-  const position = averagePosition(hidden.length ? hidden : members);
+  const position = groupPosition(hidden.length ? hidden : members);
   return {
     id: groupId,
     type: WorkflowNodeKind.Step,
@@ -105,6 +72,7 @@ function groupTile(
     originId: groupId,
     projectedKind: "group",
     memberIds: members.map((m) => m.id),
+    supportingIds,
   };
 }
 
@@ -158,7 +126,7 @@ export function projectAfter(doc: WorkflowDoc): LaneProjection {
     const hidden = [...g.memberIds, ...g.supportingIds]
       .map((id) => doc.nodes.find((n) => n.id === id))
       .filter((n): n is NodeDto => !!n);
-    return groupTile(g.groupId, members, hidden);
+    return groupTile(g.groupId, members, hidden, g.supportingIds);
   });
 
   const visibleBase = doc.nodes

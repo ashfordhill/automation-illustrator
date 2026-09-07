@@ -107,7 +107,22 @@ export function DetailsPanel() {
           <Text size="sm" fw={700}>
             Who
           </Text>
-          <WhoButtons actors={workflow.actors} value={whoId} onChange={() => undefined} disabled />
+          <WhoButtons
+            actors={workflow.actors}
+            value={whoId}
+            onChange={(id) => useStore.getState().assignActor(group.id, id)}
+            disabled={readOnly}
+          />
+          {readOnly ? null : (
+            <Button
+              color="red"
+              variant="light"
+              size="xs"
+              onClick={() => useStore.getState().unmerge(group.id)}
+            >
+              Unmerge
+            </Button>
+          )}
         </Stack>
       );
     }
@@ -115,7 +130,9 @@ export function DetailsPanel() {
     const n = findNode(workflow, selected.id);
     if (!n) return null;
     const extra = isAfterOnlyNode(workflow, n.id);
-    const showRemove = !readOnly && !extra;
+    const showRemove =
+      !readOnly &&
+      (view === ViewMode.Before || (view === ViewMode.After && extra));
     if (n.type === WorkflowNodeKind.DataField) {
       return (
         <Stack gap="xs" p="sm" className="chrome-hide">

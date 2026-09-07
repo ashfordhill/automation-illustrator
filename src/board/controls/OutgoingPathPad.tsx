@@ -1,13 +1,13 @@
 /**
  * + / − in a React Flow NodeToolbar (CX-01) so pads are not covered by the tile.
- * + opens Step / Data / Connect existing; − enters the Node-removal picker (WG-08).
- * Hidden in Present. + is hidden in After until Slice 11.
+ * + opens Step / Data / Connect existing in Before; After-only Step / Connect existing in After.
+ * Hidden in Present. Both is read-only.
  */
 import { type CSSProperties } from "react";
 import { prettyKey, KeyAction } from "../../keyboard/bindings";
 import { useStore } from "../../state/store";
 import { ViewMode, WorkflowNodeKind } from "../../workflow/catalogs";
-import { findMergeGroup, isAfterOnlyNode } from "../../workflow/selectors";
+import { findMergeGroup } from "../../workflow/selectors";
 
 export function OutgoingPathPad({ nodeId }: { nodeId: string }) {
   const interaction = useStore((s) => s.interaction);
@@ -18,11 +18,8 @@ export function OutgoingPathPad({ nodeId }: { nodeId: string }) {
   const picking = interaction.kind === "remove-pick" && interaction.hostId === nodeId;
   const menuOpen = interaction.kind === "add-menu" && interaction.sourceId === nodeId;
   const plusOn = linking || menuOpen;
-  const showPlus = view === ViewMode.Before;
-  const showMinus =
-    view !== ViewMode.Both &&
-    !findMergeGroup(workflow, nodeId) &&
-    !isAfterOnlyNode(workflow, nodeId);
+  const showPlus = view === ViewMode.Before || view === ViewMode.After;
+  const showMinus = view !== ViewMode.Both;
   if (!showPlus && !showMinus && !menuOpen) return null;
   return (
     <div
@@ -34,8 +31,16 @@ export function OutgoingPathPad({ nodeId }: { nodeId: string }) {
         {showPlus ? (
           <button
             type="button"
-            aria-label="Add Step, Data, or Connect existing"
-            title="Add a Path: new Step, new Data, or Connect existing"
+            aria-label={
+              view === ViewMode.After
+                ? "Add After-only Step or Connect existing"
+                : "Add Step, Data, or Connect existing"
+            }
+            title={
+              view === ViewMode.After
+                ? "Add an After-only Step or Connect existing"
+                : "Add a Path: new Step, new Data, or Connect existing"
+            }
             onClick={() => useStore.getState().openLinkMenu(nodeId)}
             style={{
               ...padBtn,
@@ -49,9 +54,17 @@ export function OutgoingPathPad({ nodeId }: { nodeId: string }) {
         {showMinus ? (
         <button
           type="button"
-          aria-label="Remove Node"
-          title="Remove a Node. The workflow will be reconnected."
-          onClick={() => useStore.getState().beginRemovePick(nodeId)}
+          aria-label={findMergeGroup(workflow, nodeId) ? "Unmerge" : "Remove Node"}
+          title={
+            findMergeGroup(workflow, nodeId)
+              ? "Unmerge restores every swallowed Step."
+              : "Remove a Node. The workflow will be reconnected."
+          }
+          onClick={() =>
+            findMergeGroup(workflow, nodeId)
+              ? useStore.getState().unmerge(nodeId)
+              : useStore.getState().beginRemovePick(nodeId)
+          }
           style={{
             ...padBtn,
             background: picking ? "var(--minus-active)" : "var(--minus)",
@@ -64,30 +77,53 @@ export function OutgoingPathPad({ nodeId }: { nodeId: string }) {
       </div>
       {menuOpen ? (
         <div className="path-plus-menu" role="menu">
-          <button
-            type="button"
-            role="menuitem"
-            onClick={() => useStore.getState().spawnBranch(nodeId, WorkflowNodeKind.Step)}
-          >
-            <kbd>{prettyKey(keymap[KeyAction.AddBranchStep])}</kbd>
-            Step
-          </button>
-          <button
-            type="button"
-            role="menuitem"
-            onClick={() => useStore.getState().spawnBranch(nodeId, WorkflowNodeKind.DataField)}
-          >
-            <kbd>{prettyKey(keymap[KeyAction.AddBranchData])}</kbd>
-            Data
-          </button>
-          <button
-            type="button"
-            role="menuitem"
-            onClick={() => useStore.getState().beginLinkFrom(nodeId)}
-          >
-            <kbd>{prettyKey(keymap[KeyAction.LinkExisting])}</kbd>
-            Connect existing
-          </button>
+          {view === ViewMode.After ? (
+            <>
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => useStore.getState().spawnBranch(nodeId, WorkflowNodeKind.Step)}
+              >
+                <kbd>{prettyKey(keymap[KeyAction.AddBranchStep])}</kbd>
+                After-only Step
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => useStore.getState().beginLinkFrom(nodeId)}
+              >
+                <kbd>{prettyKey(keymap[KeyAction.LinkExisting])}</kbd>
+                Connect existing
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => useStore.getState().spawnBranch(nodeId, WorkflowNodeKind.Step)}
+              >
+                <kbd>{prettyKey(keymap[KeyAction.AddBranchStep])}</kbd>
+                Step
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => useStore.getState().spawnBranch(nodeId, WorkflowNodeKind.DataField)}
+              >
+                <kbd>{prettyKey(keymap[KeyAction.AddBranchData])}</kbd>
+                Data
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => useStore.getState().beginLinkFrom(nodeId)}
+              >
+                <kbd>{prettyKey(keymap[KeyAction.LinkExisting])}</kbd>
+                Connect existing
+              </button>
+            </>
+          )}
         </div>
       ) : null}
     </div>

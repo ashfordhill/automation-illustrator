@@ -1,7 +1,7 @@
 /**
  * Robot Mailroom showcase — hamburger Demo item.
- * Overlay (merge group + After-only Step) is projected in After (Slice 10);
- * merge dock and After-only create/remove land in Slice 11.
+ * Overlay (merge group + After-only Step) is projected in After.
+ * Merge dock and After-only create/remove are live.
  */
 import { ROBOT_COLORS } from "../workflow/actors";
 import {
