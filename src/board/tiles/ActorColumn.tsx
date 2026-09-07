@@ -39,6 +39,7 @@ function Chip({
         minFontSizePx={minFontSizePx}
         mode={mode}
         maxLines={maxLines}
+        hug={tone === "name"}
         color={tone === "role" ? FIGURE_INK_ON_PASTEL : "var(--ink)"}
       />
     </div>
@@ -64,7 +65,7 @@ export function ActorColumn({ actor }: { actor: ActorDto | undefined }) {
         flexDirection: "column",
         alignItems: "stretch",
         justifyContent: "space-between",
-        padding: "8px 0 0",
+        padding: "8px 0 5px",
         boxSizing: "border-box",
         overflow: "visible",
         ["--actor-fill" as string]: actor?.color ?? "var(--actor-empty)",
@@ -80,7 +81,7 @@ export function ActorColumn({ actor }: { actor: ActorDto | undefined }) {
       <div className="actor-card">
         <Chip
           text={actor?.name ?? "—"}
-          maxFontSizePx={13}
+          maxFontSizePx={16}
           minFontSizePx={11}
           tone="name"
           mode="multiline"

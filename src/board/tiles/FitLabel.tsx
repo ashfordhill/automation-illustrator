@@ -14,6 +14,7 @@ export function FitLabel({
   mode = "box",
   maxLines = 3,
   color = "var(--ink)",
+  hug = false,
 }: {
   text: string;
   maxFontSizePx: number;
@@ -21,6 +22,7 @@ export function FitLabel({
   mode?: "box" | "multiline" | "oneline";
   maxLines?: number;
   color?: string;
+  hug?: boolean;
 }) {
   const oneline = mode === "oneline";
   return (
@@ -33,10 +35,11 @@ export function FitLabel({
           style={{
             fontWeight: 800,
             textAlign: "center",
-            lineHeight: 1.15,
+            lineHeight: hug ? 1 : 1.15,
             color,
             width: "100%",
-            height: "100%",
+            height: hug ? "auto" : "100%",
+            maxHeight: hug ? "2.4em" : undefined,
             overflow: "hidden",
             overflowWrap: "anywhere",
             wordBreak: "break-word",

@@ -1,0 +1,27 @@
+name: Render Excalidraw
+
+on:
+  push:
+    paths:
+      - '**/*.excalidraw'
+
+permissions:
+  contents: write
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ashfordhill/action-excalidraw-render@v1
+        with:
+          format: 'svg'
+
+      - name: Commit rendered files
+        run: |
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add -A
+          git diff --staged --quiet || git commit -m "chore: render excalidraw files [skip ci]"
+          git push

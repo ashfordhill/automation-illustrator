@@ -313,9 +313,10 @@ body,
 .actor-card {
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  margin: 0 4px 4px;
-  padding: 3px 3px 3px;
+  flex: 0 0 auto;
+  min-height: 88px;
+  margin: 0 5px 4px;
+  padding: 3px;
   gap: 0;
   background: var(--cream);
   border: 1.5px solid color-mix(in srgb, var(--line) 28%, transparent);
@@ -329,31 +330,47 @@ body,
   overflow: hidden;
   width: 100%;
   box-sizing: border-box;
-  padding: 0 3px;
+  padding: 0;
   border: none;
   background: transparent;
 }
 
 .actor-chip-name {
-  height: 22px;
-  padding: 0 3px 2px;
-  justify-content: flex-end;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: flex-end;
+  height: auto;
+  min-height: 0;
+  padding: 0 1px;
 }
 
+.actor-chip-name .fit-label,
 .actor-chip-name .fit-label-fit {
   display: flex;
   align-items: flex-end;
-  justify-content: center;
+  height: auto;
+  line-height: 1;
 }
 
 .actor-chip-role {
-  height: 48px;
-  padding: 2px 4px;
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  min-height: 56px;
+  height: auto;
+  padding: 3px 4px;
   border-radius: 6px;
-  /* Same hue as the Who column, darker and punchier so it reads as a nested
-     sub-box of the cream name card — not a grey chip and not a hole in the strip. */
-  background: oklch(from var(--actor-fill) calc(l * 0.78) calc(c * 2.4) h);
-  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--line) 22%, transparent);
+  /* Same-hue terracotta/punch nested in the cream card. Add chroma (pale
+     pastels have almost none) and clamp so robot fills do not go neon. */
+  background: oklch(from var(--actor-fill) 0.69 clamp(0.07, calc(c + 0.075), 0.13) h);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--line) 18%, transparent);
+}
+
+.actor-chip-role .fit-label,
+.actor-chip-role .fit-label-fit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Cream fields keep tile ink; labels above them stay chrome-ink.
