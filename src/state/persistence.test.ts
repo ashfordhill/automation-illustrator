@@ -4,15 +4,18 @@ import {
   downloadWorkflowCopy,
   hydratePersistedWorkflow,
   loadSound,
+  loadTheme,
   LS_SOUND,
+  LS_THEME,
   LS_WORKFLOW,
   SAVE_COPY_FILENAME,
   saveSound,
+  saveTheme,
   writeWorkflow,
   type StorageLike,
 } from "./persistence";
 import { emptyAfterOverlay, emptyWorkflow, type WorkflowDoc } from "../workflow/types";
-import { SplitKind, StepKind, WorkflowNodeKind } from "../workflow/catalogs";
+import { ColorScheme, SplitKind, StepKind, WorkflowNodeKind } from "../workflow/catalogs";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -195,4 +198,14 @@ test("sound preference defaults off and only 'on' enables it (SH-03)", () => {
   expect(loadSound()).toBe(false);
   localStorage.setItem(LS_SOUND, "yes");
   expect(loadSound()).toBe(false);
+});
+
+test("theme preference defaults light and round-trips (P-09)", () => {
+  localStorage.clear();
+  expect(loadTheme()).toBe(ColorScheme.Light);
+  saveTheme(ColorScheme.Dark);
+  expect(localStorage.getItem(LS_THEME)).toBe(ColorScheme.Dark);
+  expect(loadTheme()).toBe(ColorScheme.Dark);
+  saveTheme(ColorScheme.Light);
+  expect(loadTheme()).toBe(ColorScheme.Light);
 });

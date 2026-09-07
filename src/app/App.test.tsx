@@ -50,6 +50,7 @@ test("app mounts the shell and view switcher", () => {
   expect(host.textContent).toContain("After");
   expect(host.textContent).toContain("Both");
   expect(host.querySelector('[aria-label="Menu"]')).not.toBeNull();
+  expect(host.querySelector("[data-unsupported-viewport]")).toBeNull();
 });
 
 test("demo startup loads the Oak Park invoice workflow", () => {

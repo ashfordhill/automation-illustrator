@@ -1,50 +1,51 @@
 # Automation Pitch
 
-A consulting board for showing office work **before** (people) and **after** (robots), with the same tiles and Paths.
+A desktop workflow board for comparing a human-heavy **Before** process with a more automated **After** process. The visual and audio language is original. It does not copy Nintendo assets, sounds, typefaces, marks, or game interfaces.
+
+The supported viewport is a laptop or monitor **at least 1024 CSS pixels wide**. Narrower windows show an unsupported-view message instead of a crushed board.
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open the URL Vite prints. The Oak Park invoice demo loads first. Use + on a tile to add a Step or Data path, or link an existing tile. Toggle Before / After / Both. New starts an empty board. Save copy from the New / Demo / Import prompt downloads the current board as JSON.
+Open the URL Vite prints. First visit loads the **Oak Park Invoice** demo. **Robot Mailroom** is the compact merge / After-only showcase.
 
----
+```bash
+npm run build          # tsc --noEmit && vite build
+npm run test:unit      # Vitest
+npm run test:e2e       # Playwright Chromium, including axe
+npm test               # unit then e2e
+```
 
-## Real Life Example Scenario
+Chromium must be installed once: `npx playwright install chromium`.
 
-Vendor A wins a bid for an Oak Park government contract to do the work of outdoor holiday decorating for the end of the year.
+## Using the board
 
-Months later, after the work is performed, Vendor A sends an invoice to the Oak Park government office.
+- **Add Step** on an empty board creates the sole root. Tile **+** adds a Step, Data, or Connect existing (in After: After-only Step or Connect existing; no Data). Empty-canvas click cancels linking and never creates a Node.
+- **−**, Delete, and inspector **Remove** open the same Node-removal picker. Paths are not deleted; the workflow reconnects when a Node is removed. **Backspace** is Undo.
+- **Before / After / Both** sits in the top bar. Shared Step/Data/Path fields edit the same base document from either lane. Who is per-lane. Both is read-only comparison.
+- In **After**, the merge dock merges connected Before-origin Steps into one giant Step (default Robot) and Unmerge restores the whole group. After-only Steps exist only in After and are omitted from the automation score.
+- **Menu**: Present, New, Import, Keybinds, Light/Dark, then Demo (Oak Park Invoice, Robot Mailroom). New / Demo / Import share Save copy / Discard / Cancel. There is no Export item; Save copy downloads the current JSON.
+- **Sound** starts off. The toggle after Undo plays original Web Audio cues (create, remove, reject, merge, tick). Preference persists in this browser.
+- Invalid saved JSON is not overwritten. Download recovery copy or Start fresh. If the browser cannot write storage, editing continues in memory with a **Not saved** chip.
 
-The invoice first arrives
+Vocabulary used in the UI: Node, Step, Data, Path, condition, stroke (solid = always visited, dotted = choice), Who, Before / After / Both, merge group.
 
-Landscaping company during the holiday needed to do decorating. PUt out a bid for this.
+## Architecture
 
-Based on the bid, the lowest bid is chosen.
+The document is **version 2**: one shared base workflow plus a sparse After overlay (assignments, merge groups, After-only Steps and Paths). Valid version 1 JSON migrates; invalid graphs are rejected, not repaired.
 
-Development Services
+```text
+src/
+  app/        shell, inspector, sound, styles
+  board/      React Flow adapters, tiles, routing, derived lane layout
+  workflow/   document meaning, Zod schemas, graph commands, merge, score
+  state/      Zustand store, history, persistence, projection
+  keyboard/   rebindable key catalog
+  demos/      Oak Park Invoice, Robot Mailroom
+```
 
-Sometimes wrong invoices are given to wrong departments.
+`workflow/` is framework-free. Lane layout and Path routing are derived at render time and are not stored in undo history. Stack: Mantine 9, Tabler icons, `@xyflow/react` 12, Zustand 5, Zod 4, Vitest 5, Playwright + axe.
 
-Every department functions this way.
-
-Business sends invoice to Nomi. BSNA. PDF file -> into BSNA. 
-
-& also need to sometimes determine what account to pay out of. if the PDF doesn't specify then you can
-
-look up contract information on internal website.
- > $50,000.
-
-The account GL is 1001 46202 101 530667
-
- < $50,000, go into internal folders, purchase requests, subfolders for each purchase request. the purchase order (PO) number is usually within the PDF file. If it's not, then if the Vendor only has 1 contract then they know it's just the 1. But, if that is not true, then an invoice is checked against the contracts individually (landscaping vs construction buildings vs construction bridge).
-
-Yuchi (Account Clerk) -> Nomi (Budget Analyst) -> (Division Manager) -> Craig (Director)
-
-Goes to accounts payable -> Check if the numbers are correct or not -> PDF invoice -> Can pay if less than $1000. 
-
-If it's more than $1000 then it goes to the comptroller.
-
-
-
+The product contract is `.docs/GOAL.md`. The relay record is `.docs/handoff.md`. A post-relay review checklist is `.docs/REVIEW_PLAN.md`.

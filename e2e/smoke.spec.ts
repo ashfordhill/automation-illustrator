@@ -1,5 +1,5 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
+import { expectAxeClean } from "./axe";
 import { waitForRouting } from "./ready";
 
 const DEMO_STEP = "Read invoice.pdf";
@@ -71,16 +71,7 @@ test.describe("baseline smoke", () => {
 
   test("axe WCAG 2.2 AA on the initial demo state", async ({ page }) => {
     await loadDemo(page);
-    const results = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      .analyze();
-    expect(
-      results.violations.map((v) => ({
-        id: v.id,
-        help: v.help,
-        nodes: v.nodes.map((n) => n.target),
-      })),
-    ).toEqual([]);
+    await expectAxeClean(page);
   });
 });
 

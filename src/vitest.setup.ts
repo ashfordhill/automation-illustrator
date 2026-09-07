@@ -11,9 +11,11 @@ if (!globalThis.ResizeObserver) {
 }
 
 if (!window.matchMedia) {
-  window.matchMedia = (query: string) =>
-    ({
-      matches: false,
+  window.matchMedia = (query: string) => {
+    const min = /\(min-width:\s*(\d+(?:\.\d+)?)px\)/.exec(query);
+    const matches = min ? 1024 >= Number(min[1]) : false;
+    return {
+      matches,
       media: query,
       onchange: null,
       addListener() {},
@@ -23,7 +25,8 @@ if (!window.matchMedia) {
       dispatchEvent() {
         return false;
       },
-    }) as MediaQueryList;
+    } as MediaQueryList;
+  };
 }
 
 if (!globalThis.IntersectionObserver) {

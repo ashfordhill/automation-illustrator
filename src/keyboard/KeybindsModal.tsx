@@ -21,6 +21,7 @@ export function KeybindsModal() {
       title="Keybinds"
       centered
       size="lg"
+      returnFocus={false}
     >
       <Text size="sm" className="hint-copy" mb="sm">
       Click a key to rebind it. Contextual hints on the canvas use these mappings.
@@ -48,6 +49,11 @@ export function KeybindsModal() {
             <Button
               size="compact-xs"
               variant={capturing === a ? "filled" : "default"}
+              aria-label={
+                capturing === a
+                  ? `Press a new key for ${ACTION_LABELS[a]}`
+                  : `${ACTION_LABELS[a]} (${prettyKey(keymap[a])})`
+              }
               onClick={() => useStore.getState().setCapturing(a)}
             >
               {capturing === a ? "Press a key…" : prettyKey(keymap[a])}

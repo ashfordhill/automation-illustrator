@@ -1,6 +1,7 @@
 /**
  * App shell: header Toolbar, right DetailsPanel + score, center Board.
- * Present mode hides the right rail. Theme is dataset.theme for CSS plus Mantine forceColorScheme.
+ * Present mode hides the right rail. Under 1024 CSS px the board is replaced (P-04).
+ * Theme is dataset.theme for CSS plus Mantine forceColorScheme.
  */
 import { useEffect } from "react";
 import { AppShell, MantineProvider, createTheme } from "@mantine/core";
@@ -19,7 +20,9 @@ import { ReplaceDocumentModal } from "./components/ReplaceDocumentModal";
 import { MergeDock } from "./components/MergeDock";
 import { Toolbar } from "./components/Toolbar";
 import { TransientNotice } from "./components/TransientNotice";
+import { UnsupportedViewport } from "./components/UnsupportedViewport";
 import { DetailsPanel } from "./inspector/SelectedItemForm";
+import { useSupportedViewport } from "./viewport";
 
 const theme = createTheme({
   fontFamily: '"Nunito Variable", Nunito, system-ui, sans-serif',
@@ -97,6 +100,7 @@ export default function App() {
   useAppKeys();
   const present = useStore((s) => s.present);
   const colorScheme = useStore((s) => s.colorScheme);
+  const supported = useSupportedViewport();
 
   useEffect(() => {
     document.documentElement.dataset.theme = colorScheme;
@@ -104,7 +108,8 @@ export default function App() {
 
   return (
     <MantineProvider theme={theme} forceColorScheme={colorScheme}>
-      <AppShell
+      {supported ? (
+        <AppShell
         header={{ height: 56 }}
         aside={{ width: present ? 0 : 320, breakpoint: "xs" }}
         padding={0}
@@ -156,6 +161,9 @@ export default function App() {
           </div>
         </AppShell.Main>
       </AppShell>
+      ) : (
+        <UnsupportedViewport />
+      )}
       <KeybindsModal />
       <ReplaceDocumentModal />
       <RecoveryModal />

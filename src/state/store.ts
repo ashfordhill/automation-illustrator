@@ -432,7 +432,14 @@ export const useStore = create<{
     if (soundEnabled) playCue("tick");
   },
   select: (selected) => set({ selected, manageActorsOpen: false, manageActorId: null }),
-  setHelp: (helpOpen) => set({ helpOpen, capturing: helpOpen ? get().capturing : null }),
+  setHelp: (helpOpen) => {
+    set({ helpOpen, capturing: helpOpen ? get().capturing : null });
+    if (!helpOpen) {
+      window.setTimeout(() => {
+        document.querySelector<HTMLElement>('header [aria-label="Menu"]')?.focus();
+      }, 0);
+    }
+  },
   setCapturing: (capturing) => set({ capturing }),
   setKey: (action, key) => {
     const keymap = { ...get().keymap, [action]: key };

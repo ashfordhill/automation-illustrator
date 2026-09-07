@@ -114,7 +114,11 @@ export function pickKnown(saved: Record<string, unknown>): Partial<Keymap> {
 }
 
 export function saveKeymap(map: Keymap) {
-  localStorage.setItem(LS_KEYMAP, JSON.stringify(map));
+  try {
+    localStorage.setItem(LS_KEYMAP, JSON.stringify(map));
+  } catch {
+    /* keymap is session-only if storage is denied */
+  }
 }
 
 /** Human-readable key for tooltips and the Keybinds modal. */

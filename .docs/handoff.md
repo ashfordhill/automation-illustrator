@@ -614,3 +614,62 @@ Corrections in the same chat before the next slice starts get their own short en
   - After-only extra outgoing from a base Step does not rewrite that Step’s base Split/strokes (would leak into Before)
 - Status: COMPLETE
 - Commit: `feat(slice-11): add merge, unmerge, and After-only Steps`
+
+## Slice 12 — integrated hardening and release review — 2026-09-07
+
+- Starting commit: `8333a6243539d93ece9a691a32d708f000eb7bd6` (`feat(slice-11): add merge, unmerge, and After-only Steps`)
+- Working tree at start: clean, branch `main`. HEAD matched Slice 11. `npm install` 137 packages, 0 vulnerabilities; start `npm run build` pass; start `npm run test:unit` 27 files / 132 tests.
+- GOAL clauses addressed: full-contract review. Newly implemented: P-04 (unsupported view under 1024 CSS px). Hardening/fixes: AQ-03 (Menu focus after Keybinds), AQ-04 (Merge button contrast on Mailroom After), SH-11 (saveKeymap quota), SH-08/SH-14 reload/keymap/theme/sound e2e. README rewritten. Post-relay review plan for a fresh agent: `.docs/REVIEW_PLAN.md`. Clause → evidence table is that file §5 plus the map below.
+- Library research and decisions: no new runtime dependency. Unsupported view uses `matchMedia('(min-width: 1024px)')` so the board is not mounted when too narrow (P-04). Mantine `ActionIcon` does not keep a custom `id`; Keybinds restore focuses `header [aria-label="Menu"]` after `returnFocus={false}`. Merge dock primary actions use the same yellow/`--on-yellow` pair as the view radios so axe color-contrast passes. `@mantine/hooks` stays (Mantine 9 peer). Removed unused `.hand-mode` CSS and Pointer-era `.pointer-mode` class name (`board-pan`). Deleted obsolete pre-product sketches `.docs/before-after.*` and `.docs/theme-light-empty.png`.
+- Files changed:
+  - P-04: `src/app/viewport.ts`, `viewport.test.ts`, `UnsupportedViewport.tsx`, `App.tsx`, `tokens.css`, `vitest.setup.ts`
+  - A11y / persist: `KeybindsModal.tsx`, `store.ts` (`setHelp` focus return), `MergeDock.tsx`, `bindings.ts` (`saveKeymap` try/catch), `Board.tsx` (`board-pan`)
+  - Tests: `e2e/hardening.spec.ts`, `e2e/axe.ts`, `e2e/smoke.spec.ts`; persistence/shell/bindings/App unit tests
+  - Docs: `README.md`, `.docs/REVIEW_PLAN.md`, this handoff entry
+  - Evidence: `.docs/evidence/12-release/`
+- Behavior implemented: Windows under 1024 CSS pixels show “This window is too narrow” instead of the board; 1024 still works. Closing Keybinds returns focus to Menu. Merge / Confirm on the After dock are high-contrast yellow. Sound, theme, rebound Undo, and edited Target survive reload. Quota-exceeded storage shows one Not saved chip. Valid v1 localStorage migrates on startup. README matches the frozen contract.
+- Tests and exact results:
+  - `npm install` at start — up to date, audited 137 packages, 0 vulnerabilities
+  - `npm run build` at start — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning)
+  - `npm run test:unit` at start — pass (27 files, 132 tests)
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning; client `index-BjRqq8D2.js` 904.75 kB)
+  - `npm run test:unit` — pass (28 files, 137 tests)
+  - `npm run test:e2e` — pass (72 passed, Chromium, 3 workers, 32.1s including webServer)
+- Evidence:
+  - `.docs/evidence/12-release/before-light-1440.png` — Oak Park Before, final shell (1440×900)
+  - `.docs/evidence/12-release/after-light-1440.png` — After (1440×900)
+  - `.docs/evidence/12-release/both-light-1440.png` — Both read-only (1440×900)
+  - `.docs/evidence/12-release/before-dark-1440.png` — Before dark (1440×900)
+  - `.docs/evidence/12-release/after-dark-1440.png` — After dark (1440×900)
+  - `.docs/evidence/12-release/both-dark-1440.png` — Both dark (1440×900)
+  - `.docs/evidence/12-release/before-light-1024.png` — supported min-width; inspector ≤ 320 px (1024×768)
+  - `.docs/evidence/12-release/unsupported-900.png` — P-04 message at 900×700; board not shown
+  - `.docs/evidence/12-release/present-light-1440.png` — Present: no inspector/toolbars/dock; score in top bar
+  - `.docs/evidence/12-release/hamburger-1440.png` — Present, New, Import, Keybinds, Dark mode, Demo chooser; no Export
+  - `.docs/evidence/12-release/replace-gate-1440.png` — Save copy / Discard / Cancel
+  - `.docs/evidence/12-release/empty-new-1440.png` — empty New + Add Step
+  - `.docs/evidence/12-release/recovery-1440.png` — corrupt storage recovery
+  - `.docs/evidence/12-release/not-saved-1440.png` — SH-11 Not saved chip
+  - `.docs/evidence/12-release/keybinds-1440.png` — rebound Undo; retired Pointer absent
+  - `.docs/evidence/12-release/mailroom-after-1440.png` — Mailroom After merge dock + giant Step
+  - `.docs/evidence/12-release/mailroom-after-dark-1440.png` — same After in dark
+  - `.docs/evidence/12-release/reduced-motion-restitch-1440.png` — 1:1 remove under reduced motion
+- GOAL clause → evidence (every ID; earlier-slice folders remain valid):
+  - P-01 README + 12-release light/dark boards; P-02 replace/canvas/merge/hardening e2e; P-03 `09-routing/stress-30-1440.png`; P-04 unsupported-900 + before-light-1024; P-05 1024 inspector width + merge dock After-only; P-06 06-canvas no idle chips; P-07 present-light-1440 + present-hides-dock; P-08 Undo+Sound, no Pointer/Hand; P-09 12-release dark set + axe; P-10 package.json
+  - WG-01 empty-new-1440; WG-02..04 commands.test / graph.test; WG-05 path-no-delete; WG-06 root-blocked; WG-07 plus-menu; WG-08..12 06-canvas remove-*; WG-13 history.test.ts
+  - PC-01..03 07-inspector path-condition / split-every; PC-04 commands.test; PC-05 routing.spec; PC-06 Oak Park dotted amounts in 12-release Before
+  - NA-01..12 07-inspector/* + inspector.spec; NA-04 merge tests
+  - CX-01 canvas.spec NodeToolbar; CX-02..05 09-routing/*; CX-06 restitch + reduced-motion-restitch; CX-07..08 picker CSS + Escape
+  - BA-01..09 10-projection/* + projection.spec; BA-06/07 11-merge after-plus / after-only-removed
+  - MG-01..10 11-merge/* + merge.spec + mailroom-after-1440
+  - SH-01..02 08-shell + 12-release chrome; SH-03..04 shell.spec / cues.ts; SH-05 hamburger-1440; SH-06 replace-gate; SH-07 Mailroom 11-merge + 12-release; SH-08 v1 migrate e2e; SH-09..10 recovery-1440; SH-11 not-saved-1440; SH-12 replace.spec history; SH-13 README Save copy; SH-14 keybinds-1440; SH-15 local Nunito
+  - AQ-01..03 keybinds + Menu focus e2e; AQ-04 axe smoke/shell/inspector/hardening/unsupported; AQ-05 reduced-motion-restitch; AQ-06 unit workflow tests; AQ-07 Playwright critical flows
+  - NG-01..09 hamburger/export/pointer/path-delete/nested-merge checks in e2e + README
+- Earlier-slice defects fixed: Keybinds Escape left focus nowhere (Mantine returnFocus targeted an unmounted Menu.Item) — Menu is focused again (AQ-03). Mantine filled Merge button failed axe color-contrast on Mailroom After — yellow chunky primary (P-09, AQ-04). `saveKeymap` could throw on quota — caught like theme/sound (SH-11).
+- Known limitations / follow-ups:
+  - Mailroom giant-Step internal condition text still truncates past ~22 characters (Slice 11 compact tile; not a GOAL miss)
+  - After-only extra outgoing from a base Step still does not rewrite base Split/strokes (would leak into Before)
+  - Vite ~900 kB chunk warning and React Flow Pro attribution console warning remain
+  - Duplicate Slice 10 block in this ledger is historical; not rewritten
+- Status: COMPLETE
+- Commit: `feat(slice-12): harden release and rewrite README`

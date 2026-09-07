@@ -338,7 +338,6 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
     blurDetailsFocus();
   }, [lane]);
 
-  const linking = interaction.kind === "connect-existing";
   const panTarget = view === ViewMode.Both && focusedLane === lane;
 
   return (
@@ -406,7 +405,7 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
               s.select({ type: SelectionKind.Edge, id: typeof originId === "string" ? originId : e.id });
               blurDetailsFocus();
             }}
-            className={`pointer-mode${linking ? " linking" : ""}`}
+            className="board-pan"
             style={{ height: "100%", background: "transparent" }}
           >
             <Background

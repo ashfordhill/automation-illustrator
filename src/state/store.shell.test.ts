@@ -33,6 +33,13 @@ test("sound is off by default and persists on/off (SH-03)", () => {
   expect(localStorage.getItem("automation-pitch.sound")).toBe("off");
 });
 
+test("theme persists across setColorScheme (P-09)", () => {
+  useStore.getState().setColorScheme(ColorScheme.Dark);
+  expect(localStorage.getItem("automation-pitch.theme")).toBe(ColorScheme.Dark);
+  useStore.getState().setColorScheme(ColorScheme.Light);
+  expect(localStorage.getItem("automation-pitch.theme")).toBe(ColorScheme.Light);
+});
+
 test("exiting Present restores the previous view and selection (P-07)", () => {
   useStore.getState().select({ type: SelectionKind.Node, id: OAK_PARK_IDS.read });
   useStore.getState().setView(ViewMode.After);

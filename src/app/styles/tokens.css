@@ -114,15 +114,15 @@ body,
   display: none !important;
 }
 
-.pointer-mode .react-flow__pane {
+.board-pan .react-flow__pane {
   cursor: grab;
 }
 
-.pointer-mode .react-flow__pane:active {
+.board-pan .react-flow__pane:active {
   cursor: grabbing;
 }
 
-.pointer-mode .react-flow__node {
+.board-pan .react-flow__node {
   cursor: pointer;
   pointer-events: all;
 }
@@ -147,11 +147,6 @@ body,
 
 .react-flow__edge-path {
   stroke: var(--line) !important;
-}
-
-.hand-mode .react-flow__node,
-.hand-mode .react-flow__edge {
-  pointer-events: none;
 }
 
 .present-mode .chrome-hide {
@@ -691,6 +686,18 @@ body,
   font-weight: 800;
 }
 
+.chunky-primary {
+  background: var(--yellow) !important;
+  color: var(--on-yellow) !important;
+  border: 2.5px solid var(--line) !important;
+  font-weight: 800;
+}
+
+.chunky-primary:focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: 2px;
+}
+
 .react-flow__node.merge-candidate-on {
   outline: 4px dotted var(--plus);
   outline-offset: 8px;
@@ -874,5 +881,35 @@ body,
   .edge-stretch .react-flow__edge-path {
     transition: none;
   }
+}
+
+.unsupported-viewport {
+  box-sizing: border-box;
+  min-height: 100dvh;
+  margin: 0;
+  padding: 48px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 16px;
+  max-width: 36rem;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.unsupported-viewport h1 {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.unsupported-viewport p {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.45;
+  color: var(--ink-soft);
 }
 

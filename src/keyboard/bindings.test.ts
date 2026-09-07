@@ -1,7 +1,7 @@
-import { afterEach, expect, test } from "vitest";
+import { afterEach, expect, test, vi } from "vitest";
 import { KeyAction } from "../workflow/catalogs";
 import { LS_KEYMAP } from "../state/persistence";
-import { ARROW_PRESET, loadKeymap, pickKnown } from "./bindings";
+import { ARROW_PRESET, loadKeymap, pickKnown, saveKeymap } from "./bindings";
 
 afterEach(() => {
   localStorage.removeItem(LS_KEYMAP);
@@ -34,4 +34,14 @@ test("loadKeymap fills new actions from the preset when the saved map is old", (
   expect(map[KeyAction.Confirm]).toBe("enter");
   expect(map[KeyAction.Merge]).toBe("m");
   expect(map[KeyAction.Unmerge]).toBe("u");
+});
+
+test("saveKeymap writes known actions and ignores a denied store (SH-14, SH-11)", () => {
+  saveKeymap({ ...ARROW_PRESET, [KeyAction.Undo]: "z" });
+  expect(JSON.parse(localStorage.getItem(LS_KEYMAP)!).undo).toBe("z");
+  const setItem = vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+    throw new Error("quota");
+  });
+  expect(() => saveKeymap(ARROW_PRESET)).not.toThrow();
+  setItem.mockRestore();
 });

@@ -74,6 +74,7 @@ export function MergeDock() {
             <Button
               ref={confirmRef}
               size="xs"
+              className="chunky-primary"
               disabled={!preview?.ok}
               onClick={() => useStore.getState().confirmMerge()}
             >
@@ -92,7 +93,7 @@ export function MergeDock() {
           <Group gap="xs">
             <Button
               size="xs"
-              variant="filled"
+              className="chunky-primary"
               aria-label="Merge"
               onClick={() => useStore.getState().beginMerge()}
             >
