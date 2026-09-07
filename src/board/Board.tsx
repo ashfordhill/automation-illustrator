@@ -1,7 +1,7 @@
 /**
  * React Flow canvas for one Before or After lane.
  * Projects the v2 document, derives the lane layout with ELK (Improvement 01),
- * and binds a per-lane viewport (BA-05).
+ * and binds a per-lane viewport. In Both, both lanes share one camera (BA-05).
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -19,8 +19,15 @@ import {
   ViewMode,
   reactFlowTypeFor,
   SelectionKind,
+  otherLane,
 } from "../workflow/catalogs";
-import { bindReactFlow } from "./reactFlowBridge";
+import {
+  applyViewport,
+  bindReactFlow,
+  getReactFlow,
+  isProgrammaticViewport,
+  syncBothViewports,
+} from "./reactFlowBridge";
 import { projectLane } from "../state/projection";
 import { useStore } from "../state/store";
 import { edgeTypes, nodeTypes, type Lane } from "./nodes/reactFlowRegistry";
@@ -113,20 +120,43 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
   const lastPos = useRef<Record<string, { x: number; y: number }>>({});
   if (display) lastPos.current = { ...lastPos.current, ...display };
 
-  /* First layout: fit once unless this lane already has a saved viewport (BA-05). */
+  /* First layout: fit once unless this lane already has a saved viewport.
+     In Both, copy the other lane's camera instead of fitting independently (BA-05). */
   const fitted = useRef(Boolean(initialViewport.current));
   useEffect(() => {
     if (fitted.current || phase === "initial") return;
+    if (useStore.getState().view === ViewMode.Both) {
+      const other = getReactFlow(otherLane(lane));
+      if (other) {
+        const v = other.getViewport();
+        if (v.zoom > 0) {
+          fitted.current = true;
+          applyViewport(lane, v);
+          useStore.getState().setLaneViewport(lane, v);
+          return;
+        }
+      }
+    }
     fitted.current = true;
     let raf = 0;
     const attempt = () => {
       void rf.fitView({ padding: 0.28 }).then((done) => {
-        if (!done) raf = requestAnimationFrame(attempt);
+        if (!done) {
+          raf = requestAnimationFrame(attempt);
+          return;
+        }
+        const v = rf.getViewport();
+        const s = useStore.getState();
+        s.setLaneViewport(lane, v);
+        if (s.view === ViewMode.Both) {
+          s.setLaneViewport(otherLane(lane), v);
+          applyViewport(otherLane(lane), v);
+        }
       });
     };
     attempt();
     return () => cancelAnimationFrame(raf);
-  }, [phase, rf]);
+  }, [phase, rf, lane]);
 
   useEffect(() => {
     if (!departing) return;
@@ -325,8 +355,15 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
           snapToGrid
           snapGrid={[GRID, GRID]}
           defaultViewport={initialViewport.current}
+          onMove={(_, viewport) => {
+            if (isProgrammaticViewport(lane)) return;
+            syncBothViewports(lane, viewport);
+          }}
           onMoveEnd={(_, viewport) => {
-            useStore.getState().setLaneViewport(lane, viewport);
+            if (isProgrammaticViewport(lane)) return;
+            const s = useStore.getState();
+            s.setLaneViewport(lane, viewport);
+            if (s.view === ViewMode.Both) s.setLaneViewport(otherLane(lane), viewport);
           }}
           proOptions={{ hideAttribution: true }}
           onPaneClick={() => {

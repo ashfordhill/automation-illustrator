@@ -105,7 +105,7 @@ export function MergedStepTile({
               boxSizing: "border-box",
               border: "2px solid var(--line)",
               borderRadius: n.kind === "data" ? 999 : 8,
-              background: n.kind === "data" ? "var(--yellow)" : "var(--paper)",
+              background: n.kind === "data" ? "var(--cream)" : "var(--paper)",
               overflow: "hidden",
             }}
           >

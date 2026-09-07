@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { DEMO_STEP, loadOakPark, screenshotBoard, waitForLayout } from "./ready";
+import { DEMO_STEP, loadOakPark, screenshotBoard, waitForLayout, laneZoom, waitForZoomIdle } from "./ready";
 
 const EVIDENCE = ".docs/evidence/10-projection";
 const MAIL_STEP = "Read incoming mail";
@@ -75,6 +75,18 @@ test.describe("slice 10 After projection and comparison", () => {
     await expect(afterLane).toHaveAttribute("data-pan-target", "true");
     await expect(page.locator('[data-lane="before"]')).toHaveAttribute("data-pan-target", "false");
     await screenshotBoard(page, `${EVIDENCE}/both-light-1440.png`);
+
+    await waitForZoomIdle(page);
+    const beforeZoom = await laneZoom(page, "before");
+    expect(await laneZoom(page, "after")).toBeCloseTo(beforeZoom, 1);
+    await afterLane.locator(".react-flow__pane").hover({ position: { x: 200, y: 80 } });
+    await page.mouse.wheel(0, -480);
+    await expect
+      .poll(async () => Math.abs((await laneZoom(page, "before")) - (await laneZoom(page, "after"))), {
+        timeout: 3_000,
+      })
+      .toBeLessThan(0.06);
+    expect(await laneZoom(page, "before")).toBeGreaterThan(beforeZoom);
   });
 
   test("After explains that Before-origin Steps cannot be removed (BA-04)", async ({ page }) => {

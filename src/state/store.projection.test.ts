@@ -81,3 +81,13 @@ test("focusedLane follows the view and Both keeps the last pan target (BA-05)", 
   s.select({ type: SelectionKind.Node, id: OAK_PARK_IDS.read });
   expect(useStore.getState().assignmentLane()).toBe("before");
 });
+
+test("entering Both copies the focused lane viewport onto both lanes (BA-05)", () => {
+  const seed = { x: 12, y: -40, zoom: 0.72 };
+  const s = useStore.getState();
+  s.setView(ViewMode.After);
+  s.setLaneViewport("after", seed);
+  s.setView(ViewMode.Both);
+  expect(useStore.getState().laneViewports.before).toEqual(seed);
+  expect(useStore.getState().laneViewports.after).toEqual(seed);
+});

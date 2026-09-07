@@ -731,3 +731,19 @@ Corrections in the same chat before the next slice starts get their own short en
   - `npm run test:e2e` — pass (77 passed, Chromium, 3 workers, 37.6s)
 - Status: COMPLETE
 - Commit: `feat(improve-01): keep viewport still and widen zoom`
+
+## Improvement 01 — correction 2 — 2026-09-07
+
+- Requested: Separate actor name vs title on tiles; drop yellow from icons and Data (yellow stays for inspector/view selection); in Both, pan/zoom Before and After together as a best-effort client comparison camera.
+- Changed:
+  - `ActorColumn` / `tokens.css` — name in a cream chip; role/title in a darker sub-box with a gap of pastel between them.
+  - `StepKindIcon` — cream/blue/ink only. `DataChip` and Data tiles use `--data` teal.
+  - Both camera: `reactFlowBridge.syncBothViewports`, Board `onMove` copy, `setView(Both)` seeds both stored viewports, pan keys move both lanes. Independent cameras remain in Before-only and After-only.
+  - `.docs/GOAL.md` — BA-05 amendment (clause text not edited in place).
+  - Tests: `store.projection.test.ts` viewport seed; `e2e/projection.spec.ts` Both zoom stays matched.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2)
+  - `npm run test:unit` — pass (29 files, 151 tests)
+  - `npm run test:e2e` — pass (77; one full run hit Windows PNG file-lock on 3 screenshot writes, those three specs re-run 10 passed)
+- Status: COMPLETE
+- Commit: `feat(improve-01): split actor titles and sync Both camera`

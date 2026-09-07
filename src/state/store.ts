@@ -394,7 +394,21 @@ export const useStore = create<{
         : view === ViewMode.Before
           ? AssignmentLane.Before
           : get().focusedLane;
-    set({ view, interaction: IDLE, focusedLane });
+    let laneViewports = get().laneViewports;
+    if (view === ViewMode.Both) {
+      const seed =
+        laneViewports[focusedLane] ??
+        laneViewports[AssignmentLane.Before] ??
+        laneViewports[AssignmentLane.After];
+      if (seed) {
+        laneViewports = {
+          ...laneViewports,
+          [AssignmentLane.Before]: seed,
+          [AssignmentLane.After]: seed,
+        };
+      }
+    }
+    set({ view, interaction: IDLE, focusedLane, laneViewports });
   },
   setFocusedLane: (focusedLane) => {
     if (get().focusedLane === focusedLane) return;

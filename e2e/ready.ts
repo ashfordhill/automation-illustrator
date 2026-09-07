@@ -26,9 +26,12 @@ export async function screenshotBoard(page: Page, path: string) {
   await page.screenshot({ path, animations: "disabled" });
 }
 
-/** Current React Flow zoom for the first board lane (translate/scale or matrix). */
-export async function laneZoom(page: Page): Promise<number> {
-  return page.locator(".board-lane .react-flow__viewport").first().evaluate((el) => {
+/** Current React Flow zoom (translate/scale or matrix). Defaults to the first lane. */
+export async function laneZoom(page: Page, lane?: "before" | "after"): Promise<number> {
+  const host = lane
+    ? page.locator(`.board-lane[data-lane="${lane}"]`)
+    : page.locator(".board-lane").first();
+  return host.locator(".react-flow__viewport").evaluate((el) => {
     const t = (el as HTMLElement).style.transform || getComputedStyle(el).transform;
     const scale = t.match(/scale\(([^)]+)\)/);
     if (scale) return Number(scale[1]);

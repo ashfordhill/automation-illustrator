@@ -1,7 +1,7 @@
 /**
  * Left column of a Step tile: figure + name + role/type chip.
  * Used by StepTile; figures live beside this file. Fill is the actor’s pastel.
- * Name and role use FitLabel so long copy wraps, shrinks, then ellipsizes (NA-10).
+ * Name and role are separate boxes so the title sits in a contrasting sub-box (NA-10).
  */
 import { HumanFigure } from "./HumanFigure";
 import { RobotFigure } from "./RobotFigure";
@@ -17,36 +17,23 @@ import {
 } from "../../workflow/types";
 import { FitLabel } from "./FitLabel";
 
-const NAME_H = 34;
-const ROLE_H = 48;
-
 function Chip({
   text,
   maxFontSizePx,
   minFontSizePx = 11,
-  topRule,
+  tone,
   mode,
   maxLines,
 }: {
   text: string;
   maxFontSizePx: number;
   minFontSizePx?: number;
-  topRule?: boolean;
+  tone: "name" | "role";
   mode?: "box" | "multiline";
   maxLines?: number;
 }) {
   return (
-    <div
-      className="actor-chip"
-      style={{
-        background: "var(--cream)",
-        borderTop: topRule ? `2.5px solid var(--line)` : undefined,
-        height: topRule ? NAME_H : ROLE_H,
-        width: "100%",
-        boxSizing: "border-box",
-        padding: "4px 6px",
-      }}
-    >
+    <div className={`actor-chip actor-chip-${tone}`}>
       <FitLabel
         text={text}
         maxFontSizePx={maxFontSizePx}
@@ -77,7 +64,7 @@ export function ActorColumn({ actor }: { actor: ActorDto | undefined }) {
         flexDirection: "column",
         alignItems: "stretch",
         justifyContent: "space-between",
-        padding: "10px 0 0",
+        padding: "8px 0 0",
         boxSizing: "border-box",
         overflow: "visible",
       }}
@@ -89,16 +76,18 @@ export function ActorColumn({ actor }: { actor: ActorDto | undefined }) {
           <RobotFigure size={42} color={FIGURE_INK_ON_PASTEL} />
         )}
       </div>
-      <div style={{ flex: "0 0 auto" }}>
+      <div className="actor-text">
         <Chip
           text={actor?.name ?? "—"}
           maxFontSizePx={13}
           minFontSizePx={11}
-          topRule
+          tone="name"
           mode="multiline"
           maxLines={2}
         />
-        {role ? <Chip text={role} maxFontSizePx={12} mode="box" maxLines={3} /> : null}
+        {role ? (
+          <Chip text={role} maxFontSizePx={12} tone="role" mode="box" maxLines={3} />
+        ) : null}
       </div>
     </div>
   );

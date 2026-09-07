@@ -1,5 +1,5 @@
 /**
- * Yellow oval mark on Data tiles.
+ * Teal oval mark on Data tiles — not yellow (yellow is inspector/view selection).
  * Lives next to StepKindIcon so board marks stay in tiles/.
  */
 import type { CSSProperties } from "react";
@@ -12,7 +12,7 @@ export function DataChip({ style }: { style?: CSSProperties }) {
         cy="14"
         rx="12"
         ry="9"
-        fill="var(--yellow)"
+        fill="var(--data)"
         stroke="var(--ink)"
         strokeWidth="2.6"
       />

@@ -21,6 +21,7 @@
   --chip-shadow: 0 3px 0 rgba(7, 28, 40, 0.1);
   --btn-shadow: rgba(7, 28, 40, 0.16);
   --yellow: #e8c14a;
+  --data: #2f8fa3;
   --blue: #1a8fd4;
   --blue-deep: #0e6ca8;
   --grid-dot: #b7d7e4;
@@ -51,6 +52,7 @@
   --chip-shadow: 0 3px 0 rgba(0, 0, 0, 0.3);
   --btn-shadow: rgba(0, 0, 0, 0.38);
   --yellow: #e2b84a;
+  --data: #5eb8c9;
   --blue: #7eb6e0;
   --blue-deep: #a8d0ee;
   --grid-dot: #3d5564;
@@ -308,8 +310,34 @@ body,
   overflow: hidden;
 }
 
+.actor-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 4px 4px;
+}
+
 .actor-chip {
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 3px 5px;
+}
+
+.actor-chip-name {
+  height: 32px;
+  background: var(--cream);
+  border-radius: 7px 7px 3px 3px;
+  border: 1.5px solid color-mix(in srgb, var(--line) 28%, transparent);
+}
+
+.actor-chip-role {
+  height: 42px;
+  background: color-mix(in srgb, var(--ink) 26%, var(--cream));
+  border-radius: 3px 3px 7px 7px;
+  border: 1.5px solid color-mix(in srgb, var(--line) 55%, transparent);
 }
 
 /* Cream fields keep tile ink; labels above them stay chrome-ink.
