@@ -1,11 +1,13 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
+import { waitForRouting } from "./ready";
 
 const DEMO_STEP = "Read invoice.pdf";
 
 async function loadDemo(page: Page) {
   await page.goto("/");
   await expect(page.getByText(DEMO_STEP).first()).toBeVisible({ timeout: 15_000 });
+  await waitForRouting(page);
 }
 
 /** Mantine hides the radio inputs; the visible labels live in the header. */
@@ -29,6 +31,7 @@ test.describe("baseline smoke", () => {
     await viewLabel(page, "After").click();
     await expect(page.getByText("AFTER", { exact: true })).toBeVisible();
     await expect(page.getByText(DEMO_STEP).first()).toBeVisible();
+    await waitForRouting(page);
     await page.screenshot({
       path: ".docs/evidence/01-harness/after-light-1440.png",
       animations: "disabled",
@@ -37,6 +40,7 @@ test.describe("baseline smoke", () => {
     await viewLabel(page, "Both").click();
     await expect(page.getByText("BEFORE", { exact: true })).toBeVisible();
     await expect(page.getByText("AFTER", { exact: true })).toBeVisible();
+    await waitForRouting(page);
     await page.screenshot({
       path: ".docs/evidence/01-harness/both-light-1440.png",
       animations: "disabled",

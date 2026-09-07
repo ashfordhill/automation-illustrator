@@ -26,7 +26,7 @@ export const ReactFlowNodeKind = {
 export type ReactFlowNodeKind =
   (typeof ReactFlowNodeKind)[keyof typeof ReactFlowNodeKind];
 
-/** Custom orthogonal Path registered in board/routing/FlowArrow.tsx. */
+/** Custom orthogonal Path registered in board/routing/FlowArrow.tsx (Smart Edge step). */
 export const ReactFlowEdgeKind = {
   Flow: "flow",
 } as const;

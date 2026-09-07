@@ -115,7 +115,7 @@ export function vacantSpot(
   return { x, y: snapToGrid(maxY + TILE_GAP) };
 }
 
-/** Approximate width of the on-canvas edge label chip. */
+/** Approximate width of the on-canvas condition chip (nowrap estimate). */
 export function labelChipWidth(label: string) {
   const t = label.trim();
   if (!t) return 0;

@@ -448,3 +448,47 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(slice-08): add shell typography and sound`
 
+## Slice 09 — smart routing and reversible label layout — 2026-09-06
+
+- Starting commit: `1e3411e30090e055dc20d0db505d4c2ad683a7f4` (`feat(slice-08): add shell typography and sound`)
+- Working tree at start: clean tracked files on `main` (10 commits ahead of `origin/main`, not pushed). Untracked planner drafts `.docs/draft-to-give-planner-agent.*` were left untouched.
+- GOAL clauses addressed: CX-02 (condition chips remain independent hit targets at all zooms), CX-03 (Smart Edge v5 orthogonal/stepped routing around Nodes), CX-04 (deterministic post-route condition placement with wrap/clamp), CX-05 (lane-derived compact layout expands and contracts; excluded from save/undo), CX-06 (connector-stretch restitch plus modest layout motion; reduced motion snaps), PC-05 (dotted/solid strokes survive Smart Edge), P-03 / AQ-06 / AQ-07 (30-object routing coverage; unit + Chromium)
+- Library research and decisions: added approved `@tisoap/react-flow-smart-edge@5.0.0`. One `SmartEdgeProvider` per Board/lane with controlled nodes and `measured` sizes; `preset: "step"` plus `svgDrawStraightLinePath` / jump-point (no diagonal) to keep the orthogonal look. `useSmartEdgePath` for the live worker path; synchronous `getSmartEdge` in unit tests. `onMetrics` with `deferred === 0` sets `data-smart-edge="settled"` so e2e waits for routing. `avoidAreas` get up to two cycles of placed condition rects. Label placement stays custom (not Smart Edge labels). No other runtime dependency.
+- Files changed:
+  - Routing: `src/board/routing/FlowArrow.tsx`, new `smartStep.ts`, `polyline.ts`, `placeLabels.ts`, `PathLayout.tsx`; `src/board/Board.tsx` (`SmartEdgeProvider` per lane)
+  - Layout: new `src/board/layout/layoutLane.ts`, `labelBox.ts`, `useModestMotion.ts`; deleted `spreadForLabels.ts`; `src/state/store.ts` no longer mutates saved positions on commit
+  - Shell/CSS: `src/app/styles/tokens.css` (condition chips)
+  - Tests: layout/placement/polyline/store.layout unit tests; `e2e/ready.ts`, `e2e/routing.spec.ts`; existing e2e `loadDemo` waits for routing
+  - Lockfile: `package.json`, `package-lock.json`
+  - Evidence: `.docs/evidence/09-routing/`; earlier e2e suites recaptured 01–08 screenshots (routed Paths, condition chips)
+  - This handoff entry
+- Behavior implemented: Paths route around Nodes with a stepped stroke; dotted still means choice. Condition chips wrap/clamp at 192 px, sit on a low-conflict segment, and select the Path without stealing the SVG hit. Long conditions expand the **displayed** lane; shortening contracts back to canonical positions. Saved JSON and undo keep those canonical hints, so reload does not accumulate drift. Removing a Node stretches new connectors through the departing tile then to the restitch path (immediate under reduced motion). Modest derived-layout moves animate ~200 ms.
+- Tests and exact results:
+  - `npm install` at start — up to date, audited 136 packages, 0 vulnerabilities; after Smart Edge, 137 packages, 0 vulnerabilities
+  - `npm run build` at start — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning)
+  - `npm run test:unit` at start — pass (17 files, 90 tests)
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning; client `index-CMLjkYrn.js` 877.22 kB from Smart Edge)
+  - `npm run test:unit` — pass (22 files, 104 tests)
+  - `npm run test:e2e` — pass (45 passed, Chromium, 56.7s including webServer)
+- Evidence:
+  - `.docs/evidence/09-routing/before-light-1440.png` — Oak Park Before; routed Paths; condition chips off tiles (1440×900)
+  - `.docs/evidence/09-routing/condition-chip-1440.png` — chip click opens Path / condition inspector (1440×900)
+  - `.docs/evidence/09-routing/label-contract-1440.png` — shortened amount condition; lane contracted (1440×900)
+  - `.docs/evidence/09-routing/zoom-out-label-1440.png` — zoomed out; condition chip still selects the Path (1440×900)
+  - `.docs/evidence/09-routing/after-light-1440.png` — After lane after routing settled (1440×900)
+  - `.docs/evidence/09-routing/both-light-1440.png` — Both; one SmartEdgeProvider per lane (1440×900)
+  - `.docs/evidence/09-routing/before-dark-1440.png` — dark theme routed Paths (1440×900)
+  - `.docs/evidence/09-routing/restitch-1440.png` — after 1:1 remove of Write; restitch Path settled (1440×900)
+  - `.docs/evidence/09-routing/stress-30-1440.png` — 15 Steps + 14 Paths routed (1440×900)
+  - `.docs/evidence/09-routing/before-light-1024.png` — routed Before at 1024×768
+- Earlier-slice defects fixed: `spreadForLabels` wrote expanded positions into the document on every commit, so save/reload drifted (CX-05). Spacing is derived per lane only. Condition chips were below the WCAG 2.2 24 px target at fitView zoom; they now have a 48 px minimum so axe `target-size` passes without covering tile + menus.
+- Known limitations / follow-ups:
+  - `playCue("twoNote")` is implemented for merge/unmerge but unused until the After dock exists — Slice 11
+  - Auto-create a default Robot when After needs one (NA-04) — Slice 11
+  - Merge (`m`) / Unmerge (`u`) catalogued only — Slice 11
+  - `+` stays hidden in After — Slice 11
+  - Both is still editable; After still mutates the shared base graph; lanes still share one viewport binding — Slice 10
+  - Robot Mailroom merge / After-only Step still not projected — Slices 10–11
+- Status: COMPLETE
+- Commit: `feat(slice-09): add smart routing and reversible label layout`
+

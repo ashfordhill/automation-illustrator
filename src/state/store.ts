@@ -14,7 +14,6 @@
  * setPresent — saves and restores view + selection (P-07)
  */
 import { create } from "zustand";
-import { spreadForLabels } from "../board/layout/spreadForLabels";
 import { clearDockPosition, snapToGrid, vacantSpot } from "../board/layout/tileMetrics";
 import { type DemoId, workflowForDemo } from "../demos/catalog";
 import { freshBoard, isEmptyBoard, oakParkInvoice } from "../demos/oakParkInvoice";
@@ -127,29 +126,22 @@ function documentForPending(pending: PendingReplace): WorkflowDoc {
   return pending.doc;
 }
 
-/** Demo or last saved board, with labels already given room. */
+/** Demo or last saved board. Label spacing is derived per lane (CX-05), not saved. */
 function loadStart(): {
   workflow: WorkflowDoc;
   persistStatus: PersistStatus;
   recovery: RecoveryState | null;
 } {
   const boot = hydratePersistedWorkflow(oakParkInvoice);
-  const workflow = room(boot.workflow);
   if (boot.recovery || boot.persistStatus === "unavailable") {
-    return { workflow, persistStatus: boot.persistStatus, recovery: boot.recovery };
+    return { workflow: boot.workflow, persistStatus: boot.persistStatus, recovery: boot.recovery };
   }
-  return { workflow, persistStatus: writeWorkflow(workflow), recovery: null };
+  return { workflow: boot.workflow, persistStatus: writeWorkflow(boot.workflow), recovery: null };
 }
 
 function persistIfAllowed(doc: WorkflowDoc, recovery: RecoveryState | null): PersistStatus {
   if (recovery) return "dirty";
   return writeWorkflow(doc);
-}
-
-/** Push tiles apart so long Path conditions (e.g. invoice > $50,000) fit. */
-function room(w: WorkflowDoc): WorkflowDoc {
-  const nodes = spreadForLabels(w.nodes, w.edges);
-  return nodes === w.nodes ? w : { ...w, nodes };
 }
 
 function prefersReducedMotion() {
@@ -289,12 +281,11 @@ export const useStore = create<{
       return;
     }
     const { workflow, past, recovery } = get();
-    const placed = room(next);
-    const persistStatus = persistIfAllowed(placed, recovery);
+    const persistStatus = persistIfAllowed(next, recovery);
     const stacks =
       kind === "text"
-        ? commitText(workflow, past, placed)
-        : commitStructural(workflow, past, placed);
+        ? commitText(workflow, past, next)
+        : commitStructural(workflow, past, next);
     set({ ...stacks, persistStatus });
   },
   replaceDoc: (next) => {
@@ -303,10 +294,9 @@ export const useStore = create<{
       get().setNotice(violations[0]!.message);
       return;
     }
-    const placed = room(next);
-    const persistStatus = persistIfAllowed(placed, get().recovery);
+    const persistStatus = persistIfAllowed(next, get().recovery);
     set({
-      ...replaceHistory(placed),
+      ...replaceHistory(next),
       persistStatus,
       selected: null,
       interaction: IDLE,
@@ -852,10 +842,10 @@ export const useStore = create<{
   },
   startFresh: () => {
     if (!get().recovery) return;
-    const placed = room(freshBoard());
-    const persistStatus = writeWorkflow(placed);
+    const next = freshBoard();
+    const persistStatus = writeWorkflow(next);
     set({
-      ...replaceHistory(placed),
+      ...replaceHistory(next),
       recovery: null,
       persistStatus,
       selected: null,

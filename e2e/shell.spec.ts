@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
+import { waitForRouting } from "./ready";
 
 const DEMO_STEP = "Read invoice.pdf";
 const EVIDENCE = ".docs/evidence/08-shell";
@@ -7,6 +8,7 @@ const EVIDENCE = ".docs/evidence/08-shell";
 async function loadDemo(page: Page) {
   await page.goto("/");
   await expect(page.getByText(DEMO_STEP).first()).toBeVisible({ timeout: 15_000 });
+  await waitForRouting(page);
 }
 
 function viewRadio(page: Page, name: "Before" | "After" | "Both") {

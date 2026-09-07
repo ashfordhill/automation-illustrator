@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { waitForRouting } from "./ready";
 
 const DEMO_STEP = "Read invoice.pdf";
 const MAIL_STEP = "Read incoming mail";
@@ -7,6 +8,7 @@ const EVIDENCE = ".docs/evidence/05-replace";
 async function loadDemo(page: Page) {
   await page.goto("/");
   await expect(page.getByText(DEMO_STEP).first()).toBeVisible({ timeout: 15_000 });
+  await waitForRouting(page);
 }
 
 function viewLabel(page: Page, name: "Before" | "After" | "Both") {
