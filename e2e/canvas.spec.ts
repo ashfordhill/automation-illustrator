@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { waitForLayout } from "./ready";
+import { waitForLayout, laneZoom, waitForZoomIdle } from "./ready";
 
 const DEMO_STEP = "Read invoice.pdf";
 const EVIDENCE = ".docs/evidence/06-canvas";
@@ -213,6 +213,27 @@ test.describe("slice 6 canvas create / connect / remove", () => {
     await page.getByRole("menuitem", { name: /Connect existing/ }).click();
     await page.locator(".react-flow__pane").click({ position: { x: 40, y: 40 }, force: true });
     await expect(page.locator(".react-flow__node")).toHaveCount(1);
+  });
+});
+
+test.describe("viewport stays user-driven", () => {
+  test("clicking a tile does not change zoom, and the wheel has several stops", async ({ page }) => {
+    await loadDemo(page);
+    await waitForZoomIdle(page);
+    const beforeClick = await laneZoom(page);
+    await page.getByText(DEMO_STEP).first().click();
+    await expect(page.getByRole("button", { name: "Add Step, Data, or Connect existing" })).toBeVisible();
+    expect(await laneZoom(page)).toBeCloseTo(beforeClick, 2);
+
+    const samples = new Set<string>();
+    samples.add((await laneZoom(page)).toFixed(2));
+    await page.mouse.move(480, 420);
+    for (let i = 0; i < 8; i++) {
+      await page.mouse.wheel(0, -120);
+      samples.add((await laneZoom(page)).toFixed(2));
+    }
+    expect(samples.size).toBeGreaterThanOrEqual(4);
+    expect(await laneZoom(page)).toBeGreaterThan(beforeClick);
   });
 });
 

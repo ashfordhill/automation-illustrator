@@ -717,3 +717,17 @@ Corrections in the same chat before the next slice starts get their own short en
   - Vite chunk-size warning (main ~859 kB plus worker/fallback) and React Flow Pro attribution console warning remain.
 - Status: COMPLETE
 - Commit: `feat(improve-01): add ELK layout and bundled Path routing`
+
+## Improvement 01 — correction 1 — 2026-09-07
+
+- Requested: Zoom felt like two coarse levels, and clicking a tile yanked the camera (zoom to 1). User asked for more intermediate zoom and no automatic viewport moves on object click.
+- Changed:
+  - `src/board/Board.tsx` — drop `setCenter(..., { zoom: 1 })` on `focusId`; `autoPanOnNodeFocus={false}`; `zoomOnDoubleClick={false}`; zoom range 0.2–2.5 (was 0.2–1.35). One-time `fitView` on first layout of a lane with no stored viewport is unchanged.
+  - `.docs/GOAL.md` — P-08 amendment.
+  - `e2e/canvas.spec.ts`, `e2e/ready.ts` — click does not change zoom; wheel produces several distinct zoom stops.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2)
+  - `npm run test:unit` — pass (29 files, 150 tests)
+  - `npm run test:e2e` — pass (77 passed, Chromium, 3 workers, 37.6s)
+- Status: COMPLETE
+- Commit: `feat(improve-01): keep viewport still and widen zoom`

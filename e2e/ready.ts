@@ -25,3 +25,30 @@ export async function screenshotBoard(page: Page, path: string) {
   await waitForLayout(page);
   await page.screenshot({ path, animations: "disabled" });
 }
+
+/** Current React Flow zoom for the first board lane (translate/scale or matrix). */
+export async function laneZoom(page: Page): Promise<number> {
+  return page.locator(".board-lane .react-flow__viewport").first().evaluate((el) => {
+    const t = (el as HTMLElement).style.transform || getComputedStyle(el).transform;
+    const scale = t.match(/scale\(([^)]+)\)/);
+    if (scale) return Number(scale[1]);
+    const matrix = t.match(/matrix\(([^)]+)\)/);
+    if (matrix) return Math.abs(Number(matrix[1].split(",")[0]));
+    return 1;
+  });
+}
+
+/** fitView runs after `data-layout=ready`; wait until zoom is no longer animating. */
+export async function waitForZoomIdle(page: Page) {
+  await expect
+    .poll(
+      async () => {
+        const a = await laneZoom(page);
+        await page.waitForTimeout(80);
+        const b = await laneZoom(page);
+        return Math.abs(a - b);
+      },
+      { timeout: 4_000 },
+    )
+    .toBeLessThan(0.01);
+}

@@ -34,6 +34,10 @@ import { afterAwareRemovalCandidateIds } from "../workflow/merge";
 import { LaneLayoutContext } from "./routing/LaneLayoutContext";
 import { pathIsDotted, type FlowPathData } from "./routing/FlowArrow";
 
+/** Scroll/pinch zoom only (P-08). Wide enough for several wheel stops between overview and a single tile. */
+const MIN_ZOOM = 0.2;
+const MAX_ZOOM = 2.5;
+
 /** Clicking a tile should send Delete to the board, not a leftover inspector field. */
 function blurDetailsFocus() {
   queueMicrotask(() => {
@@ -211,24 +215,14 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
     return () => bindReactFlow(lane, null);
   }, [rf, lane]);
 
+  /* Newly created tiles still request focus for selection chrome; never pan or zoom to them. */
   useEffect(() => {
     if (!focusId) return;
     const id = focusId;
-    const n = projection.nodes.find((x) => x.id === id || x.originId === id);
-    if (n) {
-      const pos = pointAt(display, n.id, n.position);
-      const size = tileSizes[n.id] ?? nodeSize(n.type);
-      void rf.setCenter(pos.x + size.w / 2, pos.y + size.h / 2, {
-        duration: 280,
-        zoom: 1,
-      });
-    }
     queueMicrotask(() => {
       useStore.getState().consumeFocus(id);
     });
-    // Center on the layout as displayed when focus was requested, not on every frame.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [focusId, rf, projection.nodes]);
+  }, [focusId]);
 
   const via = departing
     ? {
@@ -322,9 +316,12 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
           selectionOnDrag={false}
           selectNodesOnDrag={false}
           zoomOnScroll
+          zoomOnPinch
+          zoomOnDoubleClick={false}
+          autoPanOnNodeFocus={false}
           panOnScroll={false}
-          minZoom={0.2}
-          maxZoom={1.35}
+          minZoom={MIN_ZOOM}
+          maxZoom={MAX_ZOOM}
           snapToGrid
           snapGrid={[GRID, GRID]}
           defaultViewport={initialViewport.current}
