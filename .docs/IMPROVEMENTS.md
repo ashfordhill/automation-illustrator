@@ -255,7 +255,7 @@ Shipped as `feat(improve-02): add merge tile type and tile drag`. Spec was [`.do
 
 # Improvement 03 — polish, Path stroke, on-canvas label
 
-Approved 2026-09-07. **Do not implement Improvement 04 or 05 in the same chat.**
+Approved 2026-09-07. **Do not implement Improvements 04–07 in the same chat.**
 
 Full spec: [`.docs/improve-03-polish-and-path.plan.md`](improve-03-polish-and-path.plan.md).
 
@@ -265,14 +265,14 @@ Evidence: `.docs/evidence/improve-03-polish/`.
 ### Kickoff prompt for the implementing agent
 
 ```text
-You are the agent for Improvement 03 of the Automation Pitch project. Work only on Improvement 03 as specified in .docs/improve-03-polish-and-path.plan.md. Do not implement Improvement 04 or 05.
+You are the agent for Improvement 03 of the Automation Pitch project. Work only on Improvement 03 as specified in .docs/improve-03-polish-and-path.plan.md. Do not implement Improvements 04–07.
 
 Before changing anything:
 1. Read .docs/GOAL.md (including Amendments), .docs/BUILD_PLAN.md Sections 3-4, .docs/IMPROVEMENTS.md, .docs/improve-03-polish-and-path.plan.md, .docs/VISUAL_IMPROVEMENTS.md, every entry in .docs/handoff.md, and .cursor/rules/agent-handoff.mdc.
-2. Run `git status` and `git log -1`. HEAD must be the COMPLETE commit of the latest handoff entry (`docs: add improve-05 chrome plan and visual improvement log`) and the tree must be clean. If not, stop and report.
+2. Run `git status` and `git log -1`. HEAD must be the COMPLETE commit of the latest handoff entry (`docs: add improve-06 shell and improve-07 no-merge plans`) and the tree must be clean. If not, stop and report.
 3. Run `npm install`, `npm run build`, `npm run test:unit` to confirm a green start.
 
-Then implement Improvement 03 exactly as specified in that plan (locked decisions, GOAL amendments, work items 5.1–5.9, tests). Locked decisions are not open for redesign. If something in the spec is impossible or contradictory, stop and ask; do not widen scope. Do not start Improvement 04 or 05.
+Then implement Improvement 03 exactly as specified in that plan (locked decisions, GOAL amendments, work items 5.1–5.9, tests). Locked decisions are not open for redesign. If something in the spec is impossible or contradictory, stop and ask; do not widen scope. Do not start Improvements 04–07.
 
 When done: run `npm run build`, `npm run test:unit`, `npm run test:e2e`; save screenshots under .docs/evidence/improve-03-polish/; append one handoff entry ending in `Status: COMPLETE`; commit everything as `feat(improve-03): polish chrome Path stroke and on-canvas label`; confirm a clean tree; report the hash, exact test results, and evidence paths. Never push, branch, or start other work.
 ```
@@ -291,7 +291,7 @@ Evidence: `.docs/evidence/improve-04-insert-preview/`.
 ### Kickoff prompt for the implementing agent
 
 ```text
-You are the agent for Improvement 04 of the Automation Pitch project. Work only on Improvement 04 as specified in .docs/improve-04-insert-preview.plan.md. Do not reopen Improvement 03 polish. Do not implement Improvement 05.
+You are the agent for Improvement 04 of the Automation Pitch project. Work only on Improvement 04 as specified in .docs/improve-04-insert-preview.plan.md. Do not reopen Improvement 03 polish. Do not implement Improvements 05–07.
 
 Before changing anything:
 1. Read .docs/GOAL.md (including Amendments), .docs/BUILD_PLAN.md Sections 3-4, .docs/IMPROVEMENTS.md, .docs/improve-04-insert-preview.plan.md, .docs/VISUAL_IMPROVEMENTS.md, every entry in .docs/handoff.md, and .cursor/rules/agent-handoff.mdc.
@@ -317,7 +317,7 @@ Evidence: `.docs/evidence/improve-05-chrome/`.
 ### Kickoff prompt for the implementing agent
 
 ```text
-You are the agent for Improvement 05 of the Automation Pitch project. Work only on Improvement 05 as specified in .docs/improve-05-chrome.plan.md. Do not reopen Improvements 03 or 04.
+You are the agent for Improvement 05 of the Automation Pitch project. Work only on Improvement 05 as specified in .docs/improve-05-chrome.plan.md. Do not reopen Improvements 03 or 04. Do not implement Improvements 06 or 07.
 
 Before changing anything:
 1. Read .docs/GOAL.md (including Amendments), .docs/BUILD_PLAN.md Sections 3-4, .docs/IMPROVEMENTS.md, .docs/improve-05-chrome.plan.md, .docs/VISUAL_IMPROVEMENTS.md, every entry in .docs/handoff.md, and .cursor/rules/agent-handoff.mdc.
@@ -328,3 +328,56 @@ Then implement Improvement 05 exactly as specified in that plan. Remove the 1 px
 
 When done: run `npm run build`, `npm run test:unit`, `npm run test:e2e`; save screenshots under .docs/evidence/improve-05-chrome/; append one handoff entry ending in `Status: COMPLETE`; commit everything as `feat(improve-05): keep Steps still and chunk the view switch`; confirm a clean tree; report the hash, exact test results, and evidence paths. Never push, branch, or start other work.
 ```
+
+---
+
+# Improvement 06 — inspector Who, trash, Other copy, zoom, hamburger
+
+Approved 2026-09-07. Start only after Improvement 05 is COMPLETE. **Do not implement Improvement 07 in the same chat.**
+
+Full spec: [`.docs/improve-06-shell.plan.md`](improve-06-shell.plan.md). Pictures: [Who](visual-improvements/2026-09-07-who-alice-selected.png), [zoom](visual-improvements/2026-09-07-wheel-zoom.gif).
+
+Commit: `feat(improve-06): quiet Who select trash Other and finer zoom`.  
+Evidence: `.docs/evidence/improve-06-shell/`.
+
+### Kickoff prompt for the implementing agent
+
+```text
+You are the agent for Improvement 06 of the Automation Pitch project. Work only on Improvement 06 as specified in .docs/improve-06-shell.plan.md. Do not reopen Improvements 03–05. Do not implement Improvement 07 (merge removal).
+
+Before changing anything:
+1. Read .docs/GOAL.md (including Amendments), .docs/BUILD_PLAN.md Sections 3-4, .docs/IMPROVEMENTS.md, .docs/improve-06-shell.plan.md, .docs/VISUAL_IMPROVEMENTS.md, every entry in .docs/handoff.md, and .cursor/rules/agent-handoff.mdc.
+2. Run `git status` and `git log -1`. HEAD must be the COMPLETE commit of Improvement 05 (`feat(improve-05): keep Steps still and chunk the view switch`) and the tree must be clean. If not, stop and report.
+3. Run `npm install`, `npm run build`, `npm run test:unit` to confirm a green start.
+
+Then implement Improvement 06 exactly as specified in that plan. Who/Type selected fill only (no dashed ring; cream fill in dark). Trash icon top-right of Step/Data inspector. Other tiles show Name only. Drop BEFORE/AFTER corner chips. Close the hamburger when the pointer returns to the canvas. Finer wheel zoom; zoom-in toward the laid-out graph when the pointer is on empty paper. Locked decisions are not open for redesign. If something in the spec is impossible or contradictory, stop and ask; do not widen scope.
+
+When done: run `npm run build`, `npm run test:unit`, `npm run test:e2e`; save screenshots under .docs/evidence/improve-06-shell/; append one handoff entry ending in `Status: COMPLETE`; commit everything as `feat(improve-06): quiet Who select trash Other and finer zoom`; confirm a clean tree; report the hash, exact test results, and evidence paths. Never push, branch, or start other work.
+```
+
+---
+
+# Improvement 07 — surgical merge removal
+
+Approved 2026-09-07. Start only after Improvement 06 is COMPLETE.
+
+Full spec: [`.docs/improve-07-no-merge.plan.md`](improve-07-no-merge.plan.md).
+
+Commit: `feat(improve-07): remove merge groups from the product`.  
+Evidence: `.docs/evidence/improve-07-no-merge/`.
+
+### Kickoff prompt for the implementing agent
+
+```text
+You are the agent for Improvement 07 of the Automation Pitch project. Work only on Improvement 07 as specified in .docs/improve-07-no-merge.plan.md. Do not reopen Improvements 03–06. Do not redesign merge.
+
+Before changing anything:
+1. Read .docs/GOAL.md (including Amendments), .docs/BUILD_PLAN.md Sections 3-4, .docs/IMPROVEMENTS.md, .docs/improve-07-no-merge.plan.md, .docs/VISUAL_IMPROVEMENTS.md, every entry in .docs/handoff.md, and .cursor/rules/agent-handoff.mdc.
+2. Run `git status` and `git log -1`. HEAD must be the COMPLETE commit of Improvement 06 (`feat(improve-06): quiet Who select trash Other and finer zoom`) and the tree must be clean. If not, stop and report.
+3. Run `npm install`, `npm run build`, `npm run test:unit` to confirm a green start.
+
+Then implement Improvement 07 exactly as specified in that plan. Surgical removal of merge UI and runtime. Keep after.groups in the schema; unfold on load; Mailroom has no group. Do not bump the document version. Do not remove After-only Steps. Locked decisions are not open for redesign. If something in the spec is impossible or contradictory, stop and ask; do not widen scope.
+
+When done: run `npm run build`, `npm run test:unit`, `npm run test:e2e`; save screenshots under .docs/evidence/improve-07-no-merge/; append one handoff entry ending in `Status: COMPLETE`; commit everything as `feat(improve-07): remove merge groups from the product`; confirm a clean tree; report the hash, exact test results, and evidence paths. Never push, branch, or start other work.
+```
+

@@ -887,3 +887,25 @@ Corrections in the same chat before the next slice starts get their own short en
 - Known limitations / follow-ups: Tile `--select-ring` cyan glow left for a later slice. Global `--chrome-line` restyle out of 05.
 - Status: COMPLETE
 - Commit: `docs: add improve-05 chrome plan and visual improvement log`
+
+## Planning — Improvements 06 and 07 — 2026-09-07
+
+- Starting commit: `83be44e102cfa75ed62559888df82da2efaffa1f` (`docs: add improve-05 chrome plan and visual improvement log`)
+- Working tree at start: clean product tree; two untracked ELK planner dumps left uncommitted
+- GOAL clauses addressed: n/a (planning only)
+- Library research and decisions: 03–05 stay locked. New Improvement 06 for Who/trash/Other/lane chips/hamburger/zoom. Merge is too large for 06 → Improvement 07 surgical removal (schema `groups` kept, unfold on load). Zoom-toward-graph is locked as bounds-center when the pointer is on empty paper. No product code in this commit.
+- Files changed:
+  - `.docs/improve-06-shell.plan.md`, `.docs/improve-07-no-merge.plan.md`
+  - `.docs/VISUAL_IMPROVEMENTS.md` plus Who PNG and zoom GIF under `.docs/visual-improvements/`
+  - `.docs/IMPROVEMENTS.md`, `.docs/improve-03-polish-and-path.plan.md`
+  - This handoff entry
+- Behavior implemented: none. Next agent is still Improvement 03.
+- Tests and exact results:
+  - `npm run build` — not run (docs only)
+  - `npm run test:unit` — not run (docs only)
+  - `npm run test:e2e` — not run (docs only)
+- Evidence: user originals `2026-09-07-who-alice-selected.png`, `2026-09-07-wheel-zoom.gif`
+- Earlier-slice defects fixed: none
+- Known limitations / follow-ups: 03 → 04 → 05 → 06 → 07. Merge redesign is later, not 07.
+- Status: COMPLETE
+- Commit: `docs: add improve-06 shell and improve-07 no-merge plans`

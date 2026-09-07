@@ -1,6 +1,6 @@
 # Improvement 03 — polish, Path stroke, on-canvas label
 
-Kickoff for a **fresh** agent. Implement **only** this file. Do **not** implement Improvement 04 (insert-on-Path live preview) or Improvement 05 (Step select / view switch).
+Kickoff for a **fresh** agent. Implement **only** this file. Do **not** implement Improvements 04–07.
 
 User pictures for this slice: `.docs/VISUAL_IMPROVEMENTS.md` entry **2026-09-07 — plus pull, Who card, Data tile, Path-pull tab**.
 
