@@ -864,3 +864,26 @@ Corrections in the same chat before the next slice starts get their own short en
 - Known limitations / follow-ups: Improvement 03 then 04, sequential. Path `−`, free-form layout, nested unmerge, After-only insert remain out of scope.
 - Status: COMPLETE
 - Commit: `docs: add improve-03 polish and improve-04 insert-preview plans`
+
+## Planning — Improvement 05 and visual log — 2026-09-07
+
+- Starting commit: `ac66ed4cabd717fd96e8bfa58f271c6adef94f22` (`docs: add improve-03 polish and improve-04 insert-preview plans`)
+- Working tree at start: clean product tree; two untracked ELK planner dumps left uncommitted
+- GOAL clauses addressed: n/a (planning only; implementing agents append amendments)
+- Library research and decisions: User asked for a separate agent for Step-select jump + Before/After/Both fill/frame, plus an always-on rule that logs attached pictures/GIFs in `.docs/VISUAL_IMPROVEMENTS.md`. No product code in this commit.
+- Files changed:
+  - `.docs/improve-05-chrome.plan.md`
+  - `.docs/VISUAL_IMPROVEMENTS.md` and `.docs/visual-improvements/*` (user originals)
+  - `.cursor/rules/visual-improvements.mdc`, `.cursor/rules/agent-handoff.mdc`
+  - `.docs/IMPROVEMENTS.md`, `.docs/improve-03-polish-and-path.plan.md` (scope notes)
+  - This handoff entry
+- Behavior implemented: none. Next agent is still Improvement 03. Improvement 05 waits until 04 is COMPLETE.
+- Tests and exact results:
+  - `npm run build` — not run (docs only)
+  - `npm run test:unit` — not run (docs only)
+  - `npm run test:e2e` — not run (docs only)
+- Evidence: n/a (user originals under `.docs/visual-improvements/`)
+- Earlier-slice defects fixed: none
+- Known limitations / follow-ups: Tile `--select-ring` cyan glow left for a later slice. Global `--chrome-line` restyle out of 05.
+- Status: COMPLETE
+- Commit: `docs: add improve-05 chrome plan and visual improvement log`

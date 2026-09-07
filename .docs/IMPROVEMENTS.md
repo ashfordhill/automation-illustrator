@@ -255,7 +255,7 @@ Shipped as `feat(improve-02): add merge tile type and tile drag`. Spec was [`.do
 
 # Improvement 03 — polish, Path stroke, on-canvas label
 
-Approved 2026-09-07. **Do not implement Improvement 04 in the same chat.**
+Approved 2026-09-07. **Do not implement Improvement 04 or 05 in the same chat.**
 
 Full spec: [`.docs/improve-03-polish-and-path.plan.md`](improve-03-polish-and-path.plan.md).
 
@@ -265,14 +265,14 @@ Evidence: `.docs/evidence/improve-03-polish/`.
 ### Kickoff prompt for the implementing agent
 
 ```text
-You are the agent for Improvement 03 of the Automation Pitch project. Work only on Improvement 03 as specified in .docs/improve-03-polish-and-path.plan.md. Do not implement Improvement 04.
+You are the agent for Improvement 03 of the Automation Pitch project. Work only on Improvement 03 as specified in .docs/improve-03-polish-and-path.plan.md. Do not implement Improvement 04 or 05.
 
 Before changing anything:
-1. Read .docs/GOAL.md (including Amendments), .docs/BUILD_PLAN.md Sections 3-4, .docs/IMPROVEMENTS.md, .docs/improve-03-polish-and-path.plan.md, every entry in .docs/handoff.md, and .cursor/rules/agent-handoff.mdc.
-2. Run `git status` and `git log -1`. HEAD must be the COMPLETE commit of the latest handoff entry and the tree must be clean. If not, stop and report.
+1. Read .docs/GOAL.md (including Amendments), .docs/BUILD_PLAN.md Sections 3-4, .docs/IMPROVEMENTS.md, .docs/improve-03-polish-and-path.plan.md, .docs/VISUAL_IMPROVEMENTS.md, every entry in .docs/handoff.md, and .cursor/rules/agent-handoff.mdc.
+2. Run `git status` and `git log -1`. HEAD must be the COMPLETE commit of the latest handoff entry (`docs: add improve-05 chrome plan and visual improvement log`) and the tree must be clean. If not, stop and report.
 3. Run `npm install`, `npm run build`, `npm run test:unit` to confirm a green start.
 
-Then implement Improvement 03 exactly as specified in that plan (locked decisions, GOAL amendments, work items 5.1–5.9, tests). Locked decisions are not open for redesign. If something in the spec is impossible or contradictory, stop and ask; do not widen scope. Do not start Improvement 04.
+Then implement Improvement 03 exactly as specified in that plan (locked decisions, GOAL amendments, work items 5.1–5.9, tests). Locked decisions are not open for redesign. If something in the spec is impossible or contradictory, stop and ask; do not widen scope. Do not start Improvement 04 or 05.
 
 When done: run `npm run build`, `npm run test:unit`, `npm run test:e2e`; save screenshots under .docs/evidence/improve-03-polish/; append one handoff entry ending in `Status: COMPLETE`; commit everything as `feat(improve-03): polish chrome Path stroke and on-canvas label`; confirm a clean tree; report the hash, exact test results, and evidence paths. Never push, branch, or start other work.
 ```
@@ -291,14 +291,40 @@ Evidence: `.docs/evidence/improve-04-insert-preview/`.
 ### Kickoff prompt for the implementing agent
 
 ```text
-You are the agent for Improvement 04 of the Automation Pitch project. Work only on Improvement 04 as specified in .docs/improve-04-insert-preview.plan.md. Do not reopen Improvement 03 polish.
+You are the agent for Improvement 04 of the Automation Pitch project. Work only on Improvement 04 as specified in .docs/improve-04-insert-preview.plan.md. Do not reopen Improvement 03 polish. Do not implement Improvement 05.
 
 Before changing anything:
-1. Read .docs/GOAL.md (including Amendments), .docs/BUILD_PLAN.md Sections 3-4, .docs/IMPROVEMENTS.md, .docs/improve-04-insert-preview.plan.md, every entry in .docs/handoff.md, and .cursor/rules/agent-handoff.mdc.
+1. Read .docs/GOAL.md (including Amendments), .docs/BUILD_PLAN.md Sections 3-4, .docs/IMPROVEMENTS.md, .docs/improve-04-insert-preview.plan.md, .docs/VISUAL_IMPROVEMENTS.md, every entry in .docs/handoff.md, and .cursor/rules/agent-handoff.mdc.
 2. Run `git status` and `git log -1`. HEAD must be the COMPLETE commit of Improvement 03 and the tree must be clean. If not, stop and report.
 3. Run `npm install`, `npm run build`, `npm run test:unit` to confirm a green start.
 
 Then implement Improvement 04 exactly as specified in that plan. Do not run ELK on pointer move. Do not call insertNodeOnPath until drop. Locked decisions are not open for redesign. If something in the spec is impossible or contradictory, stop and ask; do not widen scope.
 
 When done: run `npm run build`, `npm run test:unit`, `npm run test:e2e`; save screenshots under .docs/evidence/improve-04-insert-preview/; append one handoff entry ending in `Status: COMPLETE`; commit everything as `feat(improve-04): preview tile insert on Path while dragging`; confirm a clean tree; report the hash, exact test results, and evidence paths. Never push, branch, or start other work.
+```
+
+---
+
+# Improvement 05 — Step select stay-put, chunky view switch
+
+Approved 2026-09-07. Start only after Improvement 04 is COMPLETE.
+
+Full spec: [`.docs/improve-05-chrome.plan.md`](improve-05-chrome.plan.md). User picture: [view switch](visual-improvements/2026-09-07-view-switch-fill.png).
+
+Commit: `feat(improve-05): keep Steps still and chunk the view switch`.  
+Evidence: `.docs/evidence/improve-05-chrome/`.
+
+### Kickoff prompt for the implementing agent
+
+```text
+You are the agent for Improvement 05 of the Automation Pitch project. Work only on Improvement 05 as specified in .docs/improve-05-chrome.plan.md. Do not reopen Improvements 03 or 04.
+
+Before changing anything:
+1. Read .docs/GOAL.md (including Amendments), .docs/BUILD_PLAN.md Sections 3-4, .docs/IMPROVEMENTS.md, .docs/improve-05-chrome.plan.md, .docs/VISUAL_IMPROVEMENTS.md, every entry in .docs/handoff.md, and .cursor/rules/agent-handoff.mdc.
+2. Run `git status` and `git log -1`. HEAD must be the COMPLETE commit of Improvement 04 (`feat(improve-04): preview tile insert on Path while dragging`) and the tree must be clean. If not, stop and report.
+3. Run `npm install`, `npm run build`, `npm run test:unit` to confirm a green start.
+
+Then implement Improvement 05 exactly as specified in that plan. Remove the 1 px select translate on Step/merge tiles. Restyle only the Before/After/Both switch (chunky ink-or-cream frame, yellow fill to the outer radius, no cyan hairline). Do not restyle the rest of the chrome. Do not copy Nintendo or Aseprite pixels. Locked decisions are not open for redesign. If something in the spec is impossible or contradictory, stop and ask; do not widen scope.
+
+When done: run `npm run build`, `npm run test:unit`, `npm run test:e2e`; save screenshots under .docs/evidence/improve-05-chrome/; append one handoff entry ending in `Status: COMPLETE`; commit everything as `feat(improve-05): keep Steps still and chunk the view switch`; confirm a clean tree; report the hash, exact test results, and evidence paths. Never push, branch, or start other work.
 ```

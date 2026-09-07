@@ -1,6 +1,8 @@
 # Improvement 03 — polish, Path stroke, on-canvas label
 
-Kickoff for a **fresh** agent. Implement **only** this file. Do **not** implement Improvement 04 (insert-on-Path live preview) — that is `.docs/improve-04-insert-preview.plan.md`.
+Kickoff for a **fresh** agent. Implement **only** this file. Do **not** implement Improvement 04 (insert-on-Path live preview) or Improvement 05 (Step select / view switch).
+
+User pictures for this slice: `.docs/VISUAL_IMPROVEMENTS.md` entry **2026-09-07 — plus pull, Who card, Data tile, Path-pull tab**.
 
 Contract: `.docs/GOAL.md` (including Amendments). Relay: `.docs/BUILD_PLAN.md` Section 4, `.docs/handoff.md`, `.cursor/rules/agent-handoff.mdc`. Start from the latest COMPLETE handoff commit with a **clean** tree.
 
