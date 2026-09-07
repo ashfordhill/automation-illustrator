@@ -31,7 +31,7 @@ function hintsFor(): Hint[] {
     return [
       { key: pk(KeyAction.PanUp), label: "Previous Node" },
       { key: pk(KeyAction.PanDown), label: "Next Node" },
-      { key: pk(KeyAction.Confirm), label: "Confirm remove" },
+      { key: pk(KeyAction.Confirm), label: "Remove highlighted Node" },
       { key: "Esc", label: "Cancel" },
     ];
   }

@@ -761,3 +761,19 @@ Corrections in the same chat before the next slice starts get their own short en
   - `npm run test:e2e` — pass (77 Chromium). One parallel run hit Windows PNG file-lock on 4 screenshot writes plus a Mailroom load timeout; those specs re-ran 28 passed (1 remaining lock retried 1 passed).
 - Status: COMPLETE
 - Commit: `feat(improve-01): nest actor title inside the name card`
+
+## Improvement 01 — correction 4 — 2026-09-07
+
+- Requested: Overlapping dotted Paths should stay visibly dotted (not look solid). Push the actor title into a larger bottom sub-box of the name card with the name snug above it. Kill the “Remove which Node?” dialog; the on-tile control should be a larger red X that actually removes, with a hover lift.
+- Changed:
+  - `src/board/routing/polyline.ts`, `FlowArrow.tsx` — dotted (and restitch) strokes are drawn as world-aligned segments so shared trunks keep the same dash phase.
+  - `src/app/styles/tokens.css` — name 22px packed to the title; title 48px nested sub-box at the bottom of the cream card.
+  - Removal: `RemovePickerHud` is pairing-preview only. `PathHostFrame` shows a red X on each candidate (`removePickedNode`). Inspector Remove / − / Delete still enter pick; Enter still removes the highlighted candidate; many-to-many pairing HUD unchanged. Root host still explains it cannot be removed (transient notice) while children remain pickable.
+  - `.docs/GOAL.md` — WG-08, WG-09, NA-12 amendment (clause text not edited in place).
+  - e2e: `confirmRemoveNode` in `e2e/ready.ts`; canvas/commands/routing/hardening/merge specs click the X instead of the old dialog.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2)
+  - `npm run test:unit` — pass (29 files, 152 tests)
+  - `npm run test:e2e` — pass (77 Chromium). One parallel run failed 2 specs that still expected the HUD root copy; after the root notice, those two re-ran passed.
+- Status: COMPLETE
+- Commit: `feat(improve-01): align dotted Paths and remove Nodes with X`

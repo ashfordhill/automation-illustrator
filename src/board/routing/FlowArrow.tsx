@@ -18,9 +18,16 @@ import {
   orthogonalPolyline,
   pathLength,
   pointAtLength,
+  polylineDrawSegments,
   polylineKey,
   polylineToSvg,
   type PolyPoint,
+  DOTTED_DASH,
+  DOTTED_GAP,
+  DOTTED_PERIOD,
+  RESTITCH_DASH,
+  RESTITCH_GAP,
+  RESTITCH_PERIOD,
 } from "./polyline";
 
 export type FlowPathData = {
@@ -119,6 +126,13 @@ export function FlowArrow({
   const stretched = useStretch(stretch && viaX != null, fromVia, settled);
   const points = stretched ?? settled;
   const path = polylineToSvg(points);
+  const dashPeriod = restitch ? RESTITCH_PERIOD : DOTTED_PERIOD;
+  const dashArray = restitch ? `${RESTITCH_DASH} ${RESTITCH_GAP}` : `${DOTTED_DASH} ${DOTTED_GAP}`;
+  const showDots = restitch || dotted;
+  const segments = useMemo(
+    () => (showDots ? polylineDrawSegments(points, dashPeriod) : []),
+    [showDots, dashPeriod, points],
+  );
 
   const rect = layout?.labels[id];
   const chip = rect
@@ -131,21 +145,41 @@ export function FlowArrow({
   const lines = label ? wrapConditionLines(label) : [];
   const className = restitch ? "edge-restitch" : stretch && stretched ? "edge-stretch" : undefined;
 
+  const stroke = restitch ? "var(--blue-deep)" : "var(--line)";
+  const strokeWidth = selected || restitch ? 4 : 2.75;
+
   return (
     <>
       <BaseEdge
         id={id}
         path={path}
-        className={className}
+        className={showDots ? undefined : className}
         interactionWidth={28}
         style={{
-          stroke: restitch ? "var(--blue-deep)" : "var(--line)",
-          strokeWidth: selected || restitch ? 4 : 2.75,
-          strokeDasharray: restitch ? "10 6" : dotted ? "8 7" : undefined,
+          stroke: showDots ? "transparent" : stroke,
+          strokeWidth,
           strokeLinecap: "butt",
           strokeLinejoin: "miter",
         }}
       />
+      {showDots
+        ? segments.map((seg, i) => (
+            <path
+              key={`${i}-${seg.x1}-${seg.y1}-${seg.x2}-${seg.y2}`}
+              d={`M ${seg.x1} ${seg.y1} L ${seg.x2} ${seg.y2}`}
+              fill="none"
+              pointerEvents="none"
+              style={{
+                stroke,
+                strokeWidth,
+                strokeDasharray: dashArray,
+                strokeDashoffset: seg.dashOffset,
+                strokeLinecap: "butt",
+                strokeLinejoin: "miter",
+              }}
+            />
+          ))
+        : null}
       {label && lines.length ? (
         <EdgeLabelRenderer>
           <div

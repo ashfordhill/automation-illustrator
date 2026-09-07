@@ -313,8 +313,9 @@ body,
 .actor-card {
   display: flex;
   flex-direction: column;
-  margin: 0 4px 5px;
-  padding: 4px 4px 5px;
+  justify-content: flex-end;
+  margin: 0 4px 4px;
+  padding: 3px 3px 3px;
   gap: 0;
   background: var(--cream);
   border: 1.5px solid color-mix(in srgb, var(--line) 28%, transparent);
@@ -328,18 +329,27 @@ body,
   overflow: hidden;
   width: 100%;
   box-sizing: border-box;
-  padding: 2px 4px;
+  padding: 0 3px;
   border: none;
   background: transparent;
 }
 
 .actor-chip-name {
-  height: 26px;
+  height: 22px;
+  padding: 0 3px 2px;
+  justify-content: flex-end;
+}
+
+.actor-chip-name .fit-label-fit {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
 }
 
 .actor-chip-role {
-  height: 34px;
-  border-radius: 5px;
+  height: 48px;
+  padding: 2px 4px;
+  border-radius: 6px;
   /* Same hue as the Who column, darker and punchier so it reads as a nested
      sub-box of the cream name card — not a grey chip and not a hole in the strip. */
   background: oklch(from var(--actor-fill) calc(l * 0.78) calc(c * 2.4) h);
@@ -629,25 +639,6 @@ body,
   outline-offset: 8px;
 }
 
-.react-flow__node.remove-candidate-on::before {
-  content: "Remove";
-  position: absolute;
-  top: -22px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--ink);
-  background: var(--cream);
-  border: 2px solid var(--line);
-  border-radius: 999px;
-  padding: 0 8px;
-  z-index: 2;
-  pointer-events: none;
-}
-
 .react-flow__node.remove-candidate-on::after {
   content: "";
   position: absolute;
@@ -655,6 +646,42 @@ body,
   border: 3px dashed var(--line);
   border-radius: 18px;
   pointer-events: none;
+}
+
+.node-remove-x {
+  pointer-events: all;
+}
+
+.node-remove-x-btn {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 999px;
+  border: 3px solid color-mix(in srgb, var(--minus) 55%, var(--line));
+  background: var(--minus);
+  color: #fff5f5;
+  cursor: pointer;
+  box-shadow: 0 4px 0 var(--btn-shadow);
+  transition:
+    transform 140ms ease,
+    box-shadow 140ms ease,
+    background 140ms ease;
+}
+
+.node-remove-x-btn:hover,
+.node-remove-x-btn:focus-visible {
+  background: var(--minus-active);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 0 var(--btn-shadow);
+  outline: none;
+}
+
+.node-remove-x-btn:focus-visible {
+  outline: 3px solid var(--yellow);
+  outline-offset: 2px;
 }
 
 @keyframes squash-pop {
@@ -933,6 +960,16 @@ body,
 
   .edge-stretch .react-flow__edge-path {
     transition: none;
+  }
+
+  .node-remove-x-btn {
+    transition: none;
+  }
+
+  .node-remove-x-btn:hover,
+  .node-remove-x-btn:focus-visible {
+    transform: none;
+    box-shadow: 0 4px 0 var(--btn-shadow);
   }
 }
 

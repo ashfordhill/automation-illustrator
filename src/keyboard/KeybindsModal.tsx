@@ -25,7 +25,7 @@ export function KeybindsModal() {
     >
       <Text size="sm" className="hint-copy" mb="sm">
       Click a key to rebind it. Contextual hints on the canvas use these mappings.
-      During Node removal, Up/Down choose a candidate and Enter confirms.
+      During Node removal, Up/Down choose a candidate and Enter or the red X removes it.
       </Text>
       <Group mb="sm">
         <Button

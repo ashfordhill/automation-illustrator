@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { loadOakPark, screenshotBoard, waitForLayout } from "./ready";
+import { loadOakPark, screenshotBoard, waitForLayout, confirmRemoveNode } from "./ready";
 
 const EVIDENCE = ".docs/evidence/11-merge";
 const MAIL_STEP = "Read incoming mail";
@@ -77,9 +77,7 @@ test.describe("slice 11 merge / unmerge and After-only Steps", () => {
     await waitForLayout(page);
     await expect(page.locator("aside").getByRole("button", { name: "Type Other" })).toBeVisible();
     await page.locator("aside").getByRole("button", { name: "Remove" }).click();
-    const dialog = page.getByRole("dialog", { name: "Remove Node" });
-    await expect(dialog).toBeVisible();
-    await dialog.getByRole("button", { name: "Confirm" }).click();
+    await confirmRemoveNode(page, "Other");
     await waitForLayout(page);
     await expect(page.locator("aside").getByRole("button", { name: "Manage actors" })).toBeVisible();
     await screenshotBoard(page, `${EVIDENCE}/after-only-removed-1440.png`);

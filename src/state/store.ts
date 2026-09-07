@@ -6,7 +6,7 @@
  * commit / undo / redo — history.ts (500; replaceDoc is a document boundary)
  * addStep — first Step is the root (WG-01); later tiles spawn from +
  * openLinkMenu / spawnBranch / beginLinkFrom — tile + (After: After-only Step / Connect existing)
- * beginRemovePick / confirmRemove — − / Delete / inspector Remove picker (WG-08..11)
+ * beginRemovePick / confirmRemove / removePickedNode — − / Delete / inspector Remove; on-tile X (WG-08..11)
  * beginMerge / confirmMerge / unmerge — After merge dock (MG-01..MG-07)
  * toggleSelectedDash — selected Path solid/dotted
  * requestNew / requestDemo / importRaw — replacement gate (SH-06, SH-12)
@@ -81,6 +81,7 @@ import {
   nextPortIndex,
   outgoingSorted,
   removalCandidateIds,
+  rootNodeId,
   validateWorkflow,
 } from "../workflow/graph";
 import { nid } from "../workflow/ids";
@@ -270,6 +271,7 @@ export const useStore = create<{
   cycleRemoveCandidate: (dir: -1 | 1) => void;
   setRemoveCandidate: (candidateId: string) => void;
   confirmRemove: () => void;
+  removePickedNode: (candidateId: string) => void;
   setPreviewSuccessorPred: (successorId: string, predecessorId: string) => void;
   useNearestPreviewPairings: () => void;
   useFanPreviewPairings: () => void;
@@ -933,6 +935,9 @@ export const useStore = create<{
       set({ interaction: IDLE, selected: { type: SelectionKind.Node, id: hostId } });
       return;
     }
+    if (rootNodeId(workflow.nodes, workflow.edges) === hostId) {
+      get().setNotice(MSG.rootRemoval);
+    }
     set({
       interaction: { kind: "remove-pick", hostId, candidateId },
       selected: { type: SelectionKind.Node, id: hostId },
@@ -1004,6 +1009,12 @@ export const useStore = create<{
       return;
     }
     applyPlannedRemoval(get, set, planned.value, planned.value.pairings);
+  },
+  removePickedNode: (candidateId) => {
+    const { interaction } = get();
+    if (interaction.kind !== "remove-pick") return;
+    get().setRemoveCandidate(candidateId);
+    get().confirmRemove();
   },
   setPreviewSuccessorPred: (successorId, predecessorId) => {
     const { interaction, workflow } = get();

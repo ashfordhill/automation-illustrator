@@ -1,11 +1,14 @@
 import { expect, test } from "vitest";
 import {
+  DOTTED_PERIOD,
   lerpPolylines,
   orthogonalPolyline,
   pathLength,
   pointAtLength,
+  polylineDrawSegments,
   polylineToSvg,
   resamplePolyline,
+  svgDashPhase,
 } from "./polyline";
 
 test("pointAtLength walks bends", () => {
@@ -41,4 +44,27 @@ test("resample and lerp keep endpoints", () => {
   expect(mid[mid.length - 1]!.x).toBeCloseTo(10);
   expect(pathLength(resamplePolyline(a, 8))).toBeCloseTo(pathLength(a));
   expect(polylineToSvg(a)).toBe("M 0 0 L 10 0");
+});
+
+test("overlapping dotted segments share world dash phase so they stay gapped", () => {
+  const trunk = polylineDrawSegments(
+    [
+      { x: 10, y: 40 },
+      { x: 80, y: 40 },
+    ],
+    DOTTED_PERIOD,
+  );
+  const shorter = polylineDrawSegments(
+    [
+      { x: 40, y: 40 },
+      { x: 80, y: 40 },
+    ],
+    DOTTED_PERIOD,
+  );
+  expect(trunk).toHaveLength(1);
+  expect(shorter).toHaveLength(1);
+  const at = 55;
+  expect(
+    svgDashPhase(at - trunk[0]!.x1, trunk[0]!.dashOffset, DOTTED_PERIOD),
+  ).toBe(svgDashPhase(at - shorter[0]!.x1, shorter[0]!.dashOffset, DOTTED_PERIOD));
 });

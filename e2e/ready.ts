@@ -26,6 +26,17 @@ export async function screenshotBoard(page: Page, path: string) {
   await page.screenshot({ path, animations: "disabled" });
 }
 
+/** Click the on-tile red X, or press Enter for the highlighted default candidate. */
+export async function confirmRemoveNode(page: Page, candidateName?: string) {
+  if (candidateName) {
+    const btn = page.getByRole("button", { name: `Remove ${candidateName}`, exact: true });
+    await expect(btn).toBeVisible();
+    await btn.click();
+    return;
+  }
+  await page.keyboard.press("Enter");
+}
+
 /** Current React Flow zoom (translate/scale or matrix). Defaults to the first lane. */
 export async function laneZoom(page: Page, lane?: "before" | "after"): Promise<number> {
   const host = lane

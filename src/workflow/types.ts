@@ -254,3 +254,11 @@ export function stepDisplayLabel(kind: StepKind, target: string): string {
   if (t.toLowerCase().startsWith(`${type.toLowerCase()} `)) return t;
   return `${type} ${t}`;
 }
+
+/** Accessible caption for a Node (picker, on-tile Remove). */
+export function nodeCaption(node: NodeDto | undefined, fallback = "Node"): string {
+  if (!node) return fallback;
+  if (isDataFieldNode(node)) return node.label.trim() || "Data";
+  if (isStepNode(node)) return stepDisplayLabel(node.stepKind, node.title);
+  return fallback;
+}

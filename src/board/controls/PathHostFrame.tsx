@@ -1,11 +1,16 @@
 /**
- * Wrapper around a React Flow node: NodeToolbar for +/−,
- * click selects or completes Connect existing / picks a removal candidate.
+ * Wrapper around a React Flow node: NodeToolbar for +/− and the on-tile
+ * Remove X during pick (WG-08). Click selects or completes Connect existing /
+ * highlights a removal candidate.
  */
 import { type ReactNode } from "react";
 import { NodeToolbar, Position } from "@xyflow/react";
+import { IconX } from "@tabler/icons-react";
 import { SelectionKind, ViewMode } from "../../workflow/catalogs";
 import { useStore } from "../../state/store";
+import { afterAwareRemovalCandidateIds } from "../../workflow/merge";
+import { findNode } from "../../workflow/selectors";
+import { nodeCaption } from "../../workflow/types";
 import { OutgoingPathPad } from "./OutgoingPathPad";
 
 export function PathHostFrame({
@@ -22,6 +27,7 @@ export function PathHostFrame({
   const present = useStore((s) => s.present);
   const view = useStore((s) => s.view);
   const interaction = useStore((s) => s.interaction);
+  const workflow = useStore((s) => s.workflow);
   const showPad =
     !present &&
     view !== ViewMode.Both &&
@@ -30,6 +36,12 @@ export function PathHostFrame({
     interaction.kind !== "remove-preview" &&
     interaction.kind !== "merge-pick" &&
     (selected || (interaction.kind === "add-menu" && interaction.sourceId === id));
+  const removeCandidates =
+    interaction.kind === "remove-pick"
+      ? afterAwareRemovalCandidateIds(workflow, interaction.hostId)
+      : [];
+  const showRemoveX = !present && !departing && removeCandidates.includes(id);
+  const caption = nodeCaption(findNode(workflow, id), id);
   return (
     <div
       className={`nopan${departing ? " node-squash-inner" : ""}`}
@@ -71,6 +83,28 @@ export function PathHostFrame({
           className="nopan nowheel node-path-toolbar"
         >
           <OutgoingPathPad nodeId={id} />
+        </NodeToolbar>
+      ) : null}
+      {showRemoveX ? (
+        <NodeToolbar
+          isVisible
+          position={Position.Top}
+          offset={16}
+          className="nopan nowheel node-remove-x"
+        >
+          <button
+            type="button"
+            className="node-remove-x-btn"
+            aria-label={`Remove ${caption}`}
+            title={`Remove ${caption}`}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              useStore.getState().removePickedNode(id);
+            }}
+          >
+            <IconX size={22} stroke={2.6} aria-hidden />
+          </button>
         </NodeToolbar>
       ) : null}
     </div>

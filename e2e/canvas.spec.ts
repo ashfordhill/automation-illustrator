@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { waitForLayout, laneZoom, waitForZoomIdle } from "./ready";
+import { waitForLayout, laneZoom, waitForZoomIdle, confirmRemoveNode } from "./ready";
 
 const DEMO_STEP = "Read invoice.pdf";
 const EVIDENCE = ".docs/evidence/06-canvas";
@@ -38,12 +38,7 @@ function viewLabel(page: Page, name: "Before" | "After" | "Both") {
 }
 
 async function confirmRemove(page: Page, candidateName?: string) {
-  const dialog = page.getByRole("dialog", { name: "Remove Node" });
-  await expect(dialog).toBeVisible();
-  if (candidateName) {
-    await dialog.getByRole("button", { name: candidateName, exact: true }).click();
-  }
-  await dialog.getByRole("button", { name: "Confirm" }).click();
+  await confirmRemoveNode(page, candidateName);
 }
 
 test.describe("slice 6 canvas create / connect / remove", () => {
@@ -102,7 +97,7 @@ test.describe("slice 6 canvas create / connect / remove", () => {
 
     await page.getByText("Review BS&A Software").first().click();
     await page.keyboard.press("Delete");
-    await expect(page.getByRole("dialog", { name: "Remove Node" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Remove Review BS&A Software" })).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(page.getByText("Review BS&A Software").first()).toBeVisible();
     await page.screenshot({
@@ -125,7 +120,7 @@ test.describe("slice 6 canvas create / connect / remove", () => {
 
     await page.getByText("Account #").first().click();
     await page.keyboard.press("Delete");
-    await expect(page.getByRole("dialog", { name: "Remove Node" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Remove Account #" })).toBeVisible();
     await page.screenshot({
       path: `${EVIDENCE}/remove-pick-1440.png`,
       animations: "disabled",
