@@ -151,7 +151,6 @@ test.describe("slice 7 inspector and actors", () => {
     await page.getByText(DEMO_STEP).first().click();
     const results = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      .exclude(".mantine-SegmentedControl-root")
       .analyze();
     expect(
       results.violations.map((v) => ({

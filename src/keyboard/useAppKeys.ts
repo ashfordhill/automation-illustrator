@@ -43,12 +43,14 @@ export function useAppKeys() {
       }
 
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
+        if (s.present) return;
         e.preventDefault();
         if (e.shiftKey) s.redo();
         else s.undo();
         return;
       }
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y") {
+        if (s.present) return;
         e.preventDefault();
         s.redo();
         return;

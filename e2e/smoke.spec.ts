@@ -67,11 +67,8 @@ test.describe("baseline smoke", () => {
 
   test("axe WCAG 2.2 AA on the initial demo state", async ({ page }) => {
     await loadDemo(page);
-    // AQ-04. The selected Before/After control is white on Mantine cyan (#15aabf, 2.78:1).
-    // Restyling that approved chrome is Slice 8 (SH-01, P-09); exclude only that widget.
     const results = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-      .exclude(".mantine-SegmentedControl-root")
       .analyze();
     expect(
       results.violations.map((v) => ({

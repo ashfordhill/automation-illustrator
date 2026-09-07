@@ -10,6 +10,8 @@
  * toggleSelectedDash — selected Path solid/dotted
  * requestNew / requestDemo / importRaw — replacement gate (SH-06, SH-12)
  * startFresh / downloadHeldRecovery — corrupt-storage recovery (SH-10)
+ * setSoundEnabled — persisted Web Audio cues (SH-03, SH-04)
+ * setPresent — saves and restores view + selection (P-07)
  */
 import { create } from "zustand";
 import { spreadForLabels } from "../board/layout/spreadForLabels";
@@ -95,12 +97,15 @@ import {
   downloadRecoveryCopy,
   downloadWorkflowCopy,
   hydratePersistedWorkflow,
+  loadSound,
   loadTheme,
+  saveSound,
   saveTheme,
   writeWorkflow,
   type PersistStatus,
   type RecoveryState,
 } from "./persistence";
+import { playCue, playCueWhen } from "../app/sound/cues";
 import { parseDocument, type ParseResult } from "../workflow/migrate";
 
 /** Right-hand inspector target, or null when nothing is selected. */
@@ -170,7 +175,9 @@ export const useStore = create<{
   future: WorkflowDoc[];
   view: ViewModeT;
   present: boolean;
+  presentResume: { view: ViewModeT; selected: Selection } | null;
   selected: Selection;
+  soundEnabled: boolean;
   keymap: Keymap;
   helpOpen: boolean;
   capturing: KeyAction | null;
@@ -193,6 +200,7 @@ export const useStore = create<{
   redo: () => void;
   setView: (v: ViewModeT) => void;
   setPresent: (p: boolean) => void;
+  setSoundEnabled: (on: boolean) => void;
   select: (s: Selection) => void;
   setHelp: (v: boolean) => void;
   setCapturing: (a: KeyAction | null) => void;
@@ -253,7 +261,9 @@ export const useStore = create<{
   future: [],
   view: ViewMode.Before,
   present: false,
+  presentResume: null,
   selected: null,
+  soundEnabled: loadSound(),
   keymap: loadKeymap(),
   helpOpen: false,
   capturing: null,
@@ -337,16 +347,37 @@ export const useStore = create<{
     });
   },
   setView: (view) => set({ view, interaction: IDLE }),
-  setPresent: (present) =>
+  setPresent: (present) => {
+    const s = get();
+    if (present) {
+      if (s.present) return;
+      set({
+        present: true,
+        presentResume: { view: s.view, selected: s.selected },
+        selected: null,
+        helpOpen: false,
+        interaction: IDLE,
+        departing: null,
+        manageActorsOpen: false,
+        manageActorId: null,
+      });
+      return;
+    }
+    const resume = s.presentResume;
     set({
-      present,
-      helpOpen: present ? false : get().helpOpen,
-      selected: present ? null : get().selected,
+      present: false,
+      view: resume?.view ?? s.view,
+      selected: resume?.selected ?? s.selected,
+      presentResume: null,
       interaction: IDLE,
       departing: null,
-      manageActorsOpen: false,
-      manageActorId: null,
-    }),
+    });
+  },
+  setSoundEnabled: (soundEnabled) => {
+    saveSound(soundEnabled);
+    set({ soundEnabled });
+    if (soundEnabled) playCue("tick");
+  },
   select: (selected) => set({ selected, manageActorsOpen: false, manageActorId: null }),
   setHelp: (helpOpen) => set({ helpOpen, capturing: helpOpen ? get().capturing : null }),
   setCapturing: (capturing) => set({ capturing }),
@@ -375,6 +406,7 @@ export const useStore = create<{
       set({ notice: null });
       return;
     }
+    playCueWhen(get().soundEnabled, "buzz");
     set({ notice, noticeId: get().noticeId + 1 });
   },
   clearDeparting: () => set({ departing: null }),
@@ -418,6 +450,7 @@ export const useStore = create<{
       return "";
     }
     get().commit(result.value);
+    playCueWhen(get().soundEnabled, "blip");
     set({
       selected: { type: SelectionKind.Node, id },
       lastHumanId: hid ?? lastHumanId,
@@ -527,6 +560,7 @@ export const useStore = create<{
       return;
     }
     get().commit(result.value);
+    playCueWhen(get().soundEnabled, "blip");
   },
   deleteSelection: () => {
     const { selected, interaction } = get();
@@ -582,6 +616,7 @@ export const useStore = create<{
         return "";
       }
       get().commit(result.value);
+      playCueWhen(get().soundEnabled, "blip");
       set({
         interaction: IDLE,
         selected: { type: SelectionKind.Node, id },
@@ -610,6 +645,7 @@ export const useStore = create<{
       return "";
     }
     get().commit(result.value);
+    playCueWhen(get().soundEnabled, "blip");
     set({
       interaction: IDLE,
       selected: { type: SelectionKind.Node, id },
@@ -842,6 +878,7 @@ function applyPlannedRemoval(
     actorFor: (stepId: string) => ActorDto | undefined;
     commit: (next: WorkflowDoc) => void;
     setNotice: (message: string | null) => void;
+    soundEnabled: boolean;
   },
   set: (partial: {
     interaction: Interaction;
@@ -872,6 +909,7 @@ function applyPlannedRemoval(
   const before = get().workflow;
   get().commit(applied.value);
   if (get().workflow === before) return;
+  playCueWhen(get().soundEnabled, "pop");
   const overlay = plan.overlayEffects.notices[0] ?? null;
   const reduced = prefersReducedMotion();
   set({

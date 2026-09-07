@@ -2,12 +2,13 @@
  * Combined Step card: actor column + task (icon, Type + Target).
  * Mounted by board/nodes/StepNode.tsx inside React Flow.
  */
-import { ACTOR_W, STEP_H, STEP_W } from "../layout/tileMetrics";
+import { STEP_H, STEP_W } from "../layout/tileMetrics";
 import { stepDisplayLabel, type ActorDto, type StepKind } from "../../workflow/types";
 import { ActorColumn } from "./ActorColumn";
+import { FitLabel } from "./FitLabel";
 import { StepKindIcon } from "./StepKindIcon";
 
-/** Right half of a Step tile — icon, then Type + Target. */
+/** Right half of a Step tile — icon, then Type + Target, then optional detail. */
 function TaskCard({
   kind,
   title,
@@ -18,54 +19,16 @@ function TaskCard({
   detail: string;
 }) {
   const headline = stepDisplayLabel(kind, title);
+  const trimmedDetail = detail.trim();
   return (
-    <div
-      className="task-card"
-      style={{
-        width: STEP_W - ACTOR_W,
-        minHeight: STEP_H,
-        background: "var(--cream)",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 2,
-        padding: "8px 10px 10px",
-        boxSizing: "border-box",
-      }}
-    >
+    <div className="task-card">
       <StepKindIcon kind={kind} />
-      <div
-        style={{
-          fontWeight: 800,
-          fontSize: 14,
-          textAlign: "center",
-          lineHeight: 1.25,
-          overflowWrap: "anywhere",
-          wordBreak: "break-word",
-          borderTop: `3px solid var(--line)`,
-          borderBottom: detail ? `3px solid var(--line)` : undefined,
-          padding: "6px 2px",
-          width: "100%",
-          color: "var(--ink)",
-        }}
-      >
-        {headline}
+      <div className="task-card-title">
+        <FitLabel text={headline} maxFontSizePx={14} mode="box" maxLines={3} />
       </div>
-      {detail ? (
-        <div
-          style={{
-            fontSize: 12,
-            color: "var(--ink)",
-            fontWeight: 700,
-            paddingTop: 4,
-            overflowWrap: "anywhere",
-            wordBreak: "break-word",
-            textAlign: "center",
-            width: "100%",
-          }}
-        >
-          {detail}
+      {trimmedDetail ? (
+        <div className="task-card-detail">
+          <FitLabel text={trimmedDetail} maxFontSizePx={12} mode="box" maxLines={2} />
         </div>
       ) : null}
     </div>
@@ -92,6 +55,7 @@ export function StepTile({
       className={`board-node step-piece${selected ? " selected" : ""}`}
       style={{
         width: STEP_W,
+        height: STEP_H,
         display: "flex",
         border: `3px solid var(--line)`,
         borderRadius: 14,

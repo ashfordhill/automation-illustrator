@@ -25,6 +25,7 @@ function resetSession() {
   s.closeBoardModes();
   s.closeManageActors({ restoreFocus: false });
   s.setColorScheme(ColorScheme.Light);
+  s.setSoundEnabled(false);
 }
 
 beforeEach(() => {
@@ -118,6 +119,25 @@ test("Path inspector uses Path / condition and Choice stroke (NA-07, PC-01)", ()
   const choice = host.querySelector('[aria-label="Always visited (solid) / Choice (dotted)"]');
   expect(choice).not.toBeNull();
   expect(choice?.querySelector('[aria-pressed="true"]')?.textContent).toMatch(/Choice/);
+});
+
+test("sound toggle is off by default and Present restores the inspector", () => {
+  expect(host.querySelector('[aria-label="Sound off"]')).not.toBeNull();
+  expect(host.querySelector('[aria-pressed="false"]')).not.toBeNull();
+  act(() => {
+    useStore.getState().select({ type: SelectionKind.Node, id: OAK_PARK_IDS.read });
+  });
+  expect(host.textContent).toContain("Type");
+  act(() => {
+    useStore.getState().setPresent(true);
+  });
+  expect(host.querySelector("aside")).toBeNull();
+  expect(host.textContent).toMatch(/will become automated/);
+  act(() => {
+    useStore.getState().setPresent(false);
+  });
+  expect(host.querySelector("aside")).not.toBeNull();
+  expect(useStore.getState().selected?.id).toBe(OAK_PARK_IDS.read);
 });
 
 test("view switching updates the on-canvas lane name", () => {

@@ -403,3 +403,48 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(slice-07): rebuild inspector for Path, Who, and actors`
 
+## Slice 08 — shell, typography, and sound — 2026-09-06
+
+- Starting commit: `4f051ef6f31ddb78993a1eb1a240c4f2fd1dc392` (`feat(slice-07): rebuild inspector for Path, Who, and actors`)
+- Working tree at start: clean tracked files on `main` (9 commits ahead of `origin/main`, not pushed). Untracked planner drafts `.docs/draft-to-give-planner-agent.*` were left untouched.
+- GOAL clauses addressed: SH-15 (local variable Nunito; Google Fonts link removed), NA-10 (tile text wrap/shrink to 11 px then ellipsis clamp; full value on title and aria-label), SH-01 / SH-02 / P-09 (chunky high-contrast shell; prominent Before/After/Both radios; both themes), P-08 / SH-03 / SH-04 (sound toggle after Undo; off by default; persisted; original Web Audio blip/pop/buzz/twoNote/tick at fixed low volume; independent of reduced motion), P-07 (Present hides inspector, NodeToolbars, and hints; score in the top bar; Space toggles Before/After; exit restores view and selection; undo/redo disabled while presenting), AQ-02 / AQ-04 / AQ-05 / AQ-07
+- Library research and decisions: added approved `@fontsource-variable/nunito@5.3.0` (`Nunito Variable` via `wght.css`). No other runtime dependency. Sound uses the Web Audio API only (no Howler/samples). Replaced Mantine SegmentedControl with an opaque yellow/dark radio group so axe no longer needs the Slice 1 contrast exclusion. Selected-on-yellow uses a dedicated `--on-yellow` ink that does not flip in dark theme.
+- Files changed:
+  - Font/shell: `index.html`, `src/main.tsx`, `src/app/App.tsx`, `src/app/styles/tokens.css`, `src/app/components/Toolbar.tsx`, `package.json`, `package-lock.json`
+  - Sound: new `src/app/sound/cues.ts`, `src/app/components/SoundToggle.tsx`; `src/state/persistence.ts`, `src/state/store.ts`, `src/keyboard/useAppKeys.ts`
+  - Tiles: `src/board/tiles/FitLabel.tsx`, `ActorColumn.tsx`, `StepTile.tsx`, `DataTile.tsx`
+  - Tests: `src/app/sound/cues.test.ts`, `src/board/tiles/FitLabel.test.tsx`, `src/state/store.shell.test.ts`, `src/state/persistence.test.ts`, `src/app/App.test.tsx`, `e2e/shell.spec.ts`, `e2e/smoke.spec.ts`, `e2e/inspector.spec.ts`
+  - Evidence: `.docs/evidence/08-shell/`; earlier e2e suites recaptured 01–07 screenshots (chunky shell, sound toggle, view radios)
+  - This handoff entry
+- Behavior implemented: Nunito is bundled locally. Actor name/role, Data label, Step title, and Step detail wrap, shrink to 11 px, then ellipsize; the full string is on title and the accessible name. The top bar is chunkier; Before/After/Both is a high-contrast radio group in the same place. Sound starts off, sits after Undo, announces when toggled, and persists. Create/connect plays a blip, remove a pop, rejections a buzz, turning sound on a tick. Present still disables editing and now restores the previous view and selection on exit.
+- Tests and exact results:
+  - `npm install` at start — up to date, audited 135 packages, 0 vulnerabilities; after Nunito, 136 packages, 0 vulnerabilities
+  - `npm run build` at start — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning)
+  - `npm run test:unit` at start — pass (14 files, 82 tests)
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; bundled Nunito woff2; existing chunk-size warning; client `index-DZV8RZyy.js` 814.55 kB)
+  - `npm run test:unit` — pass (17 files, 90 tests)
+  - `npm run test:e2e` — pass (37 passed, Chromium, 40.8s including webServer)
+- Evidence:
+  - `.docs/evidence/08-shell/before-light-1440.png` — chunky light shell; view radios; Sound off after Undo (1440×900)
+  - `.docs/evidence/08-shell/after-light-1440.png` — After lane, same chrome (1440×900)
+  - `.docs/evidence/08-shell/both-light-1440.png` — stacked Before/After (1440×900)
+  - `.docs/evidence/08-shell/present-light-1440.png` — Present: inspector hidden, score in the top bar, no NodeToolbars (1440×900)
+  - `.docs/evidence/08-shell/sound-on-1440.png` — Sound on announced; reduced-motion emulation (1440×900)
+  - `.docs/evidence/08-shell/hamburger-1440.png` — Present first; Demo chooser at the bottom (1440×900)
+  - `.docs/evidence/08-shell/tile-text-clamp-1440.png` — long Step title/detail wrapped, shrunk, clamped (1440×900)
+  - `.docs/evidence/08-shell/before-dark-1440.png` — dark theme shell (1440×900)
+  - `.docs/evidence/08-shell/after-dark-1440.png` — After in dark (1440×900)
+  - `.docs/evidence/08-shell/both-dark-1440.png` — Both in dark (1440×900)
+  - `.docs/evidence/08-shell/before-light-1024.png` — light shell at 1024×768
+- Earlier-slice defects fixed: Present cleared selection and did not restore view/selection on exit (P-07). Ctrl+Z/Y still mutated the document during Present; both are ignored while presenting. Slice 1 axe exclusion for Mantine SegmentedControl is no longer needed.
+- Known limitations / follow-ups:
+  - `playCue("twoNote")` is implemented for merge/unmerge but unused until the After dock exists — Slice 11
+  - Auto-create a default Robot when After needs one (NA-04) — Slice 11
+  - Merge (`m`) / Unmerge (`u`) catalogued only — Slice 11
+  - `+` stays hidden in After — Slice 11
+  - Connector-stretch restitch animation and Smart Edge routing — Slice 9
+  - Both is still editable; After still mutates the shared base graph — Slice 10
+  - Robot Mailroom merge / After-only Step still not projected — Slices 10–11
+- Status: COMPLETE
+- Commit: `feat(slice-08): add shell typography and sound`
+

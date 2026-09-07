@@ -1,6 +1,6 @@
 /**
  * Load/save the workflow document as JSON (Import menu + localStorage).
- * Theme and keybind keys live here so persist concerns stay in one module.
+ * Theme, keybind, and sound keys live here so persist concerns stay in one module.
  *
  * Persistence status is saved / dirty / unavailable (SH-11). Failed startup
  * payloads stay under LS_WORKFLOW until the user downloads or starts fresh (SH-10).
@@ -44,6 +44,7 @@ export function fromJson(raw: string): WorkflowDoc {
 export const LS_WORKFLOW = "automation-pitch.workflow";
 export const LS_KEYMAP = "automation-pitch.keymap";
 export const LS_THEME = "automation-pitch.theme";
+export const LS_SOUND = "automation-pitch.sound";
 export const SAVE_COPY_FILENAME = "automation-pitch.json";
 export const RECOVERY_COPY_FILENAME = "automation-pitch.recovery.json";
 
@@ -155,6 +156,23 @@ export function saveTheme(scheme: ColorScheme) {
     localStorage.setItem(LS_THEME, scheme);
   } catch {
     /* theme is session-only if storage is denied */
+  }
+}
+
+/** Sound is off unless the saved value is exactly `on` (SH-03). */
+export function loadSound(): boolean {
+  try {
+    return localStorage.getItem(LS_SOUND) === "on";
+  } catch {
+    return false;
+  }
+}
+
+export function saveSound(on: boolean) {
+  try {
+    localStorage.setItem(LS_SOUND, on ? "on" : "off");
+  } catch {
+    /* preference is session-only if storage is denied */
   }
 }
 

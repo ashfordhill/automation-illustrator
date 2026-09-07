@@ -15,6 +15,7 @@ function resetSession() {
   s.clearImportError();
   s.closeBoardModes();
   s.setColorScheme(ColorScheme.Light);
+  s.setSoundEnabled(false);
   if (s.recovery) s.clearRecoveryHold();
 }
 

@@ -4,6 +4,7 @@
  */
 import { FIELD_H, FIELD_W } from "../layout/tileMetrics";
 import { DataChip } from "./DataChip";
+import { FitLabel } from "./FitLabel";
 
 export function DataTile({
   label,
@@ -14,6 +15,7 @@ export function DataTile({
   selected?: boolean;
   lifted?: boolean;
 }) {
+  const text = label.trim() || "Data";
   return (
     <div
       className={`board-node field-piece${selected ? " selected" : ""}`}
@@ -33,11 +35,14 @@ export function DataTile({
         outlineOffset: 4,
         transform: lifted ? "translateY(-3px)" : undefined,
         transition: "transform 140ms ease",
+        overflow: "hidden",
+        padding: "8px 10px",
+        boxSizing: "border-box",
       }}
     >
       <DataChip />
-      <div style={{ fontWeight: 800, fontSize: 14, textAlign: "center", lineHeight: 1.15 }}>
-        {label || "Data"}
+      <div className="data-label">
+        <FitLabel text={text} maxFontSizePx={14} mode="box" maxLines={3} />
       </div>
     </div>
   );

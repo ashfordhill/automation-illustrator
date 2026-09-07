@@ -1,17 +1,10 @@
 /**
- * Top bar: Undo, Not saved, Before/After/Both, hamburger.
- * Present keeps the automation score here because the right rail is hidden.
- * Pointer/Hand were removed (P-08); sound toggle arrives in Slice 8.
+ * Top bar: Undo, sound, Not saved, Before/After/Both, hamburger.
+ * Present keeps the automation score here because the right rail is hidden (P-07).
+ * Pointer/Hand were removed (P-08); sound toggle sits after Undo (SH-03).
  */
 import { useRef } from "react";
-import {
-  ActionIcon,
-  Group,
-  Menu,
-  SegmentedControl,
-  Text,
-  Tooltip,
-} from "@mantine/core";
+import { ActionIcon, Group, Menu, Text, Tooltip } from "@mantine/core";
 import {
   IconArrowBackUp,
   IconFileImport,
@@ -24,15 +17,41 @@ import {
 import { DEMO_CHOICES } from "../../demos/catalog";
 import { prettyKey, KeyAction } from "../../keyboard/bindings";
 import { useStore } from "../../state/store";
-import {
-  ColorScheme,
-  ViewMode,
-} from "../../workflow/catalogs";
+import { ColorScheme, ViewMode } from "../../workflow/catalogs";
 import { automationScore } from "../../workflow/scoring";
 import { PersistStatusChip } from "./PersistStatusChip";
+import { SoundToggle } from "./SoundToggle";
+
+const VIEW_OPTIONS: Array<{ value: (typeof ViewMode)[keyof typeof ViewMode]; label: string }> = [
+  { value: ViewMode.Before, label: "Before" },
+  { value: ViewMode.After, label: "After" },
+  { value: ViewMode.Both, label: "Both" },
+];
+
+function ViewSwitch() {
+  const view = useStore((s) => s.view);
+  return (
+    <div className="view-switch" role="radiogroup" aria-label="Before, After, or Both">
+      {VIEW_OPTIONS.map((opt) => {
+        const on = view === opt.value;
+        return (
+          <button
+            key={opt.value}
+            type="button"
+            role="radio"
+            aria-checked={on}
+            className={`view-switch-btn${on ? " is-on" : ""}`}
+            onClick={() => useStore.getState().setView(opt.value)}
+          >
+            {opt.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 export function Toolbar() {
-  const view = useStore((s) => s.view);
   const present = useStore((s) => s.present);
   const workflow = useStore((s) => s.workflow);
   const keymap = useStore((s) => s.keymap);
@@ -49,7 +68,7 @@ export function Toolbar() {
         h={56}
         className="chrome-bar"
         style={{
-          borderBottom: "2px solid var(--chrome-line)",
+          borderBottom: "3px solid var(--chrome-line)",
         }}
       >
         <Group gap="xs" wrap="nowrap">
@@ -65,23 +84,14 @@ export function Toolbar() {
               </ActionIcon>
             </Tooltip>
           </Group>
+          <SoundToggle />
           <PersistStatusChip />
         </Group>
 
         <Group gap="sm" wrap="nowrap" style={{ minWidth: 0, flex: 1, justifyContent: "center" }}>
-          <SegmentedControl
-            size="xs"
-            color="cyan"
-            value={view}
-            onChange={(v) => useStore.getState().setView(v as typeof view)}
-            data={[
-              { value: ViewMode.Before, label: "Before" },
-              { value: ViewMode.After, label: "After" },
-              { value: ViewMode.Both, label: "Both" },
-            ]}
-          />
+          <ViewSwitch />
           {present ? (
-            <Text size="sm" fw={700} lineClamp={2} style={{ maxWidth: 380 }}>
+            <Text className="present-score" size="sm" fw={800} lineClamp={2} style={{ maxWidth: 380 }}>
               {automationScore(workflow)}
             </Text>
           ) : null}

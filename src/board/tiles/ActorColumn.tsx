@@ -1,7 +1,7 @@
 /**
  * Left column of a Step tile: figure + name + role/type chip.
  * Used by StepTile; figures live beside this file. Fill is the actor’s pastel.
- * Name and role use FitLabel (auto-text-size) so long copy cannot grow the tile.
+ * Name and role use FitLabel so long copy wraps, shrinks, then ellipsizes (NA-10).
  */
 import { HumanFigure } from "./HumanFigure";
 import { RobotFigure } from "./RobotFigure";
@@ -23,29 +23,37 @@ const ROLE_H = 48;
 function Chip({
   text,
   maxFontSizePx,
-  minFontSizePx = 8,
+  minFontSizePx = 11,
   topRule,
   mode,
+  maxLines,
 }: {
   text: string;
   maxFontSizePx: number;
   minFontSizePx?: number;
   topRule?: boolean;
   mode?: "box" | "multiline";
+  maxLines?: number;
 }) {
   return (
     <div
+      className="actor-chip"
       style={{
         background: "var(--cream)",
         borderTop: topRule ? `2.5px solid var(--line)` : undefined,
         height: topRule ? NAME_H : ROLE_H,
         width: "100%",
         boxSizing: "border-box",
-        overflow: "hidden",
         padding: "4px 6px",
       }}
     >
-      <FitLabel text={text} maxFontSizePx={maxFontSizePx} minFontSizePx={minFontSizePx} mode={mode} />
+      <FitLabel
+        text={text}
+        maxFontSizePx={maxFontSizePx}
+        minFontSizePx={minFontSizePx}
+        mode={mode}
+        maxLines={maxLines}
+      />
     </div>
   );
 }
@@ -82,8 +90,15 @@ export function ActorColumn({ actor }: { actor: ActorDto | undefined }) {
         )}
       </div>
       <div style={{ flex: "0 0 auto" }}>
-        <Chip text={actor?.name ?? "—"} maxFontSizePx={13} minFontSizePx={11} topRule mode="multiline" />
-        {role ? <Chip text={role} maxFontSizePx={12} mode="box" /> : null}
+        <Chip
+          text={actor?.name ?? "—"}
+          maxFontSizePx={13}
+          minFontSizePx={11}
+          topRule
+          mode="multiline"
+          maxLines={2}
+        />
+        {role ? <Chip text={role} maxFontSizePx={12} mode="box" maxLines={3} /> : null}
       </div>
     </div>
   );

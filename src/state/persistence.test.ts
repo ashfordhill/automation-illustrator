@@ -3,8 +3,11 @@ import {
   downloadTextFile,
   downloadWorkflowCopy,
   hydratePersistedWorkflow,
+  loadSound,
+  LS_SOUND,
   LS_WORKFLOW,
   SAVE_COPY_FILENAME,
+  saveSound,
   writeWorkflow,
   type StorageLike,
 } from "./persistence";
@@ -180,4 +183,16 @@ test("downloadWorkflowCopy writes a JSON attachment", () => {
   expect(revoke).toHaveBeenCalled();
   downloadTextFile(SAVE_COPY_FILENAME, "{}");
   expect(click).toHaveBeenCalledTimes(2);
+});
+
+test("sound preference defaults off and only 'on' enables it (SH-03)", () => {
+  localStorage.clear();
+  expect(loadSound()).toBe(false);
+  saveSound(true);
+  expect(localStorage.getItem(LS_SOUND)).toBe("on");
+  expect(loadSound()).toBe(true);
+  saveSound(false);
+  expect(loadSound()).toBe(false);
+  localStorage.setItem(LS_SOUND, "yes");
+  expect(loadSound()).toBe(false);
 });

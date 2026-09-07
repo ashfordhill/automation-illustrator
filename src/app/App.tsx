@@ -21,8 +21,8 @@ import { TransientNotice } from "./components/TransientNotice";
 import { DetailsPanel } from "./inspector/SelectedItemForm";
 
 const theme = createTheme({
-  fontFamily: "Nunito, system-ui, sans-serif",
-  headings: { fontFamily: "Nunito, system-ui, sans-serif" },
+  fontFamily: '"Nunito Variable", Nunito, system-ui, sans-serif',
+  headings: { fontFamily: '"Nunito Variable", Nunito, system-ui, sans-serif' },
   defaultRadius: "md",
   primaryColor: "cyan",
   cursorType: "pointer",
@@ -39,12 +39,13 @@ function LaneLabel({ text }: { text: string }) {
         zIndex: 5,
         fontWeight: 800,
         fontSize: 13,
-        letterSpacing: 0.4,
+        letterSpacing: 0.6,
         background: "var(--cream)",
         color: "var(--ink)",
-        border: "1.5px solid var(--line)",
+        border: "3px solid var(--line)",
         borderRadius: 999,
-        padding: "2px 10px",
+        padding: "3px 12px",
+        boxShadow: "var(--chip-shadow)",
       }}
     >
       {text}
@@ -63,7 +64,7 @@ function CanvasArea() {
             flex: 1,
             minHeight: 0,
             position: "relative",
-            borderBottom: "2px solid var(--chrome-line)",
+            borderBottom: "3px solid var(--chrome-line)",
           }}
         >
           <LaneLabel text="BEFORE" />
@@ -128,7 +129,7 @@ export default function App() {
           <AppShell.Aside
             p={0}
             className="chrome-bar"
-            style={{ borderLeft: "2px solid var(--chrome-line)" }}
+            style={{ borderLeft: "3px solid var(--chrome-line)" }}
           >
             <div className="details-rail">
               <div className="details-rail-body">
