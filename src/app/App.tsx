@@ -125,6 +125,8 @@ export default function App() {
             overflow: "hidden",
             display: "flex",
             flexDirection: "column",
+            height: "calc(100dvh - 56px)",
+            minHeight: 0,
           },
         }}
       >

@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
-import { waitForRouting } from "./ready";
+import { waitForLayout } from "./ready";
 
 const DEMO_STEP = "Read invoice.pdf";
 const EVIDENCE = ".docs/evidence/07-inspector";
@@ -8,7 +8,7 @@ const EVIDENCE = ".docs/evidence/07-inspector";
 async function loadDemo(page: Page) {
   await page.goto("/");
   await expect(page.getByText(DEMO_STEP).first()).toBeVisible({ timeout: 15_000 });
-  await waitForRouting(page);
+  await waitForLayout(page);
 }
 
 function viewLabel(page: Page, name: "Before" | "After" | "Both") {
@@ -72,7 +72,7 @@ test.describe("slice 7 inspector and actors", () => {
     );
   });
 
-  test("Path / condition, stroke, and Split One of / Every", async ({ page }) => {
+  test("Path / condition, stroke, and Path 1 Path vs All Paths", async ({ page }) => {
     await loadDemo(page);
     await page.getByText("invoice > $50,000").first().click();
     await expect(aside(page).getByText("Path / condition", { exact: true })).toBeVisible();
@@ -93,12 +93,12 @@ test.describe("slice 7 inspector and actors", () => {
     await expect(page.locator("#path-condition-field")).toBeFocused();
 
     await page.getByText(DEMO_STEP).first().click();
-    const split = aside(page).getByRole("group", { name: "Split: One of / Every" });
-    await expect(split.getByRole("button", { name: "One of" })).toHaveAttribute(
+    const split = aside(page).getByRole("group", { name: "Path: 1 Path vs All Paths" });
+    await expect(split.getByRole("button", { name: "1 Path" })).toHaveAttribute(
       "aria-pressed",
       "true",
     );
-    await split.getByRole("button", { name: "Every" }).click();
+    await split.getByRole("button", { name: "All Paths" }).click();
     await page.getByText("invoice > $50,000").first().click();
     await expect(stroke.getByRole("button", { name: "Always visited (solid)" })).toHaveAttribute(
       "aria-pressed",
@@ -110,7 +110,7 @@ test.describe("slice 7 inspector and actors", () => {
     });
 
     await page.getByText(DEMO_STEP).first().click();
-    await aside(page).getByRole("group", { name: "Split: One of / Every" }).getByRole("button", { name: "One of" }).click();
+    await aside(page).getByRole("group", { name: "Path: 1 Path vs All Paths" }).getByRole("button", { name: "1 Path" }).click();
     await page.getByText("invoice > $50,000").first().click();
     await expect(stroke.getByRole("button", { name: "Choice (dotted)" })).toHaveAttribute(
       "aria-pressed",

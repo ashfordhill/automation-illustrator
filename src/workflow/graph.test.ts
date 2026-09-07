@@ -34,6 +34,21 @@ test("outgoingSorted orders by target y then x", () => {
   expect(outgoingSorted(nodes, edges, "a").map((e) => e.id)).toEqual(["e1", "e2"]);
 });
 
+test("a PositionMap reorders siblings and the WG-09 default follows it", () => {
+  const nodes = [step("a", 0), step("b", 40), step("c", 10)];
+  const edges: EdgeDto[] = [
+    { id: "e2", source: "a", target: "b", label: "" },
+    { id: "e1", source: "a", target: "c", label: "" },
+  ];
+  const displayed = { a: { x: 0, y: 0 }, b: { x: 300, y: 0 }, c: { x: 300, y: 200 } };
+  expect(outgoingSorted(nodes, edges, "a", displayed).map((e) => e.id)).toEqual(["e2", "e1"]);
+  expect(removalCandidateIds(nodes, edges, "a", displayed)).toEqual(["b", "c"]);
+  expect(defaultRemovalCandidateId(nodes, edges, "a")).toBe("c");
+  expect(defaultRemovalCandidateId(nodes, edges, "a", displayed)).toBe("b");
+  /* Ids missing from the map fall back to saved positions. */
+  expect(outgoingSorted(nodes, edges, "a", { b: { x: 0, y: 5 } }).map((e) => e.id)).toEqual(["e2", "e1"]);
+});
+
 test("PC-02: One of makes every outgoing Path dotted; a single outgoing is solid", () => {
   const nodes = [step("a", 0), step("b", 0), step("c", 40)];
   const one: EdgeDto[] = [{ id: "e1", source: "a", target: "b", label: "" }];

@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { expectAxeClean } from "./axe";
-import { DEMO_STEP, loadOakPark, screenshotBoard, waitForRouting } from "./ready";
+import { DEMO_STEP, loadOakPark, screenshotBoard, waitForLayout } from "./ready";
 
 const EVIDENCE = ".docs/evidence/12-release";
 const MAIL_STEP = "Read incoming mail";
@@ -20,7 +20,7 @@ async function loadMailroom(page: Page) {
   await page.getByRole("menuitem", { name: "Robot Mailroom" }).click();
   await page.getByRole("button", { name: "Discard" }).click();
   await expect(page.getByText(MAIL_STEP).first()).toBeVisible({ timeout: 15_000 });
-  await waitForRouting(page);
+  await waitForLayout(page);
 }
 
 const V1_SEED = {
@@ -101,7 +101,7 @@ test.describe("slice 12 persistence, keymap, and reload", () => {
     await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
     await page.reload();
     await expect(page.getByText(DEMO_STEP).first()).toBeVisible({ timeout: 15_000 });
-    await waitForRouting(page);
+    await waitForLayout(page);
     await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
     await expect(page.getByRole("button", { name: "Sound on" })).toBeVisible();
   });
@@ -129,15 +129,15 @@ test.describe("slice 12 persistence, keymap, and reload", () => {
     await expect(page.getByRole("button", { name: "Menu" })).toBeFocused();
   });
 
-  test("edited Target survives reload", async ({ page }) => {
+  test("edited Name survives reload", async ({ page }) => {
     await loadOakPark(page);
     await page.getByText(DEMO_STEP).first().click();
-    const target = page.locator("aside").getByLabel("Target");
+    const target = page.locator("aside").getByLabel("Name");
     await target.fill("invoice-reload.pdf");
     await target.blur();
     await page.reload();
     await expect(page.getByText("Read invoice-reload.pdf").first()).toBeVisible({ timeout: 15_000 });
-    await waitForRouting(page);
+    await waitForLayout(page);
   });
 
   test("quota-exceeded storage shows one Not saved chip (SH-11)", async ({ page }) => {
@@ -161,7 +161,7 @@ test.describe("slice 12 persistence, keymap, and reload", () => {
     }, V1_SEED);
     await page.goto("/");
     await expect(page.getByText(DEMO_STEP).first()).toBeVisible({ timeout: 15_000 });
-    await waitForRouting(page);
+    await waitForLayout(page);
     const stored = await page.evaluate(() => localStorage.getItem("automation-pitch.workflow"));
     expect(stored).toBeTruthy();
     expect(JSON.parse(stored!).version).toBe(2);
@@ -175,11 +175,11 @@ test.describe("slice 12 surfaces, dialogs, and final screenshots", () => {
     await screenshotBoard(page, `${EVIDENCE}/before-light-1440.png`);
 
     await viewRadio(page, "After").click();
-    await waitForRouting(page);
+    await waitForLayout(page);
     await screenshotBoard(page, `${EVIDENCE}/after-light-1440.png`);
 
     await viewRadio(page, "Both").click();
-    await waitForRouting(page);
+    await waitForLayout(page);
     await expect(page.getByRole("button", { name: /Add / })).toHaveCount(0);
     await expect(page.getByRole("region", { name: "Merge and Unmerge" })).toHaveCount(0);
     await screenshotBoard(page, `${EVIDENCE}/both-light-1440.png`);
@@ -207,13 +207,13 @@ test.describe("slice 12 surfaces, dialogs, and final screenshots", () => {
 
     await openMenu(page);
     await page.getByRole("menuitem", { name: "Dark mode" }).click();
-    await waitForRouting(page);
+    await waitForLayout(page);
     await screenshotBoard(page, `${EVIDENCE}/before-dark-1440.png`);
     await viewRadio(page, "After").click();
-    await waitForRouting(page);
+    await waitForLayout(page);
     await screenshotBoard(page, `${EVIDENCE}/after-dark-1440.png`);
     await viewRadio(page, "Both").click();
-    await waitForRouting(page);
+    await waitForLayout(page);
     await screenshotBoard(page, `${EVIDENCE}/both-dark-1440.png`);
   });
 
@@ -247,13 +247,13 @@ test.describe("slice 12 surfaces, dialogs, and final screenshots", () => {
   test("Mailroom After merge dock in both themes", async ({ page }) => {
     await loadMailroom(page);
     await viewRadio(page, "After").click();
-    await waitForRouting(page);
+    await waitForLayout(page);
     await expect(page.getByRole("region", { name: "Merge and Unmerge" })).toBeVisible();
     await expect(page.getByText(RECEIPT).first()).toBeVisible();
     await screenshotBoard(page, `${EVIDENCE}/mailroom-after-1440.png`);
     await openMenu(page);
     await page.getByRole("menuitem", { name: "Dark mode" }).click();
-    await waitForRouting(page);
+    await waitForLayout(page);
     await screenshotBoard(page, `${EVIDENCE}/mailroom-after-dark-1440.png`);
   });
 
@@ -284,12 +284,12 @@ test.describe("slice 12 accessibility and reduced motion", () => {
     await expectAxeClean(page);
 
     await viewRadio(page, "Both").click();
-    await waitForRouting(page);
+    await waitForLayout(page);
     await expectAxeClean(page);
 
     await loadMailroom(page);
     await viewRadio(page, "After").click();
-    await waitForRouting(page);
+    await waitForLayout(page);
     await expectAxeClean(page);
   });
 
@@ -304,7 +304,7 @@ test.describe("slice 12 accessibility and reduced motion", () => {
     await dialog.getByRole("button", { name: "Confirm" }).click();
     await expect(page.getByText("Write BS&A Software")).toHaveCount(0);
     await expect(page.getByText("Review BS&A Software").first()).toBeVisible();
-    await waitForRouting(page);
+    await waitForLayout(page);
     await screenshotBoard(page, `${EVIDENCE}/reduced-motion-restitch-1440.png`);
   });
 });

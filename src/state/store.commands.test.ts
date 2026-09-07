@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, expect, test } from "vitest";
-import { ColorScheme, SelectionKind, ViewMode, WorkflowNodeKind } from "../workflow/catalogs";
+import { AssignmentLane, ColorScheme, SelectionKind, ViewMode, WorkflowNodeKind } from "../workflow/catalogs";
 import { MSG } from "../workflow/commands";
 import { defaultRemovalCandidateId, validateWorkflow } from "../workflow/graph";
 import { emptyAfterOverlay, type WorkflowDoc } from "../workflow/types";
@@ -220,6 +220,38 @@ test("addStep on a nonempty board does not create a second root", () => {
   expect(useStore.getState().workflow.nodes).toHaveLength(count);
   expect(useStore.getState().notice).toBe(MSG.notEmpty);
   expect(validateWorkflow(useStore.getState().workflow)).toEqual([]);
+});
+
+test("beginRemovePick defaults to the displayed-topmost child (derived layout, WG-09)", () => {
+  const s = useStore.getState();
+  const doc = s.workflow;
+  const root = rootId(doc);
+  const children = doc.edges.filter((e) => e.source === root).map((e) => e.target);
+  expect(children.length).toBeGreaterThanOrEqual(2);
+  const [first, second] = children as [string, string];
+
+  s.setLaneLayoutPositions(AssignmentLane.Before, {
+    [first]: { x: 400, y: 400 },
+    [second]: { x: 400, y: 0 },
+  });
+  expect(useStore.getState().activePositions()).toBeDefined();
+  s.beginRemovePick(root);
+  const pick = useStore.getState().interaction;
+  expect(pick.kind).toBe("remove-pick");
+  if (pick.kind === "remove-pick") expect(pick.candidateId).toBe(second);
+  s.closeBoardModes();
+
+  /* Flip the displayed order and the default flips with it; saved positions never change. */
+  const before = useStore.getState().workflow;
+  s.setLaneLayoutPositions(AssignmentLane.Before, {
+    [first]: { x: 400, y: 0 },
+    [second]: { x: 400, y: 400 },
+  });
+  s.beginRemovePick(root);
+  const again = useStore.getState().interaction;
+  if (again.kind === "remove-pick") expect(again.candidateId).toBe(first);
+  expect(useStore.getState().workflow).toBe(before);
+  s.closeBoardModes();
 });
 
 test("root-only board explains WG-06; leaf picker defaults to itself (WG-09)", () => {

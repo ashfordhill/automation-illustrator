@@ -79,14 +79,14 @@ export function ActorColumn({ actor }: { actor: ActorDto | undefined }) {
         justifyContent: "space-between",
         padding: "10px 0 0",
         boxSizing: "border-box",
-        overflow: "hidden",
+        overflow: "visible",
       }}
     >
-      <div style={{ display: "flex", justifyContent: "center", flex: "0 0 auto" }}>
+      <div style={{ display: "flex", justifyContent: "center", flex: "0 0 auto", overflow: "visible" }}>
         {human ? (
-          <HumanFigure size={52} color={FIGURE_INK_ON_PASTEL} />
+          <HumanFigure size={42} color={FIGURE_INK_ON_PASTEL} />
         ) : (
-          <RobotFigure size={52} color={FIGURE_INK_ON_PASTEL} />
+          <RobotFigure size={42} color={FIGURE_INK_ON_PASTEL} />
         )}
       </div>
       <div style={{ flex: "0 0 auto" }}>

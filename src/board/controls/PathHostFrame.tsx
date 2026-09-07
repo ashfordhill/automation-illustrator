@@ -2,7 +2,7 @@
  * Wrapper around a React Flow node: NodeToolbar for +/−,
  * click selects or completes Connect existing / picks a removal candidate.
  */
-import { useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { NodeToolbar, Position } from "@xyflow/react";
 import { SelectionKind, ViewMode } from "../../workflow/catalogs";
 import { useStore } from "../../state/store";
@@ -19,7 +19,6 @@ export function PathHostFrame({
   departing?: boolean;
   children: ReactNode;
 }) {
-  const [hover, setHover] = useState(false);
   const present = useStore((s) => s.present);
   const view = useStore((s) => s.view);
   const interaction = useStore((s) => s.interaction);
@@ -30,14 +29,12 @@ export function PathHostFrame({
     interaction.kind !== "remove-pick" &&
     interaction.kind !== "remove-preview" &&
     interaction.kind !== "merge-pick" &&
-    (selected || hover || (interaction.kind === "add-menu" && interaction.sourceId === id));
+    (selected || (interaction.kind === "add-menu" && interaction.sourceId === id));
   return (
     <div
       className={`nopan${departing ? " node-squash-inner" : ""}`}
       style={{ position: "relative", width: "100%", height: "100%" }}
       aria-hidden={departing || undefined}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
       onClick={(e) => {
         const s = useStore.getState();
         if (s.present || departing) return;

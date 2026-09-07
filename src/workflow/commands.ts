@@ -10,6 +10,7 @@ import {
   isConvex,
   maybeExclusiveSplit,
   outgoingSorted,
+  positionOf,
   rootNodeId,
   validateWorkflow,
   wouldCreateCycle,
@@ -23,6 +24,7 @@ import {
   type EdgeDto,
   type MergeGroupDto,
   type NodeDto,
+  type PositionMap,
   type StepNodeDto,
   type WorkflowDoc,
 } from "./types";
@@ -132,10 +134,6 @@ function compareVisual(
   return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
 }
 
-function nodeById(nodes: NodeDto[], id: string) {
-  return nodes.find((n) => n.id === id);
-}
-
 /** WG-12: trimmed nonempty conditions, traversal order, joined with ` + `. */
 export function joinConditions(...labels: string[]): string {
   return labels
@@ -187,6 +185,7 @@ export function pruneAfterOverlay(
   remainingNodes: NodeDto[],
   remainingEdges: EdgeDto[],
   original?: { nodes: NodeDto[]; edges: EdgeDto[] },
+  positions?: PositionMap,
 ): OverlayEffects {
   const notices: string[] = [];
   const extraIds = new Set(after.extraNodes.map((n) => n.id));
@@ -197,13 +196,13 @@ export function pruneAfterOverlay(
   if (original) {
     const afterNodes = [...original.nodes, ...after.extraNodes];
     const afterEdges = [...original.edges, ...after.extraEdges];
-    const incoming = incomingSorted(afterNodes, afterEdges, removedNodeId);
-    const outgoing = outgoingSorted(afterNodes, afterEdges, removedNodeId);
+    const incoming = incomingSorted(afterNodes, afterEdges, removedNodeId, positions);
+    const outgoing = outgoingSorted(afterNodes, afterEdges, removedNodeId, positions);
     const predCount = uniqueIds(incoming, "source").length;
     const succCount = uniqueIds(outgoing, "target").length;
     const pairings =
       predCount >= 2 && succCount >= 2
-        ? nearestPairings(afterNodes, afterEdges, incoming, outgoing)
+        ? nearestPairings(afterNodes, afterEdges, incoming, outgoing, positions)
         : fanPairings(afterNodes, afterEdges, incoming, outgoing);
     const extraPairings = pairings.filter(
       (p) => extraIds.has(p.predecessorId) || extraIds.has(p.successorId),
@@ -258,9 +257,9 @@ function collapsedPairing(
 }
 
 /** Incident Paths and unique neighbor ids for a Node (WG-10 / WG-11). */
-export function removalNeighborhood(doc: WorkflowDoc, nodeId: string) {
-  const incoming = incomingSorted(doc.nodes, doc.edges, nodeId);
-  const outgoing = outgoingSorted(doc.nodes, doc.edges, nodeId);
+export function removalNeighborhood(doc: WorkflowDoc, nodeId: string, positions?: PositionMap) {
+  const incoming = incomingSorted(doc.nodes, doc.edges, nodeId, positions);
+  const outgoing = outgoingSorted(doc.nodes, doc.edges, nodeId, positions);
   return {
     incoming,
     outgoing,
@@ -275,32 +274,35 @@ export function pairingBetween(
   removedId: string,
   predecessorId: string,
   successorId: string,
+  positions?: PositionMap,
 ): RemovalPairing | null {
-  const incoming = incomingSorted(doc.nodes, doc.edges, removedId).find(
+  const incoming = incomingSorted(doc.nodes, doc.edges, removedId, positions).find(
     (e) => e.source === predecessorId,
   );
-  const outgoing = outgoingSorted(doc.nodes, doc.edges, removedId).find(
+  const outgoing = outgoingSorted(doc.nodes, doc.edges, removedId, positions).find(
     (e) => e.target === successorId,
   );
   if (!incoming || !outgoing) return null;
   return collapsedPairing(doc.nodes, doc.edges, incoming, outgoing);
 }
 
+/** WG-11 nearest predecessor per successor, by displayed position when a map is given. */
 export function nearestPairings(
   nodes: NodeDto[],
   edges: EdgeDto[],
   incoming: EdgeDto[],
   outgoing: EdgeDto[],
+  positions?: PositionMap,
 ): RemovalPairing[] {
   const pairings: RemovalPairing[] = [];
   for (const out of outgoing) {
-    const succ = nodeById(nodes, out.target);
+    const succ = positionOf(nodes, out.target, positions);
     let best: EdgeDto | undefined;
     let bestKey: { dy: number; dx: number; id: string } | undefined;
     for (const inn of incoming) {
-      const pred = nodeById(nodes, inn.source);
-      const dy = Math.abs((pred?.position.y ?? 0) - (succ?.position.y ?? 0));
-      const dx = Math.abs((pred?.position.x ?? 0) - (succ?.position.x ?? 0));
+      const pred = positionOf(nodes, inn.source, positions);
+      const dy = Math.abs((pred?.y ?? 0) - (succ?.y ?? 0));
+      const dx = Math.abs((pred?.x ?? 0) - (succ?.x ?? 0));
       const key = { dy, dx, id: inn.source };
       if (!bestKey || compareVisual(key, bestKey) < 0) {
         best = inn;
@@ -488,6 +490,7 @@ function planFromNeighborhood(
   outgoing: EdgeDto[],
   pairings: RemovalPairing[],
   mode: RemovalPlan["mode"],
+  positions?: PositionMap,
 ): CommandResult<RemovalPlan> {
   if (outgoing.length) {
     const checked = validatePairings(
@@ -509,6 +512,7 @@ function planFromNeighborhood(
     remainingNodes,
     remainingEdges,
     { nodes: doc.nodes, edges: doc.edges },
+    positions,
   );
   return ok({
     nodeId,
@@ -520,7 +524,11 @@ function planFromNeighborhood(
 }
 
 /** WG-10 / WG-11: auto fan for 1:1, 1:N, N:1; preview nearest pairings for M:N. */
-export function planNodeRemoval(doc: WorkflowDoc, nodeId: string): CommandResult<RemovalPlan> {
+export function planNodeRemoval(
+  doc: WorkflowDoc,
+  nodeId: string,
+  positions?: PositionMap,
+): CommandResult<RemovalPlan> {
   const valid = requireValid(doc);
   if (!valid.ok) return valid;
   if (!doc.nodes.some((n) => n.id === nodeId)) {
@@ -530,8 +538,8 @@ export function planNodeRemoval(doc: WorkflowDoc, nodeId: string): CommandResult
   if (root === nodeId) {
     return fail("root-removal", MSG.rootRemoval);
   }
-  const incoming = incomingSorted(doc.nodes, doc.edges, nodeId);
-  const outgoing = outgoingSorted(doc.nodes, doc.edges, nodeId);
+  const incoming = incomingSorted(doc.nodes, doc.edges, nodeId, positions);
+  const outgoing = outgoingSorted(doc.nodes, doc.edges, nodeId, positions);
   const predCount = uniqueIds(incoming, "source").length;
   const succCount = uniqueIds(outgoing, "target").length;
   if (predCount >= 2 && succCount >= 2) {
@@ -540,8 +548,9 @@ export function planNodeRemoval(doc: WorkflowDoc, nodeId: string): CommandResult
       nodeId,
       incoming,
       outgoing,
-      nearestPairings(doc.nodes, doc.edges, incoming, outgoing),
+      nearestPairings(doc.nodes, doc.edges, incoming, outgoing, positions),
       "preview",
+      positions,
     );
   }
   return planFromNeighborhood(
@@ -551,6 +560,7 @@ export function planNodeRemoval(doc: WorkflowDoc, nodeId: string): CommandResult
     outgoing,
     fanPairings(doc.nodes, doc.edges, incoming, outgoing),
     "auto",
+    positions,
   );
 }
 
@@ -598,6 +608,7 @@ export function applyNodeRemoval(
   doc: WorkflowDoc,
   plan: RemovalPlan,
   pairings: RemovalPairing[] = plan.pairings,
+  positions?: PositionMap,
 ): CommandResult<WorkflowDoc> {
   const valid = requireValid(doc);
   if (!valid.ok) return valid;
@@ -608,8 +619,8 @@ export function applyNodeRemoval(
   if (root === plan.nodeId) {
     return fail("root-removal", MSG.rootRemoval);
   }
-  const incoming = incomingSorted(doc.nodes, doc.edges, plan.nodeId);
-  const outgoing = outgoingSorted(doc.nodes, doc.edges, plan.nodeId);
+  const incoming = incomingSorted(doc.nodes, doc.edges, plan.nodeId, positions);
+  const outgoing = outgoingSorted(doc.nodes, doc.edges, plan.nodeId, positions);
   if (outgoing.length) {
     const checked = validatePairings(
       pairings,
@@ -632,6 +643,7 @@ export function applyNodeRemoval(
     remainingNodes,
     remainingEdges,
     { nodes: doc.nodes, edges: doc.edges },
+    positions,
   );
   return succeed({
     ...doc,

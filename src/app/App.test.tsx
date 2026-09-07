@@ -89,16 +89,12 @@ test("inspector Type buttons are alphabetical with Other last; Who offers every 
   );
   expect(types.at(-1)).toBe("Type Other");
   expect(types.slice(0, -1)).toEqual([
-    "Type Approve",
     "Type Call",
     "Type Copy",
-    "Type Drag",
     "Type Email",
-    "Type File",
     "Type Print",
     "Type Read",
     "Type Review",
-    "Type Scan",
     "Type Search",
     "Type Write",
   ]);

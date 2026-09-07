@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { waitForRouting } from "./ready";
+import { waitForLayout } from "./ready";
 
 const DEMO_STEP = "Read invoice.pdf";
 const EVIDENCE = ".docs/evidence/06-canvas";
@@ -30,7 +30,7 @@ const MN_DOC = {
 async function loadDemo(page: Page) {
   await page.goto("/");
   await expect(page.getByText(DEMO_STEP).first()).toBeVisible({ timeout: 15_000 });
-  await waitForRouting(page);
+  await waitForLayout(page);
 }
 
 function viewLabel(page: Page, name: "Before" | "After" | "Both") {
@@ -53,6 +53,9 @@ test.describe("slice 6 canvas create / connect / remove", () => {
     await expect(page.getByRole("button", { name: /^Pointer/ })).toHaveCount(0);
     await expect(page.getByRole("button", { name: /^Hand/ })).toHaveCount(0);
 
+    await expect(page.getByRole("button", { name: "Add Step, Data, or Connect existing" })).toHaveCount(0);
+    await page.getByText(DEMO_STEP).first().hover();
+    await expect(page.getByRole("button", { name: "Add Step, Data, or Connect existing" })).toHaveCount(0);
     await page.getByText(DEMO_STEP).first().click();
     await expect(page.getByRole("button", { name: "Add Step, Data, or Connect existing" })).toBeVisible();
     await page.screenshot({

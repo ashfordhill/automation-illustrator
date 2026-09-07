@@ -1,5 +1,5 @@
 /**
- * Contextual hint strip at the top of the board (P-06).
+ * Quiet Excalidraw-style hint strip at the bottom of the board (P-06).
  * Idle has no chips. Hints appear only for a selection or an active task.
  * Rejections use TransientNotice instead of this strip.
  */

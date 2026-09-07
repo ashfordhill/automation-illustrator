@@ -10,6 +10,8 @@ import {
   type EdgeDto,
   type MergeGroupDto,
   type NodeDto,
+  type Point,
+  type PositionMap,
   type StepNodeDto,
   type WorkflowDoc,
   type WorkflowDocV1,
@@ -39,18 +41,28 @@ function nodeOf(nodes: NodeDto[], id: string) {
   return nodes.find((n) => n.id === id);
 }
 
-/** Outgoing Paths of a tile, top-to-bottom (then left-to-right). */
-export function outgoingSorted(nodes: NodeDto[], edges: EdgeDto[], sourceId: string) {
+/** Displayed position when a layout map has one, else the saved hint. */
+export function positionOf(nodes: NodeDto[], id: string, positions?: PositionMap): Point | undefined {
+  return positions?.[id] ?? nodeOf(nodes, id)?.position;
+}
+
+/** Outgoing Paths of a tile, top-to-bottom (then left-to-right) by displayed position. */
+export function outgoingSorted(
+  nodes: NodeDto[],
+  edges: EdgeDto[],
+  sourceId: string,
+  positions?: PositionMap,
+) {
   return edges
     .filter((e) => e.source === sourceId)
     .slice()
     .sort((a, b) => {
-      const na = nodeOf(nodes, a.target);
-      const nb = nodeOf(nodes, b.target);
-      const ya = na?.position.y ?? 0;
-      const yb = nb?.position.y ?? 0;
+      const pa = positionOf(nodes, a.target, positions);
+      const pb = positionOf(nodes, b.target, positions);
+      const ya = pa?.y ?? 0;
+      const yb = pb?.y ?? 0;
       if (ya !== yb) return ya - yb;
-      return (na?.position.x ?? 0) - (nb?.position.x ?? 0);
+      return (pa?.x ?? 0) - (pb?.x ?? 0);
     });
 }
 
@@ -122,19 +134,24 @@ export function applyConnectStroke(
   return edges.map((e) => (e.id === newEdgeId ? { ...e, dashed } : e));
 }
 
-/** Incoming Paths of a tile, top-to-bottom (then left-to-right) by source position. */
-export function incomingSorted(nodes: NodeDto[], edges: EdgeDto[], targetId: string) {
+/** Incoming Paths of a tile, top-to-bottom (then left-to-right) by displayed source position. */
+export function incomingSorted(
+  nodes: NodeDto[],
+  edges: EdgeDto[],
+  targetId: string,
+  positions?: PositionMap,
+) {
   return edges
     .filter((e) => e.target === targetId)
     .slice()
     .sort((a, b) => {
-      const na = nodeOf(nodes, a.source);
-      const nb = nodeOf(nodes, b.source);
-      const ya = na?.position.y ?? 0;
-      const yb = nb?.position.y ?? 0;
+      const pa = positionOf(nodes, a.source, positions);
+      const pb = positionOf(nodes, b.source, positions);
+      const ya = pa?.y ?? 0;
+      const yb = pb?.y ?? 0;
       if (ya !== yb) return ya - yb;
-      const xa = na?.position.x ?? 0;
-      const xb = nb?.position.x ?? 0;
+      const xa = pa?.x ?? 0;
+      const xb = pb?.x ?? 0;
       if (xa !== xb) return xa - xb;
       return a.source < b.source ? -1 : a.source > b.source ? 1 : 0;
     });
@@ -144,7 +161,12 @@ export function incomingSorted(nodes: NodeDto[], edges: EdgeDto[], targetId: str
  * WG-08: the host plus Nodes on incident Paths, excluding the root (WG-06).
  * Order is outgoing children, then the host, then predecessors.
  */
-export function removalCandidateIds(nodes: NodeDto[], edges: EdgeDto[], hostId: string): string[] {
+export function removalCandidateIds(
+  nodes: NodeDto[],
+  edges: EdgeDto[],
+  hostId: string,
+  positions?: PositionMap,
+): string[] {
   const root = rootNodeId(nodes, edges);
   const seen = new Set<string>();
   const ids: string[] = [];
@@ -154,21 +176,22 @@ export function removalCandidateIds(nodes: NodeDto[], edges: EdgeDto[], hostId: 
     seen.add(id);
     ids.push(id);
   };
-  for (const e of outgoingSorted(nodes, edges, hostId)) add(e.target);
+  for (const e of outgoingSorted(nodes, edges, hostId, positions)) add(e.target);
   add(hostId);
-  for (const e of incomingSorted(nodes, edges, hostId)) add(e.source);
+  for (const e of incomingSorted(nodes, edges, hostId, positions)) add(e.source);
   return ids;
 }
 
-/** WG-09: first outgoing child; a leaf defaults to itself when it is removable. */
+/** WG-09: first outgoing child (by displayed position); a leaf defaults to itself when removable. */
 export function defaultRemovalCandidateId(
   nodes: NodeDto[],
   edges: EdgeDto[],
   hostId: string,
+  positions?: PositionMap,
 ): string | null {
-  const candidates = removalCandidateIds(nodes, edges, hostId);
+  const candidates = removalCandidateIds(nodes, edges, hostId, positions);
   if (!candidates.length) return null;
-  const firstChild = outgoingSorted(nodes, edges, hostId)[0]?.target;
+  const firstChild = outgoingSorted(nodes, edges, hostId, positions)[0]?.target;
   if (firstChild && candidates.includes(firstChild)) return firstChild;
   if (candidates.includes(hostId)) return hostId;
   return candidates[0] ?? null;

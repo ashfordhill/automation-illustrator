@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { DEMO_STEP, loadOakPark, screenshotBoard, waitForRouting } from "./ready";
+import { DEMO_STEP, loadOakPark, screenshotBoard, waitForLayout } from "./ready";
 
 const EVIDENCE = ".docs/evidence/10-projection";
 const MAIL_STEP = "Read incoming mail";
@@ -19,7 +19,7 @@ async function loadMailroom(page: Page) {
   await page.getByRole("menuitem", { name: "Robot Mailroom" }).click();
   await page.getByRole("button", { name: "Discard" }).click();
   await expect(page.getByText(MAIL_STEP).first()).toBeVisible({ timeout: 15_000 });
-  await waitForRouting(page);
+  await waitForLayout(page);
 }
 
 test.describe("slice 10 After projection and comparison", () => {
@@ -31,7 +31,7 @@ test.describe("slice 10 After projection and comparison", () => {
 
     await viewLabel(page, "After").click();
     await expect(page.getByText("AFTER", { exact: true })).toBeVisible();
-    await waitForRouting(page);
+    await waitForLayout(page);
     await expect(page.getByText(RECEIPT).first()).toBeVisible();
     await expect(page.locator("[data-merge-group]").first()).toBeVisible();
     await expect(page.getByText("Scan letter to PDF").first()).toBeVisible();
@@ -39,21 +39,21 @@ test.describe("slice 10 After projection and comparison", () => {
 
     await page.getByRole("button", { name: "Menu" }).click();
     await page.getByRole("menuitem", { name: "Dark mode" }).click();
-    await waitForRouting(page);
+    await waitForLayout(page);
     await screenshotBoard(page, `${EVIDENCE}/after-dark-1440.png`);
   });
 
   test("shared Target edited from After is the same value in Before (BA-02)", async ({ page }) => {
     await loadOakPark(page);
     await viewLabel(page, "After").click();
-    await waitForRouting(page);
+    await waitForLayout(page);
     await page.getByText(DEMO_STEP).first().click();
-    const target = aside(page).getByLabel("Target");
+    const target = aside(page).getByLabel("Name");
     await expect(target).toBeVisible();
     await target.fill("shared after title");
     await target.blur();
     await viewLabel(page, "Before").click();
-    await waitForRouting(page);
+    await waitForLayout(page);
     await expect(page.getByText("Read shared after title").first()).toBeVisible();
     await screenshotBoard(page, `${EVIDENCE}/shared-edit-1440.png`);
   });
@@ -61,14 +61,14 @@ test.describe("slice 10 After projection and comparison", () => {
   test("Both is read-only and pans the last focused lane (BA-05)", async ({ page }) => {
     await loadOakPark(page);
     await viewLabel(page, "Both").click();
-    await waitForRouting(page);
+    await waitForLayout(page);
     await expect(page.getByText("BEFORE", { exact: true })).toBeVisible();
     await expect(page.getByText("AFTER", { exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "Add Step, Data, or Connect existing" })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Remove Node" })).toHaveCount(0);
 
     await page.getByText(DEMO_STEP).first().click();
-    await expect(aside(page).getByLabel("Target")).toHaveAttribute("readonly", "");
+    await expect(aside(page).getByLabel("Name")).toHaveAttribute("readonly", "");
 
     const afterLane = page.locator('[data-lane="after"]');
     await afterLane.getByText(DEMO_STEP).click();
@@ -80,7 +80,7 @@ test.describe("slice 10 After projection and comparison", () => {
   test("After explains that Before-origin Steps cannot be removed (BA-04)", async ({ page }) => {
     await loadOakPark(page);
     await viewLabel(page, "After").click();
-    await waitForRouting(page);
+    await waitForLayout(page);
     await page.getByText(DEMO_STEP).first().click();
     await page.getByRole("button", { name: "Remove Node" }).click();
     await expect(page.getByText("After cannot remove a Before-origin Step.")).toBeVisible();
@@ -99,7 +99,7 @@ test.describe("supported min-width", () => {
   test("Mailroom After projection at 1024 CSS pixels", async ({ page }) => {
     await loadMailroom(page);
     await viewLabel(page, "After").click();
-    await waitForRouting(page);
+    await waitForLayout(page);
     await expect(page.getByText(RECEIPT).first()).toBeVisible();
     await screenshotBoard(page, `${EVIDENCE}/after-light-1024.png`);
   });

@@ -79,6 +79,7 @@ import {
   defaultRemovalCandidateId,
   edgeIsDotted,
   nextPortIndex,
+  outgoingSorted,
   removalCandidateIds,
   validateWorkflow,
 } from "../workflow/graph";
@@ -92,6 +93,7 @@ import {
   type ActorDto,
   type ColorScheme as ColorSchemeT,
   type NodeDto,
+  type PositionMap,
   type RobotKind as RobotKindT,
   type StepKind as StepKindT,
   type StepNodeDto,
@@ -223,6 +225,11 @@ export const useStore = create<{
   setView: (v: ViewModeT) => void;
   setFocusedLane: (lane: AssignmentLane) => void;
   setLaneViewport: (lane: AssignmentLane, viewport: LaneViewport) => void;
+  /** Displayed Node positions per lane, published by the Board after each ELK pass (derived, never saved). */
+  laneLayoutPositions: Partial<Record<AssignmentLane, PositionMap>>;
+  setLaneLayoutPositions: (lane: AssignmentLane, positions: PositionMap) => void;
+  /** Displayed positions for the lane being edited, or undefined before the first layout. */
+  activePositions: () => PositionMap | undefined;
   canvasEditable: () => boolean;
   setPresent: (p: boolean) => void;
   setSoundEnabled: (on: boolean) => void;
@@ -350,6 +357,7 @@ export const useStore = create<{
       view: ViewMode.Before,
       focusedLane: AssignmentLane.Before,
       laneViewports: {},
+      laneLayoutPositions: {},
       canvasEpoch: get().canvasEpoch + 1,
     });
   },
@@ -399,6 +407,12 @@ export const useStore = create<{
     }
     set({ laneViewports: { ...get().laneViewports, [lane]: viewport } });
   },
+  laneLayoutPositions: {},
+  setLaneLayoutPositions: (lane, positions) => {
+    if (get().laneLayoutPositions[lane] === positions) return;
+    set({ laneLayoutPositions: { ...get().laneLayoutPositions, [lane]: positions } });
+  },
+  activePositions: () => get().laneLayoutPositions[get().assignmentLane()],
   canvasEditable: () => !get().present && get().view !== ViewMode.Both,
   setPresent: (present) => {
     const s = get();
@@ -873,11 +887,14 @@ export const useStore = create<{
       if (view === ViewMode.After) get().unmerge(group.id);
       return;
     }
+    const positions = get().activePositions();
     if (isAfterOnlyNode(workflow, hostId)) {
       if (view !== ViewMode.After) return;
       const graph = afterGraph(workflow);
-      const candidates = afterAwareRemovalCandidateIds(workflow, hostId);
-      const firstChild = graph.edges.find((e) => e.source === hostId && candidates.includes(e.target))?.target;
+      const candidates = afterAwareRemovalCandidateIds(workflow, hostId, positions);
+      const firstChild = outgoingSorted(graph.nodes, graph.edges, hostId, positions).find((e) =>
+        candidates.includes(e.target),
+      )?.target;
       const candidateId =
         (firstChild && candidates.includes(firstChild) ? firstChild : null) ??
         (candidates.includes(hostId) ? hostId : candidates[0]);
@@ -895,8 +912,8 @@ export const useStore = create<{
       return;
     }
     if (!workflow.nodes.some((n) => n.id === hostId)) return;
-    const candidates = removalCandidateIds(workflow.nodes, workflow.edges, hostId);
-    const candidateId = defaultRemovalCandidateId(workflow.nodes, workflow.edges, hostId);
+    const candidates = removalCandidateIds(workflow.nodes, workflow.edges, hostId, positions);
+    const candidateId = defaultRemovalCandidateId(workflow.nodes, workflow.edges, hostId, positions);
     if (!candidates.length || !candidateId) {
       get().setNotice(MSG.rootRemoval);
       set({ interaction: IDLE, selected: { type: SelectionKind.Node, id: hostId } });
@@ -912,7 +929,11 @@ export const useStore = create<{
   cycleRemoveCandidate: (dir) => {
     const { interaction, workflow } = get();
     if (interaction.kind !== "remove-pick") return;
-    const candidates = afterAwareRemovalCandidateIds(workflow, interaction.hostId);
+    const candidates = afterAwareRemovalCandidateIds(
+      workflow,
+      interaction.hostId,
+      get().activePositions(),
+    );
     if (!candidates.length) {
       set({ interaction: IDLE });
       return;
@@ -926,7 +947,11 @@ export const useStore = create<{
   setRemoveCandidate: (candidateId) => {
     const { interaction, workflow } = get();
     if (interaction.kind !== "remove-pick") return;
-    const candidates = afterAwareRemovalCandidateIds(workflow, interaction.hostId);
+    const candidates = afterAwareRemovalCandidateIds(
+      workflow,
+      interaction.hostId,
+      get().activePositions(),
+    );
     if (!candidates.includes(candidateId)) return;
     set({ interaction: { ...interaction, candidateId } });
   },
@@ -941,8 +966,9 @@ export const useStore = create<{
       return;
     }
     if (interaction.kind !== "remove-pick") return;
+    const positions = get().activePositions();
     if (isAfterOnlyNode(workflow, interaction.candidateId)) {
-      const planned = planAfterOnlyRemoval(workflow, interaction.candidateId);
+      const planned = planAfterOnlyRemoval(workflow, interaction.candidateId, positions);
       if (!planned.ok) {
         get().setNotice(planned.message);
         return;
@@ -954,7 +980,7 @@ export const useStore = create<{
       applyAfterOnlyPlanned(get, set, planned.value, planned.value.pairings);
       return;
     }
-    const planned = planNodeRemoval(workflow, interaction.candidateId);
+    const planned = planNodeRemoval(workflow, interaction.candidateId, positions);
     if (!planned.ok) {
       get().setNotice(planned.message);
       return;
@@ -973,6 +999,7 @@ export const useStore = create<{
       interaction.plan.nodeId,
       predecessorId,
       successorId,
+      get().activePositions(),
     );
     if (!pairing) return;
     const pairings = [
@@ -989,13 +1016,14 @@ export const useStore = create<{
   useNearestPreviewPairings: () => {
     const { interaction, workflow } = get();
     if (interaction.kind !== "remove-preview") return;
-    const { incoming, outgoing } = removalNeighborhood(workflow, interaction.plan.nodeId);
+    const positions = get().activePositions();
+    const { incoming, outgoing } = removalNeighborhood(workflow, interaction.plan.nodeId, positions);
     set({
       interaction: {
         kind: "remove-preview",
         plan: {
           ...interaction.plan,
-          pairings: nearestPairings(workflow.nodes, workflow.edges, incoming, outgoing),
+          pairings: nearestPairings(workflow.nodes, workflow.edges, incoming, outgoing, positions),
         },
       },
     });
@@ -1175,6 +1203,7 @@ export const useStore = create<{
       view: ViewMode.Before,
       focusedLane: AssignmentLane.Before,
       laneViewports: {},
+      laneLayoutPositions: {},
       canvasEpoch: get().canvasEpoch + 1,
     });
   },
@@ -1187,6 +1216,7 @@ function applyPlannedRemoval(
     commit: (next: WorkflowDoc) => void;
     setNotice: (message: string | null) => void;
     soundEnabled: boolean;
+    activePositions: () => PositionMap | undefined;
   },
   set: (partial: {
     interaction: Interaction;
@@ -1201,7 +1231,8 @@ function applyPlannedRemoval(
   const { workflow } = get();
   const node = workflow.nodes.find((n) => n.id === plan.nodeId);
   const actor = node && isStepNode(node) ? get().actorFor(node.id) : undefined;
-  const { predecessorIds, successorIds } = removalNeighborhood(workflow, plan.nodeId);
+  const positions = get().activePositions();
+  const { predecessorIds, successorIds } = removalNeighborhood(workflow, plan.nodeId, positions);
   if (successorIds.length) {
     const checked = validatePairings(pairings, predecessorIds, successorIds);
     if (!checked.ok) {
@@ -1209,7 +1240,7 @@ function applyPlannedRemoval(
       return;
     }
   }
-  const applied = applyNodeRemoval(workflow, plan, pairings);
+  const applied = applyNodeRemoval(workflow, plan, pairings, positions);
   if (!applied.ok) {
     get().setNotice(applied.message);
     return;
@@ -1235,6 +1266,7 @@ function applyAfterOnlyPlanned(
     commit: (next: WorkflowDoc) => void;
     setNotice: (message: string | null) => void;
     soundEnabled: boolean;
+    activePositions: () => PositionMap | undefined;
   },
   set: (partial: {
     interaction: Interaction;
@@ -1248,7 +1280,7 @@ function applyAfterOnlyPlanned(
   const { workflow } = get();
   const node = findNode(workflow, plan.nodeId);
   const actor = node && isStepNode(node) ? get().actorFor(node.id) : undefined;
-  const applied = applyAfterOnlyRemoval(workflow, plan, pairings);
+  const applied = applyAfterOnlyRemoval(workflow, plan, pairings, get().activePositions());
   if (!applied.ok) {
     get().setNotice(applied.message);
     return;

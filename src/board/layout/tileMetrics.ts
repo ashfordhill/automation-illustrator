@@ -114,15 +114,3 @@ export function vacantSpot(
   const maxY = Math.max(...nodes.map((n) => n.position.y + nodeSize(n.type).h));
   return { x, y: snapToGrid(maxY + TILE_GAP) };
 }
-
-/** Approximate width of the on-canvas condition chip (nowrap estimate). */
-export function labelChipWidth(label: string) {
-  const t = label.trim();
-  if (!t) return 0;
-  return Math.max(GRID, Math.ceil((t.length * 8 + 32) / GRID) * GRID);
-}
-
-/** Horizontal gap needed between source and target so a label is not under a tile. */
-export function gapForLabel(label: string) {
-  return Math.max(TILE_GAP, labelChipWidth(label) + GRID);
-}

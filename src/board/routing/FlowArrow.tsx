@@ -1,32 +1,27 @@
 /**
- * Orthogonal Path renderer: Smart Edge step routing plus custom condition chips.
- * Stroke is graph.edgeIsDotted (PC-01, PC-05). Labels are independent hit targets (CX-02).
+ * Orthogonal Path renderer: ELK route from the lane layout plus a condition chip
+ * at the rect ELK reserved for it (CX-04, CX-05). Stroke is graph.edgeIsDotted
+ * (PC-01, PC-05). Chips are independent hit targets (CX-02). Remove-preview
+ * Paths are not laid out and fall back to a right-angle polyline.
  */
-import { useEffect, useLayoutEffect, useMemo, useState } from "react";
-import {
-  BaseEdge,
-  EdgeLabelRenderer,
-  type EdgeProps,
-} from "@xyflow/react";
-import { useSmartEdgePath } from "@tisoap/react-flow-smart-edge";
+import { useEffect, useMemo, useState } from "react";
+import { BaseEdge, EdgeLabelRenderer, type EdgeProps } from "@xyflow/react";
 import { SelectionKind } from "../../workflow/catalogs";
 import { useStore } from "../../state/store";
 import { afterGraph, edgeIsDotted } from "../../workflow/graph";
 import { findEdge } from "../../workflow/selectors";
+import type { WorkflowDoc } from "../../workflow/types";
 import { wrapConditionLines } from "../layout/labelBox";
-import { usePathLayout } from "./PathLayout";
-import { placementCenter } from "./placeLabels";
+import { useLaneLayoutContext } from "./LaneLayoutContext";
 import {
   lerpPolylines,
-  nativeStepPolyline,
-  nearestOnPolyline,
   orthogonalPolyline,
+  pathLength,
+  pointAtLength,
   polylineKey,
   polylineToSvg,
-  pointsFromSmart,
   type PolyPoint,
 } from "./polyline";
-import { SMART_GRID_RATIO, SMART_NODE_PADDING, SMART_PRESET } from "./smartStep";
 
 export type FlowPathData = {
   restitch?: boolean;
@@ -37,11 +32,22 @@ export type FlowPathData = {
   viaY?: number;
 } & Record<string, unknown>;
 
+/** Stroke for a document Path by origin id: dotted = choice, solid = always visited. */
+export function pathIsDotted(workflow: WorkflowDoc, originId: string): boolean {
+  const edge = findEdge(workflow, originId);
+  if (!edge) return false;
+  const inBefore = workflow.edges.some((e) => e.id === edge.id);
+  if (inBefore) return edgeIsDotted(workflow.nodes, workflow.edges, edge);
+  const graph = afterGraph(workflow);
+  return edgeIsDotted(graph.nodes, graph.edges, edge);
+}
+
 function prefersReducedMotion(): boolean {
   if (typeof window === "undefined" || typeof window.matchMedia !== "function") return true;
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
+/** Restitch stretch (CX-06): from the polyline through the departing tile to the settled route. */
 function useStretch(active: boolean, from: PolyPoint[], to: PolyPoint[]): PolyPoint[] | null {
   const fromKey = polylineKey(from);
   const toKey = polylineKey(to);
@@ -70,91 +76,57 @@ function useStretch(active: boolean, from: PolyPoint[], to: PolyPoint[]): PolyPo
 
 export function FlowArrow({
   id,
-  source,
-  target,
   sourceX,
   sourceY,
   targetX,
   targetY,
-  sourcePosition,
-  targetPosition,
   selected,
   data,
 }: EdgeProps) {
   const pathData = (data ?? {}) as FlowPathData;
   const workflow = useStore((s) => s.workflow);
   const present = useStore((s) => s.present);
-  const { reportPath, placements } = usePathLayout();
+  const { layout } = useLaneLayoutContext();
   const restitch = Boolean(pathData.restitch);
   const stretch = Boolean(pathData.stretch);
   const restitchCondition = restitch && typeof pathData.condition === "string" ? pathData.condition : "";
   const restitchDashed = restitch ? Boolean(pathData.dashed) : false;
   const originId = typeof pathData.originId === "string" ? pathData.originId : id;
   const edge = restitch ? undefined : findEdge(workflow, originId);
-  const graph = edge ? afterGraph(workflow) : { nodes: workflow.nodes, edges: workflow.edges };
-  const dotted = restitch
-    ? restitchDashed
-    : edge
-      ? edgeIsDotted(
-          workflow.edges.some((e) => e.id === edge.id) ? workflow.nodes : graph.nodes,
-          workflow.edges.some((e) => e.id === edge.id) ? workflow.edges : graph.edges,
-          edge,
-        )
-      : false;
+  const dotted = restitch ? restitchDashed : pathIsDotted(workflow, originId);
   const label = restitch ? restitchCondition : edge?.label;
 
-  const { route } = useSmartEdgePath({
-    id,
-    source,
-    target,
-    sourceX,
-    sourceY,
-    targetX,
-    targetY,
-    sourcePosition,
-    targetPosition,
-    preset: SMART_PRESET,
-    options: { gridRatio: SMART_GRID_RATIO, nodePadding: SMART_NODE_PADDING },
-  });
-
-  const settled = useMemo(() => {
-    if (route?.kind === "routed") {
-      const d = route.svgPathString;
-      const points = pointsFromSmart(sourceX, sourceY, targetX, targetY, route.points);
-      return { d, points };
-    }
-    const native = nativeStepPolyline(
-      sourceX,
-      sourceY,
-      targetX,
-      targetY,
-      sourcePosition,
-      targetPosition,
-    );
-    return { d: native.d, points: native.points.length ? native.points : orthogonalPolyline(sourceX, sourceY, targetX, targetY) };
-  }, [route, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition]);
+  const route = layout?.routes[id];
+  const routeKey = route ? polylineKey(route) : "";
+  const settled = useMemo<PolyPoint[]>(
+    () => (route && route.length >= 2 ? route : orthogonalPolyline(sourceX, sourceY, targetX, targetY)),
+    // routeKey stands in for the route array identity (animated frames reuse ids).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [routeKey, sourceX, sourceY, targetX, targetY],
+  );
 
   const viaX = pathData.viaX;
   const viaY = pathData.viaY;
   const fromVia = useMemo(() => {
-    if (viaX == null || viaY == null) return settled.points;
-    const a = orthogonalPolyline(sourceX, sourceY, viaX, viaY);
-    const b = orthogonalPolyline(viaX, viaY, targetX, targetY);
+    if (viaX == null || viaY == null) return settled;
+    const start = settled[0]!;
+    const end = settled[settled.length - 1]!;
+    const a = orthogonalPolyline(start.x, start.y, viaX, viaY);
+    const b = orthogonalPolyline(viaX, viaY, end.x, end.y);
     return [...a.slice(0, -1), ...b];
-  }, [viaX, viaY, sourceX, sourceY, targetX, targetY, settled.points]);
+  }, [viaX, viaY, settled]);
 
-  const stretched = useStretch(stretch && viaX != null, fromVia, settled.points);
-  const points = stretched ?? settled.points;
-  const path = stretched ? polylineToSvg(stretched) : settled.d;
+  const stretched = useStretch(stretch && viaX != null, fromVia, settled);
+  const points = stretched ?? settled;
+  const path = polylineToSvg(points);
 
-  useLayoutEffect(() => {
-    reportPath(id, points);
-  }, [id, points, reportPath]);
-
-  const placement = placements[id];
-  const chip = placement
-    ? nearestOnPolyline(points, placementCenter(placement).x, placementCenter(placement).y)
-    : points[Math.floor(points.length / 2)] ?? { x: (sourceX + targetX) / 2, y: (sourceY + targetY) / 2 };
+  const rect = layout?.labels[id];
+  const chip = rect
+    ? { x: rect.x + rect.w / 2, y: rect.y + rect.h / 2, w: rect.w, h: rect.h }
+    : (() => {
+        const mid = pointAtLength(points, pathLength(points) / 2);
+        return { x: mid.x, y: mid.y, w: undefined, h: undefined };
+      })();
 
   const lines = label ? wrapConditionLines(label) : [];
   const className = restitch ? "edge-restitch" : stretch && stretched ? "edge-stretch" : undefined;
@@ -170,7 +142,8 @@ export function FlowArrow({
           stroke: restitch ? "var(--blue-deep)" : "var(--line)",
           strokeWidth: selected || restitch ? 4 : 2.75,
           strokeDasharray: restitch ? "10 6" : dotted ? "8 7" : undefined,
-          strokeLinecap: "square",
+          strokeLinecap: "butt",
+          strokeLinejoin: "miter",
         }}
       />
       {label && lines.length ? (
@@ -180,12 +153,15 @@ export function FlowArrow({
             style={{
               position: "absolute",
               transform: `translate(-50%, -50%) translate(${chip.x}px, ${chip.y}px)`,
+              width: chip.w,
+              height: chip.h,
               pointerEvents: restitch ? "none" : "all",
             }}
           >
             <button
               type="button"
               className={`path-condition${restitch ? " is-restitch" : ""}${selected ? " is-on" : ""}`}
+              style={chip.w ? { width: chip.w, height: chip.h } : undefined}
               title={label}
               aria-label={label}
               tabIndex={restitch || present ? -1 : 0}

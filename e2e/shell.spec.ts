@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
-import { waitForRouting } from "./ready";
+import { waitForLayout } from "./ready";
 
 const DEMO_STEP = "Read invoice.pdf";
 const EVIDENCE = ".docs/evidence/08-shell";
@@ -8,7 +8,7 @@ const EVIDENCE = ".docs/evidence/08-shell";
 async function loadDemo(page: Page) {
   await page.goto("/");
   await expect(page.getByText(DEMO_STEP).first()).toBeVisible({ timeout: 15_000 });
-  await waitForRouting(page);
+  await waitForLayout(page);
 }
 
 function viewRadio(page: Page, name: "Before" | "After" | "Both") {
@@ -109,11 +109,11 @@ test.describe("slice 8 shell, typography, and sound", () => {
     await page.keyboard.press("Escape");
 
     await page.getByText(DEMO_STEP).first().click();
-    const target = page.locator("aside").getByLabel("Target");
+    const target = page.locator("aside").getByLabel("Name");
     await target.fill(
       "invoice.pdf that must wrap then shrink then clamp with an ellipsis for NA-10",
     );
-    const detail = page.locator("aside").getByLabel("System / detail");
+    const detail = page.locator("aside").getByLabel("Details");
     await detail.fill("BS&A Software lookup with a very long system note that should clamp");
     await expect(
       page.getByRole("group", {

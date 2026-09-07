@@ -74,16 +74,9 @@ export function DetailsPanel() {
 
   if (manageOpen) return <ManageActorsPanel />;
 
-  const idleCopy = readOnly
-    ? "Both is a read-only comparison. Select a tile or Path to inspect."
-    : "Select a tile or Path to edit.";
-
   if (!selected) {
     return (
       <Stack gap="sm" p="sm" className="chrome-hide">
-        <Text size="sm" className="hint-copy">
-          {idleCopy}
-        </Text>
         {readOnly ? null : <ManageActorsButton />}
       </Stack>
     );
@@ -169,30 +162,32 @@ export function DetailsPanel() {
         {outs >= 2 ? (
           <>
             <Text size="sm" fw={700}>
-              Split: One of / Every
+              Path
             </Text>
             <FatChoice
-              label="Split: One of / Every"
+              label="Path: 1 Path vs All Paths"
               value={n.split}
               disabled={readOnly}
               onChange={(v) =>
                 useStore.getState().updateNode(n.id, { split: v as typeof n.split })
               }
               options={[
-                { value: SplitKind.Exclusive, label: "One of" },
-                { value: SplitKind.Parallel, label: "Every" },
+                { value: SplitKind.Exclusive, label: "1 Path" },
+                { value: SplitKind.Parallel, label: "All Paths" },
               ]}
             />
           </>
         ) : null}
         <TextInput
-          label="Target"
+          id="step-name-field"
+          label="Name"
           value={n.title}
           readOnly={readOnly}
           onChange={(e) => useStore.getState().updateNode(n.id, { title: e.target.value })}
         />
         <TextInput
-          label="System / detail"
+          id="step-details-field"
+          label="Details"
           value={n.detail}
           readOnly={readOnly}
           onChange={(e) => useStore.getState().updateNode(n.id, { detail: e.target.value })}
@@ -252,9 +247,6 @@ export function DetailsPanel() {
 
   return (
     <Stack gap="sm" p="sm" className="chrome-hide">
-      <Text size="sm" className="hint-copy">
-        {idleCopy}
-      </Text>
       {readOnly ? null : <ManageActorsButton />}
     </Stack>
   );

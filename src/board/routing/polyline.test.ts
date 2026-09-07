@@ -2,20 +2,21 @@ import { expect, test } from "vitest";
 import {
   lerpPolylines,
   orthogonalPolyline,
-  parseSvgPath,
   pathLength,
+  pointAtLength,
   polylineToSvg,
   resamplePolyline,
 } from "./polyline";
 
-test("parseSvgPath reads orthogonal M/L commands", () => {
-  const pts = parseSvgPath("M 0 10 L 40 10 L 40 80 L 90 80");
-  expect(pts).toEqual([
+test("pointAtLength walks bends", () => {
+  const pts = [
     { x: 0, y: 10 },
     { x: 40, y: 10 },
     { x: 40, y: 80 },
-    { x: 90, y: 80 },
-  ]);
+  ];
+  expect(pointAtLength(pts, 20)).toEqual({ x: 20, y: 10 });
+  expect(pointAtLength(pts, 60)).toEqual({ x: 40, y: 30 });
+  expect(pointAtLength(pts, 999)).toEqual({ x: 40, y: 80 });
 });
 
 test("orthogonalPolyline stays stepped", () => {

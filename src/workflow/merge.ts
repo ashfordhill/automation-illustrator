@@ -45,6 +45,7 @@ import {
   type EdgeDto,
   type MergeGroupDto,
   type NodeDto,
+  type PositionMap,
   type StepNodeDto,
   type WorkflowDoc,
 } from "./types";
@@ -455,6 +456,7 @@ function dropAssign(lane: Record<string, string>, nodeId: string): Record<string
 export function planAfterOnlyRemoval(
   doc: WorkflowDoc,
   nodeId: string,
+  positions?: PositionMap,
 ): CommandResult<RemovalPlan> {
   const valid = succeed(doc);
   if (!valid.ok) return valid;
@@ -462,13 +464,13 @@ export function planAfterOnlyRemoval(
     return fail("missing-ref", MSG.missingNode);
   }
   const graph = afterGraph(doc);
-  const incoming = incomingSorted(graph.nodes, graph.edges, nodeId);
-  const outgoing = outgoingSorted(graph.nodes, graph.edges, nodeId);
+  const incoming = incomingSorted(graph.nodes, graph.edges, nodeId, positions);
+  const outgoing = outgoingSorted(graph.nodes, graph.edges, nodeId, positions);
   const predCount = uniqueIds(incoming, "source").length;
   const succCount = uniqueIds(outgoing, "target").length;
   const pairings =
     predCount >= 2 && succCount >= 2
-      ? nearestPairings(graph.nodes, graph.edges, incoming, outgoing)
+      ? nearestPairings(graph.nodes, graph.edges, incoming, outgoing, positions)
       : fanPairings(graph.nodes, graph.edges, incoming, outgoing);
   const extraEdges = applyAfterPairings(
     graph.nodes,
@@ -499,8 +501,9 @@ export function applyAfterOnlyRemoval(
   doc: WorkflowDoc,
   plan: RemovalPlan,
   pairings: RemovalPairing[] = plan.pairings,
+  positions?: PositionMap,
 ): CommandResult<WorkflowDoc> {
-  const planned = planAfterOnlyRemoval(doc, plan.nodeId);
+  const planned = planAfterOnlyRemoval(doc, plan.nodeId, positions);
   if (!planned.ok) return planned;
   const graph = afterGraph(doc);
   const extraEdges = applyAfterPairings(
@@ -534,12 +537,16 @@ export function convexityBreakFromConnect(
 }
 
 /** After-only removal candidates live on the After graph (BA-07). */
-export function afterAwareRemovalCandidateIds(doc: WorkflowDoc, hostId: string): string[] {
+export function afterAwareRemovalCandidateIds(
+  doc: WorkflowDoc,
+  hostId: string,
+  positions?: PositionMap,
+): string[] {
   if (isAfterOnlyNode(doc, hostId)) {
     const graph = afterGraph(doc);
-    return removalCandidateIds(graph.nodes, graph.edges, hostId).filter(
+    return removalCandidateIds(graph.nodes, graph.edges, hostId, positions).filter(
       (id) => id === hostId || isAfterOnlyNode(doc, id),
     );
   }
-  return removalCandidateIds(doc.nodes, doc.edges, hostId);
+  return removalCandidateIds(doc.nodes, doc.edges, hostId, positions);
 }

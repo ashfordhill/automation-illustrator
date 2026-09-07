@@ -1,7 +1,7 @@
 /**
  * Alphabetical Step Type fat buttons; Other last (NA-05).
  */
-import { STEP_KIND_META, STEP_KINDS, type StepKind } from "../../workflow/types";
+import { STEP_KIND_META, typePickerKinds, type StepKind } from "../../workflow/types";
 import { StepKindIcon } from "../../board/tiles/StepKindIcon";
 
 export function TypeButtons({
@@ -15,7 +15,7 @@ export function TypeButtons({
 }) {
   return (
     <div className="inspector-type-grid" role="group" aria-label="Type">
-      {STEP_KINDS.map((kind) => {
+      {typePickerKinds(value).map((kind) => {
         const label = STEP_KIND_META[kind].label;
         const on = value === kind;
         return (

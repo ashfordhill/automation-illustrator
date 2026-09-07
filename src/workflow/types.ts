@@ -28,7 +28,7 @@ export {
   WORKFLOW_VERSION_V1,
 } from "./catalogs";
 
-/** Inspector Type buttons: alphabetical labels, Other last (NA-05). */
+/** Inspector Type buttons: alphabetical labels, Other last (NA-05). Schema still accepts every value. */
 export const STEP_KINDS = [
   StepKind.Approve,
   StepKind.Call,
@@ -45,6 +45,24 @@ export const STEP_KINDS = [
   StepKind.Other,
 ] as const;
 
+/** Types offered in the inspector picker. Scan, Drag, Approve, and File stay in the schema for existing boards. */
+export const PICKER_STEP_KINDS: ReadonlySet<StepKind> = new Set([
+  StepKind.Call,
+  StepKind.Copy,
+  StepKind.Email,
+  StepKind.Print,
+  StepKind.Read,
+  StepKind.Review,
+  StepKind.Search,
+  StepKind.Write,
+  StepKind.Other,
+]);
+
+/** Alphabetical Type buttons, Other last. A retired Type still appears when the selected Step already has it. */
+export function typePickerKinds(current: StepKind): StepKind[] {
+  return STEP_KINDS.filter((kind) => PICKER_STEP_KINDS.has(kind) || kind === current);
+}
+
 /** UI copy for RobotKind values — stored key `ai` is shown as LLM. */
 export const ROBOT_KIND_LABEL: Record<RobotKind, string> = {
   [RobotKind.Llm]: "LLM",
@@ -53,6 +71,13 @@ export const ROBOT_KIND_LABEL: Record<RobotKind, string> = {
 };
 
 export type Point = { x: number; y: number };
+
+/**
+ * Displayed (derived-layout) Node positions for one lane. Optional input to the
+ * WG-09 / WG-11 graph rules so "first child" and "nearest" follow what the user
+ * sees; callers fall back to saved positions when absent (GOAL amendment 2026-09-07).
+ */
+export type PositionMap = Record<string, Point>;
 
 /** Default HumanDto.role — the people equivalent of robot LLM / Agent / Script. */
 export const DEFAULT_HUMAN_ROLE = "worker";

@@ -1,7 +1,25 @@
 import { expect, test, type Page } from "@playwright/test";
-import { DEMO_STEP, loadOakPark, screenshotBoard, waitForRouting } from "./ready";
+import { DEMO_STEP, loadOakPark, screenshotBoard, waitForLayout } from "./ready";
 
-const EVIDENCE = ".docs/evidence/09-routing";
+const EVIDENCE = ".docs/evidence/improve-01-layout";
+
+/** Parse the M/L polyline FlowArrow writes into `path#<edgeId>`. */
+async function routeOf(page: Page, edgeId: string): Promise<{ x: number; y: number }[]> {
+  const d = await page.locator(`path#${edgeId}`).getAttribute("d");
+  expect(d, `route for ${edgeId}`).toBeTruthy();
+  const nums = d!.match(/-?\d+(\.\d+)?/g)!.map(Number);
+  const pts: { x: number; y: number }[] = [];
+  for (let i = 0; i + 1 < nums.length; i += 2) pts.push({ x: nums[i]!, y: nums[i + 1]! });
+  return pts;
+}
+
+function expectOrthogonal(pts: { x: number; y: number }[]) {
+  for (let i = 0; i + 1 < pts.length; i++) {
+    const a = pts[i]!;
+    const b = pts[i + 1]!;
+    expect(a.x === b.x || a.y === b.y, `diagonal segment ${JSON.stringify([a, b])}`).toBe(true);
+  }
+}
 
 function viewLabel(page: Page, name: "Before" | "After" | "Both") {
   return page.locator("header").getByText(name, { exact: true });
@@ -33,7 +51,81 @@ const STRESS = {
   after: { assignments: {}, groups: [], extraNodes: [], extraEdges: [] },
 };
 
-test.describe("slice 9 routing and label layout", () => {
+/** Three labeled branches with long, wrapping conditions (chip-spacing evidence). */
+const MULTI_EDGE = {
+  ...STRESS,
+  nodes: STRESS.nodes.slice(0, 5),
+  edges: [
+    { id: "m0", source: "s0", target: "s1", label: "approved by the finance lead after review" },
+    { id: "m1", source: "s0", target: "s2", label: "rejected" },
+    { id: "m2", source: "s0", target: "s3", label: "escalate when the amount exceeds the quarterly threshold" },
+    { id: "m3", source: "s1", target: "s4", label: "" },
+    { id: "m4", source: "s2", target: "s4", label: "" },
+    { id: "m5", source: "s3", target: "s4", label: "" },
+  ],
+  assignments: Object.fromEntries(Array.from({ length: 5 }, (_, i) => [`s${i}`, "h1"])),
+};
+
+test.describe("ELK layout and bundled Path routing (Improvement 01)", () => {
+  test("fan-out Paths share a trunk and split at right angles; chains are straight", async ({ page }) => {
+    await loadOakPark(page);
+    const gt = await routeOf(page, "e_gt");
+    const lt = await routeOf(page, "e_lt");
+    expect(gt[0]).toEqual(lt[0]);
+    expect(gt[1]!.x).toBe(lt[1]!.x);
+    expectOrthogonal(gt);
+    expectOrthogonal(lt);
+    const chain = await routeOf(page, "e_enter_review");
+    expect(new Set(chain.map((p) => p.y)).size).toBe(1);
+  });
+
+  test("+ Step lands in the column right of its source and the lane returns to ready", async ({ page }) => {
+    await loadOakPark(page);
+    const review = page.getByText("Review BS&A Software").first();
+    await review.click();
+    const reviewBox = await review.boundingBox();
+    await page.getByRole("button", { name: "Add Step, Data, or Connect existing" }).first().click();
+    await page.getByRole("menuitem", { name: "1 Step" }).click();
+    const started = Date.now();
+    await expect(page.locator(".board-lane")).toHaveAttribute("data-layout", "ready", { timeout: 2_000 });
+    expect(Date.now() - started).toBeLessThan(2_000);
+    const fresh = page.locator(".react-flow__node.selected").first();
+    await expect(fresh).toBeVisible();
+    const freshBox = await fresh.boundingBox();
+    const reviewAfter = await page.getByText("Review BS&A Software").first().boundingBox();
+    expect(freshBox!.x).toBeGreaterThan(reviewAfter!.x + reviewBox!.width * 0.5);
+    await screenshotBoard(page, `${EVIDENCE}/add-step-1440.png`);
+  });
+
+  test("Robot Mailroom After lane lays out", async ({ page }) => {
+    await loadOakPark(page);
+    await page.getByRole("button", { name: "Menu" }).click();
+    await page.getByRole("menuitem", { name: "Robot Mailroom" }).click();
+    await page.getByRole("button", { name: "Discard" }).click();
+    await expect(page.getByText(DEMO_STEP)).toHaveCount(0);
+    await waitForLayout(page);
+    await viewLabel(page, "After").click();
+    await expect(page.getByText("AFTER", { exact: true })).toBeVisible();
+    await waitForLayout(page);
+    await screenshotBoard(page, `${EVIDENCE}/mailroom-after-1440.png`);
+  });
+
+  test("long wrapping conditions on sibling branches keep their chips apart", async ({ page }) => {
+    await page.addInitScript((doc) => {
+      localStorage.setItem("automation-pitch.workflow", JSON.stringify(doc));
+    }, MULTI_EDGE);
+    await page.goto("/");
+    await expect(page.getByText("step 0").first()).toBeVisible({ timeout: 15_000 });
+    await waitForLayout(page);
+    const a = await page.getByRole("button", { name: "rejected" }).boundingBox();
+    const b = await page.getByRole("button", { name: /approved by the finance lead/ }).boundingBox();
+    expect(a && b).toBeTruthy();
+    const overlapX = Math.min(a!.x + a!.width, b!.x + b!.width) - Math.max(a!.x, b!.x);
+    const overlapY = Math.min(a!.y + a!.height, b!.y + b!.height) - Math.max(a!.y, b!.y);
+    expect(overlapX <= 0 || overlapY <= 0).toBe(true);
+    await screenshotBoard(page, `${EVIDENCE}/wrapping-multi-edge-1440.png`);
+  });
+
   test("Oak Park conditions sit beside Paths and stay clickable", async ({ page }) => {
     await loadOakPark(page);
     const gt = page.getByRole("button", { name: "invoice > $50,000" }).first();
@@ -61,7 +153,7 @@ test.describe("slice 9 routing and label layout", () => {
     const websiteBefore = await page.getByText("Search website").first().boundingBox();
     await field.fill("");
     await field.blur();
-    await waitForRouting(page);
+    await waitForLayout(page);
     const websiteAfter = await page.getByText("Search website").first().boundingBox();
     expect(websiteBefore).toBeTruthy();
     expect(websiteAfter).toBeTruthy();
@@ -73,7 +165,7 @@ test.describe("slice 9 routing and label layout", () => {
     await loadOakPark(page);
     await page.mouse.move(400, 400);
     await page.mouse.wheel(0, 1800);
-    await waitForRouting(page);
+    await waitForLayout(page);
     await page.getByRole("button", { name: "invoice > $50,000" }).first().click();
     await expect(aside(page).getByText("Path / condition", { exact: true })).toBeVisible();
     await screenshotBoard(page, `${EVIDENCE}/zoom-out-label-1440.png`);
@@ -83,12 +175,12 @@ test.describe("slice 9 routing and label layout", () => {
     await loadOakPark(page);
     await viewLabel(page, "After").click();
     await expect(page.getByText("AFTER", { exact: true })).toBeVisible();
-    await waitForRouting(page);
+    await waitForLayout(page);
     await screenshotBoard(page, `${EVIDENCE}/after-light-1440.png`);
 
     await viewLabel(page, "Both").click();
     await expect(page.getByText("BEFORE", { exact: true })).toBeVisible();
-    await waitForRouting(page);
+    await waitForLayout(page);
     await screenshotBoard(page, `${EVIDENCE}/both-light-1440.png`);
   });
 
@@ -96,7 +188,7 @@ test.describe("slice 9 routing and label layout", () => {
     await loadOakPark(page);
     await page.getByRole("button", { name: "Menu" }).click();
     await page.getByRole("menuitem", { name: "Dark mode" }).click();
-    await waitForRouting(page);
+    await waitForLayout(page);
     await screenshotBoard(page, `${EVIDENCE}/before-dark-1440.png`);
   });
 
@@ -110,7 +202,7 @@ test.describe("slice 9 routing and label layout", () => {
     await dialog.getByRole("button", { name: "Confirm" }).click();
     await expect(page.getByText("Write BS&A Software")).toHaveCount(0);
     await expect(page.getByText("Review BS&A Software").first()).toBeVisible();
-    await waitForRouting(page);
+    await waitForLayout(page);
     await screenshotBoard(page, `${EVIDENCE}/restitch-1440.png`);
   });
 
@@ -121,7 +213,7 @@ test.describe("slice 9 routing and label layout", () => {
     await page.goto("/");
     await expect(page.getByText("step 0").first()).toBeVisible({ timeout: 15_000 });
     const started = Date.now();
-    await waitForRouting(page);
+    await waitForLayout(page);
     expect(Date.now() - started).toBeLessThan(8_000);
     await screenshotBoard(page, `${EVIDENCE}/stress-30-1440.png`);
   });

@@ -290,6 +290,45 @@ test("N:1 removal fans every predecessor onto the successor", () => {
   expect(validateWorkflow(applied.value)).toEqual([]);
 });
 
+test("M:N nearest pairings follow a displayed PositionMap over saved positions", () => {
+  const board = doc(
+    [
+      step("r"),
+      step("a", 0, 40),
+      step("b", 100, 40),
+      step("n", 50, 80),
+      step("c", 0, 120),
+      step("d", 100, 120),
+    ],
+    [
+      path("e1", "r", "a"),
+      path("e2", "r", "b"),
+      path("e3", "a", "n"),
+      path("e4", "b", "n"),
+      path("e5", "n", "c"),
+      path("e6", "n", "d"),
+    ],
+  );
+  /* The derived layout shows a below b and c below d: the nearest pairing flips. */
+  const displayed = {
+    a: { x: 400, y: 300 },
+    b: { x: 400, y: 0 },
+    c: { x: 800, y: 300 },
+    d: { x: 800, y: 0 },
+  };
+  const plan = planNodeRemoval(board, "n", displayed);
+  expect(plan.ok).toBe(true);
+  if (!plan.ok) return;
+  expect(plan.value.pairings.map((p) => [p.predecessorId, p.successorId])).toEqual([
+    ["b", "d"],
+    ["a", "c"],
+  ]);
+  const applied = applyNodeRemoval(board, plan.value, plan.value.pairings, displayed);
+  expect(applied.ok).toBe(true);
+  if (!applied.ok) return;
+  expect(validateWorkflow(applied.value)).toEqual([]);
+});
+
 test("M:N plan uses nearest visual pairings and stays preview", () => {
   const board = doc(
     [

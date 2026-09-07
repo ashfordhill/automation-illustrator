@@ -673,3 +673,47 @@ Corrections in the same chat before the next slice starts get their own short en
   - Duplicate Slice 10 block in this ledger is historical; not rewritten
 - Status: COMPLETE
 - Commit: `feat(slice-12): harden release and rewrite README`
+
+## Improvement 01 — ELK layout and bundled Path routing — 2026-09-07
+
+- Starting commit: `10e2686e16bc34c0604cd947b70f13e1799809a1` (`feat(slice-12): harden release and rewrite README`)
+- Working tree at start: not clean (prior unfinished Improvement 01 already had elkjs, layout modules, and evidence). Branch `main`. HEAD matched Slice 12. This chat finished that work, plus the user-requested inspector/canvas UX extras and a follow-up plan, in one commit. `npm install` 137 packages, 0 vulnerabilities.
+- GOAL clauses addressed: CX-03, CX-04, CX-05, WG-09, WG-11, PC-01, PC-03 (ELK). Same-chat UX: NA-05, NA-07, P-06, CX-01. Amendments appended 2026-09-07; clauses not edited in place.
+- Library research and decisions: `elkjs@^0.12.0` only new runtime dependency (already approved). Worker loaded as Vite `?url` (`elkjs/lib/elk-worker.min.js`); main-thread `elk.bundled.js` is a separate chunk used only if the worker fails. `@tisoap/react-flow-smart-edge` removed. No other new runtime deps. Node placement kept `BRANDES_KOEPF` and added `elk.layered.nodePlacement.bk.fixedAlignment: BALANCED` so a fan-out parent is centered on its children and 1:1 chains stay straight. `elk.edgeLabels.inline` is set on the label element (`LABEL_OPTIONS`), not the root. `elk.layered.wrapping.strategy` stays `OFF` in shipped code. `wrapping-multi-edge-1440.png` used the long-condition MULTI_EDGE *fixture* with wrapping still OFF — not a local uncommitted wrapping-strategy toggle. Production preview (`npx vite preview --port 4178`): `.board-lane[data-layout="ready"]`, worker `assets/elk-worker.min-*.js` loaded, bundled fallback not fetched.
+- Files changed:
+  - Layout/routing: added `src/board/layout/{elkClient,elkGraph,elkLayout,layoutEngine,laneLayout,useLaneLayout,useAnimatedLayout}.ts` and tests; `src/board/routing/LaneLayoutContext.ts`; `Board.tsx`, `FlowArrow.tsx`, `polyline.ts`, `tileMetrics.ts`. Deleted `layoutLane.ts`, `placeLabels.ts`, `PathLayout.tsx`, `smartStep.ts`, `useModestMotion.ts`.
+  - Graph/commands: `PositionMap` through `graph.ts`, `commands.ts`, `store.ts`, `merge.ts` (WG-09/WG-11 on displayed positions).
+  - Inspector/canvas UX: `SelectedItemForm.tsx`, `TypeButtons.tsx`, `types.ts` (`typePickerKinds`), `App.tsx` (aside scroll), `PathHostFrame.tsx` (toolbar selected-only), `CanvasHelper.tsx` / `tokens.css` (Excalidraw-style keycaps), `ActorColumn.tsx` (Who figures not clipped).
+  - Contract/docs: `.docs/GOAL.md` Amendments, `.docs/IMPROVEMENTS.md`, `.docs/BUILD_PLAN.md` ELK supersession note, `.cursor/rules/agent-handoff.mdc` retained stack, `.docs/merge-tile-and-drag.plan.md`, `.docs/menu-tab-plus.{png,svg}`.
+  - Tests: `elkLayout.test.ts`, `layoutEngine.test.ts`, `types.test.ts`; e2e `waitForLayout` in `e2e/ready.ts`; `e2e/routing.spec.ts` evidence under `.docs/evidence/improve-01-layout/`; inspector/canvas/shell/projection/smoke/merge copy updates.
+  - Deps: `package.json` / `package-lock.json` (`elkjs`, Smart Edge gone).
+- Behavior implemented: Each lane is one ELK layered/orthogonal pass — compact columns, shared Path trunks that split at right angles, chips in reserved gutters that contract when shortened (CX-05). Adding/removing a Node re-packs the lane. Inspector Type omits Scan/Drag/Approve/File unless already stored; Split is Path 1 Path / All Paths and hidden for a single outgoing Path; fields are Name and Details; idle “Select a tile…” copy is gone; inspector and Who portraits scroll/fit instead of clipping; canvas hints are quiet bottom keycaps; +/− show only on the selected tile (or its open add menu).
+- Tests and exact results:
+  - `npm install` — 137 packages, 0 vulnerabilities
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; main `index-CJWBh1Dz.js` 858.81 kB; worker `elk-worker.min-r_yRvuMO.js` 1,595.33 kB; bundled fallback `elk.bundled-BuO9ZEBf.js` 1,431.11 kB, not in the main graph)
+  - `npm run test:unit` — pass (29 files, 150 tests)
+  - `npm run test:e2e` — pass (76 passed, Chromium, 3 workers, 37.3s including webServer)
+- Evidence:
+  - `.docs/evidence/improve-01-layout/before-light-1440.png` — Oak Park Before, bundled fan-out, centered parent, straight chain after merge (1440×900)
+  - `.docs/evidence/improve-01-layout/condition-chip-1440.png` — chips beside branch segments, clickable
+  - `.docs/evidence/improve-01-layout/label-contract-1440.png` — CX-05 contraction after shortening a condition
+  - `.docs/evidence/improve-01-layout/after-light-1440.png` — After lane ELK
+  - `.docs/evidence/improve-01-layout/both-light-1440.png` — Both comparison after routing settles
+  - `.docs/evidence/improve-01-layout/before-dark-1440.png` — dark theme routed Paths
+  - `.docs/evidence/improve-01-layout/restitch-1440.png` — removal restitch stretch then settle
+  - `.docs/evidence/improve-01-layout/stress-30-1440.png` — ~30 Nodes/Paths (P-03)
+  - `.docs/evidence/improve-01-layout/add-step-1440.png` — new Step in the next column; inspector Name/Details; selected-only +/−; quiet hints
+  - `.docs/evidence/improve-01-layout/mailroom-after-1440.png` — Mailroom After ELK (merge tile still the Slice 11 giant Step)
+  - `.docs/evidence/improve-01-layout/wrapping-multi-edge-1440.png` — three long wrapping conditions, wrapping.strategy OFF
+  - `.docs/evidence/improve-01-layout/zoom-out-label-1440.png` — chip remains the Path hit target when zoomed out (CX-02)
+  - `.docs/evidence/improve-01-layout/before-light-1024.png` — supported min-width (1024×768)
+  - Earlier-slice e2e folders (`01-harness` … `12-release`) recaptured in this commit so historical screenshots match the ELK board.
+- Earlier-slice defects fixed: none that blocked ELK. Inspector rail overflow (Who/score clipped) and hover +/− were product gaps closed here under NA-07 / CX-01 / P-06.
+- Known limitations / follow-ups:
+  - Merge-group tiles still distort (MG-08 chrome on `STEP_H` ActorColumn). Drag-to-insert, selected-only trash drop, Path `−` on 2+ outgoing only, and the `+` tab drop-palette are specified for a later agent in `.docs/merge-tile-and-drag.plan.md` (visual refs `.docs/menu-tab-plus.png` / `.svg`). Do not implement in this commit.
+  - `elk.layered.wrapping.strategy` remains OFF; wrapping screenshot is long labels, not MULTI_EDGE wrapping.
+  - `LaneLayout.bounds` is computed but no frame UI (possible later improvement).
+  - Mailroom giant-Step internal condition text still truncates past ~22 characters.
+  - Vite chunk-size warning (main ~859 kB plus worker/fallback) and React Flow Pro attribution console warning remain.
+- Status: COMPLETE
+- Commit: `feat(improve-01): add ELK layout and bundled Path routing`

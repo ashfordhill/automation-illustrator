@@ -1,5 +1,5 @@
 /**
- * Wrapped Path-condition chip size. Used by layoutLane (CX-05) and placement (CX-04).
+ * Wrapped Path-condition chip size. Fed to ELK as inline edge-label boxes (CX-04, CX-05).
  * Explicit max width; extra lines clamp with an ellipsis. No DOM required.
  */
 import { GRID } from "./tileMetrics";
