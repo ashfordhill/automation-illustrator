@@ -1,14 +1,17 @@
 /**
  * Right inspector: Step / Data / Path forms, Who, Manage actors (NA-01..12, PC-02..03).
+ * Both is read-only comparison (BA-05). After-only Nodes/Paths resolve from the overlay.
  */
 import { Button, Stack, Text, TextInput } from "@mantine/core";
 import {
   SelectionKind,
   SplitKind,
+  ViewMode,
   WorkflowNodeKind,
 } from "../../workflow/catalogs";
-import { edgeIsDotted } from "../../workflow/graph";
-import { laneAssignments } from "../../workflow/types";
+import { afterGraph, edgeIsDotted } from "../../workflow/graph";
+import { isStepNode, laneAssignments } from "../../workflow/types";
+import { findEdge, findMergeGroup, findNode, isAfterOnlyNode } from "../../workflow/selectors";
 import { useStore } from "../../state/store";
 import { ManageActorsPanel } from "./ManageActorsPanel";
 import { TypeButtons } from "./TypeButtons";
@@ -65,24 +68,54 @@ export function DetailsPanel() {
   const selected = useStore((s) => s.selected);
   const workflow = useStore((s) => s.workflow);
   const lane = useStore((s) => s.assignmentLane());
+  const view = useStore((s) => s.view);
   const manageOpen = useStore((s) => s.manageActorsOpen);
+  const readOnly = view === ViewMode.Both;
 
   if (manageOpen) return <ManageActorsPanel />;
+
+  const idleCopy = readOnly
+    ? "Both is a read-only comparison. Select a tile or Path to inspect."
+    : "Select a tile or Path to edit.";
 
   if (!selected) {
     return (
       <Stack gap="sm" p="sm" className="chrome-hide">
         <Text size="sm" className="hint-copy">
-          Select a tile or Path to edit.
+          {idleCopy}
         </Text>
-        <ManageActorsButton />
+        {readOnly ? null : <ManageActorsButton />}
       </Stack>
     );
   }
 
   if (selected.type === SelectionKind.Node) {
-    const n = workflow.nodes.find((x) => x.id === selected.id);
+    const group = findMergeGroup(workflow, selected.id);
+    if (group) {
+      const names = group.memberIds.map((id) => {
+        const n = findNode(workflow, id);
+        if (n && isStepNode(n)) return n.title.trim() || n.stepKind;
+        return id;
+      });
+      const whoId = laneAssignments(workflow, lane)[group.memberIds[0] ?? ""] ?? "";
+      return (
+        <Stack gap="xs" p="sm" className="chrome-hide">
+          <Text fw={800}>Merged Steps</Text>
+          <Text size="sm" className="hint-copy">
+            {names.join(" · ") || "Merged Before-origin Steps."}
+          </Text>
+          <Text size="sm" fw={700}>
+            Who
+          </Text>
+          <WhoButtons actors={workflow.actors} value={whoId} onChange={() => undefined} disabled />
+        </Stack>
+      );
+    }
+
+    const n = findNode(workflow, selected.id);
     if (!n) return null;
+    const extra = isAfterOnlyNode(workflow, n.id);
+    const showRemove = !readOnly && !extra;
     if (n.type === WorkflowNodeKind.DataField) {
       return (
         <Stack gap="xs" p="sm" className="chrome-hide">
@@ -91,16 +124,20 @@ export function DetailsPanel() {
             id="data-label-field"
             label="Label"
             value={n.label}
+            readOnly={readOnly}
             onChange={(e) => useStore.getState().updateNode(n.id, { label: e.target.value })}
           />
-          <Button color="red" variant="light" size="xs" onClick={() => useStore.getState().beginRemovePick(n.id)}>
-            Remove
-          </Button>
+          {showRemove ? (
+            <Button color="red" variant="light" size="xs" onClick={() => useStore.getState().beginRemovePick(n.id)}>
+              Remove
+            </Button>
+          ) : null}
         </Stack>
       );
     }
     const actorId = laneAssignments(workflow, lane)[n.id] ?? "";
-    const outs = workflow.edges.filter((e) => e.source === n.id).length;
+    const graph = extra ? afterGraph(workflow) : { nodes: workflow.nodes, edges: workflow.edges };
+    const outs = graph.edges.filter((e) => e.source === n.id).length;
     return (
       <Stack gap="xs" p="sm" className="chrome-hide">
         <Text fw={800}>Step</Text>
@@ -109,6 +146,7 @@ export function DetailsPanel() {
         </Text>
         <TypeButtons
           value={n.stepKind}
+          disabled={readOnly}
           onChange={(stepKind) => useStore.getState().updateNode(n.id, { stepKind })}
         />
         {outs >= 2 ? (
@@ -119,6 +157,7 @@ export function DetailsPanel() {
             <FatChoice
               label="Split: One of / Every"
               value={n.split}
+              disabled={readOnly}
               onChange={(v) =>
                 useStore.getState().updateNode(n.id, { split: v as typeof n.split })
               }
@@ -132,11 +171,13 @@ export function DetailsPanel() {
         <TextInput
           label="Target"
           value={n.title}
+          readOnly={readOnly}
           onChange={(e) => useStore.getState().updateNode(n.id, { title: e.target.value })}
         />
         <TextInput
           label="System / detail"
           value={n.detail}
+          readOnly={readOnly}
           onChange={(e) => useStore.getState().updateNode(n.id, { detail: e.target.value })}
         />
         <Text size="sm" fw={700}>
@@ -145,21 +186,26 @@ export function DetailsPanel() {
         <WhoButtons
           actors={workflow.actors}
           value={actorId}
+          disabled={readOnly}
           onChange={(id) => useStore.getState().assignActor(n.id, id)}
         />
-        <ManageActorsButton />
-        <Button color="red" variant="light" size="xs" onClick={() => useStore.getState().beginRemovePick(n.id)}>
-          Remove
-        </Button>
+        {readOnly ? null : <ManageActorsButton />}
+        {showRemove ? (
+          <Button color="red" variant="light" size="xs" onClick={() => useStore.getState().beginRemovePick(n.id)}>
+            Remove
+          </Button>
+        ) : null}
       </Stack>
     );
   }
 
   if (selected.type === SelectionKind.Edge) {
-    const e = workflow.edges.find((x) => x.id === selected.id);
+    const e = findEdge(workflow, selected.id);
     if (!e) return null;
-    const outs = workflow.edges.filter((x) => x.source === e.source).length;
-    const dotted = edgeIsDotted(workflow.nodes, workflow.edges, e);
+    const extra = workflow.after.extraEdges.some((x) => x.id === e.id);
+    const graph = extra ? afterGraph(workflow) : { nodes: workflow.nodes, edges: workflow.edges };
+    const outs = graph.edges.filter((x) => x.source === e.source).length;
+    const dotted = edgeIsDotted(graph.nodes, graph.edges, e);
     return (
       <Stack gap="xs" p="sm" className="chrome-hide">
         <Text fw={800}>Path / condition</Text>
@@ -167,6 +213,7 @@ export function DetailsPanel() {
           id="path-condition-field"
           label="condition"
           value={e.label}
+          readOnly={readOnly}
           onChange={(ev) => useStore.getState().updateEdge(e.id, { label: ev.target.value })}
         />
         <Text size="sm" fw={700}>
@@ -175,7 +222,7 @@ export function DetailsPanel() {
         <FatChoice
           label="Always visited (solid) / Choice (dotted)"
           value={dotted ? "dotted" : "solid"}
-          disabled={outs < 2}
+          disabled={readOnly || outs < 2}
           onChange={(v) => useStore.getState().updateEdge(e.id, { dashed: v === "dotted" })}
           options={[
             { value: "solid", label: "Always visited (solid)" },
@@ -189,9 +236,9 @@ export function DetailsPanel() {
   return (
     <Stack gap="sm" p="sm" className="chrome-hide">
       <Text size="sm" className="hint-copy">
-        Select a tile or Path to edit.
+        {idleCopy}
       </Text>
-      <ManageActorsButton />
+      {readOnly ? null : <ManageActorsButton />}
     </Stack>
   );
 }

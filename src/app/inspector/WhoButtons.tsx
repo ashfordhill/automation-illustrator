@@ -10,10 +10,12 @@ export function WhoButtons({
   actors,
   value,
   onChange,
+  disabled,
 }: {
   actors: ActorDto[];
   value: string;
   onChange: (actorId: string) => void;
+  disabled?: boolean;
 }) {
   return (
     <div className="inspector-who-grid" role="group" aria-label="Who">
@@ -27,6 +29,7 @@ export function WhoButtons({
             className={`inspector-who${on ? " is-on" : ""}`}
             aria-pressed={on}
             aria-label={`Who ${actor.name}`}
+            disabled={disabled}
             onClick={() => onChange(actor.id)}
           >
             <span className="inspector-who-fig" style={{ background: actor.color }}>

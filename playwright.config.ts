@@ -8,6 +8,7 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: 0,
+  workers: 3,
   reporter: [["list"]],
   use: {
     baseURL: e2eOrigin,

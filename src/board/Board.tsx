@@ -1,7 +1,6 @@
 /**
  * React Flow canvas for one Before or After lane.
- * Maps WorkflowDoc → derived lane layout + Smart Edge Paths; click/link/remove-pick
- * dispatch into the store. Binds reactFlowBridge so keyboard pan can move this viewport.
+ * Projects the v2 document, derives lane layout, and binds a per-lane viewport (BA-05).
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -18,11 +17,13 @@ import { SmartEdgeProvider, type SmartEdgeMetrics } from "@tisoap/react-flow-sma
 import "@xyflow/react/dist/style.css";
 import {
   ReactFlowEdgeKind,
+  ViewMode,
   reactFlowTypeFor,
   SelectionKind,
   WorkflowNodeKind,
 } from "../workflow/catalogs";
 import { bindReactFlow } from "./reactFlowBridge";
+import { projectLane } from "../state/projection";
 import { useStore } from "../state/store";
 import { edgeTypes, nodeTypes, type Lane } from "./nodes/reactFlowRegistry";
 import { FIELD_H, FIELD_W, GRID, STEP_H, STEP_W, nodeSize } from "./layout/tileMetrics";
@@ -49,8 +50,10 @@ function nodeClassName(
   interaction: ReturnType<typeof useStore.getState>["interaction"],
   candidates: string[],
   departingId: string | null,
+  merge?: boolean,
 ): string {
   const parts = ["nopan"];
+  if (merge) parts.push("is-merge-group");
   if (departingId === id) parts.push("node-departing");
   if (interaction.kind === "remove-pick" && candidates.includes(id)) {
     parts.push(interaction.candidateId === id ? "remove-candidate-on" : "remove-candidate");
@@ -75,6 +78,9 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
   const focusId = useStore((s) => s.focusId);
   const interaction = useStore((s) => s.interaction);
   const departing = useStore((s) => s.departing);
+  const focusedLane = useStore((s) => s.focusedLane);
+  const view = useStore((s) => s.view);
+  const initialViewport = useRef(useStore.getState().laneViewports[lane]);
   const rf = useReactFlow();
   const editing = !present;
   const hostId = interaction.kind === "remove-pick" ? interaction.hostId : null;
@@ -82,32 +88,34 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
     ? removalCandidateIds(workflow.nodes, workflow.edges, hostId)
     : [];
 
+  const projection = useMemo(() => projectLane(workflow, lane), [workflow, lane]);
+
   const labelBoxes = useMemo(() => {
     const boxes: Record<string, ReturnType<typeof measureLabelBox>> = {};
-    for (const e of workflow.edges) {
+    for (const e of projection.edges) {
       if (e.label.trim()) boxes[e.id] = measureLabelBox(e.label);
     }
     return boxes;
-  }, [workflow.edges]);
+  }, [projection.edges]);
 
   const derived = useMemo(
-    () => layoutLane(workflow.nodes, workflow.edges, labelBoxes),
-    [workflow.nodes, workflow.edges, labelBoxes],
+    () => layoutLane(projection.nodes, projection.edges, labelBoxes),
+    [projection.nodes, projection.edges, labelBoxes],
   );
   const display = useModestMotion(derived);
   const lastPos = useRef(display);
   lastPos.current = { ...lastPos.current, ...display };
 
-  const [settled, setSettled] = useState(workflow.edges.length === 0);
+  const [settled, setSettled] = useState(projection.edges.length === 0);
   const [avoidAreas, setAvoidAreas] = useState<Rect[]>([]);
   const avoidCycles = useRef(0);
-  const graphKey = `${workflow.nodes.map((n) => n.id).join(",")}|${workflow.edges.map((e) => `${e.id}:${e.label}`).join(",")}`;
+  const graphKey = `${projection.nodes.map((n) => n.id).join(",")}|${projection.edges.map((e) => `${e.id}:${e.label}`).join(",")}`;
 
   useEffect(() => {
     avoidCycles.current = 0;
     setAvoidAreas([]);
-    setSettled(workflow.edges.length === 0);
-  }, [graphKey, workflow.edges.length]);
+    setSettled(projection.edges.length === 0);
+  }, [graphKey, projection.edges.length]);
 
   const onLabelRects = useCallback((rects: LabelPlacement[]) => {
     if (!rects.length) return;
@@ -129,34 +137,40 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
     return () => window.clearTimeout(t);
   }, [departing]);
 
-  const prevEdgeIds = useRef(new Set(workflow.edges.map((e) => e.id)));
+  const prevEdgeIds = useRef(new Set(projection.edges.map((e) => e.id)));
   const [stretchIds, setStretchIds] = useState<Set<string>>(new Set());
   useEffect(() => {
     if (!departing) {
-      prevEdgeIds.current = new Set(workflow.edges.map((e) => e.id));
+      prevEdgeIds.current = new Set(projection.edges.map((e) => e.id));
       setStretchIds(new Set());
       return;
     }
-    const next = new Set(workflow.edges.map((e) => e.id));
+    const next = new Set(projection.edges.map((e) => e.id));
     setStretchIds(new Set([...next].filter((id) => !prevEdgeIds.current.has(id))));
-  }, [departing, workflow.edges]);
+  }, [departing, projection.edges]);
 
   const hideFromObstacles = new Set<string>();
   if (departing) hideFromObstacles.add(departing.node.id);
   if (interaction.kind === "remove-preview") hideFromObstacles.add(interaction.plan.nodeId);
 
-  const rfNodes: Node[] = workflow.nodes.map((n) => {
+  const rfNodes: Node[] = projection.nodes.map((n) => {
     const pos = pointAt(display, n.id, n.position);
     const size = tileSize(n.type);
     return {
       id: n.id,
       type: reactFlowTypeFor(n.type),
       position: pos,
-      data: { lane },
+      data: {
+        lane,
+        node: n,
+        projectedKind: n.projectedKind,
+        originId: n.originId,
+        memberIds: n.memberIds,
+      },
       draggable: false,
       selectable: editing,
       selected: selected?.type === SelectionKind.Node && selected.id === n.id,
-      className: nodeClassName(n.id, interaction, candidates, null),
+      className: nodeClassName(n.id, interaction, candidates, null, n.projectedKind === "group"),
       width: size.w,
       height: size.h,
       measured: { width: size.w, height: size.h },
@@ -164,7 +178,7 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
     };
   });
 
-  if (departing && !workflow.nodes.some((n) => n.id === departing.node.id)) {
+  if (departing && !projection.nodes.some((n) => n.id === departing.node.id)) {
     const n = departing.node;
     const pos = lastPos.current[n.id] ?? n.position;
     const size = tileSize(n.type);
@@ -172,7 +186,7 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
       id: n.id,
       type: reactFlowTypeFor(n.type),
       position: pos,
-      data: { lane, departing: true },
+      data: { lane, node: n, departing: true },
       draggable: false,
       selectable: false,
       className: nodeClassName(n.id, interaction, [], n.id),
@@ -199,36 +213,36 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
 
   const nodeRects: NodeRect[] = useMemo(
     () =>
-      workflow.nodes.map((n) => {
+      projection.nodes.map((n) => {
         const pos = pointAt(display, n.id, n.position);
         const size = nodeSize(n.type);
         return { id: n.id, x: pos.x, y: pos.y, w: size.w, h: size.h };
       }),
     // displayKey captures modest-motion frames without a new identity each rAF.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- display is keyed
-    [workflow.nodes, displayKey],
+    [projection.nodes, displayKey],
   );
 
   const labels = useMemo(() => {
     const next: Record<string, string> = {};
-    for (const e of workflow.edges) next[e.id] = e.label;
+    for (const e of projection.edges) next[e.id] = e.label;
     if (interaction.kind === "remove-preview") {
       for (const p of interaction.plan.pairings) {
         next[`preview-${p.predecessorId}-${p.successorId}`] = p.condition;
       }
     }
     return next;
-  }, [workflow.edges, interaction]);
+  }, [projection.edges, interaction]);
 
   useEffect(() => {
-    bindReactFlow(rf);
-    return () => bindReactFlow(null);
-  }, [rf]);
+    bindReactFlow(lane, rf);
+    return () => bindReactFlow(lane, null);
+  }, [rf, lane]);
 
   useEffect(() => {
     if (!focusId) return;
     const id = focusId;
-    const n = workflow.nodes.find((x) => x.id === id);
+    const n = projection.nodes.find((x) => x.id === id || x.originId === id);
     if (n) {
       const pos = pointAt(display, n.id, n.position);
       const w = n.type === WorkflowNodeKind.Step ? STEP_W : FIELD_W;
@@ -241,7 +255,7 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
     queueMicrotask(() => {
       useStore.getState().consumeFocus(id);
     });
-  }, [focusId, rf, workflow.nodes, display]);
+  }, [focusId, rf, projection.nodes, display]);
 
   const via = departing
     ? {
@@ -250,7 +264,7 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
       }
     : null;
 
-  const edges: Edge<FlowPathData>[] = workflow.edges.map((e) => {
+  const edges: Edge<FlowPathData>[] = projection.edges.map((e) => {
     const stretching = stretchIds.has(e.id);
     return {
       id: e.id,
@@ -258,8 +272,8 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
       target: e.target,
       type: ReactFlowEdgeKind.Flow,
       selectable: editing && interaction.kind !== "remove-pick" && interaction.kind !== "remove-preview",
-      selected: selected?.type === SelectionKind.Edge && selected.id === e.id,
-      data: stretching && via ? { stretch: true, viaX: via.x, viaY: via.y } : {},
+      selected: selected?.type === SelectionKind.Edge && selected.id === e.originId,
+      data: stretching && via ? { stretch: true, viaX: via.x, viaY: via.y, originId: e.originId } : { originId: e.originId },
     };
   });
 
@@ -281,6 +295,7 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
 
   const onNodeClick = useCallback((_: unknown, n: Node) => {
     const s = useStore.getState();
+    s.setFocusedLane(lane);
     if (s.present) return;
     if (s.interaction.kind === "connect-existing") {
       s.completeLinkTo(n.id);
@@ -293,15 +308,20 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
     if (s.interaction.kind === "remove-preview") return;
     s.select({ type: SelectionKind.Node, id: n.id });
     blurDetailsFocus();
-  }, []);
+  }, [lane]);
 
   const linking = interaction.kind === "connect-existing";
+  const panTarget = view === ViewMode.Both && focusedLane === lane;
 
   return (
     <div
-      className="board-lane"
+      className={`board-lane${panTarget ? " is-pan-target" : ""}`}
       data-smart-edge={settled ? "settled" : "pending"}
+      data-lane={lane}
+      data-pan-target={panTarget ? "true" : "false"}
+      aria-label={lane === "after" ? "After lane" : "Before lane"}
       style={{ height: height ?? "100%" }}
+      onPointerDown={() => useStore.getState().setFocusedLane(lane)}
     >
       <SmartEdgeProvider
         nodes={obstacleNodes}
@@ -332,11 +352,16 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
             maxZoom={1.35}
             snapToGrid
             snapGrid={[GRID, GRID]}
-            fitView
+            defaultViewport={initialViewport.current}
+            fitView={!initialViewport.current}
             fitViewOptions={{ padding: 0.28 }}
+            onMoveEnd={(_, viewport) => {
+              useStore.getState().setLaneViewport(lane, viewport);
+            }}
             proOptions={{ hideAttribution: true }}
             onPaneClick={() => {
               const s = useStore.getState();
+              s.setFocusedLane(lane);
               if (s.present) return;
               s.closeBoardModes();
               s.select(null);
@@ -344,11 +369,13 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
             onNodeClick={onNodeClick}
             onEdgeClick={(_, e) => {
               const s = useStore.getState();
+              s.setFocusedLane(lane);
               if (s.present) return;
               if (s.interaction.kind === "remove-pick" || s.interaction.kind === "remove-preview") {
                 return;
               }
-              s.select({ type: SelectionKind.Edge, id: e.id });
+              const originId = (e.data as FlowPathData | undefined)?.originId;
+              s.select({ type: SelectionKind.Edge, id: typeof originId === "string" ? originId : e.id });
               blurDetailsFocus();
             }}
             className={`pointer-mode${linking ? " linking" : ""}`}
@@ -368,8 +395,9 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
 }
 
 export function Board({ lane, height }: { lane: Lane; height?: string }) {
+  const epoch = useStore((s) => s.canvasEpoch);
   return (
-    <ReactFlowProvider>
+    <ReactFlowProvider key={`${lane}-${epoch}`}>
       <Inner lane={lane} height={height} />
     </ReactFlowProvider>
   );

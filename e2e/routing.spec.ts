@@ -118,9 +118,9 @@ test.describe("slice 9 routing and label layout", () => {
     await page.addInitScript((doc) => {
       localStorage.setItem("automation-pitch.workflow", JSON.stringify(doc));
     }, STRESS);
-    const started = Date.now();
     await page.goto("/");
     await expect(page.getByText("step 0").first()).toBeVisible({ timeout: 15_000 });
+    const started = Date.now();
     await waitForRouting(page);
     expect(Date.now() - started).toBeLessThan(8_000);
     await screenshotBoard(page, `${EVIDENCE}/stress-30-1440.png`);

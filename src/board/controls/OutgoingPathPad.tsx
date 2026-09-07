@@ -7,16 +7,23 @@ import { type CSSProperties } from "react";
 import { prettyKey, KeyAction } from "../../keyboard/bindings";
 import { useStore } from "../../state/store";
 import { ViewMode, WorkflowNodeKind } from "../../workflow/catalogs";
+import { findMergeGroup, isAfterOnlyNode } from "../../workflow/selectors";
 
 export function OutgoingPathPad({ nodeId }: { nodeId: string }) {
   const interaction = useStore((s) => s.interaction);
   const keymap = useStore((s) => s.keymap);
   const view = useStore((s) => s.view);
+  const workflow = useStore((s) => s.workflow);
   const linking = interaction.kind === "connect-existing" && interaction.sourceId === nodeId;
   const picking = interaction.kind === "remove-pick" && interaction.hostId === nodeId;
   const menuOpen = interaction.kind === "add-menu" && interaction.sourceId === nodeId;
   const plusOn = linking || menuOpen;
-  const showPlus = view !== ViewMode.After;
+  const showPlus = view === ViewMode.Before;
+  const showMinus =
+    view !== ViewMode.Both &&
+    !findMergeGroup(workflow, nodeId) &&
+    !isAfterOnlyNode(workflow, nodeId);
+  if (!showPlus && !showMinus && !menuOpen) return null;
   return (
     <div
       className="nopan nowheel outgoing-path-pad"
@@ -39,6 +46,7 @@ export function OutgoingPathPad({ nodeId }: { nodeId: string }) {
             +
           </button>
         ) : null}
+        {showMinus ? (
         <button
           type="button"
           aria-label="Remove Node"
@@ -52,6 +60,7 @@ export function OutgoingPathPad({ nodeId }: { nodeId: string }) {
         >
           −
         </button>
+        ) : null}
       </div>
       {menuOpen ? (
         <div className="path-plus-menu" role="menu">

@@ -60,6 +60,8 @@ export const MSG = {
     "A Path cannot be removed on its own. Remove a Node and the workflow will be reconnected.",
   manyToMany:
     "This Node has multiple incoming and outgoing Paths. Confirm pairings before removing it.",
+  afterOriginRemoval:
+    "After cannot remove a Before-origin Step. Switch to Before to remove a Node.",
   notEmpty: "The first Step is already on the board. New Nodes must connect from an existing Node.",
   notStep: "The first Node on a board must be a Step.",
   missingNode: "That Node is not on the board.",
@@ -167,20 +169,40 @@ function weaklyConnected(ids: string[], nodes: NodeDto[], edges: EdgeDto[]): boo
 }
 
 /**
- * BA-09 / MG-10 skeleton: drop After-only Paths touching the removed Node,
- * drop its After Who, prune merge members, dissolve empty or split groups.
- * After-only Step restitch waits for Slice 10 projection.
+ * BA-09 / MG-10: restitch After-only Paths on the After graph with the same
+ * fan/nearest rules so After-only Steps stay reachable; prune merge members
+ * and dissolve empty or split groups.
  */
 export function pruneAfterOverlay(
   after: AfterOverlay,
   removedNodeId: string,
   remainingNodes: NodeDto[],
   remainingEdges: EdgeDto[],
+  original?: { nodes: NodeDto[]; edges: EdgeDto[] },
 ): OverlayEffects {
   const notices: string[] = [];
-  const extraEdges = after.extraEdges.filter(
+  const extraIds = new Set(after.extraNodes.map((n) => n.id));
+  let extraEdges = after.extraEdges.filter(
     (e) => e.source !== removedNodeId && e.target !== removedNodeId,
   );
+
+  if (original) {
+    const afterNodes = [...original.nodes, ...after.extraNodes];
+    const afterEdges = [...original.edges, ...after.extraEdges];
+    const incoming = incomingSorted(afterNodes, afterEdges, removedNodeId);
+    const outgoing = outgoingSorted(afterNodes, afterEdges, removedNodeId);
+    const predCount = uniqueIds(incoming, "source").length;
+    const succCount = uniqueIds(outgoing, "target").length;
+    const pairings =
+      predCount >= 2 && succCount >= 2
+        ? nearestPairings(afterNodes, afterEdges, incoming, outgoing)
+        : fanPairings(afterNodes, afterEdges, incoming, outgoing);
+    const extraPairings = pairings.filter(
+      (p) => extraIds.has(p.predecessorId) || extraIds.has(p.successorId),
+    );
+    extraEdges = applyPairings(afterNodes, extraEdges, extraPairings);
+  }
+
   const remainingIds = new Set(remainingNodes.map((n) => n.id));
   const groups: MergeGroupDto[] = [];
   for (const g of after.groups) {
@@ -457,6 +479,7 @@ function planFromNeighborhood(
     nodeId,
     remainingNodes,
     remainingEdges,
+    { nodes: doc.nodes, edges: doc.edges },
   );
   return ok({
     nodeId,
@@ -579,6 +602,7 @@ export function applyNodeRemoval(
     plan.nodeId,
     remainingNodes,
     remainingEdges,
+    { nodes: doc.nodes, edges: doc.edges },
   );
   return succeed({
     ...doc,

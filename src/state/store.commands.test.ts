@@ -188,13 +188,12 @@ test("undo does not change the active view; replaceDoc is a history boundary", (
   const s = useStore.getState();
   s.setView(ViewMode.After);
   const leaf = leafId(s.workflow);
-  s.select({ type: SelectionKind.Node, id: leaf });
-  s.deleteSelection();
-  s.confirmRemove();
+  s.updateNode(leaf, { title: "typed-from-after" });
   expect(useStore.getState().past.length).toBeGreaterThan(0);
   s.undo();
   expect(useStore.getState().view).toBe(ViewMode.After);
-  expect(useStore.getState().workflow.nodes.some((n) => n.id === leaf)).toBe(true);
+  const undone = useStore.getState().workflow.nodes.find((n) => n.id === leaf);
+  expect(undone && "title" in undone ? undone.title : "").not.toBe("typed-from-after");
 
   s.updateNode(leaf, { title: "typed" });
   expect(useStore.getState().past.length).toBeGreaterThan(0);

@@ -1,7 +1,7 @@
 /**
  * Robot Mailroom showcase — hamburger Demo item.
- * Overlay (merge group + After-only Step) is stored now; After still draws the
- * base graph until Slice 10 projects it (BUILD_PLAN Appendix A).
+ * Overlay (merge group + After-only Step) is projected in After (Slice 10);
+ * merge dock and After-only create/remove land in Slice 11.
  */
 import { ROBOT_COLORS } from "../workflow/actors";
 import {

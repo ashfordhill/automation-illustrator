@@ -11,7 +11,8 @@ import {
 import { useSmartEdgePath } from "@tisoap/react-flow-smart-edge";
 import { SelectionKind } from "../../workflow/catalogs";
 import { useStore } from "../../state/store";
-import { edgeIsDotted } from "../../workflow/graph";
+import { afterGraph, edgeIsDotted } from "../../workflow/graph";
+import { findEdge } from "../../workflow/selectors";
 import { wrapConditionLines } from "../layout/labelBox";
 import { usePathLayout } from "./PathLayout";
 import { placementCenter } from "./placeLabels";
@@ -88,8 +89,18 @@ export function FlowArrow({
   const stretch = Boolean(pathData.stretch);
   const restitchCondition = restitch && typeof pathData.condition === "string" ? pathData.condition : "";
   const restitchDashed = restitch ? Boolean(pathData.dashed) : false;
-  const edge = restitch ? undefined : workflow.edges.find((e) => e.id === id);
-  const dotted = restitch ? restitchDashed : edge ? edgeIsDotted(workflow.nodes, workflow.edges, edge) : false;
+  const originId = typeof pathData.originId === "string" ? pathData.originId : id;
+  const edge = restitch ? undefined : findEdge(workflow, originId);
+  const graph = edge ? afterGraph(workflow) : { nodes: workflow.nodes, edges: workflow.edges };
+  const dotted = restitch
+    ? restitchDashed
+    : edge
+      ? edgeIsDotted(
+          workflow.edges.some((e) => e.id === edge.id) ? workflow.nodes : graph.nodes,
+          workflow.edges.some((e) => e.id === edge.id) ? workflow.edges : graph.edges,
+          edge,
+        )
+      : false;
   const label = restitch ? restitchCondition : edge?.label;
 
   const { route } = useSmartEdgePath({
@@ -184,7 +195,7 @@ export function FlowArrow({
               onClick={(e) => {
                 e.stopPropagation();
                 if (present || restitch) return;
-                useStore.getState().select({ type: SelectionKind.Edge, id });
+                useStore.getState().select({ type: SelectionKind.Edge, id: originId });
               }}
             >
               {lines.map((line, i) => (

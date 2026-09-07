@@ -36,7 +36,7 @@ function LaneLabel({ text }: { text: string }) {
         position: "absolute",
         top: 10,
         left: 14,
-        zIndex: 5,
+        pointerEvents: "none",
         fontWeight: 800,
         fontSize: 13,
         letterSpacing: 0.6,

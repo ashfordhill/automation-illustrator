@@ -7,11 +7,12 @@ import { SelectionKind, WorkflowNodeKind } from "../../workflow/catalogs";
 import { useStore } from "../../state/store";
 import { DataTile } from "../tiles/DataTile";
 import { PathHostFrame } from "../controls/PathHostFrame";
+import { findNode } from "../../workflow/selectors";
 
 export function DataFieldNode({ id, selected, dragging }: NodeProps) {
   const departing = useStore((s) => s.departing?.node.id === id);
   const node = useStore((s) => {
-    const live = s.workflow.nodes.find((n) => n.id === id);
+    const live = findNode(s.workflow, id);
     if (live) return live;
     const ghost = s.departing?.node;
     return ghost?.id === id ? ghost : undefined;

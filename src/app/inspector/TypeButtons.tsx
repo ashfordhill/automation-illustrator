@@ -7,9 +7,11 @@ import { StepKindIcon } from "../../board/tiles/StepKindIcon";
 export function TypeButtons({
   value,
   onChange,
+  disabled,
 }: {
   value: StepKind;
   onChange: (kind: StepKind) => void;
+  disabled?: boolean;
 }) {
   return (
     <div className="inspector-type-grid" role="group" aria-label="Type">
@@ -23,6 +25,7 @@ export function TypeButtons({
             className={`inspector-type${on ? " is-on" : ""}`}
             aria-pressed={on}
             aria-label={`Type ${label}`}
+            disabled={disabled}
             onClick={() => onChange(kind)}
           >
             <span className="inspector-type-icon">

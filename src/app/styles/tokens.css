@@ -506,6 +506,11 @@ body,
   height: 100%;
 }
 
+.board-lane.is-pan-target {
+  outline: 3px solid var(--chrome-line);
+  outline-offset: -3px;
+}
+
 .path-condition {
   display: flex;
   flex-direction: column;

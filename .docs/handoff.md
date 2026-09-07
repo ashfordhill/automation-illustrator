@@ -492,3 +492,85 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(slice-09): add smart routing and reversible label layout`
 
+## Slice 10 — After projection and comparison semantics — 2026-09-06
+
+- Starting commit: `aa8904b553c81f13a5855dc9da44d8bed5e3b07a` (`feat(slice-09): add smart routing and reversible label layout`)
+- Working tree at start: clean tracked files on `main` (11 commits ahead of `origin/main`, not pushed). Untracked planner drafts `.docs/draft-to-give-planner-agent.*` were left untouched.
+- GOAL clauses addressed: BA-02 (shared Before-origin fields edit from Before or After and show immediately), BA-04 (After cannot remove Before-origin Nodes; `−` explains), BA-05 (Both read-only; independent viewports; pan keys follow last focused lane), BA-08 (score omits After-only Steps; merged members counted individually), BA-09 (Before removal restitches After-only Paths on the combined After graph), MG-09 (display projection: internals hidden, boundary Path endpoints remapped, distinct parallel conditions kept), P-03 / AQ-06 / AQ-07 (projection unit tests plus Chromium comparison coverage)
+- Library research and decisions: no new runtime dependency. One React Flow instance per lane with `laneViewports` in Zustand; each Board reads the stored viewport once on mount so saving `onMoveEnd` does not flip `fitView` mid-mount. Pan keys use `focusedLane`; Both outlines the pan-target lane (`data-pan-target`). Group tiles are a stand-in Step from the first member until Slice 11’s giant Step. Playwright `workers` capped at 3 so Chromium + Smart Edge do not starve under six parallel browsers.
+- Files changed:
+  - Projection: new `src/state/projection.ts`, `src/workflow/selectors.ts`; `src/workflow/scoring.ts` (`automationCounts`); `src/workflow/graph.ts` (`afterGraph`); `src/workflow/commands.ts` (`pruneAfterOverlay` restitch + `MSG.afterOriginRemoval`)
+  - Store / Board: `src/state/store.ts` (`focusedLane`, `laneViewports`, `canvasEpoch`, extra-overlay patches, Both/After guards); `src/board/Board.tsx`, `reactFlowBridge.ts`, tiles, Path chrome, `FlowArrow.tsx`
+  - Inspector / shell: `SelectedItemForm.tsx`, `TypeButtons.tsx`, `WhoButtons.tsx`, `CanvasHelper.tsx`, `App.tsx`, `useAppKeys.ts`, `tokens.css`; comment in `robotMailroom.ts` and `catalogs.ts`
+  - Tests: `projection.test.ts`, `scoring.test.ts`, `store.projection.test.ts`, command/store tests; new `e2e/projection.spec.ts`; `e2e/canvas.spec.ts`, `e2e/routing.spec.ts`; `playwright.config.ts` (`workers: 3`)
+  - Evidence: `.docs/evidence/10-projection/`; earlier e2e suites recaptured 01–09 screenshots (projected After)
+  - This handoff entry
+- Behavior implemented: Before is the base graph only (no After-only receipt). After adds extra Nodes/Paths, hides merge internals, remaps boundary Path endpoints onto the group tile (`g_mail_sort` for Robot Mailroom), and keeps distinct parallel conditions. Shared Type/title/detail/Data/condition/stroke/Split edits from After write the base document and appear in Before immediately; Who stays per-lane. Both has no NodeToolbars or inspector mutation; clicking a lane sets the pan-key target. Mailroom score stays **3 of 6**. Removing a Before-origin Node restitches After-only Paths so extras stay reachable. After `−` on a Before-origin Step explains the BA-04 block.
+- Tests and exact results:
+  - `npm install` at start — up to date, 137 packages
+  - `npm run build` at start — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning)
+  - `npm run test:unit` at start — pass (22 files, 104 tests)
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning; client `index-C8faNhV7.js` 884.38 kB)
+  - `npm run test:unit` — pass (25 files, 115 tests)
+  - `npm run test:e2e` — pass (51 passed, Chromium, 3 workers, 2.4m including webServer)
+- Evidence:
+  - `.docs/evidence/10-projection/before-light-1440.png` — Robot Mailroom Before; no receipt Step (1440×900)
+  - `.docs/evidence/10-projection/after-light-1440.png` — After: merged internals hidden, receipt present, score 3 of 6 (1440×900)
+  - `.docs/evidence/10-projection/after-dark-1440.png` — same After in dark (1440×900)
+  - `.docs/evidence/10-projection/after-light-1024.png` — Mailroom After at 1024×768
+  - `.docs/evidence/10-projection/shared-edit-1440.png` — Target edited in After appears on the Before tile (1440×900)
+  - `.docs/evidence/10-projection/both-light-1440.png` — Both read-only; After lane is the pan target (1440×900)
+  - `.docs/evidence/10-projection/after-origin-blocked-1440.png` — After `−` notice on a Before-origin Step (1440×900)
+- Earlier-slice defects fixed: After could remove Before-origin Nodes (BA-04) — `−` now explains and does not mutate. Lanes shared one React Flow viewport binding — each lane has its own instance and stored viewport. A Zustand selector that returned a new object every render looped StepNode on Mailroom After. Lane-label chips stole pointer events so Both pan-focus clicks missed the canvas. `fitView={!storedViewport}` flipped after the first `onMoveEnd` and broke overlay/`+` hit-testing. Playwright default (6 workers) timed out Chromium + Smart Edge; workers capped at 3.
+- Known limitations / follow-ups:
+  - Merge/Unmerge dock, closure/convexity, preview/confirm (MG-01..MG-07) — Slice 11
+  - Giant Step with condensed internal flow and no System/detail (MG-08); group tile is a first-member stand-in — Slice 11
+  - Who-on-all-members; Unmerge from a merged tile (BA-04 remainder) — Slice 11
+  - After-only Step/Path create (`+` in After, hide `+ Data`) and After-only removal (BA-06, BA-07) — Slice 11
+  - MG-10 Before-connect convexity / group dissolution — Slice 11
+  - Auto-create a default Robot when After needs one (NA-04) — Slice 11
+  - `playCue("twoNote")` unused until the After dock exists — Slice 11
+- Status: COMPLETE
+- Commit: `feat(slice-10): add After projection and comparison`
+
+## Slice 10 — After projection and comparison semantics — 2026-09-06
+
+- Starting commit: `aa8904b553c81f13a5855dc9da44d8bed5e3b07a` (`feat(slice-09): add smart routing and reversible label layout`)
+- Working tree at start: clean tracked files on `main` (11 commits ahead of `origin/main`, not pushed). Untracked planner drafts `.docs/draft-to-give-planner-agent.*` were left untouched.
+- GOAL clauses addressed: BA-02 (shared Before-origin fields edit from Before or After and show immediately), BA-04 (After cannot remove Before-origin Nodes; `−` explains), BA-05 (Both read-only; independent viewports; pan keys follow last focused lane), BA-08 (score omits After-only Steps; merged members counted individually), BA-09 (Before removal restitches After-only Paths on the combined After graph), MG-09 (display projection: internals hidden, boundary Path endpoints remapped, distinct parallel conditions kept), P-03 / AQ-06 / AQ-07 (projection unit tests plus Chromium comparison coverage)
+- Library research and decisions: no new runtime dependency. One React Flow instance per lane with `laneViewports` in Zustand; each Board reads the stored viewport once on mount so saving `onMoveEnd` does not flip `fitView` mid-mount. Pan keys use `focusedLane`; Both outlines the pan-target lane (`data-pan-target`). Group tiles are a stand-in Step from the first member until Slice 11’s giant Step. Playwright `workers` capped at 3 so Chromium + Smart Edge do not starve under six parallel browsers.
+- Files changed:
+  - Projection: new `src/state/projection.ts`, `src/workflow/selectors.ts`; `src/workflow/scoring.ts` (`automationCounts`); `src/workflow/graph.ts` (`afterGraph`); `src/workflow/commands.ts` (`pruneAfterOverlay` restitch + `MSG.afterOriginRemoval`)
+  - Store / Board: `src/state/store.ts` (`focusedLane`, `laneViewports`, `canvasEpoch`, extra-overlay patches, Both/After guards); `src/board/Board.tsx`, `reactFlowBridge.ts`, tiles, Path chrome, `FlowArrow.tsx`
+  - Inspector / shell: `SelectedItemForm.tsx`, `TypeButtons.tsx`, `WhoButtons.tsx`, `CanvasHelper.tsx`, `App.tsx`, `useAppKeys.ts`, `tokens.css`; comment in `robotMailroom.ts` and `catalogs.ts`
+  - Tests: `projection.test.ts`, `scoring.test.ts`, `store.projection.test.ts`, command/store tests; new `e2e/projection.spec.ts`; `e2e/canvas.spec.ts`, `e2e/routing.spec.ts`; `playwright.config.ts` (`workers: 3`)
+  - Evidence: `.docs/evidence/10-projection/`; earlier e2e suites recaptured 01–09 screenshots (projected After)
+  - This handoff entry
+- Behavior implemented: Before is the base graph only (no After-only receipt). After adds extra Nodes/Paths, hides merge internals, remaps boundary Path endpoints onto the group tile (`g_mail_sort` for Robot Mailroom), and keeps distinct parallel conditions. Shared Type/title/detail/Data/condition/stroke/Split edits from After write the base document and appear in Before immediately; Who stays per-lane. Both has no NodeToolbars or inspector mutation; clicking a lane sets the pan-key target. Mailroom score stays **3 of 6**. Removing a Before-origin Node restitches After-only Paths so extras stay reachable. After `−` on a Before-origin Step explains the BA-04 block.
+- Tests and exact results:
+  - `npm install` at start — up to date, 137 packages
+  - `npm run build` at start — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning)
+  - `npm run test:unit` at start — pass (22 files, 104 tests)
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning; client `index-C8faNhV7.js` 884.38 kB)
+  - `npm run test:unit` — pass (25 files, 115 tests)
+  - `npm run test:e2e` — pass (51 passed, Chromium, 3 workers, 2.4m including webServer)
+- Evidence:
+  - `.docs/evidence/10-projection/before-light-1440.png` — Robot Mailroom Before; no receipt Step (1440×900)
+  - `.docs/evidence/10-projection/after-light-1440.png` — After: merged internals hidden, receipt present, score 3 of 6 (1440×900)
+  - `.docs/evidence/10-projection/after-dark-1440.png` — same After in dark (1440×900)
+  - `.docs/evidence/10-projection/after-light-1024.png` — Mailroom After at 1024×768
+  - `.docs/evidence/10-projection/shared-edit-1440.png` — Target edited in After appears on the Before tile (1440×900)
+  - `.docs/evidence/10-projection/both-light-1440.png` — Both read-only; After lane is the pan target (1440×900)
+  - `.docs/evidence/10-projection/after-origin-blocked-1440.png` — After `−` notice on a Before-origin Step (1440×900)
+- Earlier-slice defects fixed: After could remove Before-origin Nodes (BA-04) — `−` now explains and does not mutate. Lanes shared one React Flow viewport binding — each lane has its own instance and stored viewport. A Zustand selector that returned a new object every render looped StepNode on Mailroom After. Lane-label chips stole pointer events so Both pan-focus clicks missed the canvas. `fitView={!storedViewport}` flipped after the first `onMoveEnd` and broke overlay/`+` hit-testing. Playwright default (6 workers) timed out Chromium + Smart Edge; workers capped at 3.
+- Known limitations / follow-ups:
+  - Merge/Unmerge dock, closure/convexity, preview/confirm (MG-01..MG-07) — Slice 11
+  - Giant Step with condensed internal flow and no System/detail (MG-08); group tile is a first-member stand-in — Slice 11
+  - Who-on-all-members; Unmerge from a merged tile (BA-04 remainder) — Slice 11
+  - After-only Step/Path create (`+` in After, hide `+ Data`) and After-only removal (BA-06, BA-07) — Slice 11
+  - MG-10 Before-connect convexity / group dissolution — Slice 11
+  - Auto-create a default Robot when After needs one (NA-04) — Slice 11
+  - `playCue("twoNote")` unused until the After dock exists — Slice 11
+- Status: COMPLETE
+- Commit: `feat(slice-10): add After projection and comparison`
+

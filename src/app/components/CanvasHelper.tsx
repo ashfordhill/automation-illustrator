@@ -56,6 +56,7 @@ function hintsFor(): Hint[] {
     ];
   }
   if (s.selected?.type === SelectionKind.Edge) {
+    if (s.view === ViewMode.Both) return [];
     return [
       { key: pk(KeyAction.ToggleDash), label: "Always visited / Choice" },
       { key: pk(KeyAction.Confirm), label: "Edit condition" },
@@ -63,8 +64,11 @@ function hintsFor(): Hint[] {
     ];
   }
   if (s.selected?.type === SelectionKind.Node) {
-    const n = s.workflow.nodes.find((x) => x.id === s.selected!.id);
+    const n =
+      s.workflow.nodes.find((x) => x.id === s.selected!.id) ??
+      s.workflow.after.extraNodes.find((x) => x.id === s.selected!.id);
     const items: Hint[] = [];
+    if (s.view === ViewMode.Both) return [];
     if (s.view !== ViewMode.After) {
       items.push({ key: pk(KeyAction.AddPath), label: "Add Path" });
     }

@@ -461,6 +461,36 @@ test("pruneAfterOverlay drops extra Paths, Who, and empty or split groups", () =
   expect(pruned.after.extraNodes).toHaveLength(1);
 });
 
+test("BA-09 restitch keeps After-only Steps reachable after a Before-origin removal", () => {
+  const originalNodes = [step("r"), step("mid", 0, 40), step("tail", 0, 80)];
+  const originalEdges = [path("e1", "r", "mid"), path("e2", "mid", "tail")];
+  const extraNode = step("s_extra", 0, 80);
+  const board = doc(originalNodes, originalEdges, {
+    assignments: { r: "h1", mid: "h1", tail: "h1" },
+    after: {
+      assignments: { r: "h1", mid: "h1", tail: "h1", s_extra: "h1" },
+      groups: [],
+      extraNodes: [extraNode],
+      extraEdges: [path("ex1", "mid", "s_extra")],
+    },
+  });
+  const plan = planNodeRemoval(board, "mid");
+  expect(plan.ok).toBe(true);
+  if (!plan.ok) return;
+  const applied = applyNodeRemoval(board, plan.value);
+  expect(applied.ok).toBe(true);
+  if (!applied.ok) return;
+  expect(validateWorkflow(applied.value)).toEqual([]);
+  expect(applied.value.nodes.map((n) => n.id)).toEqual(["r", "tail"]);
+  expect(applied.value.after.extraNodes).toHaveLength(1);
+  expect(applied.value.after.extraEdges.some((e) => e.source === "r" && e.target === "s_extra")).toBe(
+    true,
+  );
+  expect(applied.value.after.extraEdges.some((e) => e.source === "mid" || e.target === "mid")).toBe(
+    false,
+  );
+});
+
 test("removing a Data Node uses the same 1:1 restitch rules", () => {
   const board = doc(
     [step("r"), data("d1", 0, 40), step("tail", 0, 80)],

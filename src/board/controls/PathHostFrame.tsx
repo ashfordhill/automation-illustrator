@@ -4,7 +4,7 @@
  */
 import { useState, type ReactNode } from "react";
 import { NodeToolbar, Position } from "@xyflow/react";
-import { SelectionKind } from "../../workflow/catalogs";
+import { SelectionKind, ViewMode } from "../../workflow/catalogs";
 import { useStore } from "../../state/store";
 import { OutgoingPathPad } from "./OutgoingPathPad";
 
@@ -21,9 +21,11 @@ export function PathHostFrame({
 }) {
   const [hover, setHover] = useState(false);
   const present = useStore((s) => s.present);
+  const view = useStore((s) => s.view);
   const interaction = useStore((s) => s.interaction);
   const showPad =
     !present &&
+    view !== ViewMode.Both &&
     !departing &&
     interaction.kind !== "remove-pick" &&
     interaction.kind !== "remove-preview" &&

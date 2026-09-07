@@ -430,6 +430,14 @@ function overlayParts(after: AfterOverlay): {
   };
 }
 
+/** Ungrouped After graph: base Nodes/Paths plus After-only Steps/Paths. */
+export function afterGraph(doc: WorkflowDoc): { nodes: NodeDto[]; edges: EdgeDto[] } {
+  return {
+    nodes: [...doc.nodes, ...doc.after.extraNodes],
+    edges: [...doc.edges, ...doc.after.extraEdges],
+  };
+}
+
 /** Identity, references, and WG-02..WG-04 for a v2 document (including After overlay refs). */
 export function validateWorkflow(doc: WorkflowDoc): GraphViolation[] {
   const extra = overlayParts(doc.after);
@@ -458,6 +466,14 @@ export function validateWorkflow(doc: WorkflowDoc): GraphViolation[] {
   out.push(...assignmentRefs(extra.afterAssignments, afterStepIds, actorIds, "After"));
   out.push(...groupRefs(extra.groups, baseStepIds));
   out.push(...validateGraphInvariants(doc.nodes, doc.edges));
+  if (extra.extraNodes.length || extra.extraEdges.length) {
+    out.push(
+      ...validateGraphInvariants(
+        [...doc.nodes, ...extra.extraNodes],
+        [...doc.edges, ...extra.extraEdges],
+      ),
+    );
+  }
   return out;
 }
 

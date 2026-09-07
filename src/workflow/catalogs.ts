@@ -85,7 +85,7 @@ export const ViewMode = {
 } as const;
 export type ViewMode = (typeof ViewMode)[keyof typeof ViewMode];
 
-/** Before/After assignment maps — Both is display-only and uses Before for editing. */
+/** Before/After assignment maps — Both is read-only comparison (BA-05). */
 export const AssignmentLane = {
   Before: "before",
   After: "after",

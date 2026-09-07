@@ -86,7 +86,6 @@ export function useAppKeys() {
 
       if (editingText) return;
       if (
-        s.present ||
         s.helpOpen ||
         s.pendingReplace ||
         s.recovery ||
@@ -95,7 +94,9 @@ export function useAppKeys() {
         return;
       }
 
-      if (s.interaction.kind === "remove-pick") {
+      const readOnlyBoard = s.present || s.view === ViewMode.Both;
+
+      if (!readOnlyBoard && s.interaction.kind === "remove-pick") {
         const up =
           keyIs(map, KeyAction.PanUp, e) ||
           e.key === "ArrowUp";
@@ -120,7 +121,7 @@ export function useAppKeys() {
         return;
       }
 
-      if (s.interaction.kind === "remove-preview") {
+      if (!readOnlyBoard && s.interaction.kind === "remove-preview") {
         if (keyIs(map, KeyAction.Confirm, e) || e.key === "Enter") {
           e.preventDefault();
           s.confirmRemove();
@@ -129,7 +130,7 @@ export function useAppKeys() {
         return;
       }
 
-      if (s.interaction.kind === "add-menu") {
+      if (!readOnlyBoard && s.interaction.kind === "add-menu") {
         e.preventDefault();
         if (keyIs(map, KeyAction.AddBranchStep, e)) {
           s.spawnBranch(s.interaction.sourceId, WorkflowNodeKind.Step);
@@ -154,7 +155,7 @@ export function useAppKeys() {
         return;
       }
 
-      if (s.interaction.kind === "connect-existing") {
+      if (!readOnlyBoard && s.interaction.kind === "connect-existing") {
         if (keyIs(map, KeyAction.RemoveNode, e)) {
           e.preventDefault();
           s.beginRemovePick(s.interaction.sourceId);
@@ -163,7 +164,7 @@ export function useAppKeys() {
         return;
       }
 
-      if (s.selected?.type === SelectionKind.Edge) {
+      if (!readOnlyBoard && s.selected?.type === SelectionKind.Edge) {
         if (keyIs(map, KeyAction.ToggleDash, e)) {
           e.preventDefault();
           s.toggleSelectedDash();
@@ -176,8 +177,9 @@ export function useAppKeys() {
         }
       }
 
-      if (s.selected?.type === SelectionKind.Node) {
-        const n = s.workflow.nodes.find((x) => x.id === s.selected!.id);
+      if (!readOnlyBoard && s.selected?.type === SelectionKind.Node) {
+        const n = s.workflow.nodes.find((x) => x.id === s.selected!.id)
+          ?? s.workflow.after.extraNodes.find((x) => x.id === s.selected!.id);
         if (
           n?.type === WorkflowNodeKind.DataField &&
           (keyIs(map, KeyAction.Confirm, e) || e.key === "Enter")
@@ -199,6 +201,7 @@ export function useAppKeys() {
       }
 
       if (
+        !readOnlyBoard &&
         s.selected &&
         (isDeleteKey(e) || action === KeyAction.Delete)
       ) {
@@ -207,11 +210,13 @@ export function useAppKeys() {
         return;
       }
 
-      if (action === KeyAction.Undo) {
+      if (!s.present && action === KeyAction.Undo) {
         e.preventDefault();
         s.undo();
         return;
       }
+
+      if (s.present) return;
 
       const pan: Partial<Record<KeyActionT, [number, number]>> = {
         [KeyAction.PanLeft]: [80, 0],
@@ -221,7 +226,7 @@ export function useAppKeys() {
       };
       if (action && pan[action]) {
         e.preventDefault();
-        panBy(...pan[action]!);
+        panBy(...pan[action]!, s.focusedLane);
       }
     };
     window.addEventListener("keydown", onKey, true);

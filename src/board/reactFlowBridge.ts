@@ -1,19 +1,20 @@
 /**
- * Imperative handle to the active React Flow instance.
- * Board.tsx binds on mount; keyboard/useAppKeys.ts pans with panBy.
- * Needed because key handlers sit outside the React Flow tree.
+ * Imperative handles to per-lane React Flow instances.
+ * Board.tsx binds on mount; keyboard/useAppKeys.ts pans the focused lane (BA-05).
  */
 import type { ReactFlowInstance } from "@xyflow/react";
+import { AssignmentLane } from "../workflow/catalogs";
 
-let inst: ReactFlowInstance | null = null;
+const insts: Partial<Record<AssignmentLane, ReactFlowInstance | null>> = {};
 
-/** Called from Board Inner so pan keys can move the viewport. */
-export function bindReactFlow(next: ReactFlowInstance | null) {
-  inst = next;
+/** Called from Board Inner so pan keys can move this lane's viewport. */
+export function bindReactFlow(lane: AssignmentLane, next: ReactFlowInstance | null) {
+  insts[lane] = next;
 }
 
-/** Nudge the camera — used by panLeft/Right/Up/Down key actions. */
-export function panBy(dx: number, dy: number) {
+/** Nudge the camera of one lane — used by panLeft/Right/Up/Down key actions. */
+export function panBy(dx: number, dy: number, lane: AssignmentLane) {
+  const inst = insts[lane];
   if (!inst) return;
   const v = inst.getViewport();
   void inst.setViewport({ x: v.x + dx, y: v.y + dy, zoom: v.zoom }, { duration: 80 });

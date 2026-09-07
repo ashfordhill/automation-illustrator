@@ -60,6 +60,7 @@ import {
   type RemovalPlan,
 } from "../workflow/commands";
 import {
+  afterGraph,
   applyDashForSplit,
   defaultRemovalCandidateId,
   edgeIsDotted,
@@ -106,6 +107,13 @@ import {
 } from "./persistence";
 import { playCue, playCueWhen } from "../app/sound/cues";
 import { parseDocument, type ParseResult } from "../workflow/migrate";
+import {
+  findEdge,
+  findMergeGroup,
+  isAfterOnlyEdge,
+  isAfterOnlyNode,
+  isBeforeOriginNode,
+} from "../workflow/selectors";
 
 /** Right-hand inspector target, or null when nothing is selected. */
 export type Selection =
@@ -113,6 +121,9 @@ export type Selection =
   | { type: typeof SelectionKind.Edge; id: string }
   | { type: typeof SelectionKind.Actor; id: string }
   | null;
+
+/** Board-local pan/zoom, keyed by lane and excluded from the document (BA-05). */
+export type LaneViewport = { x: number; y: number; zoom: number };
 
 /** Pending New / Demo / Import replacement (SH-06). */
 export type PendingReplace =
@@ -166,6 +177,9 @@ export const useStore = create<{
   past: WorkflowDoc[];
   future: WorkflowDoc[];
   view: ViewModeT;
+  focusedLane: AssignmentLane;
+  laneViewports: Partial<Record<AssignmentLane, LaneViewport>>;
+  canvasEpoch: number;
   present: boolean;
   presentResume: { view: ViewModeT; selected: Selection } | null;
   selected: Selection;
@@ -191,6 +205,9 @@ export const useStore = create<{
   undo: () => void;
   redo: () => void;
   setView: (v: ViewModeT) => void;
+  setFocusedLane: (lane: AssignmentLane) => void;
+  setLaneViewport: (lane: AssignmentLane, viewport: LaneViewport) => void;
+  canvasEditable: () => boolean;
   setPresent: (p: boolean) => void;
   setSoundEnabled: (on: boolean) => void;
   select: (s: Selection) => void;
@@ -252,6 +269,9 @@ export const useStore = create<{
   past: [],
   future: [],
   view: ViewMode.Before,
+  focusedLane: AssignmentLane.Before,
+  laneViewports: {},
+  canvasEpoch: 0,
   present: false,
   presentResume: null,
   selected: null,
@@ -308,6 +328,9 @@ export const useStore = create<{
       manageActorsOpen: false,
       manageActorId: null,
       view: ViewMode.Before,
+      focusedLane: AssignmentLane.Before,
+      laneViewports: {},
+      canvasEpoch: get().canvasEpoch + 1,
     });
   },
   undo: () => {
@@ -336,7 +359,27 @@ export const useStore = create<{
       notice: null,
     });
   },
-  setView: (view) => set({ view, interaction: IDLE }),
+  setView: (view) => {
+    const focusedLane =
+      view === ViewMode.After
+        ? AssignmentLane.After
+        : view === ViewMode.Before
+          ? AssignmentLane.Before
+          : get().focusedLane;
+    set({ view, interaction: IDLE, focusedLane });
+  },
+  setFocusedLane: (focusedLane) => {
+    if (get().focusedLane === focusedLane) return;
+    set({ focusedLane });
+  },
+  setLaneViewport: (lane, viewport) => {
+    const prev = get().laneViewports[lane];
+    if (prev && prev.x === viewport.x && prev.y === viewport.y && prev.zoom === viewport.zoom) {
+      return;
+    }
+    set({ laneViewports: { ...get().laneViewports, [lane]: viewport } });
+  },
+  canvasEditable: () => !get().present && get().view !== ViewMode.Both,
   setPresent: (present) => {
     const s = get();
     if (present) {
@@ -400,9 +443,13 @@ export const useStore = create<{
     set({ notice, noticeId: get().noticeId + 1 });
   },
   clearDeparting: () => set({ departing: null }),
-  /** Both view still edits the Before assignment map. */
-  assignmentLane: () =>
-    get().view === ViewMode.After ? AssignmentLane.After : AssignmentLane.Before,
+  /** Who map for inspector and assignment: After view uses After; Both uses the focused lane. */
+  assignmentLane: () => {
+    const { view, focusedLane } = get();
+    if (view === ViewMode.After) return AssignmentLane.After;
+    if (view === ViewMode.Both) return focusedLane;
+    return AssignmentLane.Before;
+  },
   actorFor: (stepId, lane) => {
     const { workflow, assignmentLane } = get();
     const L = lane ?? assignmentLane();
@@ -454,6 +501,7 @@ export const useStore = create<{
     return "";
   },
   addHuman: (name) => {
+    if (get().present || get().view === ViewMode.Both) return "";
     const actor = makeHuman(name);
     const { workflow, commit, manageActorsOpen } = get();
     commit({ ...workflow, actors: [...workflow.actors, actor] });
@@ -461,6 +509,7 @@ export const useStore = create<{
     return actor.id;
   },
   addRobot: (kind = RobotKind.Script) => {
+    if (get().present || get().view === ViewMode.Both) return "";
     const actor = makeRobot("Robot", kind);
     const { workflow, commit, manageActorsOpen } = get();
     commit({ ...workflow, actors: [...workflow.actors, actor] });
@@ -468,6 +517,7 @@ export const useStore = create<{
     return actor.id;
   },
   removeActor: (actorId) => {
+    if (get().present || get().view === ViewMode.Both) return false;
     const result = removeActorFromDoc(get().workflow, actorId);
     if (!result.ok) {
       get().setNotice(result.message);
@@ -502,28 +552,66 @@ export const useStore = create<{
   },
   setManageActorId: (manageActorId) => set({ manageActorId }),
   updateNode: (id, patch) => {
+    if (get().present || get().view === ViewMode.Both) return;
     const { workflow, commit } = get();
-    let nodes = workflow.nodes.map((n) => {
-      if (n.id !== id) return n;
-      return { ...n, ...patch } as NodeDto;
-    });
+    const inBase = workflow.nodes.some((n) => n.id === id);
+    const inExtra = workflow.after.extraNodes.some((n) => n.id === id);
+    if (!inBase && !inExtra) return;
+    let nodes = workflow.nodes;
+    let extraNodes = workflow.after.extraNodes;
+    if (inBase) {
+      nodes = nodes.map((n) => (n.id === id ? ({ ...n, ...patch } as NodeDto) : n));
+    } else {
+      extraNodes = extraNodes.map((n) => (n.id === id ? ({ ...n, ...patch } as typeof n) : n));
+    }
     let edges = workflow.edges;
+    let extraEdges = workflow.after.extraEdges;
     if ("split" in patch) {
-      edges = applyDashForSplit(nodes, edges, id);
+      const extraIds = new Set(extraEdges.map((e) => e.id));
+      const combined = applyDashForSplit([...nodes, ...extraNodes], [...edges, ...extraEdges], id);
+      edges = combined.filter((e) => !extraIds.has(e.id));
+      extraEdges = combined.filter((e) => extraIds.has(e.id));
     }
     const textOnly =
       !("split" in patch) && !("stepKind" in patch) && !("position" in patch);
-    commit({ ...workflow, nodes, edges }, textOnly ? "text" : "structural");
+    commit(
+      {
+        ...workflow,
+        nodes,
+        edges,
+        after: { ...workflow.after, extraNodes, extraEdges },
+      },
+      textOnly ? "text" : "structural",
+    );
   },
   updateEdge: (id, patch) => {
+    if (get().present || get().view === ViewMode.Both) return;
     const { workflow, commit } = get();
     const kind: HistoryKind = patch.dashed !== undefined ? "structural" : "text";
-    commit({
-      ...workflow,
-      edges: workflow.edges.map((e) => (e.id === id ? { ...e, ...patch } : e)),
-    }, kind);
+    if (workflow.edges.some((e) => e.id === id)) {
+      commit(
+        {
+          ...workflow,
+          edges: workflow.edges.map((e) => (e.id === id ? { ...e, ...patch } : e)),
+        },
+        kind,
+      );
+      return;
+    }
+    if (!workflow.after.extraEdges.some((e) => e.id === id)) return;
+    commit(
+      {
+        ...workflow,
+        after: {
+          ...workflow.after,
+          extraEdges: workflow.after.extraEdges.map((e) => (e.id === id ? { ...e, ...patch } : e)),
+        },
+      },
+      kind,
+    );
   },
   updateActor: (id, patch) => {
+    if (get().present || get().view === ViewMode.Both) return;
     const { workflow, commit } = get();
     const textOnly = !("color" in patch) && !("robotKind" in patch) && !("kind" in patch);
     commit({
@@ -535,7 +623,9 @@ export const useStore = create<{
   },
   /** Who is offered in both lanes (NA-03, NA-11). lastHumanId stamps new Before-origin Steps. */
   assignActor: (stepId, actorId) => {
+    if (get().present || get().view === ViewMode.Both) return;
     const { workflow, commit, assignmentLane } = get();
+    if (findMergeGroup(workflow, stepId)) return;
     const lane = assignmentLane();
     const actor = workflow.actors.find((a) => a.id === actorId);
     if (!actor) return;
@@ -543,6 +633,7 @@ export const useStore = create<{
     if (isHuman(actor)) set({ lastHumanId: actorId });
   },
   connect: (source, target, label = "") => {
+    if (get().present || get().view !== ViewMode.Before) return;
     const { workflow } = get();
     const result = connectNodes(workflow, source, target, { label });
     if (!result.ok) {
@@ -553,6 +644,7 @@ export const useStore = create<{
     playCueWhen(get().soundEnabled, "blip");
   },
   deleteSelection: () => {
+    if (get().present || get().view === ViewMode.Both) return;
     const { selected, interaction } = get();
     if (interaction.kind === "remove-pick" || interaction.kind === "remove-preview") {
       get().confirmRemove();
@@ -572,7 +664,7 @@ export const useStore = create<{
 
   closeBoardModes: () => set({ interaction: IDLE }),
   openLinkMenu: (sourceId) => {
-    if (get().present || get().view === ViewMode.After) return;
+    if (get().present || get().view !== ViewMode.Before) return;
     const { interaction } = get();
     if (interaction.kind === "add-menu" && interaction.sourceId === sourceId) {
       set({ interaction: IDLE });
@@ -584,7 +676,7 @@ export const useStore = create<{
     });
   },
   spawnBranch: (sourceId, type) => {
-    if (get().present || get().view === ViewMode.After) return "";
+    if (get().present || get().view !== ViewMode.Before) return "";
     const { workflow, lastHumanId } = get();
     const src = workflow.nodes.find((n) => n.id === sourceId);
     if (!src) {
@@ -644,7 +736,7 @@ export const useStore = create<{
     return id;
   },
   beginLinkFrom: (sourceId) => {
-    if (get().present || get().view === ViewMode.After) return;
+    if (get().present || get().view !== ViewMode.Before) return;
     const { interaction } = get();
     if (interaction.kind === "connect-existing" && interaction.sourceId === sourceId) {
       set({ interaction: IDLE });
@@ -670,12 +762,16 @@ export const useStore = create<{
   },
   toggleSelectedDash: () => {
     const { selected, workflow, updateEdge } = get();
+    if (!get().canvasEditable()) return;
     if (selected?.type !== SelectionKind.Edge) return;
-    const edge = workflow.edges.find((e) => e.id === selected.id);
+    const edge = findEdge(workflow, selected.id);
     if (!edge) return;
-    const outs = workflow.edges.filter((e) => e.source === edge.source).length;
+    const graph = isAfterOnlyEdge(workflow, edge.id)
+      ? afterGraph(workflow)
+      : { nodes: workflow.nodes, edges: workflow.edges };
+    const outs = graph.edges.filter((e) => e.source === edge.source).length;
     if (outs < 2) return;
-    updateEdge(selected.id, { dashed: !edgeIsDotted(workflow.nodes, workflow.edges, edge) });
+    updateEdge(selected.id, { dashed: !edgeIsDotted(graph.nodes, graph.edges, edge) });
   },
   focusPathLabel: () => {
     focusNamedField("path-condition-field");
@@ -685,8 +781,13 @@ export const useStore = create<{
   },
 
   beginRemovePick: (hostId) => {
-    if (get().present) return;
+    if (get().present || get().view === ViewMode.Both) return;
     const { workflow } = get();
+    if (findMergeGroup(workflow, hostId) || isAfterOnlyNode(workflow, hostId)) return;
+    if (get().view === ViewMode.After && isBeforeOriginNode(workflow, hostId)) {
+      get().setNotice(MSG.afterOriginRemoval);
+      return;
+    }
     if (!workflow.nodes.some((n) => n.id === hostId)) return;
     const candidates = removalCandidateIds(workflow.nodes, workflow.edges, hostId);
     const candidateId = defaultRemovalCandidateId(workflow.nodes, workflow.edges, hostId);
@@ -858,6 +959,9 @@ export const useStore = create<{
       manageActorsOpen: false,
       manageActorId: null,
       view: ViewMode.Before,
+      focusedLane: AssignmentLane.Before,
+      laneViewports: {},
+      canvasEpoch: get().canvasEpoch + 1,
     });
   },
 }));

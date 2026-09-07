@@ -134,10 +134,10 @@ test.describe("slice 6 canvas create / connect / remove", () => {
     await loadDemo(page);
     await page.getByText("Review BS&A Software").first().click();
     await page.getByRole("button", { name: "Add Step, Data, or Connect existing" }).click();
-    await page.getByRole("menuitem", { name: /Step/ }).click();
+    await page.keyboard.press("1");
     await page.getByText("Review BS&A Software").first().click();
     await page.getByRole("button", { name: "Add Step, Data, or Connect existing" }).click();
-    await page.getByRole("menuitem", { name: /Step/ }).click();
+    await page.keyboard.press("1");
 
     await page.getByText("Review BS&A Software").first().click();
     await page.keyboard.press("Delete");
