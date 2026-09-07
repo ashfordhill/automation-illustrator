@@ -57,7 +57,7 @@ function hintsFor(): Hint[] {
   }
   if (s.selected?.type === SelectionKind.Edge) {
     return [
-      { key: pk(KeyAction.ToggleDash), label: "Solid / dotted" },
+      { key: pk(KeyAction.ToggleDash), label: "Always visited / Choice" },
       { key: pk(KeyAction.Confirm), label: "Edit condition" },
       { key: pk(KeyAction.Delete), label: "Paths aren't removed" },
     ];

@@ -17,7 +17,7 @@ test.describe("baseline smoke", () => {
   test("app mounts with the Oak Park demo", async ({ page }) => {
     await loadDemo(page);
     await expect(page.getByRole("button", { name: "Menu" })).toBeVisible();
-    await expect(page.getByText("Select a tile or arrow to edit.")).toBeVisible();
+    await expect(page.getByText("Select a tile or Path to edit.")).toBeVisible();
     await page.screenshot({
       path: ".docs/evidence/01-harness/before-light-1440.png",
       animations: "disabled",

@@ -358,3 +358,48 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(slice-06): add create, connect, and remove canvas UX`
 
+## Slice 07 — inspector and actors — 2026-09-06
+
+- Starting commit: `68c3eca93521fbbba96ee2a2c6202a49ff5f7ea3` (`feat(slice-06): add create, connect, and remove canvas UX`)
+- Working tree at start: clean tracked files on `main` (8 commits ahead of `origin/main`, not pushed). Untracked planner drafts `.docs/draft-to-give-planner-agent.*` were left untouched.
+- GOAL clauses addressed: NA-01 (Name/Color/Role or Type), NA-02 (unused-only deletion with assigning Step names, including After-only extra Steps), NA-03 (Robot-in-Before; new Steps still last-used Human else Alice else first Human in both lanes), NA-05 (alphabetical Type fat buttons, Other last; Who icon buttons for every actor in both lanes), NA-06 (Manage actors in the inspector; paint mode gone), NA-07 (Path / condition; Always visited (solid) / Choice (dotted); Split: One of / Every), NA-08 (Enter focuses Path condition or Data Label and selects the value; Step Enter does not guess a field), NA-09 (native Tab order on visible inspector controls), NA-11 (Who primary click is the only assignment), NA-12 (no Path delete; Node Remove still enters the picker), PC-02 / PC-03 (One of dots every outgoing Path; Every solids them; single outgoing always solid; changing Split re-applies defaults), P-05 (inspector 320 px), AQ-06 / AQ-07
+- Library research and decisions: no new dependencies. Actor color stays Mantine `ColorInput` with preset swatches. Who and Type are native buttons (not Select) so Tab order is complete. Paint-mode click-to-assign on tiles is removed (NA-11).
+- Files changed:
+  - Inspector: `src/app/inspector/SelectedItemForm.tsx`, new `TypeButtons.tsx`, `WhoButtons.tsx`, `ManageActorsPanel.tsx`; `src/app/App.tsx` (aside 320 px); `src/app/styles/tokens.css`
+  - Actors/graph: `src/workflow/actors.ts` (`defaultHumanId`, `actorUsages`, `removeActor`), `src/workflow/types.ts` (STEP_KINDS order), `src/workflow/graph.ts` / `commands.ts` (PC-02 connect stroke)
+  - Store/keyboard/board: `src/state/store.ts` (Who in both lanes, manage-actors panel, `removeActor`, Enter focus ids), `src/keyboard/useAppKeys.ts`, `src/board/Board.tsx`, `src/board/controls/PathHostFrame.tsx` (paint mode removed), `src/board/routing/FlowArrow.tsx` (comment), `src/app/components/CanvasHelper.tsx`
+  - Tests: `src/workflow/actors.test.ts`, `src/workflow/graph.test.ts`, `src/workflow/commands.test.ts`, `src/state/store.actors.test.ts`, `src/app/App.test.tsx`, `e2e/inspector.spec.ts`, `e2e/smoke.spec.ts`, `e2e/commands.spec.ts`
+  - Evidence: `.docs/evidence/07-inspector/`; earlier e2e suites recaptured 01–06 screenshots (320 px inspector)
+  - This handoff entry
+- Behavior implemented: The inspector titles a Path **Path / condition** and edits **condition**. Stroke is Always visited (solid) / Choice (dotted); Split is One of / Every and rewrites outgoing Path strokes. Step Type is alphabetical fat buttons with Other last. Who is actor icon buttons for every Human and Robot in Before and After. Manage actors edits Name/Color/Role or Type, adds humans and robots, and blocks deletion of assigned actors with a notice that names the Steps. Enter on a Path or Data Node focuses the primary field. Inspector width is 320 px. Paintbrush assignment (select actor, click Steps) is gone.
+- Tests and exact results:
+  - `npm install` at start — up to date, audited 135 packages, 0 vulnerabilities
+  - `npm run build` at start — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning)
+  - `npm run test:unit` at start — pass (12 files, 71 tests)
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning; client `index-DkqYIK_K.js` 817.57 kB)
+  - `npm run test:unit` — pass (14 files, 82 tests)
+  - `npm run test:e2e` — pass (32 passed, Chromium, 36.1s including webServer)
+- Evidence:
+  - `.docs/evidence/07-inspector/before-light-1440.png` — Oak Park Before; 320 px inspector idle (1440×900)
+  - `.docs/evidence/07-inspector/after-light-1440.png` — After lane (1440×900)
+  - `.docs/evidence/07-inspector/both-light-1440.png` — stacked Before/After (1440×900)
+  - `.docs/evidence/07-inspector/step-who-before-1440.png` — Step inspector: Type grid, Split One of, Who including Robot (1440×900)
+  - `.docs/evidence/07-inspector/who-before-robot-1440.png` — Robot assigned on a Before Step (1440×900)
+  - `.docs/evidence/07-inspector/who-after-1440.png` — Who assignment in After (1440×900)
+  - `.docs/evidence/07-inspector/path-condition-1440.png` — Path / condition; Choice (dotted) selected (1440×900)
+  - `.docs/evidence/07-inspector/split-every-1440.png` — Split Every makes amount Paths Always visited (1440×900)
+  - `.docs/evidence/07-inspector/delete-blocked-1440.png` — Alice deletion blocked with assigning Step names (1440×900)
+  - `.docs/evidence/07-inspector/manage-actors-1440.png` — Robot Mailroom Manage actors; unused Priya selected (1440×900)
+  - `.docs/evidence/07-inspector/before-light-1024.png` — Step inspector at 1024×768
+- Earlier-slice defects fixed: exclusive Split used to draw the first outgoing Path solid and the rest dotted. PC-02 requires every One-of Path dotted (a single outgoing Path stays solid). `applyDashForSplit` / `edgeIsDotted` / connect stroke now follow that; Oak Park amount Paths were already explicitly dotted (PC-06).
+- Known limitations / follow-ups:
+  - Auto-create a default Robot when After needs one (NA-04 merge / After-only) — Slice 11
+  - Tile text wrap/shrink/clamp (NA-10) and chunky shell / Nunito / sound — Slice 8
+  - Merge (`m`) / Unmerge (`u`) catalogued only — Slice 11
+  - `+` stays hidden in After — Slice 11
+  - Connector-stretch restitch animation — Slice 9
+  - Both is still editable; After still mutates the shared base graph — Slice 10
+  - Robot Mailroom merge / After-only Step still not projected — Slices 10–11
+- Status: COMPLETE
+- Commit: `feat(slice-07): rebuild inspector for Path, Who, and actors`
+

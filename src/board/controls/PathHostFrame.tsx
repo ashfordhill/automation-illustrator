@@ -5,7 +5,6 @@
 import { useState, type ReactNode } from "react";
 import { NodeToolbar, Position } from "@xyflow/react";
 import { SelectionKind } from "../../workflow/catalogs";
-import { isStepNode } from "../../workflow/types";
 import { useStore } from "../../state/store";
 import { OutgoingPathPad } from "./OutgoingPathPad";
 
@@ -48,14 +47,6 @@ export function PathHostFrame({
           return;
         }
         if (s.interaction.kind === "remove-preview") return;
-        if (s.selected?.type === SelectionKind.Actor) {
-          const node = s.workflow.nodes.find((x) => x.id === id);
-          if (node && isStepNode(node)) {
-            s.assignActor(id, s.selected.id);
-            s.select({ type: SelectionKind.Node, id });
-            return;
-          }
-        }
         if (s.interaction.kind === "add-menu" && s.interaction.sourceId !== id) {
           s.closeBoardModes();
         }

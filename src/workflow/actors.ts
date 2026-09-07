@@ -2,12 +2,15 @@
  * Actor roster helpers and pastel fills.
  * ActorColumn / HumanFigure sit on HUMAN_PRESETS; robots use ROBOT_COLORS[RobotKind].
  */
-import { ActorKind, IdPrefix, RobotKind } from "./catalogs";
+import { ActorKind, AssignmentLane, IdPrefix, RobotKind } from "./catalogs";
 import { nid } from "./ids";
 import {
   DEFAULT_HUMAN_ROLE,
+  isStepNode,
+  stepDisplayLabel,
   type ActorDto,
   type RobotKind as RobotKindT,
+  type WorkflowDoc,
 } from "./types";
 
 export const HUMAN_PRESETS = [
@@ -56,18 +59,91 @@ export function defaultActors(): ActorDto[] {
 
 /** Prefer Alice so new Steps match the demo’s default person. */
 export function aliceId(actors: ActorDto[]) {
-  return (
-    actors.find((a) => a.kind === ActorKind.Human && a.name === "Alice")?.id ??
-    actors[0]?.id
-  );
+  return actors.find((a) => a.kind === ActorKind.Human && a.name === "Alice")?.id;
 }
 
-/** First robot on the roster — After-lane assignments in the Oak Park demo. */
+/**
+ * New Before-origin Steps: last-used Human, else Alice, else the first Human (NA-03).
+ */
+export function defaultHumanId(
+  actors: ActorDto[],
+  lastHumanId?: string | null,
+): string | undefined {
+  if (lastHumanId) {
+    const last = actors.find((a) => a.id === lastHumanId && a.kind === ActorKind.Human);
+    if (last) return last.id;
+  }
+  return aliceId(actors) ?? actors.find((a) => a.kind === ActorKind.Human)?.id;
+}
+
+/** First robot on the roster (NA-04). */
 export function defaultRobotId(actors: ActorDto[]) {
-  return actors.find((a) => a.kind === ActorKind.Robot)?.id ?? actors[0]?.id;
+  return actors.find((a) => a.kind === ActorKind.Robot)?.id;
 }
 
-/** Inspector “+ New person”. */
+export type ActorUse = {
+  stepId: string;
+  lane: typeof AssignmentLane.Before | typeof AssignmentLane.After;
+  title: string;
+};
+
+function stepTitle(doc: WorkflowDoc, stepId: string): string {
+  const n =
+    doc.nodes.find((x) => x.id === stepId) ??
+    doc.after.extraNodes.find((x) => x.id === stepId);
+  if (!n) return stepId;
+  if (isStepNode(n)) return stepDisplayLabel(n.stepKind, n.title);
+  return n.label;
+}
+
+/** Assignments in Before, After, and After-only extra Steps (NA-02). */
+export function actorUsages(doc: WorkflowDoc, actorId: string): ActorUse[] {
+  const uses: ActorUse[] = [];
+  for (const [stepId, id] of Object.entries(doc.assignments)) {
+    if (id === actorId) {
+      uses.push({
+        stepId,
+        lane: AssignmentLane.Before,
+        title: stepTitle(doc, stepId),
+      });
+    }
+  }
+  for (const [stepId, id] of Object.entries(doc.after.assignments)) {
+    if (id === actorId) {
+      uses.push({
+        stepId,
+        lane: AssignmentLane.After,
+        title: stepTitle(doc, stepId),
+      });
+    }
+  }
+  return uses;
+}
+
+export function actorInUseMessage(actorName: string, uses: ActorUse[]): string {
+  const detail = uses
+    .map((u) => `${u.title} (${u.lane === AssignmentLane.Before ? "Before" : "After"})`)
+    .join(", ");
+  return `${actorName} is assigned to ${detail}.`;
+}
+
+/** Unused-only deletion (NA-02). Callers surface `message` when blocked. */
+export function removeActor(
+  doc: WorkflowDoc,
+  actorId: string,
+): { ok: true; value: WorkflowDoc } | { ok: false; code: string; message: string } {
+  const actor = doc.actors.find((a) => a.id === actorId);
+  if (!actor) {
+    return { ok: false, code: "missing-actor", message: "That actor is not on the roster." };
+  }
+  const uses = actorUsages(doc, actorId);
+  if (uses.length) {
+    return { ok: false, code: "actor-in-use", message: actorInUseMessage(actor.name, uses) };
+  }
+  return { ok: true, value: { ...doc, actors: doc.actors.filter((a) => a.id !== actorId) } };
+}
+
+/** Inspector “Add human”. */
 export function makeHuman(name?: string, color?: string): ActorDto {
   const n = name?.trim() || `Person ${Math.floor(Math.random() * 90) + 2}`;
   const preset = HUMAN_PRESETS.find((p) => p.name === n);
@@ -81,7 +157,7 @@ export function makeHuman(name?: string, color?: string): ActorDto {
   };
 }
 
-/** Inspector “+ New robot”. Name stays “Robot”; kind drives fill. */
+/** Inspector “Add robot”. Name stays “Robot”; kind drives fill. */
 export function makeRobot(
   name = "Robot",
   robotKind: RobotKindT = RobotKind.Script,

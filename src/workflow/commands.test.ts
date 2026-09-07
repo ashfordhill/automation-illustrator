@@ -150,6 +150,17 @@ test("connectNodes rejects self-loop, duplicate, root incoming, and cycle", () =
   expect(board.edges).toHaveLength(2);
 });
 
+test("addConnectedNode applies One of stroke to every outgoing Path (PC-02)", () => {
+  const board = doc(
+    [step("r"), step("a", 0, 40)],
+    [path("e1", "r", "a", "", false)],
+  );
+  const added = addConnectedNode(board, "r", step("b", 80, 40));
+  expect(added.ok).toBe(true);
+  if (!added.ok) return;
+  expect(added.value.edges.map((e) => e.dashed)).toEqual([true, true]);
+});
+
 test("connectNodes accepts a legal reconvergence Path", () => {
   const board = doc(
     [step("r"), step("a", 0, 40), step("b", 80, 40), step("c", 40, 80)],

@@ -1,6 +1,6 @@
 /**
  * Orthogonal flow Path between tiles.
- * Stroke is edge.dashed, or exclusive-split fallback (graph.edgeIsDotted).
+ * Stroke is graph.edgeIsDotted (PC-01, PC-02).
  * Proposed restitches (remove-preview) use a static pattern, not a blink (AQ-05).
  */
 import { BaseEdge, EdgeLabelRenderer, type EdgeProps } from "@xyflow/react";

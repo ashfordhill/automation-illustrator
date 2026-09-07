@@ -28,20 +28,20 @@ export {
   WORKFLOW_VERSION_V1,
 } from "./catalogs";
 
-/** Ordered list for inspector selects — keep in display order. */
+/** Inspector Type buttons: alphabetical labels, Other last (NA-05). */
 export const STEP_KINDS = [
-  StepKind.Read,
-  StepKind.Search,
-  StepKind.Write,
-  StepKind.Review,
-  StepKind.Copy,
-  StepKind.Print,
-  StepKind.Email,
-  StepKind.Drag,
-  StepKind.Scan,
   StepKind.Approve,
   StepKind.Call,
+  StepKind.Copy,
+  StepKind.Drag,
+  StepKind.Email,
   StepKind.File,
+  StepKind.Print,
+  StepKind.Read,
+  StepKind.Review,
+  StepKind.Scan,
+  StepKind.Search,
+  StepKind.Write,
   StepKind.Other,
 ] as const;
 
@@ -99,7 +99,7 @@ export type EdgeDto = {
   source: string;
   target: string;
   label: string;
-  /** Explicit stroke; omit to fall back to exclusive-split (first solid, rest dotted). */
+  /** Explicit stroke; omit to fall back to Split default (PC-02). */
   dashed?: boolean;
 };
 

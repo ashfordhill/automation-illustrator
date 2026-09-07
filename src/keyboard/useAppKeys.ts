@@ -75,6 +75,11 @@ export function useAppKeys() {
           s.closeBoardModes();
           return;
         }
+        if (s.manageActorsOpen) {
+          e.preventDefault();
+          s.closeManageActors();
+          return;
+        }
       }
 
       if (editingText) return;
@@ -170,6 +175,15 @@ export function useAppKeys() {
       }
 
       if (s.selected?.type === SelectionKind.Node) {
+        const n = s.workflow.nodes.find((x) => x.id === s.selected!.id);
+        if (
+          n?.type === WorkflowNodeKind.DataField &&
+          (keyIs(map, KeyAction.Confirm, e) || e.key === "Enter")
+        ) {
+          e.preventDefault();
+          s.focusDataLabel();
+          return;
+        }
         if (keyIs(map, KeyAction.AddPath, e)) {
           e.preventDefault();
           s.openLinkMenu(s.selected.id);

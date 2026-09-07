@@ -25,13 +25,13 @@ import {
   type Keymap,
 } from "../keyboard/bindings";
 import {
-  aliceId,
   defaultActors,
+  defaultHumanId,
   makeHuman,
   makeRobot,
+  removeActor as removeActorFromDoc,
 } from "../workflow/actors";
 import {
-  ActorKind,
   AssignmentLane,
   ColorScheme,
   IdPrefix,
@@ -69,7 +69,6 @@ import {
 import { nid } from "../workflow/ids";
 import {
   isHuman,
-  isRobot,
   isStepNode,
   STEP_KIND_META,
   laneAssignments,
@@ -155,6 +154,16 @@ function prefersReducedMotion() {
 
 const started = loadStart();
 
+function focusNamedField(id: string) {
+  queueMicrotask(() => {
+    const el = document.getElementById(id);
+    if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
+      el.focus();
+      el.select();
+    }
+  });
+}
+
 export const useStore = create<{
   workflow: WorkflowDoc;
   past: WorkflowDoc[];
@@ -166,6 +175,8 @@ export const useStore = create<{
   helpOpen: boolean;
   capturing: KeyAction | null;
   lastHumanId: string | null;
+  manageActorsOpen: boolean;
+  manageActorId: string | null;
   focusId: string | null;
   interaction: Interaction;
   departing: DepartingTile | null;
@@ -197,6 +208,10 @@ export const useStore = create<{
   addField: (position?: { x: number; y: number }) => string;
   addHuman: (name?: string) => string;
   addRobot: (kind?: RobotKindT) => string;
+  removeActor: (actorId: string) => boolean;
+  openManageActors: () => void;
+  closeManageActors: (opts?: { restoreFocus?: boolean }) => void;
+  setManageActorId: (id: string | null) => void;
   updateNode: (id: string, patch: Partial<NodeDto>) => void;
   updateEdge: (id: string, patch: { label?: string; dashed?: boolean }) => void;
   updateActor: (id: string, patch: Partial<ActorDto>) => void;
@@ -210,6 +225,7 @@ export const useStore = create<{
   completeLinkTo: (targetId: string) => void;
   toggleSelectedDash: () => void;
   focusPathLabel: () => void;
+  focusDataLabel: () => void;
   beginRemovePick: (hostId: string) => void;
   cycleRemoveCandidate: (dir: -1 | 1) => void;
   setRemoveCandidate: (candidateId: string) => void;
@@ -242,6 +258,8 @@ export const useStore = create<{
   helpOpen: false,
   capturing: null,
   lastHumanId: null,
+  manageActorsOpen: false,
+  manageActorId: null,
   focusId: null,
   interaction: IDLE,
   departing: null,
@@ -287,6 +305,8 @@ export const useStore = create<{
       pendingReplace: null,
       importError: null,
       lastHumanId: null,
+      manageActorsOpen: false,
+      manageActorId: null,
       view: ViewMode.Before,
     });
   },
@@ -324,8 +344,10 @@ export const useStore = create<{
       selected: present ? null : get().selected,
       interaction: IDLE,
       departing: null,
+      manageActorsOpen: false,
+      manageActorId: null,
     }),
-  select: (selected) => set({ selected }),
+  select: (selected) => set({ selected, manageActorsOpen: false, manageActorId: null }),
   setHelp: (helpOpen) => set({ helpOpen, capturing: helpOpen ? get().capturing : null }),
   setCapturing: (capturing) => set({ capturing }),
   setKey: (action, key) => {
@@ -374,10 +396,8 @@ export const useStore = create<{
       return "";
     }
     const id = nid(IdPrefix.Step);
-    const human =
-      lastHumanId ??
-      aliceId(workflow.actors) ??
-      workflow.actors.find((a) => a.kind === ActorKind.Human)?.id;
+    const actors = workflow.actors.length ? workflow.actors : defaultActors();
+    const hid = defaultHumanId(actors, lastHumanId);
     const pos = position ?? vacantSpot(workflow.nodes, WorkflowNodeKind.Step);
     const node: StepNodeDto = {
       id,
@@ -388,8 +408,6 @@ export const useStore = create<{
       detail: "",
       split: SplitKind.Exclusive,
     };
-    const actors = workflow.actors.length ? workflow.actors : defaultActors();
-    const hid = human ?? aliceId(actors);
     const result = createRootStep(
       { ...workflow, actors },
       node,
@@ -414,18 +432,52 @@ export const useStore = create<{
   },
   addHuman: (name) => {
     const actor = makeHuman(name);
-    const { workflow, commit } = get();
+    const { workflow, commit, manageActorsOpen } = get();
     commit({ ...workflow, actors: [...workflow.actors, actor] });
-    set({ selected: { type: SelectionKind.Actor, id: actor.id } });
+    if (manageActorsOpen) set({ manageActorId: actor.id });
     return actor.id;
   },
   addRobot: (kind = RobotKind.Script) => {
     const actor = makeRobot("Robot", kind);
-    const { workflow, commit } = get();
+    const { workflow, commit, manageActorsOpen } = get();
     commit({ ...workflow, actors: [...workflow.actors, actor] });
-    set({ selected: { type: SelectionKind.Actor, id: actor.id } });
+    if (manageActorsOpen) set({ manageActorId: actor.id });
     return actor.id;
   },
+  removeActor: (actorId) => {
+    const result = removeActorFromDoc(get().workflow, actorId);
+    if (!result.ok) {
+      get().setNotice(result.message);
+      return false;
+    }
+    get().commit(result.value);
+    const patch: { manageActorId?: string | null; lastHumanId?: string | null; selected?: Selection } =
+      {};
+    if (get().manageActorId === actorId) patch.manageActorId = null;
+    if (get().lastHumanId === actorId) patch.lastHumanId = null;
+    const selected = get().selected;
+    if (selected?.type === SelectionKind.Actor && selected.id === actorId) {
+      patch.selected = null;
+    }
+    if (Object.keys(patch).length) set(patch);
+    return true;
+  },
+  openManageActors: () => {
+    const { workflow, manageActorId } = get();
+    const nextId =
+      manageActorId && workflow.actors.some((a) => a.id === manageActorId)
+        ? manageActorId
+        : (workflow.actors[0]?.id ?? null);
+    set({ manageActorsOpen: true, manageActorId: nextId });
+  },
+  closeManageActors: (opts) => {
+    set({ manageActorsOpen: false, manageActorId: null });
+    if (opts?.restoreFocus === false) return;
+    queueMicrotask(() => {
+      document.getElementById("manage-actors-btn")?.focus();
+    });
+  },
+  setManageActorId: (manageActorId) => set({ manageActorId }),
   updateNode: (id, patch) => {
     const { workflow, commit } = get();
     let nodes = workflow.nodes.map((n) => {
@@ -458,12 +510,12 @@ export const useStore = create<{
       ),
     }, textOnly ? "text" : "structural");
   },
-  /** Before lane refuses robots; lastHumanId remembers who to stamp on new steps. */
+  /** Who is offered in both lanes (NA-03, NA-11). lastHumanId stamps new Before-origin Steps. */
   assignActor: (stepId, actorId) => {
     const { workflow, commit, assignmentLane } = get();
     const lane = assignmentLane();
     const actor = workflow.actors.find((a) => a.id === actorId);
-    if (lane === AssignmentLane.Before && isRobot(actor)) return;
+    if (!actor) return;
     commit(withLaneAssignments(workflow, lane, { ...laneAssignments(workflow, lane), [stepId]: actorId }));
     if (isHuman(actor)) set({ lastHumanId: actorId });
   },
@@ -477,7 +529,7 @@ export const useStore = create<{
     get().commit(result.value);
   },
   deleteSelection: () => {
-    const { selected, workflow, interaction } = get();
+    const { selected, interaction } = get();
     if (interaction.kind === "remove-pick" || interaction.kind === "remove-preview") {
       get().confirmRemove();
       return;
@@ -491,15 +543,7 @@ export const useStore = create<{
       get().setNotice(MSG.pathRemoval);
       return;
     }
-    const used = Object.values(workflow.assignments)
-      .concat(Object.values(workflow.after.assignments))
-      .includes(selected.id);
-    if (used) return;
-    get().commit({
-      ...workflow,
-      actors: workflow.actors.filter((a) => a.id !== selected.id),
-    });
-    set({ selected: null, interaction: IDLE });
+    get().removeActor(selected.id);
   },
 
   closeBoardModes: () => set({ interaction: IDLE }),
@@ -546,10 +590,7 @@ export const useStore = create<{
       return id;
     }
     const id = nid(IdPrefix.Step);
-    const human =
-      lastHumanId ??
-      aliceId(workflow.actors) ??
-      workflow.actors.find((a) => a.kind === ActorKind.Human)?.id;
+    const human = defaultHumanId(workflow.actors, lastHumanId);
     const result = addConnectedNode(
       workflow,
       sourceId,
@@ -606,16 +647,15 @@ export const useStore = create<{
     if (selected?.type !== SelectionKind.Edge) return;
     const edge = workflow.edges.find((e) => e.id === selected.id);
     if (!edge) return;
+    const outs = workflow.edges.filter((e) => e.source === edge.source).length;
+    if (outs < 2) return;
     updateEdge(selected.id, { dashed: !edgeIsDotted(workflow.nodes, workflow.edges, edge) });
   },
   focusPathLabel: () => {
-    queueMicrotask(() => {
-      const el = document.getElementById("path-label-field");
-      if (el instanceof HTMLInputElement) {
-        el.focus();
-        el.select();
-      }
-    });
+    focusNamedField("path-condition-field");
+  },
+  focusDataLabel: () => {
+    focusNamedField("data-label-field");
   },
 
   beginRemovePick: (hostId) => {
@@ -632,6 +672,8 @@ export const useStore = create<{
     set({
       interaction: { kind: "remove-pick", hostId, candidateId },
       selected: { type: SelectionKind.Node, id: hostId },
+      manageActorsOpen: false,
+      manageActorId: null,
     });
   },
   cycleRemoveCandidate: (dir) => {
@@ -787,6 +829,8 @@ export const useStore = create<{
       pendingReplace: null,
       importError: null,
       lastHumanId: null,
+      manageActorsOpen: false,
+      manageActorId: null,
       view: ViewMode.Before,
     });
   },

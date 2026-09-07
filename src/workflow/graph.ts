@@ -55,30 +55,39 @@ export function outgoingSorted(nodes: NodeDto[], edges: EdgeDto[], sourceId: str
 }
 
 /**
- * Stroke for one Path. An explicit `dashed` flag wins; otherwise exclusive
- * splits draw the first outgoing Path solid and the rest dotted.
+ * PC-02 default stroke from Split and outgoing count.
+ * One of (exclusive) + two or more outgoing → dotted; Every → solid;
+ * a single outgoing Path is always solid.
+ */
+export function splitDefaultDashed(split: SplitKind, outgoingCount: number): boolean {
+  if (outgoingCount < 2) return false;
+  return split === SplitKind.Exclusive;
+}
+
+/**
+ * Stroke for one Path (PC-01, PC-02). A single outgoing Path is always solid.
+ * Otherwise an explicit `dashed` flag wins; omitted flags follow Split.
  */
 export function edgeIsDotted(
   nodes: NodeDto[],
   edges: EdgeDto[],
   edge: EdgeDto,
 ): boolean {
+  const outs = outgoingSorted(nodes, edges, edge.source);
+  if (outs.length < 2) return false;
   if (edge.dashed === true) return true;
   if (edge.dashed === false) return false;
   const src = nodeOf(nodes, edge.source);
   if (!src || src.type !== WorkflowNodeKind.Step) return false;
-  if (src.split === SplitKind.Parallel) return false;
-  const outs = outgoingSorted(nodes, edges, edge.source);
-  if (outs.length < 2) return false;
-  return outs.findIndex((e) => e.id === edge.id) > 0;
+  return splitDefaultDashed(src.split, outs.length);
 }
 
-/** Extra outgoing Paths start dotted so a new branch reads as a split. */
+/** True when source already has an outgoing Path (a new one is an extra branch). */
 export function defaultDashed(edges: EdgeDto[], sourceId: string) {
   return edges.some((e) => e.source === sourceId);
 }
 
-/** Exclusive: first solid, rest dotted. Parallel: every Path solid. */
+/** PC-03: changing Split re-applies the PC-02 default to every outgoing Path. */
 export function applyDashForSplit(
   nodes: NodeDto[],
   edges: EdgeDto[],
@@ -87,12 +96,30 @@ export function applyDashForSplit(
   const src = nodeOf(nodes, sourceId);
   if (!src || src.type !== WorkflowNodeKind.Step) return edges;
   const outs = outgoingSorted(nodes, edges, sourceId);
-  return edges.map((e) => {
-    if (e.source !== sourceId) return e;
-    if (src.split === SplitKind.Parallel) return { ...e, dashed: false };
-    const i = outs.findIndex((o) => o.id === e.id);
-    return { ...e, dashed: i > 0 };
-  });
+  const dashed = splitDefaultDashed(src.split, outs.length);
+  return edges.map((e) => (e.source !== sourceId ? e : { ...e, dashed }));
+}
+
+/**
+ * Stroke for a newly connected Path. Crossing from one outgoing to two
+ * applies Split defaults to every outgoing Path (PC-02). Extra branches
+ * after that keep existing overrides and only stamp the new Path.
+ */
+export function applyConnectStroke(
+  nodes: NodeDto[],
+  edges: EdgeDto[],
+  sourceId: string,
+  newEdgeId: string,
+  previousOutgoingCount: number,
+): EdgeDto[] {
+  if (previousOutgoingCount < 2) {
+    return applyDashForSplit(nodes, edges, sourceId);
+  }
+  const src = nodeOf(nodes, sourceId);
+  const split =
+    src && src.type === WorkflowNodeKind.Step ? src.split : SplitKind.Parallel;
+  const dashed = splitDefaultDashed(split, previousOutgoingCount + 1);
+  return edges.map((e) => (e.id === newEdgeId ? { ...e, dashed } : e));
 }
 
 /** Incoming Paths of a tile, top-to-bottom (then left-to-right) by source position. */

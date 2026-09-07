@@ -42,7 +42,7 @@ test.describe("slice 4 command evidence", () => {
   }) => {
     await loadDemo(page);
     await page.getByText("invoice > $50,000").first().click();
-    await expect(page.locator("aside").getByText("Arrow", { exact: true })).toBeVisible();
+    await expect(page.locator("aside").getByText("Path / condition", { exact: true })).toBeVisible();
     await expect(page.locator("aside").getByRole("button", { name: "Delete" })).toHaveCount(0);
     await page.screenshot({
       path: `${EVIDENCE}/path-no-delete-1440.png`,

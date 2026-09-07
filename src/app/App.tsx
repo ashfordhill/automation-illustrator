@@ -104,7 +104,7 @@ export default function App() {
     <MantineProvider theme={theme} forceColorScheme={colorScheme}>
       <AppShell
         header={{ height: 56 }}
-        aside={{ width: present ? 0 : 268, breakpoint: "xs" }}
+        aside={{ width: present ? 0 : 320, breakpoint: "xs" }}
         padding={0}
         className={present ? "present-mode" : undefined}
         styles={{

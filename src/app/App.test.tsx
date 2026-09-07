@@ -2,8 +2,9 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, expect, test } from "vitest";
 import "@mantine/core/styles.css";
+import { OAK_PARK_IDS } from "../demos/oakParkInvoice";
 import { useStore } from "../state/store";
-import { ColorScheme, ViewMode } from "../workflow/catalogs";
+import { ColorScheme, SelectionKind, ViewMode } from "../workflow/catalogs";
 import { isStepNode } from "../workflow/types";
 import App from "./App";
 import "./styles/tokens.css";
@@ -22,6 +23,7 @@ function resetSession() {
   s.cancelReplace();
   s.clearImportError();
   s.closeBoardModes();
+  s.closeManageActors({ restoreFocus: false });
   s.setColorScheme(ColorScheme.Light);
 }
 
@@ -74,6 +76,48 @@ test("unavailable persist status shows a Not saved chip", () => {
     useStore.setState({ persistStatus: "unavailable" });
   });
   expect(host.textContent).toContain("Not saved");
+});
+
+test("inspector Type buttons are alphabetical with Other last; Who offers every actor", () => {
+  act(() => {
+    useStore.getState().select({ type: SelectionKind.Node, id: OAK_PARK_IDS.read });
+  });
+  const types = [...host.querySelectorAll('[aria-label^="Type "]')].map((el) =>
+    el.getAttribute("aria-label"),
+  );
+  expect(types.at(-1)).toBe("Type Other");
+  expect(types.slice(0, -1)).toEqual([
+    "Type Approve",
+    "Type Call",
+    "Type Copy",
+    "Type Drag",
+    "Type Email",
+    "Type File",
+    "Type Print",
+    "Type Read",
+    "Type Review",
+    "Type Scan",
+    "Type Search",
+    "Type Write",
+  ]);
+  expect(host.querySelector('[aria-label="Who Alice"]')).not.toBeNull();
+  expect(host.querySelector('[aria-label="Who Robot"]')).not.toBeNull();
+  act(() => {
+    host.querySelector<HTMLButtonElement>('[aria-label="Who Robot"]')?.click();
+  });
+  expect(useStore.getState().workflow.assignments[OAK_PARK_IDS.read]).toBe(OAK_PARK_IDS.robot);
+});
+
+test("Path inspector uses Path / condition and Choice stroke (NA-07, PC-01)", () => {
+  act(() => {
+    useStore.getState().select({ type: SelectionKind.Edge, id: OAK_PARK_IDS.gt });
+  });
+  expect(host.textContent).toContain("Path / condition");
+  const rail = host.querySelector(".details-rail-body")?.textContent ?? "";
+  expect(rail).not.toMatch(/\bArrow\b/);
+  const choice = host.querySelector('[aria-label="Always visited (solid) / Choice (dotted)"]');
+  expect(choice).not.toBeNull();
+  expect(choice?.querySelector('[aria-pressed="true"]')?.textContent).toMatch(/Choice/);
 });
 
 test("view switching updates the on-canvas lane name", () => {

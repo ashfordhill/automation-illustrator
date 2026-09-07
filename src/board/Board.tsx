@@ -20,7 +20,6 @@ import {
   SelectionKind,
   WorkflowNodeKind,
 } from "../workflow/catalogs";
-import { isStepNode } from "../workflow/types";
 import { bindReactFlow } from "./reactFlowBridge";
 import { useStore } from "../state/store";
 import { edgeTypes, nodeTypes, type Lane } from "./nodes/reactFlowRegistry";
@@ -165,15 +164,6 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
       return;
     }
     if (s.interaction.kind === "remove-preview") return;
-    if (s.selected?.type === SelectionKind.Actor) {
-      const node = s.workflow.nodes.find((x) => x.id === n.id);
-      if (node && isStepNode(node)) {
-        s.assignActor(n.id, s.selected.id);
-        s.select({ type: SelectionKind.Node, id: n.id });
-        blurDetailsFocus();
-        return;
-      }
-    }
     s.select({ type: SelectionKind.Node, id: n.id });
     blurDetailsFocus();
   }, []);

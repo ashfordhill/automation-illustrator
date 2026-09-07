@@ -4,7 +4,7 @@
  */
 import { IdPrefix, WorkflowNodeKind } from "./catalogs";
 import {
-  defaultDashed,
+  applyConnectStroke,
   edgeIsDotted,
   incomingSorted,
   maybeExclusiveSplit,
@@ -366,17 +366,20 @@ export function connectNodes(
   if (wouldCreateCycle(doc.edges, source, target)) {
     return fail("cycle", MSG.cycle);
   }
-  const edges: EdgeDto[] = [
+  const previousOutgoing = doc.edges.filter((e) => e.source === source).length;
+  const edgeId = options?.id ?? nid(IdPrefix.Edge);
+  const rawEdges: EdgeDto[] = [
     ...doc.edges,
     {
-      id: options?.id ?? nid(IdPrefix.Edge),
+      id: edgeId,
       source,
       target,
       label: options?.label ?? "",
-      dashed: defaultDashed(doc.edges, source),
+      dashed: false,
     },
   ];
-  const nodes = maybeExclusiveSplit(doc.nodes, edges, source);
+  const nodes = maybeExclusiveSplit(doc.nodes, rawEdges, source);
+  const edges = applyConnectStroke(nodes, rawEdges, source, edgeId, previousOutgoing);
   return succeed({ ...doc, nodes, edges });
 }
 
@@ -395,18 +398,21 @@ export function addConnectedNode(
   if (doc.nodes.some((n) => n.id === node.id)) {
     return fail("duplicate-id", `Duplicate id "${node.id}".`);
   }
+  const previousOutgoing = doc.edges.filter((e) => e.source === sourceId).length;
+  const edgeId = options?.edgeId ?? nid(IdPrefix.Edge);
   const nodes = [...doc.nodes, node];
-  const edges: EdgeDto[] = [
+  const rawEdges: EdgeDto[] = [
     ...doc.edges,
     {
-      id: options?.edgeId ?? nid(IdPrefix.Edge),
+      id: edgeId,
       source: sourceId,
       target: node.id,
       label: options?.label ?? "",
-      dashed: defaultDashed(doc.edges, sourceId),
+      dashed: false,
     },
   ];
-  const splitNodes = maybeExclusiveSplit(nodes, edges, sourceId);
+  const splitNodes = maybeExclusiveSplit(nodes, rawEdges, sourceId);
+  const edges = applyConnectStroke(splitNodes, rawEdges, sourceId, edgeId, previousOutgoing);
   let assignments = doc.assignments;
   let afterAssignments = doc.after.assignments;
   if (node.type === WorkflowNodeKind.Step) {

@@ -1,6 +1,16 @@
 import { expect, test } from "vitest";
 import { SplitKind, StepKind, WorkflowNodeKind } from "./catalogs";
-import { edgeIsDotted, defaultRemovalCandidateId, outgoingSorted, removalCandidateIds, rootNodeId, wouldCreateCycle } from "./graph";
+import {
+  applyConnectStroke,
+  applyDashForSplit,
+  defaultRemovalCandidateId,
+  edgeIsDotted,
+  outgoingSorted,
+  removalCandidateIds,
+  rootNodeId,
+  splitDefaultDashed,
+  wouldCreateCycle,
+} from "./graph";
 import type { EdgeDto, NodeDto } from "./types";
 
 function step(id: string, y: number): NodeDto {
@@ -24,14 +34,70 @@ test("outgoingSorted orders by target y then x", () => {
   expect(outgoingSorted(nodes, edges, "a").map((e) => e.id)).toEqual(["e1", "e2"]);
 });
 
-test("edgeIsDotted: exclusive split first solid, rest dotted when dashed is omitted", () => {
+test("PC-02: One of makes every outgoing Path dotted; a single outgoing is solid", () => {
   const nodes = [step("a", 0), step("b", 0), step("c", 40)];
-  const edges: EdgeDto[] = [
+  const one: EdgeDto[] = [{ id: "e1", source: "a", target: "b", label: "" }];
+  expect(edgeIsDotted(nodes, one, one[0]!)).toBe(false);
+  expect(splitDefaultDashed(SplitKind.Exclusive, 1)).toBe(false);
+  expect(splitDefaultDashed(SplitKind.Exclusive, 2)).toBe(true);
+  expect(splitDefaultDashed(SplitKind.Parallel, 2)).toBe(false);
+
+  const two: EdgeDto[] = [
     { id: "e1", source: "a", target: "b", label: "" },
     { id: "e2", source: "a", target: "c", label: "" },
   ];
-  expect(edgeIsDotted(nodes, edges, edges[0])).toBe(false);
-  expect(edgeIsDotted(nodes, edges, edges[1])).toBe(true);
+  expect(edgeIsDotted(nodes, two, two[0]!)).toBe(true);
+  expect(edgeIsDotted(nodes, two, two[1]!)).toBe(true);
+
+  const mixed: EdgeDto[] = [
+    { id: "e1", source: "a", target: "b", label: "", dashed: false },
+    { id: "e2", source: "a", target: "c", label: "", dashed: true },
+  ];
+  expect(edgeIsDotted(nodes, mixed, mixed[0]!)).toBe(false);
+  expect(edgeIsDotted(nodes, mixed, mixed[1]!)).toBe(true);
+});
+
+test("PC-03: changing Split re-applies the default stroke to every outgoing Path", () => {
+  const nodes = [
+    { ...step("a", 0), split: SplitKind.Exclusive },
+    step("b", 0),
+    step("c", 40),
+  ];
+  const edges: EdgeDto[] = [
+    { id: "e1", source: "a", target: "b", label: "", dashed: false },
+    { id: "e2", source: "a", target: "c", label: "", dashed: false },
+  ];
+  const oneOf = applyDashForSplit(nodes, edges, "a");
+  expect(oneOf.map((e) => e.dashed)).toEqual([true, true]);
+
+  const everyNodes = nodes.map((n) =>
+    n.id === "a" ? { ...n, split: SplitKind.Parallel } : n,
+  );
+  const every = applyDashForSplit(everyNodes, oneOf, "a");
+  expect(every.map((e) => e.dashed)).toEqual([false, false]);
+});
+
+test("applyConnectStroke stamps Split defaults when a second Path appears", () => {
+  const nodes = [step("a", 0), step("b", 0), step("c", 40)];
+  const first: EdgeDto[] = [{ id: "e1", source: "a", target: "b", label: "", dashed: false }];
+  const afterFirst = applyConnectStroke(nodes, first, "a", "e1", 0);
+  expect(afterFirst[0]?.dashed).toBe(false);
+
+  const two: EdgeDto[] = [
+    ...afterFirst,
+    { id: "e2", source: "a", target: "c", label: "", dashed: false },
+  ];
+  const afterSecond = applyConnectStroke(nodes, two, "a", "e2", 1);
+  expect(afterSecond.map((e) => e.dashed)).toEqual([true, true]);
+
+  const three: EdgeDto[] = [
+    { id: "e1", source: "a", target: "b", label: "", dashed: false },
+    { id: "e2", source: "a", target: "c", label: "", dashed: true },
+    { id: "e3", source: "a", target: "b", label: "x", dashed: false },
+  ];
+  const afterThird = applyConnectStroke(nodes, three, "a", "e3", 2);
+  expect(afterThird.find((e) => e.id === "e1")?.dashed).toBe(false);
+  expect(afterThird.find((e) => e.id === "e3")?.dashed).toBe(true);
 });
 
 test("rootNodeId is the unique Node with no incoming Path", () => {
