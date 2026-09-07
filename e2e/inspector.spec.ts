@@ -72,18 +72,14 @@ test.describe("slice 7 inspector and actors", () => {
     );
   });
 
-  test("Path / condition, stroke, and Path 1 Path vs All Paths", async ({ page }) => {
+  test("Path inspector is the label field; Split still sets Path strokes", async ({ page }) => {
     await loadDemo(page);
     await page.getByText("invoice > $50,000").first().click();
-    await expect(aside(page).getByText("Path / condition", { exact: true })).toBeVisible();
+    await expect(aside(page).locator("#path-condition-field")).toBeVisible();
+    await expect(aside(page).getByText("Path / condition", { exact: true })).toHaveCount(0);
+    await expect(aside(page).getByRole("button", { name: "Always visited (solid)" })).toHaveCount(0);
+    await expect(aside(page).getByRole("button", { name: "Choice (dotted)" })).toHaveCount(0);
     await expect(aside(page).getByRole("button", { name: "Delete" })).toHaveCount(0);
-    const stroke = aside(page).getByRole("group", {
-      name: "Always visited (solid) / Choice (dotted)",
-    });
-    await expect(stroke.getByRole("button", { name: "Choice (dotted)" })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
     await page.screenshot({
       path: `${EVIDENCE}/path-condition-1440.png`,
       animations: "disabled",
@@ -100,10 +96,7 @@ test.describe("slice 7 inspector and actors", () => {
     );
     await split.getByRole("button", { name: "All Paths" }).click();
     await page.getByText("invoice > $50,000").first().click();
-    await expect(stroke.getByRole("button", { name: "Always visited (solid)" })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
+    await expect(aside(page).locator("#path-condition-field")).toBeVisible();
     await page.screenshot({
       path: `${EVIDENCE}/split-every-1440.png`,
       animations: "disabled",
@@ -112,10 +105,7 @@ test.describe("slice 7 inspector and actors", () => {
     await page.getByText(DEMO_STEP).first().click();
     await aside(page).getByRole("group", { name: "Path: 1 Path vs All Paths" }).getByRole("button", { name: "1 Path" }).click();
     await page.getByText("invoice > $50,000").first().click();
-    await expect(stroke.getByRole("button", { name: "Choice (dotted)" })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
+    await expect(aside(page).locator("#path-condition-field")).toBeVisible();
   });
 
   test("Manage actors deletion blockers; unused Priya can be deleted", async ({ page }) => {

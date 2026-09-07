@@ -142,14 +142,14 @@ test.describe("ELK layout and bundled Path routing (Improvement 01)", () => {
     await screenshotBoard(page, `${EVIDENCE}/before-light-1440.png`);
 
     await gt.click();
-    await expect(aside(page).getByText("Path / condition", { exact: true })).toBeVisible();
+    await expect(aside(page).locator("#path-condition-field")).toBeVisible();
     await screenshotBoard(page, `${EVIDENCE}/condition-chip-1440.png`);
   });
 
   test("shortening a condition contracts the lane (CX-05)", async ({ page }) => {
     await loadOakPark(page);
     await page.getByRole("button", { name: "invoice > $50,000" }).first().click();
-    const field = aside(page).getByLabel("condition");
+    const field = aside(page).locator("#path-condition-field");
     await expect(field).toBeVisible();
     const websiteBefore = await page.getByText("Search website").first().boundingBox();
     await field.fill("");
@@ -168,7 +168,7 @@ test.describe("ELK layout and bundled Path routing (Improvement 01)", () => {
     await page.mouse.wheel(0, 1800);
     await waitForLayout(page);
     await page.getByRole("button", { name: "invoice > $50,000" }).first().click();
-    await expect(aside(page).getByText("Path / condition", { exact: true })).toBeVisible();
+    await expect(aside(page).locator("#path-condition-field")).toBeVisible();
     await screenshotBoard(page, `${EVIDENCE}/zoom-out-label-1440.png`);
   });
 

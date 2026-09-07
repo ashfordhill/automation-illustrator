@@ -32,7 +32,7 @@ export function MergedStepTile({
         width: layout.width,
         height: layout.height,
         display: "flex",
-        alignItems: "flex-start",
+        alignItems: "stretch",
         border: "3px solid var(--line)",
         borderRadius: 14,
         overflow: "hidden",

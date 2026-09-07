@@ -794,3 +794,20 @@ Corrections in the same chat before the next slice starts get their own short en
 - Evidence: `.docs/evidence/improve-01-layout/mailroom-dana-card-1440.png` — Mailroom Before; Dana cream card with terracotta Mail clerk sub-box packed under the name
 - Status: COMPLETE
 - Commit: `feat(improve-01): pack actor name against a terracotta title sub-box`
+
+## Improvement 01 — correction 6 — 2026-09-07
+
+- Requested: Path inspector should be only a **label** field — drop the Path / condition heading and Always visited / Choice buttons. Who name/title card was clipped by the actor strip; inset it for breathing room. Title chip colors were too punchy.
+- Changed:
+  - `src/app/inspector/SelectedItemForm.tsx` — Path rail is one `label` text field. Stroke override stays on the existing keybind; Split still sets defaults.
+  - `src/board/tiles/StepTile.tsx`, `ActorColumn.tsx`, `MergedStepTile.tsx` — tile is border-box; Who column fills height; cream card sits in 8/12px strip padding so it is not clipped.
+  - `src/app/styles/tokens.css` — quieter same-hue title wash (`l * 0.84`); lower card min-height.
+  - `.docs/GOAL.md` — NA-07 / PC-03 amendment.
+  - e2e/unit: Path inspector assertions use `#path-condition-field`; no stroke buttons in the rail.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2)
+  - `npm run test:unit` — pass (29 files, 152 tests)
+  - `npm run test:e2e` — pass (77 Chromium)
+- Evidence: `.docs/evidence/07-inspector/path-condition-1440.png` — Path rail is only the label field; `.docs/evidence/improve-01-layout/mailroom-dana-card-1440.png` — Dana cream card inset above the strip bottom
+- Status: COMPLETE
+- Commit: `feat(improve-01): simplify Path inspector and inset Who card`

@@ -9,7 +9,7 @@ import {
   ViewMode,
   WorkflowNodeKind,
 } from "../../workflow/catalogs";
-import { afterGraph, edgeIsDotted } from "../../workflow/graph";
+import { afterGraph } from "../../workflow/graph";
 import { isStepNode, laneAssignments } from "../../workflow/types";
 import { findEdge, findMergeGroup, findNode, isAfterOnlyNode } from "../../workflow/selectors";
 import { useStore } from "../../state/store";
@@ -214,32 +214,14 @@ export function DetailsPanel() {
   if (selected.type === SelectionKind.Edge) {
     const e = findEdge(workflow, selected.id);
     if (!e) return null;
-    const extra = workflow.after.extraEdges.some((x) => x.id === e.id);
-    const graph = extra ? afterGraph(workflow) : { nodes: workflow.nodes, edges: workflow.edges };
-    const outs = graph.edges.filter((x) => x.source === e.source).length;
-    const dotted = edgeIsDotted(graph.nodes, graph.edges, e);
     return (
       <Stack gap="xs" p="sm" className="chrome-hide">
-        <Text fw={800}>Path / condition</Text>
         <TextInput
           id="path-condition-field"
-          label="condition"
+          label="label"
           value={e.label}
           readOnly={readOnly}
           onChange={(ev) => useStore.getState().updateEdge(e.id, { label: ev.target.value })}
-        />
-        <Text size="sm" fw={700}>
-          Always visited (solid) / Choice (dotted)
-        </Text>
-        <FatChoice
-          label="Always visited (solid) / Choice (dotted)"
-          value={dotted ? "dotted" : "solid"}
-          disabled={readOnly || outs < 2}
-          onChange={(v) => useStore.getState().updateEdge(e.id, { dashed: v === "dotted" })}
-          options={[
-            { value: "solid", label: "Always visited (solid)" },
-            { value: "dotted", label: "Choice (dotted)" },
-          ]}
         />
       </Stack>
     );

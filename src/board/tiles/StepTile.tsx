@@ -57,6 +57,7 @@ export function StepTile({
         width: STEP_W,
         height: STEP_H,
         display: "flex",
+        boxSizing: "border-box",
         border: `3px solid var(--line)`,
         borderRadius: 14,
         overflow: "hidden",

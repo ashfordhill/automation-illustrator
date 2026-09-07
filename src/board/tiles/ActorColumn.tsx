@@ -4,7 +4,7 @@
  */
 import { HumanFigure } from "./HumanFigure";
 import { RobotFigure } from "./RobotFigure";
-import { ACTOR_W, STEP_H } from "../layout/tileMetrics";
+import { ACTOR_W } from "../layout/tileMetrics";
 import { FIGURE_INK_ON_PASTEL } from "../../workflow/actors";
 import { ActorKind } from "../../workflow/catalogs";
 import {
@@ -58,16 +58,16 @@ export function ActorColumn({ actor }: { actor: ActorDto | undefined }) {
       className="actor-strip"
       style={{
         width: ACTOR_W,
-        height: STEP_H,
+        height: "100%",
         background: actor?.color ?? "var(--actor-empty)",
         borderRight: `3px solid var(--line)`,
         display: "flex",
         flexDirection: "column",
         alignItems: "stretch",
         justifyContent: "space-between",
-        padding: "8px 0 5px",
+        padding: "8px 8px 12px",
         boxSizing: "border-box",
-        overflow: "visible",
+        overflow: "hidden",
         ["--actor-fill" as string]: actor?.color ?? "var(--actor-empty)",
       }}
     >

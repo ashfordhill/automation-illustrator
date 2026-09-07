@@ -106,16 +106,16 @@ test("inspector Type buttons are alphabetical with Other last; Who offers every 
   expect(useStore.getState().workflow.assignments[OAK_PARK_IDS.read]).toBe(OAK_PARK_IDS.robot);
 });
 
-test("Path inspector uses Path / condition and Choice stroke (NA-07, PC-01)", () => {
+test("Path inspector is only the label field (NA-07)", () => {
   act(() => {
     useStore.getState().select({ type: SelectionKind.Edge, id: OAK_PARK_IDS.gt });
   });
-  expect(host.textContent).toContain("Path / condition");
   const rail = host.querySelector(".details-rail-body")?.textContent ?? "";
+  expect(rail).not.toMatch(/Path \/ condition/);
   expect(rail).not.toMatch(/\bArrow\b/);
-  const choice = host.querySelector('[aria-label="Always visited (solid) / Choice (dotted)"]');
-  expect(choice).not.toBeNull();
-  expect(choice?.querySelector('[aria-pressed="true"]')?.textContent).toMatch(/Choice/);
+  expect(rail).not.toMatch(/Always visited/);
+  expect(rail).not.toMatch(/Choice \(dotted\)/);
+  expect(host.querySelector("#path-condition-field")).not.toBeNull();
 });
 
 test("sound toggle is off by default and Present restores the inspector", () => {
