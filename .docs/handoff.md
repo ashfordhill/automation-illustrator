@@ -747,3 +747,17 @@ Corrections in the same chat before the next slice starts get their own short en
   - `npm run test:e2e` — pass (77; one full run hit Windows PNG file-lock on 3 screenshot writes, those three specs re-run 10 passed)
 - Status: COMPLETE
 - Commit: `feat(improve-01): split actor titles and sync Both camera`
+
+## Improvement 01 — correction 3 — 2026-09-07
+
+- Requested: Name and title on Step tiles must not sit as two unrelated chips. No gap of column fill between them. Grey for the title was too dull; the title should read as a nested sub-box of the name card.
+- Changed:
+  - `src/board/tiles/ActorColumn.tsx` — wrap name + title in `.actor-card`; set `--actor-fill` from the actor’s pastel on the Who column; title copy uses `FIGURE_INK_ON_PASTEL` so it stays dark on the nested chip in both themes.
+  - `src/board/tiles/FitLabel.tsx` — optional `color` (default `var(--ink)`).
+  - `src/app/styles/tokens.css` — cream parent card, zero gap; title inset uses a darker/punchier `oklch(from var(--actor-fill) …)` mix of that same hue (not grey, not a hole showing the strip).
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2)
+  - `npm run test:unit` — pass (29 files, 151 tests)
+  - `npm run test:e2e` — pass (77 Chromium). One parallel run hit Windows PNG file-lock on 4 screenshot writes plus a Mailroom load timeout; those specs re-ran 28 passed (1 remaining lock retried 1 passed).
+- Status: COMPLETE
+- Commit: `feat(improve-01): nest actor title inside the name card`

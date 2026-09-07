@@ -13,12 +13,14 @@ export function FitLabel({
   minFontSizePx = MIN_TILE_FONT_PX,
   mode = "box",
   maxLines = 3,
+  color = "var(--ink)",
 }: {
   text: string;
   maxFontSizePx: number;
   minFontSizePx?: number;
   mode?: "box" | "multiline" | "oneline";
   maxLines?: number;
+  color?: string;
 }) {
   const oneline = mode === "oneline";
   return (
@@ -32,7 +34,7 @@ export function FitLabel({
             fontWeight: 800,
             textAlign: "center",
             lineHeight: 1.15,
-            color: "var(--ink)",
+            color,
             width: "100%",
             height: "100%",
             overflow: "hidden",

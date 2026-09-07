@@ -310,11 +310,16 @@ body,
   overflow: hidden;
 }
 
-.actor-text {
+.actor-card {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 0 4px 4px;
+  margin: 0 4px 5px;
+  padding: 4px 4px 5px;
+  gap: 0;
+  background: var(--cream);
+  border: 1.5px solid color-mix(in srgb, var(--line) 28%, transparent);
+  border-radius: 8px;
+  box-sizing: border-box;
 }
 
 .actor-chip {
@@ -323,21 +328,22 @@ body,
   overflow: hidden;
   width: 100%;
   box-sizing: border-box;
-  padding: 3px 5px;
+  padding: 2px 4px;
+  border: none;
+  background: transparent;
 }
 
 .actor-chip-name {
-  height: 32px;
-  background: var(--cream);
-  border-radius: 7px 7px 3px 3px;
-  border: 1.5px solid color-mix(in srgb, var(--line) 28%, transparent);
+  height: 26px;
 }
 
 .actor-chip-role {
-  height: 42px;
-  background: color-mix(in srgb, var(--ink) 26%, var(--cream));
-  border-radius: 3px 3px 7px 7px;
-  border: 1.5px solid color-mix(in srgb, var(--line) 55%, transparent);
+  height: 34px;
+  border-radius: 5px;
+  /* Same hue as the Who column, darker and punchier so it reads as a nested
+     sub-box of the cream name card — not a grey chip and not a hole in the strip. */
+  background: oklch(from var(--actor-fill) calc(l * 0.78) calc(c * 2.4) h);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--line) 22%, transparent);
 }
 
 /* Cream fields keep tile ink; labels above them stay chrome-ink.

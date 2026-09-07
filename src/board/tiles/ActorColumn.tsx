@@ -1,7 +1,6 @@
 /**
- * Left column of a Step tile: figure + name + role/type chip.
- * Used by StepTile; figures live beside this file. Fill is the actor’s pastel.
- * Name and role are separate boxes so the title sits in a contrasting sub-box (NA-10).
+ * Left column of a Step tile: figure + a name card with the title nested inside.
+ * Fill is the actor’s pastel; the title sub-box reuses that color on cream (NA-10).
  */
 import { HumanFigure } from "./HumanFigure";
 import { RobotFigure } from "./RobotFigure";
@@ -40,6 +39,7 @@ function Chip({
         minFontSizePx={minFontSizePx}
         mode={mode}
         maxLines={maxLines}
+        color={tone === "role" ? FIGURE_INK_ON_PASTEL : "var(--ink)"}
       />
     </div>
   );
@@ -67,6 +67,7 @@ export function ActorColumn({ actor }: { actor: ActorDto | undefined }) {
         padding: "8px 0 0",
         boxSizing: "border-box",
         overflow: "visible",
+        ["--actor-fill" as string]: actor?.color ?? "var(--actor-empty)",
       }}
     >
       <div style={{ display: "flex", justifyContent: "center", flex: "0 0 auto", overflow: "visible" }}>
@@ -76,7 +77,7 @@ export function ActorColumn({ actor }: { actor: ActorDto | undefined }) {
           <RobotFigure size={42} color={FIGURE_INK_ON_PASTEL} />
         )}
       </div>
-      <div className="actor-text">
+      <div className="actor-card">
         <Chip
           text={actor?.name ?? "—"}
           maxFontSizePx={13}
