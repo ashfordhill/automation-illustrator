@@ -12,10 +12,14 @@ import {
   planNodeRemoval,
   pruneAfterOverlay,
   insertNodeOnPath,
+  removePath,
+  canRemovePath,
   validatePairings,
   type RemovalPairing,
 } from "./commands";
 import { validateWorkflow } from "./graph";
+import { oakParkInvoice, OAK_PARK_IDS } from "../demos/oakParkInvoice";
+import { MAILROOM_IDS, robotMailroom } from "../demos/robotMailroom";
 import {
   emptyAfterOverlay,
   emptyWorkflow,
@@ -217,6 +221,56 @@ test("connectNodes accepts a legal reconvergence Path", () => {
   if (!result.ok) return;
   expect(result.value.edges.some((e) => e.source === "b" && e.target === "c")).toBe(true);
   expect(validateWorkflow(result.value)).toEqual([]);
+});
+
+test("removePath drops a reconverge Path and rejects a bridge Path", () => {
+  const diamond = doc(
+    [step("r"), step("a", 0, 40), step("b", 80, 40), step("c", 40, 80)],
+    [path("e1", "r", "a"), path("e2", "r", "b"), path("e3", "a", "c"), path("e4", "b", "c")],
+  );
+  expect(canRemovePath(diamond, "e3")).toBe(true);
+  const dropped = removePath(diamond, "e3");
+  expect(dropped.ok).toBe(true);
+  if (!dropped.ok) return;
+  expect(dropped.value.edges.map((e) => e.id)).toEqual(["e1", "e2", "e4"]);
+  expect(validateWorkflow(dropped.value)).toEqual([]);
+
+  expect(canRemovePath(diamond, "e1")).toBe(false);
+  const bridge = removePath(diamond, "e1");
+  expect(bridge.ok).toBe(false);
+  if (bridge.ok) return;
+  expect(bridge.message).toBe(MSG.pathRemoval);
+  expect(diamond.edges).toHaveLength(4);
+});
+
+test("removePath rejects the only Path into an After-only Step", () => {
+  const board = doc([step("a"), step("b", 0, 200)], [path("e1", "a", "b")], {
+    after: {
+      ...emptyAfterOverlay(),
+      extraNodes: [step("x", 0, 400)],
+      extraEdges: [path("ex", "b", "x")],
+      assignments: { a: "h1", b: "h1", x: "h1" },
+    },
+  });
+  const blocked = removePath(board, "ex");
+  expect(blocked.ok).toBe(false);
+  if (blocked.ok) return;
+  expect(blocked.message).toBe(MSG.pathRemoval);
+});
+
+test("removePath on Oak Park / Mailroom reconverge Paths", () => {
+  const oak = oakParkInvoice();
+  expect(canRemovePath(oak, OAK_PARK_IDS.webAcct)).toBe(true);
+  expect(canRemovePath(oak, OAK_PARK_IDS.gt)).toBe(false);
+  const dropped = removePath(oak, OAK_PARK_IDS.webAcct);
+  expect(dropped.ok).toBe(true);
+  if (!dropped.ok) return;
+  expect(validateWorkflow(dropped.value)).toEqual([]);
+
+  const mail = robotMailroom();
+  expect(canRemovePath(mail, MAILROOM_IDS.e6)).toBe(true);
+  expect(canRemovePath(mail, MAILROOM_IDS.e1)).toBe(false);
+  expect(canRemovePath(mail, MAILROOM_IDS.extra)).toBe(false);
 });
 
 test("addConnectedNode creates a reachable child in one step", () => {

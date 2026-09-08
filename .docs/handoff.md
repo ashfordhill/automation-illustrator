@@ -1214,3 +1214,31 @@ Corrections in the same chat before the next slice starts get their own short en
 - Known limitations / follow-ups: Uncommitted Who-follow and Path-delete work from other chats remains unstaged. Untracked ELK planner dumps still not committed. Incident Paths are faded, not rubber-banded to the ghost (NG-02).
 - Status: COMPLETE
 - Commit: `feat(improve-10): clean insert preview and move cursor`
+
+## Improvement 11 — Path Delete menu and hit pad — 2026-09-08
+
+- Starting commit: `0bee1c26592e09c1b11c501d718538c3ca483c24` (`feat(improve-10): clean insert preview and move cursor`)
+- Working tree at start: not fully clean. Improvement 10 had just landed; leftover Who-follow work and ELK planner dumps were left unstaged. Path hit-pad and `onEdgeContextMenu` were already in HEAD from that commit.
+- GOAL clauses addressed: WG-05, NG-03, NA-12, AQ-01, CX-02 (amendments dated 2026-09-08; Path-delete wording already in HEAD). Also restored the dropped NA-03/BA-02 Who-follow amendment (code not in this commit).
+- Library research and decisions: no new runtime dependency. Removal is drop-the-Path-only when `validateWorkflow` still passes (every Tile reachable from the root on base and After). No WG-10 restitch. Menu is Mantine 9 + Tabler trash. Path hit pad is React Flow `interactionWidth` 44 (was 28).
+- Files changed:
+  - Contract/docs: `.docs/GOAL.md` (Who-follow amendment restored); `.docs/IMPROVEMENTS.md` (11 COMPLETE); `.docs/improve-11-path-delete.plan.md`; visual log copy; this handoff entry
+  - Commands: `commands.ts` (`removePath`, `canRemovePath`); `interaction.ts` (`path-menu`); `store.ts` (`openPathMenu`, `removePath`; Delete on a selected Path)
+  - UI: `PathContextMenu.tsx`; `App.tsx`; `CanvasHelper.tsx`; `tokens.css` (hit pad + menu chrome)
+  - Tests: `commands.test.ts`, `store.commands.test.ts`, `e2e/improve-11-path-delete.spec.ts`, notice copy in `canvas.spec.ts` / `commands.spec.ts`
+  - Evidence: `.docs/evidence/improve-11-path-delete/`; recaptured `path-no-delete` notice shots
+- Behavior implemented:
+  - Right-click a Path for a menu. Delete is enabled when the Path is not a bridge; otherwise it is disabled. The Delete key does the same when a Path is selected. Inspector still has no Path delete control.
+  - Path stroke hit pads are wider. Condition chips stay independent.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning)
+  - `npm run test:unit` — pass (31 files, 177 tests)
+  - `npm run test:e2e` — pass (91 passed, Chromium, 3 workers, 56.5s)
+- Evidence:
+  - `.docs/evidence/improve-11-path-delete/path-menu-delete-1440.png` — right-click reconverge Path; Delete enabled (1440×900)
+  - `.docs/evidence/improve-11-path-delete/path-deleted-1440.png` — after Delete; Search website remains a leaf; Account still reached (1440×900)
+  - `.docs/evidence/improve-11-path-delete/path-menu-blocked-1440.png` — right-click `e_gt`; Delete disabled; no Remove Path hint (1440×900)
+- Earlier-slice defects fixed: Improvement 10 committed `onEdgeContextMenu` / `PATH_HIT_WIDTH` without `openPathMenu`; this commit adds the store command so that call compiles.
+- Known limitations / follow-ups: Who-follow store code remains unstaged. Untracked ELK planner dumps still not committed. Shared inbound merges still need a click on a unique segment to pick one Path.
+- Status: COMPLETE
+- Commit: `feat(improve-11): delete redundant Paths from the context menu`

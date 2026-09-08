@@ -10,6 +10,7 @@ import {
   ViewMode,
   WorkflowNodeKind,
 } from "../../workflow/catalogs";
+import { canRemovePath } from "../../workflow/commands";
 
 type Hint = { key: string; label: string };
 
@@ -59,11 +60,14 @@ function hintsFor(): Hint[] {
   }
   if (s.selected?.type === SelectionKind.Edge) {
     if (s.view === ViewMode.Both) return [];
-    return [
+    const items: Hint[] = [
       { key: pk(KeyAction.ToggleDash), label: "Dotted / Solid" },
       { key: pk(KeyAction.Confirm), label: "Edit label" },
-      { key: pk(KeyAction.Delete), label: "Paths aren't removed" },
     ];
+    if (canRemovePath(s.workflow, s.selected.id)) {
+      items.push({ key: pk(KeyAction.Delete), label: "Remove Path" });
+    }
+    return items;
   }
   if (s.selected?.type === SelectionKind.Node) {
     const n =

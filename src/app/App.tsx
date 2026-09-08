@@ -18,6 +18,7 @@ import { RemovePickerHud } from "./components/RemovePickerHud";
 import { ReplaceDocumentModal } from "./components/ReplaceDocumentModal";
 import { Toolbar } from "./components/Toolbar";
 import { TransientNotice } from "./components/TransientNotice";
+import { PathContextMenu } from "../board/controls/PathContextMenu";
 import { UnsupportedViewport } from "./components/UnsupportedViewport";
 import { DetailsPanel } from "./inspector/SelectedItemForm";
 import { useSupportedViewport } from "./viewport";
@@ -122,6 +123,7 @@ export default function App() {
             <EmptyBoardCta />
             <CanvasHelper />
             <TransientNotice />
+            <PathContextMenu />
             <RemovePickerHud />
           </div>
         </AppShell.Main>

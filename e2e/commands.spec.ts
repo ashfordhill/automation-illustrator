@@ -47,7 +47,7 @@ test.describe("slice 4 command evidence", () => {
     await capturePage(page, `${EVIDENCE}/path-no-delete-1440.png`);
 
     await page.keyboard.press("Delete");
-    await expect(page.getByText(/cannot be removed on its own/i)).toBeVisible();
+    await expect(page.getByText(/would leave a Tile the root cannot reach/i)).toBeVisible();
   });
 
   test("root removal is blocked with a hint; leaf removal restitches", async ({ page }) => {

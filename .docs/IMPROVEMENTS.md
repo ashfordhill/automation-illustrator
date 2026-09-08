@@ -431,9 +431,9 @@ Evidence: `.docs/evidence/improve-10-drag-preview/`.
 
 ---
 
-# Improvement 11 — Path Delete menu and hit pad
+# Improvement 11 — Path Delete menu and hit pad (COMPLETE)
 
-Approved 2026-09-08. Implement in this chat (Improvement 10 remains a separate spec).
+Approved 2026-09-08. Start only after Improvement 10 is COMPLETE.
 
 Full spec: [`.docs/improve-11-path-delete.plan.md`](improve-11-path-delete.plan.md). Picture: [path delete hit](visual-improvements/2026-09-08-path-delete-hit.png).
 

@@ -65,6 +65,13 @@ test("store actions keep a valid workflow (WG-02..WG-04)", () => {
   expect(useStore.getState().workflow.edges).toHaveLength(edgeCount);
   expect(useStore.getState().notice).toBe(MSG.pathRemoval);
 
+  s.setNotice(null);
+  s.select({ type: SelectionKind.Edge, id: "e_web_acct" });
+  s.deleteSelection();
+  expect(useStore.getState().workflow.edges.some((e) => e.id === "e_web_acct")).toBe(false);
+  expect(useStore.getState().notice).toBe(null);
+  expect(validateWorkflow(useStore.getState().workflow)).toEqual([]);
+
   s.select({ type: SelectionKind.Node, id: leaf });
   s.deleteSelection();
   expect(useStore.getState().workflow.nodes.some((n) => n.id === leaf)).toBe(false);

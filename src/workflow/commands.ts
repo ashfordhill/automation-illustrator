@@ -60,7 +60,7 @@ export const MSG = {
   selfLoop: "A Path cannot start and end on the same Node.",
   rootRemoval: "The root cannot be removed while other Tiles remain.",
   pathRemoval:
-    "A Path cannot be removed on its own. Remove a Node and the workflow will be reconnected.",
+    "Removing this Path would leave a Tile the root cannot reach.",
   manyToMany:
     "This Node has multiple incoming and outgoing Paths. Confirm pairings before removing it.",
   notEmpty: "A root is already on the board. New Nodes must connect from an existing Node.",
@@ -382,6 +382,34 @@ export function connectNodes(
   const nodes = maybeExclusiveSplit(doc.nodes, rawEdges, source);
   const edges = applyConnectStroke(nodes, rawEdges, source, edgeId, previousOutgoing);
   return succeed({ ...doc, nodes, edges });
+}
+
+/**
+ * Drop a Path when the remaining graph stays a connected DAG (WG-03).
+ * Base Paths and After-only Paths both go through validateWorkflow.
+ */
+export function removePath(doc: WorkflowDoc, edgeId: string): CommandResult<WorkflowDoc> {
+  const valid = requireValid(doc);
+  if (!valid.ok) return valid;
+  const inBase = doc.edges.some((e) => e.id === edgeId);
+  const inExtra = doc.after.extraEdges.some((e) => e.id === edgeId);
+  if (!inBase && !inExtra) return fail("missing-path", MSG.missingPath);
+  const next: WorkflowDoc = inBase
+    ? { ...doc, edges: doc.edges.filter((e) => e.id !== edgeId) }
+    : {
+        ...doc,
+        after: {
+          ...doc.after,
+          extraEdges: doc.after.extraEdges.filter((e) => e.id !== edgeId),
+        },
+      };
+  const checked = succeed(next);
+  if (!checked.ok) return fail("path-keeps-reachability", MSG.pathRemoval);
+  return checked;
+}
+
+export function canRemovePath(doc: WorkflowDoc, edgeId: string): boolean {
+  return removePath(doc, edgeId).ok;
 }
 
 /** Add a child Node and its Path in one validated step (create + connect). */

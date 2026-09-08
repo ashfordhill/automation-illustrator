@@ -9,6 +9,7 @@
  * removeTarget / confirmRemove — selected-tile X / Delete; M:N pairing preview
  * insertOnPath — drop a tile onto a Path
  * toggleSelectedDash — selected Path solid / dotted
+ * removePath / openPathMenu — redundant Path Delete (reachability)
  * requestNew / requestDemo / importRaw — replacement gate (SH-06, SH-12)
  * startFresh / downloadHeldRecovery — corrupt-storage recovery (SH-10)
  * setSoundEnabled — persisted Web Audio cues (SH-03, SH-04)
@@ -57,6 +58,7 @@ import {
   pairingBetween,
   planNodeRemoval,
   removalNeighborhood,
+  removePath as removePathFromDoc,
   validatePairings,
   type RemovalPairing,
   type RemovalPlan,
@@ -259,6 +261,8 @@ export const useStore = create<{
   assignActor: (stepId: string, actorId: string) => void;
   connect: (source: string, target: string, label?: string) => void;
   deleteSelection: () => void;
+  openPathMenu: (edgeId: string, x: number, y: number) => void;
+  removePath: (edgeId: string) => void;
   closeBoardModes: () => void;
   spawnBranch: (sourceId: string, type: typeof WorkflowNodeKind.Step | typeof WorkflowNodeKind.DataField) => string;
   beginPlusPull: (sourceId: string) => void;
@@ -757,10 +761,39 @@ export const useStore = create<{
       return;
     }
     if (selected.type === SelectionKind.Edge) {
-      get().setNotice(MSG.pathRemoval);
+      get().removePath(selected.id);
       return;
     }
     get().removeActor(selected.id);
+  },
+  openPathMenu: (edgeId, x, y) => {
+    if (!get().canvasEditable()) return;
+    const kind = get().interaction.kind;
+    if (
+      kind === "tile-drag" ||
+      kind === "plus-pull" ||
+      kind === "path-pull" ||
+      kind === "remove-preview" ||
+      kind === "path-label-edit"
+    ) {
+      return;
+    }
+    if (!findEdge(get().workflow, edgeId)) return;
+    set({
+      selected: { type: SelectionKind.Edge, id: edgeId },
+      interaction: { kind: "path-menu", edgeId, x, y },
+    });
+  },
+  removePath: (edgeId) => {
+    if (!get().canvasEditable()) return;
+    const result = removePathFromDoc(get().workflow, edgeId);
+    if (!result.ok) {
+      get().setNotice(result.message);
+      return;
+    }
+    get().commit(result.value);
+    playCueWhen(get().soundEnabled, "pop");
+    set({ selected: null, interaction: IDLE });
   },
 
   closeBoardModes: () => set({ interaction: IDLE }),

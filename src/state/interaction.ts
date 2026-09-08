@@ -13,7 +13,8 @@ export type Interaction =
   | { kind: "tile-drag"; nodeId: string; hoverEdgeId: string | null }
   | { kind: "connect-existing"; sourceId: string }
   | { kind: "remove-preview"; plan: RemovalPlan }
-  | { kind: "path-label-edit"; edgeId: string };
+  | { kind: "path-label-edit"; edgeId: string }
+  | { kind: "path-menu"; edgeId: string; x: number; y: number };
 
 export const IDLE: Interaction = { kind: "idle" };
 

@@ -169,6 +169,20 @@ body.is-tile-dragging * {
   stroke: transparent !important;
 }
 
+.react-flow__edge-interaction {
+  stroke-width: 44;
+}
+
+.path-context-menu {
+  border: 2.5px solid var(--chrome-line) !important;
+  border-radius: 10px !important;
+  padding: 4px;
+}
+
+.path-context-anchor {
+  pointer-events: none;
+}
+
 .present-mode .chrome-hide {
   display: none !important;
 }
