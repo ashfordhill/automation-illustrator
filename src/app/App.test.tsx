@@ -9,6 +9,7 @@ import { isStepNode } from "../workflow/types";
 import App from "./App";
 import { APP_VERSION } from "./version";
 import "./styles/tokens.css";
+import "./components/StatusBar.css";
 
 let host: HTMLDivElement;
 let root: Root;
@@ -63,27 +64,22 @@ test("demo startup loads the Oak Park invoice workflow", () => {
   expect(workflow.nodes.some((n) => !isStepNode(n) && n.label === "Account #")).toBe(true);
 });
 
-test("status bar shows project name, Actors, toggle off, and package version", () => {
+test("status bar shows toggle and package version", () => {
   const bar = host.querySelector("footer.status-bar");
   expect(bar).not.toBeNull();
-  expect(host.querySelector(".status-project")?.textContent).toBe("Oak Park Invoice");
-  expect(host.querySelector("#status-actors-btn")?.textContent).toBe("Actors");
+  expect(host.querySelector(".status-project")).toBeNull();
+  const end = host.querySelector(".status-end");
+  expect(end).not.toBeNull();
+  expect(end?.firstElementChild?.classList.contains("status-toggle")).toBe(true);
+  expect(end?.lastElementChild?.classList.contains("status-version")).toBe(true);
   expect(host.querySelector(".status-toggle")?.getAttribute("aria-pressed")).toBe("false");
-  expect(host.querySelector(".status-toggle")?.textContent).toBe("right-click-delete: off");
+  expect(host.querySelector(".status-toggle")?.textContent).toBe("Right Click Delete");
   expect(host.querySelector(".status-version")?.textContent).toBe(`v${APP_VERSION}`);
   expect(APP_VERSION).toBe("1.0.0");
 });
 
-test("New discard is Untitled in the status bar", () => {
-  act(() => {
-    useStore.getState().requestNew();
-    useStore.getState().confirmReplaceDiscard();
-  });
-  expect(host.querySelector(".status-project")?.textContent).toBe("Untitled");
-});
-
-test("status bar Actors opens Manage actors", () => {
-  const btn = host.querySelector<HTMLButtonElement>("#status-actors-btn");
+test("inspector Manage actors opens the panel", () => {
+  const btn = host.querySelector<HTMLButtonElement>("#manage-actors-btn");
   expect(btn).not.toBeNull();
   try {
     act(() => {

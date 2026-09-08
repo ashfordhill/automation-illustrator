@@ -183,6 +183,7 @@ test.describe("slice 12 surfaces, dialogs, and final screenshots", () => {
       "Present",
       "New",
       "Import",
+      "Actors",
       "Keybinds",
       "Dark mode",
       "Oak Park Invoice",

@@ -5,24 +5,30 @@ import { capturePage, loadOakPark, waitForLayout } from "./ready";
 const EVIDENCE = ".docs/evidence/improve-21-status-bar";
 
 test.describe("Improvement 21 — bottom status bar", () => {
-  test("full-width bar overlaps the inspector with project, Actors, toggle, and version", async ({
+  test("full-width bar overlaps the inspector with toggle and version", async ({
     page,
   }) => {
     await loadOakPark(page);
     const bar = page.locator("footer.status-bar");
     await expect(bar).toBeVisible();
-    await expect(bar.getByText("Oak Park Invoice")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Actors", exact: true })).toBeVisible();
-    await expect(
-      page.getByRole("button", { name: "right-click-delete: off" }),
-    ).toHaveAttribute("aria-pressed", "false");
+    await expect(bar.getByText("Oak Park Invoice")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Actors", exact: true })).toHaveCount(0);
+    const toggle = page.locator("footer.status-bar .status-toggle");
+    await expect(toggle).toHaveAttribute("aria-pressed", "false");
+    await expect(toggle).toHaveText("Right Click Delete");
     await expect(page.getByLabel("Application version 1.0.0")).toHaveText("v1.0.0");
+    const toggleBox = await toggle.boundingBox();
+    const versionBox = await page.getByLabel("Application version 1.0.0").boundingBox();
+    expect(toggleBox).toBeTruthy();
+    expect(versionBox).toBeTruthy();
 
     const barBox = await bar.boundingBox();
     const asideBox = await page.locator("aside").boundingBox();
     expect(barBox).toBeTruthy();
     expect(asideBox).toBeTruthy();
     expect(barBox!.x).toBeLessThanOrEqual(1);
+    expect(toggleBox!.x).toBeGreaterThan(barBox!.x + barBox!.width / 2);
+    expect(versionBox!.x).toBeGreaterThan(toggleBox!.x);
     expect(barBox!.x + barBox!.width).toBeGreaterThan(asideBox!.x + 8);
     expect(barBox!.y + barBox!.height).toBeGreaterThanOrEqual(asideBox!.y + asideBox!.height - 2);
     expect(barBox!.y).toBeLessThan(asideBox!.y + asideBox!.height);
@@ -41,26 +47,20 @@ test.describe("Improvement 21 — bottom status bar", () => {
     ).toEqual([]);
   });
 
-  test("New is Untitled; Actors opens Manage actors; Mailroom keeps its name", async ({
+  test("hamburger Actors opens Manage actors; Present hides it", async ({
     page,
   }) => {
     await loadOakPark(page);
-    await page.getByRole("button", { name: "Actors", exact: true }).click();
+    await page.getByRole("button", { name: "Menu" }).click();
+    await page.getByRole("menuitem", { name: "Actors", exact: true }).click();
     await expect(page.getByRole("heading", { name: "Manage actors" })).toBeVisible();
     await capturePage(page, `${EVIDENCE}/actors-1440.png`);
 
     await page.getByRole("button", { name: "Menu" }).click();
-    await page.getByRole("menuitem", { name: "New" }).click();
-    await page.getByRole("button", { name: "Discard" }).click();
-    await expect(page.locator("footer.status-bar").getByText("Untitled")).toBeVisible();
-    await capturePage(page, `${EVIDENCE}/untitled-1440.png`);
-
+    await page.getByRole("menuitem", { name: "Present" }).click();
     await page.getByRole("button", { name: "Menu" }).click();
-    await page.getByRole("menuitem", { name: "Robot Mailroom" }).click();
-    await page.getByRole("button", { name: "Discard" }).click();
-    await expect(page.getByText("incoming mail").first()).toBeVisible({ timeout: 15_000 });
-    await waitForLayout(page);
-    await expect(page.locator("footer.status-bar").getByText("Robot Mailroom")).toBeVisible();
+    await expect(page.getByRole("menuitem", { name: "Actors", exact: true })).toHaveCount(0);
+    await page.getByRole("menuitem", { name: "Exit present" }).click();
   });
 
   test("right-click-delete on removes a Tile; off does not", async ({ page }) => {
@@ -70,10 +70,9 @@ test.describe("Improvement 21 — bottom status bar", () => {
     await expect(review).toBeVisible();
     await expect(page.getByTestId("path-menu-delete")).toHaveCount(0);
 
-    await page.getByRole("button", { name: "right-click-delete: off" }).click();
-    await expect(
-      page.getByRole("button", { name: "right-click-delete: on" }),
-    ).toHaveAttribute("aria-pressed", "true");
+    const toggle = page.locator("footer.status-bar .status-toggle");
+    await toggle.click();
+    await expect(toggle).toHaveAttribute("aria-pressed", "true");
     await capturePage(page, `${EVIDENCE}/right-click-on-1440.png`);
 
     await review.click({ button: "right" });
@@ -103,4 +102,3 @@ test.describe("Improvement 21 status bar at 1024", () => {
     await capturePage(page, `${EVIDENCE}/status-bar-1024.png`);
   });
 });
-

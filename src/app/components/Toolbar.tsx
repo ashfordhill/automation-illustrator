@@ -47,12 +47,14 @@ function ViewSwitch() {
 
 export function Toolbar() {
   const present = useStore((s) => s.present);
+  const view = useStore((s) => s.view);
   const keymap = useStore((s) => s.keymap);
   const past = useStore((s) => s.past);
   const colorScheme = useStore((s) => s.colorScheme);
   const fileRef = useRef<HTMLInputElement>(null);
   const menuBtnRef = useRef<HTMLButtonElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const showActors = !present && view !== ViewMode.Both;
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -139,6 +141,9 @@ export function Toolbar() {
               </Menu.Item>
               <Menu.Item onClick={() => useStore.getState().requestNew()}>New</Menu.Item>
               <Menu.Item onClick={() => fileRef.current?.click()}>Import</Menu.Item>
+              {showActors ? (
+                <Menu.Item onClick={() => useStore.getState().openManageActors()}>Actors</Menu.Item>
+              ) : null}
               <Menu.Item onClick={() => useStore.getState().setHelp(true)}>Keybinds</Menu.Item>
               <Menu.Item onClick={() => useStore.getState().toggleColorScheme()}>
                 {colorScheme === ColorScheme.Dark ? "Light mode" : "Dark mode"}

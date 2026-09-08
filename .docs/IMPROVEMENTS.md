@@ -614,3 +614,16 @@ Selected Who / Manage actors cards use a **cream fill and 4px ink border** (pres
 
 Commit: `feat(improve-28): restyle selected Who without yellow`.  
 Evidence: `.docs/evidence/improve-28-who-select/`.
+
+Correction 1 (2026-09-08): the yellow the user wanted gone is the **inspector fold › / ‹ hover**, not the actor cards. Hover is cream + ink. Evidence: `.docs/evidence/improve-28-fold-hover/`.
+
+---
+
+# Improvement 30 — Right Click Delete on the right
+
+Approved 2026-09-08. Picture: [toggle on the left](visual-improvements/2026-09-08-right-click-delete-left.gif).
+
+After the project name left the status bar, **Right Click Delete** sat on the far left with the version on the far right. The toggle now sits on the **right** of the bar, immediately left of `v` plus the package version. Copy, pressed/yellow on/off, and right-click Tile remove are unchanged. No new dependency.
+
+Commit: `feat(improve-30): put Right Click Delete on the right`.  
+Evidence: `.docs/evidence/improve-30-status-toggle-right/`.

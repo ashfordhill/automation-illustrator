@@ -695,7 +695,7 @@ export const useStore = create<{
     queueMicrotask(() => {
       (
         document.getElementById("manage-actors-btn") ??
-        document.getElementById("status-actors-btn")
+        document.querySelector<HTMLElement>('header [aria-label="Menu"]')
       )?.focus();
     });
   },

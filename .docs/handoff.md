@@ -1788,3 +1788,32 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(improve-28): quiet the inspector fold hover`
 
+## Improvement 30 — Right Click Delete on the right — 2026-09-08
+
+- Starting commit: `06bc97de48b037cc15da0ad615beb8befbf950d0` (`feat(improve-28): quiet the inspector fold hover`)
+- Working tree at start: not clean. Concurrent Type-picker / Who-select / tile-pie / evidence recaptures were left unstaged and are not in this commit.
+- GOAL clauses addressed: P-05 (amendment dated 2026-09-08). Also ships the already-approved status-bar follow-ups that this layout depends on: no project name, Actors in the hamburger, toggle copy “Right Click Delete”.
+- Library research and decisions: no new runtime dependency. After the project name left, `justify-content: space-between` parked the remaining toggle on the left. A `.status-end` cluster (`margin-left: auto`, `justify-content: flex-end`) keeps Right Click Delete immediately left of the version on the right.
+- Files changed:
+  - Shell: `src/app/components/StatusBar.tsx`, `src/app/components/StatusBar.css`, `src/app/components/Toolbar.tsx` (hamburger Actors), `src/state/store.ts` (Manage actors focus fallback)
+  - Tests: `src/app/App.test.tsx`, `e2e/improve-21-status-bar.spec.ts`, `e2e/improve-30-status-toggle-right.spec.ts`, `e2e/hardening.spec.ts`
+  - Docs: `.docs/GOAL.md`, `.docs/IMPROVEMENTS.md`, `.docs/VISUAL_IMPROVEMENTS.md`; this handoff entry
+  - User GIF: `.docs/visual-improvements/2026-09-08-right-click-delete-left.gif`
+  - Evidence: `.docs/evidence/improve-30-status-toggle-right/`
+- Behavior implemented:
+  - Right Click Delete sits on the right of the status bar, left of `v1.0.0`.
+  - Status bar no longer shows the project name or an Actors pill; hamburger Menu has Actors (hidden in Present and Compare).
+- Tests and exact results:
+  - `npm run build` — `tsc --noEmit` blocked on concurrent untracked `src/board/tiles/pieGeometry.test.ts` (missing `./pieGeometry`). This commit’s files typecheck. `npx vite build` pass (Vite 8.2.2; existing chunk-size warning).
+  - `npm run test:unit` — excluding concurrent pieGeometry: 37 files, 214 tests pass.
+  - `npm run test:e2e` — `e2e/improve-30-status-toggle-right.spec.ts` pass (3); `e2e/improve-21-status-bar.spec.ts` pass (5). Full suite not re-run; port 4189 (`playwright.inherit.config.ts`). Chromium via `LD_LIBRARY_PATH` `~/.local/pw-libs`.
+- Evidence:
+  - `.docs/evidence/improve-30-status-toggle-right/toggle-right-1440.png` — Oak Park; toggle off on the right, next to v1.0.0 (1440×900)
+  - `.docs/evidence/improve-30-status-toggle-right/toggle-on-1440.png` — same; toggle on (yellow) (1440×900)
+  - `.docs/evidence/improve-30-status-toggle-right/toggle-right-dark-1440.png` — dark theme; toggle on the right (1440×900)
+  - `.docs/evidence/improve-30-status-toggle-right/toggle-right-1024.png` — toggle on the right at 1024×768
+- Earlier-slice defects fixed: none. Concurrent drop-name / hamburger-Actors WIP is included because the left-side toggle only exists on that bar.
+- Known limitations / follow-ups: Concurrent Type-picker / Who-select / tile-pie WIP remains unstaged.
+- Status: COMPLETE
+- Commit: `feat(improve-30): put Right Click Delete on the right`
+

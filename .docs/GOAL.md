@@ -212,3 +212,7 @@ Append only, newest last. Format: `- YYYY-MM-DD — <clause IDs> — <decision a
 - 2026-09-08 — WG-08, NA-12 — When right-click-delete is on, right-clicking a Tile removes that Node through the same path as X / Delete / inspector Remove. Off does not delete. Present and Both still disable editing. — approved by user
 - 2026-09-08 — P-08 — One-time fitView is the first nonempty layout of a lane with no stored viewport. An empty New board does not consume that fit. After Add Step or Add Data, the first Tile is centered in the board at the current zoom (no zoom-in on a single Tile). — approved by user
 - 2026-09-08 — SH-02, BA-05 — The top-bar switch reads Before / After / Compare. Compare is the stacked read-only comparison (stored view remains `both`). Neither Compare pane draws a pan-target outline. — approved by user
+- 2026-09-08 — P-05 — The status-bar Actors control uses an ink border, not the cyan chrome line. The toggle copy is “Right Click Delete”; on/off is the pressed state (yellow when on), not on/off in the wording. — approved by user
+- 2026-09-08 — P-05, NA-06 — Actors is not on the status bar. The hamburger Menu has an Actors item that opens Manage actors (hidden in Present and Compare). The inspector Manage actors action remains. — approved by user
+- 2026-09-08 — P-05 — The status bar does not show the loaded project name. It shows Right Click Delete and the application version. — approved by user
+- 2026-09-08 — P-05 — Right Click Delete sits on the right of the status bar, next to the version, not on the left. — approved by user

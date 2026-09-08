@@ -167,3 +167,15 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 - Resolution: Hover is cream + ink, like the other chrome buttons. Not yellow.
 - Attachments: [manage actors yellow highlight](visual-improvements/2026-09-08-manage-actors-yellow-highlight.gif)
 
+
+## 2026-09-08 — drop status bar project name
+
+- Issue: Bottom-left project title is unreliable and not wanted.
+- Resolution: Status bar no longer shows the loaded project name. Right Click Delete and version remain.
+- Attachments: n/a
+
+## 2026-09-08 — Right Click Delete on the left
+
+- Issue: Right Click Delete sits on the left of the bottom status bar; version is on the right.
+- Resolution: Shipped in `feat(improve-30): put Right Click Delete on the right` — toggle and version are a right-side cluster.
+- Attachments: [right click delete left](visual-improvements/2026-09-08-right-click-delete-left.gif)
