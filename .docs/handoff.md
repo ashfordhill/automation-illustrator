@@ -1414,3 +1414,17 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(improve-08): make plus taffy outline chunky`
 
+## Improvement 10 — correction 5 — 2026-09-08
+
+- Requested: Dragging a Tile onto a hovered Path that shares an ELK trunk with that Tile’s current Path (root fan-out children) should insert; it did not.
+- Changed: `skipInsertHover` skips only Paths that touch the dragged Tile. `hitPathId` / `hitInsertPathId` hit unique segments of bundled siblings after the split (or before a merge) and ignore the shared trunk. Incident Paths still fade; bundled siblings do not. `insertNodeOnPath` already accepted this graph edit.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning)
+  - `npm run test:unit` — pass (31 files, 187 tests)
+  - `npm run test:e2e` — sibling insert verified in Chromium against the dev server (preview band, drop removes `e_lt`, condition kept). Full Playwright suite not run in this chat because port 4177 was in use by another agent.
+- Evidence:
+  - `.docs/evidence/improve-10-drag-preview/insert-sibling-branch-1440.png` — Search website dragged over the other amount Path unique branch; blue insert band (1440×900)
+  - `.docs/evidence/improve-10-drag-preview/insert-sibling-drop-1440.png` — after drop onto that Path; layout ready (1440×900)
+- Status: COMPLETE
+- Commit: `feat(improve-10): insert Tiles on unique sibling Paths`
+

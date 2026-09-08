@@ -1,6 +1,14 @@
 import { expect, test } from "vitest";
 import ELK from "elkjs/lib/elk.bundled.js";
-import { distToPolyline, hitPathId, incidentPathIds, routesShareBundle, skipInsertHover } from "./pathHit";
+import {
+  distToPolyline,
+  hitInsertPathId,
+  hitPathId,
+  incidentPathIds,
+  routesShareBundle,
+  skipInsertHover,
+  uniqueSegments,
+} from "./pathHit";
 import type { LaneLayout } from "./laneLayout";
 import { oakParkInvoice, OAK_PARK_IDS } from "../../demos/oakParkInvoice";
 import { projectBefore } from "../../state/projection";
@@ -66,40 +74,51 @@ test("routesShareBundle detects a shared trunk and a shared inbound merge", () =
   expect(routesShareBundle(mergeA, mergeB)).toBe(true);
 });
 
-test("skipInsertHover skips the incident Path and its bundled sibling, not a disjoint Path", () => {
-  const layout: LaneLayout = {
-    key: "fan",
-    positions: {},
-    routes: {
-      e1: [
-        { x: 0, y: 50 },
-        { x: 40, y: 50 },
-        { x: 40, y: 10 },
-        { x: 80, y: 10 },
-      ],
-      e2: [
-        { x: 0, y: 50 },
-        { x: 40, y: 50 },
-        { x: 40, y: 90 },
-        { x: 80, y: 90 },
-      ],
-      e3: [
-        { x: 80, y: 10 },
-        { x: 140, y: 10 },
-      ],
-    },
-    labels: {},
-    bounds: { x: 0, y: 0, w: 140, h: 90 },
-  };
-  const skip = skipInsertHover(layout, new Set(["e1"]));
+const fanLayout: LaneLayout = {
+  key: "fan",
+  positions: {},
+  routes: {
+    e1: [
+      { x: 0, y: 50 },
+      { x: 40, y: 50 },
+      { x: 40, y: 10 },
+      { x: 80, y: 10 },
+    ],
+    e2: [
+      { x: 0, y: 50 },
+      { x: 40, y: 50 },
+      { x: 40, y: 90 },
+      { x: 80, y: 90 },
+    ],
+    e3: [
+      { x: 80, y: 10 },
+      { x: 140, y: 10 },
+    ],
+  },
+  labels: {},
+  bounds: { x: 0, y: 0, w: 140, h: 90 },
+};
+
+test("skipInsertHover skips only the incident Path, not its bundled sibling", () => {
+  const skip = skipInsertHover(fanLayout, new Set(["e1"]));
   expect(skip("e1")).toBe(true);
-  expect(skip("e2")).toBe(true);
+  expect(skip("e2")).toBe(false);
   expect(skip("e3")).toBe(false);
-  expect(hitPathId(layout, { x: 40, y: 88 }, skip)).toBeNull();
-  expect(hitPathId(layout, { x: 110, y: 10 }, skip)).toBe("e3");
 });
 
-test("Oak Park: dragging Web skips the amount fan-out bundle, not Enter→Review", async () => {
+test("hitInsertPathId hits a bundled sibling on its unique branch, not the shared trunk", () => {
+  const incident = new Set(["e1"]);
+  expect(hitInsertPathId(fanLayout, { x: 20, y: 50 }, incident)).toBeNull();
+  expect(hitInsertPathId(fanLayout, { x: 40, y: 50 }, incident)).toBeNull();
+  expect(hitInsertPathId(fanLayout, { x: 40, y: 88 }, incident)).toBe("e2");
+  expect(hitInsertPathId(fanLayout, { x: 70, y: 90 }, incident)).toBe("e2");
+  expect(hitInsertPathId(fanLayout, { x: 110, y: 10 }, incident)).toBe("e3");
+  const unique = uniqueSegments(fanLayout.routes.e2!, [fanLayout.routes.e1!]);
+  expect(unique.length).toBeGreaterThan(0);
+  expect(unique.some((s) => s.a.y === 90 || s.b.y === 90)).toBe(true);
+});
+
+test("Oak Park: dragging Web hits the other amount branch, not the shared trunk", async () => {
   const elk = new ELK();
   const projection = projectBefore(oakParkInvoice());
   const boxes: Record<string, { w: number; h: number; lines: string[] }> = {};
@@ -110,11 +129,21 @@ test("Oak Park: dragging Web skips the amount fan-out bundle, not Enter→Review
     laneGraphKey(projection, boxes),
     await elk.layout(buildElkGraph(projection, boxes)),
   );
-  const skip = skipInsertHover(
-    layout,
-    incidentPathIds(oakParkInvoice().edges, OAK_PARK_IDS.web),
-  );
-  expect(skip(OAK_PARK_IDS.gt)).toBe(true);
-  expect(skip(OAK_PARK_IDS.lt)).toBe(true);
-  expect(skip(OAK_PARK_IDS.enterReview)).toBe(false);
+  const incident = incidentPathIds(oakParkInvoice().edges, OAK_PARK_IDS.web);
+  expect(incident.has(OAK_PARK_IDS.gt)).toBe(true);
+  expect(skipInsertHover(layout, incident)(OAK_PARK_IDS.gt)).toBe(true);
+  expect(skipInsertHover(layout, incident)(OAK_PARK_IDS.lt)).toBe(false);
+  expect(skipInsertHover(layout, incident)(OAK_PARK_IDS.enterReview)).toBe(false);
+
+  const gt = layout.routes[OAK_PARK_IDS.gt]!;
+  const lt = layout.routes[OAK_PARK_IDS.lt]!;
+  expect(hitInsertPathId(layout, gt[0]!, incident)).toBeNull();
+  const unique = uniqueSegments(lt, [gt]);
+  expect(unique.length).toBeGreaterThan(0);
+  const mid = unique[unique.length - 1]!;
+  const p = { x: (mid.a.x + mid.b.x) / 2, y: (mid.a.y + mid.b.y) / 2 };
+  expect(hitInsertPathId(layout, p, incident)).toBe(OAK_PARK_IDS.lt);
+  const enter = layout.routes[OAK_PARK_IDS.enterReview]!;
+  const enterMid = enter[Math.floor(enter.length / 2)]!;
+  expect(hitInsertPathId(layout, enterMid, incident)).toBe(OAK_PARK_IDS.enterReview);
 });

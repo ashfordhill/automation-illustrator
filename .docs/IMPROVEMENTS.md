@@ -437,6 +437,8 @@ Correction 3 (2026-09-08): drop the custom black SVG cursors. Tiles use the plat
 
 Correction 4 (2026-09-08): pan and pull-tabs use a white/black OS-style grab hand (same look as the pointer). Platform `grab` stays blurry on Windows because Chrome only ships a 1× bitmap.
 
+Correction 5 (2026-09-08): unique segments of bundled sibling Paths are drop targets. Only incident Paths fade. Shared trunk / inbound merge still does not pick a Path.
+
 ---
 
 # Improvement 11 — Path Delete menu and hit pad (COMPLETE)

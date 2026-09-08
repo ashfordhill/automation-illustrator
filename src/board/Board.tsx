@@ -33,7 +33,7 @@ import { useStore } from "../state/store";
 import { edgeTypes, nodeTypes, type Lane } from "./nodes/reactFlowRegistry";
 import { GRID, nodeSize } from "./layout/tileMetrics";
 import { insertPreviewGeom } from "./layout/insertPreview";
-import { incidentPathIds, skipInsertHover } from "./layout/pathHit";
+import { incidentPathIds } from "./layout/pathHit";
 import { findNode } from "../workflow/selectors";
 import { measureLabelBox, type LabelBox } from "./layout/labelBox";
 import type { TileSizes } from "./layout/elkGraph";
@@ -125,10 +125,11 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
   const insertHoverId = interaction.kind === "tile-drag" ? interaction.hoverEdgeId : null;
   const dragNodeId = interaction.kind === "tile-drag" ? interaction.nodeId : null;
   const fadeInsertPath = useMemo(() => {
-    if (!dragNodeId || !shown) return (_id: string) => false;
+    if (!dragNodeId) return (_id: string) => false;
     const edgeList = [...workflow.edges, ...workflow.after.extraEdges];
-    return skipInsertHover(shown, incidentPathIds(edgeList, dragNodeId));
-  }, [dragNodeId, shown, workflow.edges, workflow.after.extraEdges]);
+    const incident = incidentPathIds(edgeList, dragNodeId);
+    return (id: string) => incident.has(id);
+  }, [dragNodeId, workflow.edges, workflow.after.extraEdges]);
   const reduceMotion =
     typeof window !== "undefined" &&
     typeof window.matchMedia === "function" &&

@@ -664,6 +664,20 @@ test("insertNodeOnPath keeps the condition on S→T and leaves T→U unlabeled",
   expect(outPath?.label).toBe("");
 });
 
+test("insertNodeOnPath can drop a fan-out child onto the sibling Path", () => {
+  const oak = oakParkInvoice();
+  const { web, fs, read, lt } = OAK_PARK_IDS;
+  const result = insertNodeOnPath(oak, web, lt);
+  expect(result.ok).toBe(true);
+  if (!result.ok) return;
+  expect(validateWorkflow(result.value)).toEqual([]);
+  expect(result.value.edges.some((e) => e.id === lt)).toBe(false);
+  expect(result.value.edges.some((e) => e.source === read && e.target === web)).toBe(true);
+  expect(result.value.edges.some((e) => e.source === web && e.target === fs)).toBe(true);
+  const inPath = result.value.edges.find((e) => e.source === read && e.target === web);
+  expect(inPath?.label).toBe("invoice < $50,000");
+});
+
 test("insertNodeOnPath rejects the root, a self-drop, and a missing Path", () => {
   const board = doc(
     [step("r"), step("a", 0, 40), step("b", 0, 80)],

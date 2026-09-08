@@ -123,3 +123,10 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 - Issue: The Tile `+` and Path create tabs on a Tile are small and hard to grab.
 - Resolution: Shipped in `feat(improve-15): enlarge tile plus and Path tabs` — 44×44 tabs, 24px peek.
 - Attachments: [tile create tabs](visual-improvements/2026-09-08-tile-create-tabs.gif)
+
+## 2026-09-08 — insert onto sibling Path
+
+- Issue: Dragging a Tile onto a hovered Path that shares a trunk with the Tile’s current Path (root fan-out) does not insert.
+- Resolution: Unique segments after the split are drop targets; only Paths that touch the dragged Tile fade. Shared trunk still does not pick a Path.
+- Attachments: [sibling insert](visual-improvements/2026-09-08-insert-sibling-path.gif)
+

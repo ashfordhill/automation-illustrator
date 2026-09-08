@@ -46,16 +46,25 @@ export function hitPathId(
   threshold = 22,
 ): string | null {
   if (!layout) return null;
+  const skippedRoutes = Object.entries(layout.routes)
+    .filter(([id, route]) => skip(id) && route.length >= 2)
+    .map(([, route]) => route);
   let bestId: string | null = null;
   let best = threshold;
   for (const [id, route] of Object.entries(layout.routes)) {
-    if (skip(id)) continue;
-    const d = distToPolyline(p, route);
+    if (skip(id) || route.length < 2) continue;
+    const d = distToUniquePolyline(p, route, skippedRoutes);
     if (d < best) {
       best = d;
       bestId = id;
     }
   }
+  if (!bestId) return null;
+  let skippedBest = Infinity;
+  for (const route of skippedRoutes) {
+    skippedBest = Math.min(skippedBest, distToPolyline(p, route));
+  }
+  if (skippedBest <= best) return null;
   return bestId;
 }
 
@@ -93,18 +102,62 @@ export function routesShareBundle(a: Point[], b: Point[]): boolean {
   return false;
 }
 
-/** Skip incident Paths and any Path that shares their ELK trunk or inbound merge. */
+function segmentSharedWith(a: Point, b: Point, routes: Point[][]): boolean {
+  const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+  return routes.some(
+    (r) =>
+      distToPolyline(a, r) <= BUNDLE_EPS &&
+      distToPolyline(b, r) <= BUNDLE_EPS &&
+      distToPolyline(mid, r) <= BUNDLE_EPS,
+  );
+}
+
+/** Distance to segments that are not on the incident bundle (unique branch / inbound run). */
+export function distToUniquePolyline(p: Point, route: Point[], sharedWith: Point[][]): number {
+  if (sharedWith.length === 0) return distToPolyline(p, route);
+  if (route.length < 2) return Infinity;
+  let best = Infinity;
+  let any = false;
+  for (let i = 0; i < route.length - 1; i++) {
+    const a = route[i]!;
+    const b = route[i + 1]!;
+    if (segmentSharedWith(a, b, sharedWith)) continue;
+    any = true;
+    best = Math.min(best, distToSegment(p, a, b));
+  }
+  return any ? best : Infinity;
+}
+
+export function uniqueSegments(route: Point[], sharedWith: Point[][]): { a: Point; b: Point }[] {
+  const out: { a: Point; b: Point }[] = [];
+  if (route.length < 2) return out;
+  for (let i = 0; i < route.length - 1; i++) {
+    const a = route[i]!;
+    const b = route[i + 1]!;
+    if (segmentSharedWith(a, b, sharedWith)) continue;
+    out.push({ a, b });
+  }
+  return out;
+}
+
+/** Skip Paths that actually touch the dragged Tile (not bundled siblings). */
 export function skipInsertHover(
-  layout: LaneLayout,
+  _layout: LaneLayout,
   incidentIds: ReadonlySet<string>,
 ): (edgeId: string) => boolean {
-  const incidentRoutes = [...incidentIds]
-    .map((id) => layout.routes[id])
-    .filter((r): r is Point[] => Boolean(r && r.length >= 2));
-  return (edgeId: string) => {
-    if (incidentIds.has(edgeId)) return true;
-    const route = layout.routes[edgeId];
-    if (!route || route.length < 2) return true;
-    return incidentRoutes.some((other) => routesShareBundle(route, other));
-  };
+  return (edgeId: string) => incidentIds.has(edgeId);
+}
+
+/**
+ * Insert drop target: incident Paths are skipped. Bundled siblings stay
+ * hittable on unique segments after the split (or before the merge). The
+ * shared trunk / inbound merge does not pick a Path.
+ */
+export function hitInsertPathId(
+  layout: LaneLayout | null,
+  p: Point,
+  incidentIds: ReadonlySet<string>,
+  threshold = 22,
+): string | null {
+  return hitPathId(layout, p, (id) => incidentIds.has(id), threshold);
 }
