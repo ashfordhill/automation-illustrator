@@ -1175,3 +1175,14 @@ Corrections in the same chat before the next slice starts get their own short en
   - `npm run test:e2e` — pass (87 passed, Chromium, 3 workers, 53.8s)
 - Status: COMPLETE
 - Commit: `feat(improve-09): blue select and Data Path stroke`
+
+## Improvement 09 — correction 4 — 2026-09-08
+
+- Requested: Drop or reduce the blue selection glow so the outline is crisp.
+- Changed: Selected Step/Data is a 4px `--blue` rim only (no blur/spread glow, no ground shadow). Path-pull tab glyph is three staggered tracks (from the attached motif). Recaptured `selected-tabs-1440.png`. GOAL CX-07 and WG-07 amendments.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning)
+  - `npm run test:unit` — pass (31 files, 171 tests)
+  - `npm run test:e2e` — pass (87 passed, Chromium, 3 workers, 54.0s)
+- Status: COMPLETE
+- Commit: `feat(improve-09): drop select glow`

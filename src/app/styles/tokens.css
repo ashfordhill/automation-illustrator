@@ -767,20 +767,16 @@ body,
 
 .step-piece.selected,
 .field-piece.selected {
-  box-shadow: 0 0 0 4px var(--select-glow),
-    0 0 16px 6px color-mix(in srgb, var(--select-glow) 75%, transparent);
+  box-shadow: 0 0 0 4px var(--select-glow);
 }
 
 .step-piece.selected.is-lifted {
-  box-shadow: 0 0 0 4px var(--select-glow),
-    0 0 16px 6px color-mix(in srgb, var(--select-glow) 75%, transparent),
-    0 10px 0 var(--btn-shadow), 0 18px 24px var(--btn-shadow);
+  box-shadow: 0 0 0 4px var(--select-glow), 0 10px 0 var(--btn-shadow),
+    0 18px 24px var(--btn-shadow);
 }
 
 .field-piece.selected.is-lifted {
-  box-shadow: 0 0 0 4px var(--select-glow),
-    0 0 16px 6px color-mix(in srgb, var(--select-glow) 75%, transparent),
-    0 10px 0 var(--btn-shadow);
+  box-shadow: 0 0 0 4px var(--select-glow), 0 10px 0 var(--btn-shadow);
 }
 
 .tile-side-tabs {

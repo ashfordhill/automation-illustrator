@@ -62,8 +62,7 @@ test.describe("Improvement 09 — tile chrome, Data root, After removal", () => 
     expect(outline.style === "none" || outline.width === "0px").toBe(true);
     const tileShadow = await tile.evaluate((el) => getComputedStyle(el).boxShadow);
     expect(tileShadow).not.toBe("none");
-    const shadowLayers = tileShadow.split(/,(?![^()]*\))/).map((p) => p.trim());
-    expect(shadowLayers.length).toBeGreaterThanOrEqual(2);
+    expect(tileShadow).toMatch(/0px 0px 0px 4px/);
     await capturePage(page, `${EVIDENCE}/selected-tabs-1440.png`);
 
     const grab = tabPeekPoint(plusBox!);

@@ -1,11 +1,14 @@
 /**
- * Spindle (bobbin: two discs + a short shaft) with one thread curving off
- * to the right — Path-pull tab glyph (WG-07, AQ-01). Black in both themes
- * on the teal Path-tab fill.
+ * Path-pull tab glyph (WG-07, AQ-01): a chunky orthogonal fork of rounded
+ * capsules — one trunk splitting into two Paths. Same capsule language as the
+ * three-track motif; arranged the way Paths actually leave a Node on the board.
+ * Ink in both themes on the teal Path-tab fill.
  */
 const GLYPH = "#071c28";
 
-export function PathSpindleIcon({ size = 24 }: { size?: number }) {
+export function PathTracksIcon({ size = 24 }: { size?: number }) {
+  const t = 6.2;
+  const r = t / 2;
   return (
     <svg
       width={size}
@@ -14,19 +17,13 @@ export function PathSpindleIcon({ size = 24 }: { size?: number }) {
       aria-hidden
       focusable="false"
     >
-      <ellipse cx="12" cy="7.6" rx="7" ry="2.5" fill={GLYPH} />
-      <ellipse cx="12" cy="24.4" rx="7" ry="2.5" fill={GLYPH} />
-      <path fill={GLYPH} d="M6.8 8.4h10.4v15.2H6.8z" />
-      <ellipse cx="12" cy="16" rx="5.1" ry="2.1" fill={GLYPH} />
-      <path
-        fill="none"
-        stroke={GLYPH}
-        strokeWidth="2.2"
-        strokeLinecap="round"
-        d="M19.4 14.2c3.4-3.6 8.2-1.4 9.4 2.4"
-      />
+      <rect x="4.3" y="12.9" width="14.2" height={t} rx={r} fill={GLYPH} />
+      <rect x="14.1" y="4.5" width={t} height="22.8" rx={r} fill={GLYPH} />
+      <rect x="14.1" y="4.5" width="13.8" height={t} rx={r} fill={GLYPH} />
+      <rect x="14.1" y="21.1" width="13.8" height={t} rx={r} fill={GLYPH} />
     </svg>
   );
 }
 
-export { PathSpindleIcon as PathKnotIcon };
+export { PathTracksIcon as PathSpindleIcon };
+export { PathTracksIcon as PathKnotIcon };

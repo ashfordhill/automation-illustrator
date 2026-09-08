@@ -183,3 +183,5 @@ Append only, newest last. Format: `- YYYY-MM-DD — <clause IDs> — <decision a
 - 2026-09-08 — CX-07 — Selected Step/Data uses a gold halo on the tile face (box-shadow rim and glow, plus a stronger ground shadow), not a CSS outline on the chrome. — approved by user
 - 2026-09-08 — CX-07 — Selected Step/Data uses a blue halo on the tile face and no ground shadow (flat). Drag-lift may still raise a tile. — approved by user
 - 2026-09-08 — PC-01, PC-02, PC-03 — Every Path is the same object: dotted or solid. Step and Data ends do not change Path type. The drawn stroke is that Path’s own flag, including a single outgoing Path. Double-click, inspector Dotted/Solid, and the keybind toggle that Path. Split still seeds new outgoing Paths from a Step (exclusive + two or more → dotted). — approved by user
+- 2026-09-08 — WG-07, AQ-01 — The Path-pull tab glyph is a chunky orthogonal fork of rounded path tracks (trunk splitting into Paths), not a spindle. Pull behavior unchanged. — approved by user
+- 2026-09-08 — CX-07 — Selected Step/Data uses a blue rim on the tile face, with no glow and no ground shadow (flat). Drag-lift may still raise a tile. — approved by user

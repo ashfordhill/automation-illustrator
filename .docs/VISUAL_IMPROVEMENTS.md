@@ -63,3 +63,9 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 - Issue: `+` and Path tabs still sit under the tile border. Pulling them out shows a triangular twist and a hard left edge against the tile.
 - Resolution: Shipped in `feat(improve-09): sit plus Path tabs on the tile` (tabs on the right edge like X; taffy/string exit from under the face; ghost stays on top).
 - Attachments: [tabs under tile](visual-improvements/2026-09-08-tabs-under-tile.png) · [pull twist](visual-improvements/2026-09-08-plus-path-pull-twist.gif)
+
+## 2026-09-08 — Path-adding tracks
+
+- Issue: Path-pull spindle does not read as “add a Path.” User wants a three-capsule staggered track mark.
+- Resolution: Path tab uses a chunky orthogonal fork of rounded capsules (trunk splitting into two Paths), so it reads as “pull a Path” and stays distinct from `+`.
+- Attachments: [path tracks motif](visual-improvements/2026-09-08-path-adding-tracks.png)

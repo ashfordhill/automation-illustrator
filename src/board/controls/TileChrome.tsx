@@ -1,5 +1,5 @@
 /**
- * Selected-tile chrome: stretchy + tab (Step / Data), Path-pull spindle, and X.
+ * Selected-tile chrome: stretchy + tab (Step / Data), Path-pull tracks, and X.
  * Pointer capture stays on the tabs so tile pickup and pan do not steal the gesture.
  */
 import {
@@ -20,7 +20,7 @@ import { useLaneLayoutContext } from "../routing/LaneLayoutContext";
 import { hitPathId } from "../layout/pathHit";
 import { insertPreviewGeom } from "../layout/insertPreview";
 import { nodeSize } from "../layout/tileMetrics";
-import { PathSpindleIcon } from "./PathKnotIcon";
+import { PathTracksIcon } from "./PathKnotIcon";
 import { DataChip } from "../tiles/DataChip";
 
 const PULL_THRESHOLD = 36;
@@ -475,7 +475,7 @@ function PathPullTab({ nodeId }: { nodeId: string }) {
             </svg>
             {drag.live ? (
               <div className="path-tab-ghost" style={{ left: endX, top: endY }}>
-                <PathSpindleIcon size={24} />
+                <PathTracksIcon size={24} />
               </div>
             ) : null}
           </div>,
@@ -497,7 +497,7 @@ function PathPullTab({ nodeId }: { nodeId: string }) {
         onPointerCancel={onPointerUp}
         onClick={(e) => e.stopPropagation()}
       >
-        <PathSpindleIcon size={24} />
+        <PathTracksIcon size={24} />
       </button>
       {overlay}
     </>
