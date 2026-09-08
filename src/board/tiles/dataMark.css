@@ -1,0 +1,12 @@
+/**
+ * Data oval fill. Coral is unused in chrome/actors (yellow = select, teal = Path tab,
+ * mint/pink/peach/lavender = Who, green = +, red = remove).
+ */
+:root,
+:root[data-theme="light"] {
+  --data-mark: #e8784a;
+}
+
+:root[data-theme="dark"] {
+  --data-mark: #f09468;
+}

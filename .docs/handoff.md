@@ -1598,3 +1598,29 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(improve-24): center the first Tile from New`
 
+## Improvement 25 — coral Data mark — 2026-09-08
+
+- Starting commit: `566ff80` (`feat(improve-24): center the first Tile from New`)
+- Working tree at start: not clean. Concurrent status-bar / tile-pie / evidence recaptures were left unstaged and are not in this commit.
+- GOAL clauses addressed: P-09 (light and dark Data mark contrast). No amendment — Data fill hex is not in the contract.
+- Library research and decisions: no new runtime dependency. Teal `#1db8a8` sat next to icy paper and `--chrome-line`. Unused saturated hue that still sits with navy/gold: coral `#e8784a` (dark `#f09468`). Distinct from minus brick `#c4453a`, Roy peach `#f4c07a`, yellow select, Alice pink, Missy lavender, plus green. Path tab keeps `--data` teal so Data and Path stay different marks. `--data-mark` lives in `dataMark.css` so this change does not rewrite `tokens.css` (concurrent WIP).
+- Files changed:
+  - `src/board/tiles/DataChip.tsx`, `src/board/tiles/dataMark.css`
+  - Tests: `e2e/improve-25-data-mark.spec.ts`
+  - Docs: `.docs/IMPROVEMENTS.md` (25); this handoff entry
+  - Evidence: `.docs/evidence/improve-25-data-mark/`
+- Behavior implemented:
+  - Data tiles and the `+` Data preview oval are coral instead of teal.
+  - Path-pull tab fill is unchanged (still washed teal).
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning)
+  - `npm run test:unit` — pass (35 files, 207 tests)
+  - `npm run test:e2e` — `e2e/improve-25-data-mark.spec.ts` pass (1). Full suite not re-run; port 4177 reserved by Playwright default config. Chromium via `LD_LIBRARY_PATH` `~/.local/pw-libs`.
+- Evidence:
+  - `.docs/evidence/improve-25-data-mark/data-mark-light-1440.png` — Account # selected; coral oval, teal Path tab (1440×900)
+  - `.docs/evidence/improve-25-data-mark/data-mark-dark-1440.png` — same in dark (1440×900)
+- Earlier-slice defects fixed: none
+- Known limitations / follow-ups: Concurrent status-bar / tile-pie WIP remains unstaged.
+- Status: COMPLETE
+- Commit: `feat(improve-25): recolor the Data mark coral`
+

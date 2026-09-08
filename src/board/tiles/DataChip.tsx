@@ -1,8 +1,10 @@
 /**
- * Teal oval mark on Data tiles — not yellow (yellow is inspector/view selection).
+ * Coral oval mark on Data tiles — not yellow (yellow is inspector/view selection)
+ * and not teal (Path tab / icy paper family).
  * Lives next to StepKindIcon so board marks stay in tiles/.
  */
 import type { CSSProperties } from "react";
+import "./dataMark.css";
 
 export function DataChip({ style }: { style?: CSSProperties }) {
   return (
@@ -12,7 +14,7 @@ export function DataChip({ style }: { style?: CSSProperties }) {
         cy="14"
         rx="12"
         ry="9"
-        fill="var(--data)"
+        fill="var(--data-mark)"
         stroke="var(--ink)"
         strokeWidth="2.6"
       />

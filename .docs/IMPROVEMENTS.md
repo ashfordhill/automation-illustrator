@@ -567,3 +567,12 @@ Approved 2026-09-08. Starting from New, Add Step or Add Data places the first Ti
 
 Commit: `feat(improve-24): center the first Tile from New`.  
 Evidence: `.docs/evidence/improve-24-first-tile-center/`.
+
+---
+
+# Improvement 25 — coral Data mark
+
+Approved 2026-09-08. The Data oval is **coral** (`#e8784a` light, `#f09468` dark) instead of teal. Teal sat in the icy paper / chrome-line family. Coral is unused (not yellow select, not actor pastels, not plus green, not minus red). The Path-pull tab stays teal. No new dependency.
+
+Commit: `feat(improve-25): recolor the Data mark coral`.  
+Evidence: `.docs/evidence/improve-25-data-mark/`.
