@@ -30,7 +30,7 @@
   --minus: #c4453a;
   --minus-active: #9e3229;
   --select-ring: rgba(26, 143, 212, 0.5);
-  --select-glow: #c98910;
+  --select-glow: var(--blue);
   --actor-empty: #cfe8f2;
   --banner: #d4f0f8;
   --mantine-color-dimmed: var(--ink-soft);
@@ -62,7 +62,7 @@
   --minus: #e06a5e;
   --minus-active: #c44d42;
   --select-ring: rgba(126, 182, 224, 0.65);
-  --select-glow: #f3cc5a;
+  --select-glow: var(--blue);
   --actor-empty: #2a4554;
   --banner: #1e3f4e;
   --mantine-color-dimmed: var(--ink-soft);
@@ -768,8 +768,7 @@ body,
 .step-piece.selected,
 .field-piece.selected {
   box-shadow: 0 0 0 4px var(--select-glow),
-    0 0 16px 6px color-mix(in srgb, var(--select-glow) 75%, transparent),
-    0 9px 0 color-mix(in srgb, var(--ink) 50%, transparent);
+    0 0 16px 6px color-mix(in srgb, var(--select-glow) 75%, transparent);
 }
 
 .step-piece.selected.is-lifted {

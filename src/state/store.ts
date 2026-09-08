@@ -971,8 +971,6 @@ export const useStore = create<{
     if (!edge) return;
     const graph =
       view === ViewMode.After ? afterGraph(workflow) : { nodes: workflow.nodes, edges: workflow.edges };
-    const outs = graph.edges.filter((e) => e.source === edge.source).length;
-    if (outs < 2) return;
     updateEdge(selected.id, { dashed: !edgeIsDotted(graph.nodes, graph.edges, edge) });
   },
   focusPathLabel: () => {

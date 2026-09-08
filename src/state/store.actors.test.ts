@@ -66,13 +66,13 @@ test("changing Split re-applies default strokes (PC-02, PC-03)", () => {
   expect(useStore.getState().workflow.edges.find((e) => e.id === gt)?.dashed).toBe(true);
 });
 
-test("toggleSelectedDash no-ops for a lone outgoing Path; two-outgoing toggles only that Path", () => {
-  const { gt, lt, enterReview } = OAK_PARK_IDS;
+test("toggleSelectedDash toggles that Path only, including a Data-sourced lone Path", () => {
+  const { gt, lt, acctEnter } = OAK_PARK_IDS;
   const s = useStore.getState();
-  s.select({ type: SelectionKind.Edge, id: enterReview });
-  const loneBefore = useStore.getState().workflow.edges.find((e) => e.id === enterReview)?.dashed;
+  s.select({ type: SelectionKind.Edge, id: acctEnter });
+  expect(useStore.getState().workflow.edges.find((e) => e.id === acctEnter)?.dashed).toBe(false);
   s.toggleSelectedDash();
-  expect(useStore.getState().workflow.edges.find((e) => e.id === enterReview)?.dashed).toBe(loneBefore);
+  expect(useStore.getState().workflow.edges.find((e) => e.id === acctEnter)?.dashed).toBe(true);
 
   s.select({ type: SelectionKind.Edge, id: gt });
   expect(useStore.getState().workflow.edges.find((e) => e.id === gt)?.dashed).toBe(true);

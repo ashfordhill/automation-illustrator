@@ -49,10 +49,20 @@ test("a PositionMap reorders siblings and the WG-09 default follows it", () => {
   expect(outgoingSorted(nodes, edges, "a", { b: { x: 0, y: 5 } }).map((e) => e.id)).toEqual(["e2", "e1"]);
 });
 
-test("PC-02: One of makes every outgoing Path dotted; a single outgoing is solid", () => {
+function data(id: string, y: number): NodeDto {
+  return {
+    id,
+    type: WorkflowNodeKind.DataField,
+    position: { x: 0, y },
+    label: "d",
+  };
+}
+
+test("PC-02: omitted stroke follows Split; an explicit dashed flag wins even on one outgoing", () => {
   const nodes = [step("a", 0), step("b", 0), step("c", 40)];
   const one: EdgeDto[] = [{ id: "e1", source: "a", target: "b", label: "" }];
   expect(edgeIsDotted(nodes, one, one[0]!)).toBe(false);
+  expect(edgeIsDotted(nodes, one, { ...one[0]!, dashed: true })).toBe(true);
   expect(splitDefaultDashed(SplitKind.Exclusive, 1)).toBe(false);
   expect(splitDefaultDashed(SplitKind.Exclusive, 2)).toBe(true);
   expect(splitDefaultDashed(SplitKind.Parallel, 2)).toBe(false);
@@ -70,6 +80,10 @@ test("PC-02: One of makes every outgoing Path dotted; a single outgoing is solid
   ];
   expect(edgeIsDotted(nodes, mixed, mixed[0]!)).toBe(false);
   expect(edgeIsDotted(nodes, mixed, mixed[1]!)).toBe(true);
+
+  const fromData = [data("d", 0), step("b", 0)];
+  const dataOut: EdgeDto[] = [{ id: "e1", source: "d", target: "b", label: "", dashed: true }];
+  expect(edgeIsDotted(fromData, dataOut, dataOut[0]!)).toBe(true);
 });
 
 test("PC-03: changing Split re-applies the default stroke to every outgoing Path", () => {

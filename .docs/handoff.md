@@ -1164,3 +1164,14 @@ Corrections in the same chat before the next slice starts get their own short en
   - `npm run test:e2e` — pass (86 passed, Chromium, 3 workers, 52.3s)
 - Status: COMPLETE
 - Commit: `feat(improve-09): make selected tile glow`
+
+## Improvement 09 — correction 3 — 2026-09-08
+
+- Requested: Double-click Paths that involve Data should go dotted (same Path type as Step — only dotted/solid). Selected tile should be a blue halo without a ground shadow (flat, not gold).
+- Changed: `edgeIsDotted` honors explicit `dashed` for any source and lone outgoing; `toggleSelectedDash` no longer no-ops; Path inspector always shows Dotted/Solid. Select glow is `--blue` with no ground shadow. GOAL PC-01/PC-02/PC-03 and CX-07 amendments.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning)
+  - `npm run test:unit` — pass (31 files, 171 tests)
+  - `npm run test:e2e` — pass (87 passed, Chromium, 3 workers, 53.8s)
+- Status: COMPLETE
+- Commit: `feat(improve-09): blue select and Data Path stroke`

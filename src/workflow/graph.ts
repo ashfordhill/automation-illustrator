@@ -77,18 +77,19 @@ export function splitDefaultDashed(split: SplitKind, outgoingCount: number): boo
 }
 
 /**
- * Stroke for one Path (PC-01, PC-02). A single outgoing Path is always solid.
- * Otherwise an explicit `dashed` flag wins; omitted flags follow Split.
+ * Stroke for one Path (PC-01). Explicit `dashed` always wins, including a
+ * single outgoing Path and Paths whose source is Data. Omitted flags follow
+ * Step Split (PC-02) when that Step has two or more outgoing Paths.
  */
 export function edgeIsDotted(
   nodes: NodeDto[],
   edges: EdgeDto[],
   edge: EdgeDto,
 ): boolean {
-  const outs = outgoingSorted(nodes, edges, edge.source);
-  if (outs.length < 2) return false;
   if (edge.dashed === true) return true;
   if (edge.dashed === false) return false;
+  const outs = outgoingSorted(nodes, edges, edge.source);
+  if (outs.length < 2) return false;
   const src = nodeOf(nodes, edge.source);
   if (!src || src.type !== WorkflowNodeKind.Step) return false;
   return splitDefaultDashed(src.split, outs.length);

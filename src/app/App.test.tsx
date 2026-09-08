@@ -127,6 +127,15 @@ test("Path inspector has label plus Dotted / Solid (NA-07)", () => {
   expect(host.querySelector("#path-condition-field")).not.toBeNull();
 });
 
+test("Path inspector Dotted / Solid is shown for a Data-sourced Path", () => {
+  act(() => {
+    useStore.getState().select({ type: SelectionKind.Edge, id: OAK_PARK_IDS.acctEnter });
+  });
+  const rail = host.querySelector(".details-rail-body")?.textContent ?? "";
+  expect(rail).toMatch(/Dotted/);
+  expect(rail).toMatch(/Solid/);
+});
+
 test("sound toggle is off by default and Present restores the inspector", () => {
   expect(host.querySelector('[aria-label="Sound off"]')).not.toBeNull();
   expect(host.querySelector('[aria-pressed="false"]')).not.toBeNull();

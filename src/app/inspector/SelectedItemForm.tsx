@@ -181,7 +181,6 @@ export function DetailsPanel() {
     if (!e) return null;
     const graph =
       view === ViewMode.After ? afterGraph(workflow) : { nodes: workflow.nodes, edges: workflow.edges };
-    const outs = graph.edges.filter((x) => x.source === e.source).length;
     const dotted = edgeIsDotted(graph.nodes, graph.edges, e);
     return (
       <Stack gap="xs" p="sm" className="chrome-hide">
@@ -192,18 +191,16 @@ export function DetailsPanel() {
           readOnly={readOnly}
           onChange={(ev) => useStore.getState().updateEdge(e.id, { label: ev.target.value })}
         />
-        {outs >= 2 ? (
-          <FatChoice
-            label="Path stroke"
-            value={dotted ? "dotted" : "solid"}
-            disabled={readOnly}
-            onChange={(v) => useStore.getState().updateEdge(e.id, { dashed: v === "dotted" })}
-            options={[
-              { value: "dotted", label: "Dotted" },
-              { value: "solid", label: "Solid" },
-            ]}
-          />
-        ) : null}
+        <FatChoice
+          label="Path stroke"
+          value={dotted ? "dotted" : "solid"}
+          disabled={readOnly}
+          onChange={(v) => useStore.getState().updateEdge(e.id, { dashed: v === "dotted" })}
+          options={[
+            { value: "dotted", label: "Dotted" },
+            { value: "solid", label: "Solid" },
+          ]}
+        />
       </Stack>
     );
   }

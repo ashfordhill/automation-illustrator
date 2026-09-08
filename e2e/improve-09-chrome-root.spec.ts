@@ -3,6 +3,7 @@ import {
   DEMO_STEP,
   capturePage,
   loadOakPark,
+  pathScreenPoint,
   tabPeekPoint,
   waitForLayout,
 } from "./ready";
@@ -118,5 +119,14 @@ test.describe("Improvement 09 — tile chrome, Data root, After removal", () => 
     await expect(page.getByText("This board is empty.")).toBeVisible();
     await expect(page.getByRole("button", { name: "Add Step" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Add Data" })).toBeVisible();
+  });
+
+  test("double-click a Path out of Data draws dotted (same Path as Step)", async ({ page }) => {
+    await loadOakPark(page);
+    const onto = await pathScreenPoint(page, "e_acct_enter", 0.5);
+    await page.mouse.dblclick(onto.x, onto.y);
+    await expect(page.locator("path#e_acct_enter")).toHaveClass(/path-stroke-dotted/);
+    await expect(aside(page).getByRole("button", { name: "Dotted" })).toHaveAttribute("aria-pressed", "true");
+    await capturePage(page, `${EVIDENCE}/data-path-dotted-1440.png`);
   });
 });
