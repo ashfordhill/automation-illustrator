@@ -1,7 +1,7 @@
 /**
  * One discriminated canvas interaction (CX-08). Replaces overlapping
  * linkFrom / linkMenu / pathPick booleans. Escape and empty-canvas click
- * always return to idle. merge-pick collects Before-origin Steps before confirm.
+ * always return to idle.
  */
 import type { ActorDto, NodeDto } from "../workflow/types";
 import type { RemovalPlan } from "../workflow/commands";
@@ -13,7 +13,6 @@ export type Interaction =
   | { kind: "tile-drag"; nodeId: string; hoverEdgeId: string | null }
   | { kind: "connect-existing"; sourceId: string }
   | { kind: "remove-preview"; plan: RemovalPlan }
-  | { kind: "merge-pick"; memberIds: string[] }
   | { kind: "path-label-edit"; edgeId: string };
 
 export const IDLE: Interaction = { kind: "idle" };

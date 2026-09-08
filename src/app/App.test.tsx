@@ -51,6 +51,7 @@ test("app mounts the shell and view switcher", () => {
   expect(host.textContent).toContain("Both");
   expect(host.querySelector('[aria-label="Menu"]')).not.toBeNull();
   expect(host.querySelector("[data-unsupported-viewport]")).toBeNull();
+  expect(host.textContent).not.toMatch(/will become automated/);
 });
 
 test("demo startup loads the Oak Park invoice workflow", () => {
@@ -135,7 +136,7 @@ test("sound toggle is off by default and Present restores the inspector", () => 
     useStore.getState().setPresent(true);
   });
   expect(host.querySelector("aside")).toBeNull();
-  expect(host.textContent).toMatch(/will become automated/);
+  expect(host.textContent).not.toMatch(/will become automated/);
   act(() => {
     useStore.getState().setPresent(false);
   });

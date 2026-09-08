@@ -36,7 +36,7 @@ test.describe("slice 10 After projection and comparison", () => {
     );
     await waitForLayout(page);
     await expect(page.getByText(RECEIPT).first()).toBeVisible();
-    await expect(page.locator("[data-merge-group]").first()).toBeVisible();
+    await expect(page.locator("[data-merge-group]")).toHaveCount(0);
     await expect(page.getByText("Scan letter to PDF").first()).toBeVisible();
     await screenshotBoard(page, `${EVIDENCE}/after-light-1440.png`);
 
@@ -106,9 +106,9 @@ test.describe("slice 10 After projection and comparison", () => {
     await screenshotBoard(page, `${EVIDENCE}/after-origin-blocked-1440.png`);
   });
 
-  test("Mailroom After score still counts merged members individually (BA-08)", async ({ page }) => {
+  test("Mailroom has no automation score copy (BA-08 withdrawn)", async ({ page }) => {
     await loadMailroom(page);
-    await expect(page.getByText("3 Steps out of 6 will become automated instead of manually performed")).toBeVisible();
+    await expect(page.getByText(/will become automated/)).toHaveCount(0);
   });
 });
 

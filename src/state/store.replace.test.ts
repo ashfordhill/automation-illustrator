@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { DemoId } from "../demos/catalog";
 import { freshBoard, isEmptyBoard, OAK_PARK_IDS } from "../demos/oakParkInvoice";
-import { MAILROOM_IDS } from "../demos/robotMailroom";
+import { MAILROOM_IDS, robotMailroom } from "../demos/robotMailroom";
 import { ColorScheme, ViewMode } from "../workflow/catalogs";
+import { UNFOLD_NOTICE } from "../workflow/types";
 import * as persist from "./persistence";
 import { useStore } from "./store";
 
@@ -68,6 +69,26 @@ test("requestNew on an empty board is a no-op", () => {
   useStore.getState().requestNew();
   expect(useStore.getState().pendingReplace).toBeNull();
   expect(isEmptyBoard(useStore.getState().workflow)).toBe(true);
+});
+
+test("loadDoc unfolds leftover groups and notices", () => {
+  const mail = robotMailroom();
+  const grouped = {
+    ...mail,
+    after: {
+      ...mail.after,
+      groups: [
+        {
+          id: MAILROOM_IDS.group,
+          memberIds: [MAILROOM_IDS.scan, MAILROOM_IDS.lookup, MAILROOM_IDS.route],
+        },
+      ],
+    },
+  };
+  useStore.getState().loadDoc(grouped);
+  expect(useStore.getState().workflow.after.groups).toEqual([]);
+  expect(useStore.getState().notice).toBe(UNFOLD_NOTICE);
+  expect(useStore.getState().workflow.after.assignments[MAILROOM_IDS.scan]).toBe(MAILROOM_IDS.mailbot);
 });
 
 test("addStep on an empty board creates the root (WG-01)", () => {

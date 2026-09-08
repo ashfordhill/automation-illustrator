@@ -39,3 +39,15 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 - Issue: Selected Who uses yellow plus a dashed ring. Other prints “Other” on the tile. Merge/Unmerge still clutters After. Wheel zoom jumps; zoom-in often targets empty paper. BEFORE/AFTER corner chips and inspector Remove text are extra chrome.
 - Resolution: Planned for Improvement 06 (Who fill-only, trash icon, Other copy, drop lane chips, hamburger dismiss, finer zoom toward the graph). Merge removal is Improvement 07.
 - Attachments: [Who Alice](visual-improvements/2026-09-07-who-alice-selected.png) · [wheel zoom](visual-improvements/2026-09-07-wheel-zoom.gif)
+
+## 2026-09-07 — plus taffy, tabs, Path stroke
+
+- Issue: Wedge `+` pull is worse than the old green taffy (keep the dim scrim). Empty-space release lags. Path-pull glyph still wrong. `+`/Path tabs sit on the tile instead of tucked behind. Delete X lifts on hover. Data preview in the `+` fan is smaller than Step. Double-click Path and inspector Dotted/Solid appear to do nothing.
+- Resolution: Planned for Improvement 08 (after merge removal). Do not mix into Improvement 07.
+- Attachments: [plus submenu](visual-improvements/2026-09-07-plus-submenu.gif)
+
+## 2026-09-07 — plus and Path tabs sit on the tile
+
+- Issue: Selected-tile `+` and Path tabs overlap the right border on top of the tile instead of hanging behind it like `.docs/menu-tab-plus.png`.
+- Resolution: Planned for Improvement 08 (tuck both tabs under the tile face).
+- Attachments: [tabs overlap](visual-improvements/2026-09-07-plus-tabs-overlap.png)

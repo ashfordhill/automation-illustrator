@@ -11,12 +11,14 @@ export { KeyAction, KeyPreset };
 /** action id → KeyboardEvent key (lowercase, Space is `" "`). */
 export type Keymap = Record<KeyAction, string>;
 
-/** Retired Slice 4 ids: Pointer/Hand, path-confirm, detach. Ignored on load (SH-14). */
+/** Retired Slice 4 ids plus withdrawn Merge/Unmerge. Ignored on load (SH-14). */
 export const RETIRED_KEY_ACTIONS = [
   "toolPointer",
   "toolHand",
   "pathConfirm",
   "detachPath",
+  "merge",
+  "unmerge",
 ] as const;
 
 export const ARROW_PRESET: Keymap = {
@@ -35,8 +37,6 @@ export const ARROW_PRESET: Keymap = {
   [KeyAction.AddBranchStep]: "1",
   [KeyAction.AddBranchData]: "2",
   [KeyAction.LinkExisting]: "3",
-  [KeyAction.Merge]: "m",
-  [KeyAction.Unmerge]: "u",
 };
 
 export const WASD_PRESET: Keymap = {
@@ -63,8 +63,6 @@ export const ACTION_LABELS: Record<KeyAction, string> = {
   [KeyAction.AddBranchStep]: "New Step (selected tile)",
   [KeyAction.AddBranchData]: "New Data (selected tile)",
   [KeyAction.LinkExisting]: "unused — pull the Path tab",
-  [KeyAction.Merge]: "Merge (After)",
-  [KeyAction.Unmerge]: "Unmerge (After)",
 };
 
 /** Normalize a keydown into the string we store in Keymap. */

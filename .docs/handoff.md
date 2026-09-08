@@ -1044,3 +1044,35 @@ Corrections in the same chat before the next slice starts get their own short en
 - Known limitations / follow-ups: Merge / Unmerge / merge dock — Improvement 07. Tile `--select-ring` and global `--chrome-line` remain out of scope. Dark Who selected fill uses `--cream`, which is also the unselected Who well in dark (fill-only, no ring). Zoom did not need the `< 0.55` fallback.
 - Status: COMPLETE
 - Commit: `feat(improve-06): quiet Who select trash Other and finer zoom`
+
+## Improvement 07 — remove merge groups from the product — 2026-09-07
+
+- Starting commit: `42ae9e45435dfc6ed94d4ea97352c4bee60909f6` (`feat(improve-06): quiet Who select trash Other and finer zoom`)
+- Working tree at start: not clean. Leftover approved work from the prior chat (score copy withdrawn, hamburger text-only, Improvement 08 planning docs/GIFs). CRLF-only and recaptured evidence PNGs were restored to HEAD before 07 product work. Untracked ELK planner dumps left uncommitted, as prior agents did.
+- GOAL clauses addressed: P-02, P-05, P-07, MG-01..MG-10, BA-04, BA-05, SH-07, SH-14 (merge withdrawn 2026-09-07); also committed leftover P-07/BA-08 score and P-07/P-10 hamburger amendments already in the working GOAL
+- Library research and decisions: no new runtime dependency. Document version stays 2. `after.groups` remains in Zod / `WorkflowDoc`; load/import unfolds groups and writes `groups: []`. Optional notice `"Merged tiles were unfolded."` `twoNote` synthesizer kept unused. Did not implement Improvement 08.
+- Files changed:
+  - Contract/docs: `.docs/GOAL.md` amendments; `.docs/IMPROVEMENTS.md` (07 COMPLETE; 08 plan recorded, not implemented); `.docs/improve-07-no-merge.plan.md`; `.docs/improve-08-plus-chrome.plan.md` and visual log attachments (planning only); this handoff entry
+  - Merge runtime/UI removed: `src/workflow/merge.ts`, `MergeDock.tsx`, `MergeGroupNode.tsx`, `MergedStepTile.tsx`, `MergeWhoColumn.tsx`, `mergeFlow.ts`, plus their tests
+  - After-only kept as `src/workflow/after.ts`; unfold in `types.ts` / `migrate.ts` / `store.replaceDoc` / persist hydrate
+  - Mailroom fixture has no group; After shows individual Before-origin Steps (Mailbot Who) plus the receipt Step
+  - Projection is `"base" | "extra"` only; catalogs drop Merge/Unmerge keys and the merge React Flow type
+  - Scoring module deleted (BA-08 leftover); hamburger items text-only (P-10 leftover)
+  - Tests: `src/workflow/after.test.ts`, persist/store unfold cases, rewritten `e2e/merge.spec.ts`, `e2e/improve-07-no-merge.spec.ts`
+  - Evidence: `.docs/evidence/improve-07-no-merge/`; Mailroom After and related e2e screenshots recaptured without a merge tile
+- Behavior implemented:
+  - After has no merge dock, merge tile, Unmerge, or Merge/Unmerge keys. Before-origin Steps in After are normal tiles. After-only Steps/Paths remain.
+  - Loading JSON with `after.groups` drops the groups, keeps After Who, and may notice once.
+  - After still cannot remove a Before-origin Step (BA-04) and does not offer Unmerge.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning; client `index-Bte18ZAr.js` 857.73 kB)
+  - `npm run test:unit` — pass (31 files, 163 tests)
+  - `npm run test:e2e` — pass (81 passed, Chromium, 3 workers, 44.0s including webServer)
+- Evidence:
+  - `.docs/evidence/improve-07-no-merge/mailroom-after-no-merge-1440.png` — Mailroom After; scan/lookup/route as normal tiles; receipt present; no merge dock (1440×900)
+  - `.docs/evidence/improve-07-no-merge/after-inspector-no-unmerge-1440.png` — Scan letter to PDF selected in After; inspector has no Unmerge (1440×900)
+  - `.docs/evidence/improve-07-no-merge/keybinds-no-merge-1440.png` — Keybinds dialog; no Merge or Unmerge rows (1440×900)
+- Earlier-slice defects fixed: Who role-chip wash used `oklch(l * 0.84)` of the actor pastel, which failed axe color-contrast on Script Mailbot tiles once Mailroom After showed those Steps individually. Floored chip lightness at 0.86 so figure ink stays AA in light and dark.
+- Known limitations / follow-ups: Merge redesign is later work, not Improvement 08. Improvement 08 is plus taffy, tucked tabs, and Path stroke. Tile `--select-ring` and global `--chrome-line` remain out of scope. `after.groups` still parses on disk.
+- Status: COMPLETE
+- Commit: `feat(improve-07): remove merge groups from the product`

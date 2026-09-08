@@ -1,7 +1,7 @@
 /**
  * Robot Mailroom showcase — hamburger Demo item.
- * Overlay (merge group + After-only Step) is projected in After.
- * Merge dock and After-only create/remove are live.
+ * After is individual Before-origin Steps (Robot Who where it was merged)
+ * plus an After-only receipt Step. SH-07 demo IDs stay.
  */
 import { HUMAN_PRESETS, ROBOT_COLORS } from "../workflow/actors";
 import {
@@ -183,7 +183,7 @@ export function robotMailroom(): WorkflowDoc {
         [id.file]: id.omar,
         [id.receipt]: id.mailbot,
       },
-      groups: [{ id: id.group, memberIds: [id.scan, id.lookup, id.route] }],
+      groups: [],
       extraNodes: [
         {
           id: id.receipt,

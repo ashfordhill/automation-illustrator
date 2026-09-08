@@ -131,7 +131,7 @@ export type EdgeDto = {
 /** stepId → actorId for one Before/After lane. */
 export type Assignments = Record<string, string>;
 
-/** Ordered Before-origin Step ids swallowed by one After merge tile (MG-02). */
+/** Kept in the schema so old JSON still parses. Runtime load unfolds groups to []. */
 export type MergeGroupDto = {
   id: string;
   memberIds: string[];
@@ -157,6 +157,21 @@ export type WorkflowDocV2 = {
 };
 
 export type WorkflowDoc = WorkflowDocV2;
+
+/** Shown once when load/import drops `after.groups`. */
+export const UNFOLD_NOTICE = "Merged tiles were unfolded.";
+
+/** Drop merge groups; member After Who and After-only Steps/Paths stay. */
+export function unfoldMergeGroups(doc: WorkflowDoc): { doc: WorkflowDoc; unfolded: boolean } {
+  if (doc.after.groups.length === 0) return { doc, unfolded: false };
+  return {
+    unfolded: true,
+    doc: {
+      ...doc,
+      after: { ...doc.after, groups: [] },
+    },
+  };
+}
 
 /** Version 1 on-disk shape before migrate.ts (lane maps, optional Human role, optional stub). */
 export type WorkflowDocV1 = {

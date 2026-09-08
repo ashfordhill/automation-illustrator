@@ -4,7 +4,6 @@ import { freshBoard, isEmptyBoard, oakParkInvoice, OAK_PARK_IDS } from "./oakPar
 import { MAILROOM_IDS, robotMailroom } from "./robotMailroom";
 import { ActorKind } from "../workflow/catalogs";
 import { edgeIsDotted, validateWorkflow } from "../workflow/graph";
-import { automationScore } from "../workflow/scoring";
 
 test("Oak Park IDs are deterministic and both amount Paths are dotted (PC-06)", () => {
   const a = oakParkInvoice();
@@ -27,7 +26,7 @@ test("Oak Park IDs are deterministic and both amount Paths are dotted (PC-06)", 
   expect(validateWorkflow(a)).toEqual([]);
 });
 
-test("Robot Mailroom matches Appendix A overlay and score", () => {
+test("Robot Mailroom matches Appendix A overlay", () => {
   const doc = robotMailroom();
   expect(validateWorkflow(doc)).toEqual([]);
   expect(doc.actors.map((a) => a.id)).toEqual([
@@ -37,19 +36,14 @@ test("Robot Mailroom matches Appendix A overlay and score", () => {
     MAILROOM_IDS.mailbot,
     MAILROOM_IDS.reader,
   ]);
-  expect(doc.after.groups).toEqual([
-    {
-      id: MAILROOM_IDS.group,
-      memberIds: [MAILROOM_IDS.scan, MAILROOM_IDS.lookup, MAILROOM_IDS.route],
-    },
-  ]);
+  expect(doc.after.groups).toEqual([]);
+  expect(doc.after.assignments[MAILROOM_IDS.scan]).toBe(MAILROOM_IDS.mailbot);
+  expect(doc.after.assignments[MAILROOM_IDS.lookup]).toBe(MAILROOM_IDS.mailbot);
+  expect(doc.after.assignments[MAILROOM_IDS.route]).toBe(MAILROOM_IDS.mailbot);
   expect(doc.after.extraNodes.map((n) => n.id)).toEqual([MAILROOM_IDS.receipt]);
   expect(doc.after.extraEdges.map((e) => e.id)).toEqual([MAILROOM_IDS.extra]);
   expect(doc.assignments[MAILROOM_IDS.priya]).toBeUndefined();
   expect(doc.actors.find((a) => a.id === MAILROOM_IDS.priya)?.kind).toBe(ActorKind.Human);
-  expect(automationScore(doc)).toBe(
-    "3 Steps out of 6 will become automated instead of manually performed",
-  );
   const found = doc.edges.find((e) => e.id === MAILROOM_IDS.e4)!;
   const missing = doc.edges.find((e) => e.id === MAILROOM_IDS.e5)!;
   expect(edgeIsDotted(doc.nodes, doc.edges, found)).toBe(true);

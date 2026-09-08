@@ -8,8 +8,7 @@
  * spawnBranch / plus-pull / path-pull — stretchy + tab and Path knot
  * removeTarget / confirmRemove — selected-tile X / Delete; M:N pairing preview
  * insertOnPath — drop a tile onto a Path
- * beginMerge / confirmMerge / unmerge — After merge dock (MG-01..MG-07)
- * toggleSelectedDash — selected Path solid/dotted
+ * toggleSelectedDash — selected Path solid / dotted
  * requestNew / requestDemo / importRaw — replacement gate (SH-06, SH-12)
  * startFresh / downloadHeldRecovery — corrupt-storage recovery (SH-10)
  * setSoundEnabled — persisted Web Audio cues (SH-03, SH-04)
@@ -65,14 +64,9 @@ import {
 import {
   addAfterStep,
   applyAfterOnlyRemoval,
-  assignMergeGroupWho,
-  createMergeGroup,
-  expandMergeSelection,
   planAfterOnlyRemoval,
-  removeMergeGroup,
-  resolveAfterEndpoint,
   connectAfter,
-} from "../workflow/merge";
+} from "../workflow/after";
 import { projectAfter } from "./projection";
 import {
   afterGraph,
@@ -97,6 +91,8 @@ import {
   type StepNodeDto,
   type ViewMode as ViewModeT,
   type WorkflowDoc,
+  UNFOLD_NOTICE,
+  unfoldMergeGroups,
 } from "../workflow/types";
 import {
   commitStructural,
@@ -123,11 +119,9 @@ import { playCue, playCueWhen } from "../app/sound/cues";
 import { parseDocument, type ParseResult } from "../workflow/migrate";
 import {
   findEdge,
-  findMergeGroup,
   findNode,
   isAfterOnlyNode,
   isBeforeOriginNode,
-  mergeGroupForMember,
 } from "../workflow/selectors";
 
 /** Right-hand inspector target, or null when nothing is selected. */
@@ -157,12 +151,23 @@ function loadStart(): {
   workflow: WorkflowDoc;
   persistStatus: PersistStatus;
   recovery: RecoveryState | null;
+  unfoldNotice: boolean;
 } {
   const boot = hydratePersistedWorkflow(oakParkInvoice);
   if (boot.recovery || boot.persistStatus === "unavailable") {
-    return { workflow: boot.workflow, persistStatus: boot.persistStatus, recovery: boot.recovery };
+    return {
+      workflow: boot.workflow,
+      persistStatus: boot.persistStatus,
+      recovery: boot.recovery,
+      unfoldNotice: Boolean(boot.unfolded),
+    };
   }
-  return { workflow: boot.workflow, persistStatus: writeWorkflow(boot.workflow), recovery: null };
+  return {
+    workflow: boot.workflow,
+    persistStatus: writeWorkflow(boot.workflow),
+    recovery: null,
+    unfoldNotice: Boolean(boot.unfolded),
+  };
 }
 
 function persistIfAllowed(doc: WorkflowDoc, recovery: RecoveryState | null): PersistStatus {
@@ -275,10 +280,6 @@ export const useStore = create<{
   setPreviewSuccessorPred: (successorId: string, predecessorId: string) => void;
   useNearestPreviewPairings: () => void;
   useFanPreviewPairings: () => void;
-  beginMerge: () => void;
-  toggleMergeMember: (id: string) => void;
-  confirmMerge: () => void;
-  unmerge: (groupId?: string) => void;
   requestNew: () => void;
   requestDemo: (demoId: DemoId) => void;
   cancelReplace: () => void;
@@ -319,7 +320,7 @@ export const useStore = create<{
   recovery: started.recovery,
   pendingReplace: null,
   importError: null,
-  notice: null,
+  notice: started.unfoldNotice ? UNFOLD_NOTICE : null,
   noticeId: 0,
 
   /** Snapshot current board onto the undo stack, persist unless recovery holds the raw key. */
@@ -338,19 +339,21 @@ export const useStore = create<{
     set({ ...stacks, persistStatus });
   },
   replaceDoc: (next) => {
-    const violations = validateWorkflow(next);
+    const unfolded = unfoldMergeGroups(next);
+    const doc = unfolded.doc;
+    const violations = validateWorkflow(doc);
     if (violations.length) {
       get().setNotice(violations[0]!.message);
       return;
     }
-    const persistStatus = persistIfAllowed(next, get().recovery);
+    const persistStatus = persistIfAllowed(doc, get().recovery);
     set({
-      ...replaceHistory(next),
+      ...replaceHistory(doc),
       persistStatus,
       selected: null,
       interaction: IDLE,
       departing: null,
-      notice: null,
+      notice: unfolded.unfolded ? UNFOLD_NOTICE : null,
       pendingReplace: null,
       importError: null,
       lastHumanId: null,
@@ -362,6 +365,9 @@ export const useStore = create<{
       laneLayoutPositions: {},
       canvasEpoch: get().canvasEpoch + 1,
     });
+    if (unfolded.unfolded) {
+      set({ noticeId: get().noticeId + 1 });
+    }
   },
   undo: () => {
     const { past, workflow, future, recovery } = get();
@@ -692,16 +698,6 @@ export const useStore = create<{
   assignActor: (stepId, actorId) => {
     if (get().present || get().view === ViewMode.Both) return;
     const { workflow, commit, assignmentLane } = get();
-    const group = findMergeGroup(workflow, stepId);
-    if (group) {
-      const result = assignMergeGroupWho(workflow, group.id, actorId);
-      if (!result.ok) {
-        get().setNotice(result.message);
-        return;
-      }
-      commit(result.value);
-      return;
-    }
     const lane = assignmentLane();
     const actor = workflow.actors.find((a) => a.id === actorId);
     if (!actor) return;
@@ -826,20 +822,19 @@ export const useStore = create<{
         get().setNotice("After does not add Data. Pull + onto Step, or press 1.");
         return "";
       }
-      const resolved = resolveAfterEndpoint(workflow, sourceId, "source");
-      if (!resolved.ok) {
-        get().setNotice(resolved.message);
+      if (!findNode(workflow, sourceId)) {
+        get().setNotice(MSG.missingNode);
         return "";
       }
       const graph = afterGraph(workflow);
       const srcNode =
         projectAfter(workflow).nodes.find((n) => n.id === sourceId) ??
-        graph.nodes.find((n) => n.id === resolved.value);
+        graph.nodes.find((n) => n.id === sourceId);
       if (!srcNode) {
         set({ interaction: IDLE });
         return "";
       }
-      const port = nextPortIndex(graph.edges, resolved.value);
+      const port = nextPortIndex(graph.edges, sourceId);
       const pos = clearDockPosition(srcNode, WorkflowNodeKind.Step, port, [
         ...graph.nodes,
         ...projectAfter(workflow).nodes,
@@ -974,11 +969,6 @@ export const useStore = create<{
   removeTarget: (nodeId) => {
     if (get().present || get().view === ViewMode.Both) return;
     const { workflow, view } = get();
-    const group = findMergeGroup(workflow, nodeId);
-    if (group) {
-      if (view === ViewMode.After) get().unmerge(group.id);
-      return;
-    }
     if (view === ViewMode.After && isBeforeOriginNode(workflow, nodeId) && !isAfterOnlyNode(workflow, nodeId)) {
       get().setNotice(MSG.afterOriginRemoval);
       return;
@@ -1079,98 +1069,6 @@ export const useStore = create<{
       },
     });
   },
-  beginMerge: () => {
-    if (get().present || get().view !== ViewMode.After) return;
-    const { interaction, selected, workflow } = get();
-    if (interaction.kind === "merge-pick") {
-      get().confirmMerge();
-      return;
-    }
-    if (!selected || selected.type !== SelectionKind.Node) {
-      get().setNotice(MSG.mergeNeedSteps);
-      return;
-    }
-    const startIds = [selected.id];
-    const preview = expandMergeSelection(workflow, startIds);
-    if (!preview.ok) {
-      get().setNotice(preview.message);
-      return;
-    }
-    set({
-      interaction: { kind: "merge-pick", memberIds: preview.value.memberIds },
-      manageActorsOpen: false,
-      manageActorId: null,
-    });
-  },
-  toggleMergeMember: (id) => {
-    const { interaction, workflow } = get();
-    if (interaction.kind !== "merge-pick") return;
-    const group = findMergeGroup(workflow, id);
-    const ids = group ? group.memberIds : [id];
-    const next = new Set(interaction.memberIds);
-    const removing = ids.every((x) => next.has(x));
-    if (removing) {
-      for (const x of ids) next.delete(x);
-    } else {
-      const check = expandMergeSelection(workflow, [...interaction.memberIds, ...ids]);
-      if (!check.ok) {
-        get().setNotice(check.message);
-        return;
-      }
-      for (const x of ids) next.add(x);
-    }
-    if (!next.size) {
-      set({ interaction: IDLE });
-      return;
-    }
-    set({ interaction: { kind: "merge-pick", memberIds: [...next] } });
-  },
-  confirmMerge: () => {
-    const { interaction, workflow } = get();
-    if (interaction.kind !== "merge-pick") return;
-    const result = createMergeGroup(workflow, interaction.memberIds);
-    if (!result.ok) {
-      get().setNotice(result.message);
-      return;
-    }
-    const created = result.value.after.groups.find((g) =>
-      interaction.memberIds.every((id) => g.memberIds.includes(id)),
-    );
-    get().commit(result.value);
-    playCueWhen(get().soundEnabled, "twoNote");
-    set({
-      interaction: IDLE,
-      selected: created ? { type: SelectionKind.Node, id: created.id } : null,
-    });
-  },
-  unmerge: (groupId) => {
-    if (get().present || get().view !== ViewMode.After) return;
-    const { workflow, selected } = get();
-    const id =
-      groupId ??
-      (selected?.type === SelectionKind.Node
-        ? findMergeGroup(workflow, selected.id)?.id ?? mergeGroupForMember(workflow, selected.id)?.id
-        : undefined);
-    if (!id) {
-      get().setNotice(MSG.mergeMissing);
-      return;
-    }
-    const group = findMergeGroup(workflow, id);
-    const result = removeMergeGroup(workflow, id);
-    if (!result.ok) {
-      get().setNotice(result.message);
-      return;
-    }
-    get().commit(result.value);
-    playCueWhen(get().soundEnabled, "twoNote");
-    set({
-      interaction: IDLE,
-      selected: group?.memberIds[0]
-        ? { type: SelectionKind.Node, id: group.memberIds[0] }
-        : null,
-    });
-  },
-
   requestNew: () => {
     if (get().recovery) return;
     if (isEmptyBoard(get().workflow)) return;

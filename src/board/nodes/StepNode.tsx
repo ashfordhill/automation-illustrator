@@ -1,7 +1,7 @@
 /**
  * React Flow node for a Step tile (actor + task).
  * Lane in node.data chooses Before vs After assignment (actorFor).
- * After-only Steps and merge-group tiles are supplied via projection data.
+ * After-only Steps are supplied via projection data.
  */
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import { AssignmentLane, SelectionKind } from "../../workflow/catalogs";
@@ -10,25 +10,19 @@ import { StepTile } from "../tiles/StepTile";
 import { PathHostFrame } from "../controls/PathHostFrame";
 import { findNode } from "../../workflow/selectors";
 import { isStepNode, laneAssignments, type StepNodeDto } from "../../workflow/types";
-import type { GroupInternals } from "../../state/projection";
 
 export type StepNodeData = {
   lane?: AssignmentLane;
   node?: StepNodeDto;
-  projectedKind?: "base" | "extra" | "group";
+  projectedKind?: "base" | "extra";
   originId?: string;
-  memberIds?: string[];
-  supportingIds?: string[];
-  internals?: GroupInternals;
   departing?: boolean;
 };
 
 export function StepNode({ id, selected, dragging, data }: NodeProps) {
   const payload = (data ?? {}) as StepNodeData;
   const lane = payload.lane ?? AssignmentLane.Before;
-  const memberIds = payload.memberIds;
-  const lookupId =
-    payload.projectedKind === "group" ? (memberIds?.[0] ?? payload.originId ?? id) : (payload.originId ?? id);
+  const lookupId = payload.originId ?? id;
   const departing = useStore((s) => (s.departing?.node.id === id ? s.departing : null));
   const live = useStore((s) => {
     const found = findNode(s.workflow, lookupId);

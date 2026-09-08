@@ -8,6 +8,7 @@ import { shapeViolations, workflowDocV1Shape, workflowDocV2Shape } from "./schem
 import {
   DEFAULT_HUMAN_ROLE,
   emptyAfterOverlay,
+  unfoldMergeGroups,
   type ActorDto,
   type HumanDto,
   type NodeDto,
@@ -20,6 +21,7 @@ export type ParseSuccess = {
   ok: true;
   doc: WorkflowDoc;
   migratedFrom?: 1;
+  unfolded?: boolean;
 };
 
 export type ParseFailure = {
@@ -100,12 +102,12 @@ function parseUnknown(data: unknown): ParseResult {
     if (graph.length) {
       return fail("invalid-graph", summarize(graph), graph);
     }
-    const migrated = migrateV1ToV2(v1);
-    const again = validateWorkflow(migrated);
+    const migrated = unfoldMergeGroups(migrateV1ToV2(v1));
+    const again = validateWorkflow(migrated.doc);
     if (again.length) {
       return fail("invalid-graph", summarize(again), again);
     }
-    return { ok: true, doc: migrated, migratedFrom: 1 };
+    return { ok: true, doc: migrated.doc, migratedFrom: 1, unfolded: migrated.unfolded };
   }
   if (version === 2) {
     const shape = workflowDocV2Shape.safeParse(data);
@@ -118,7 +120,8 @@ function parseUnknown(data: unknown): ParseResult {
     if (graph.length) {
       return fail("invalid-graph", summarize(graph), graph);
     }
-    return { ok: true, doc };
+    const unfolded = unfoldMergeGroups(doc);
+    return { ok: true, doc: unfolded.doc, unfolded: unfolded.unfolded };
   }
   return fail(
     "unsupported-version",

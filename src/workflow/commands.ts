@@ -7,7 +7,6 @@ import {
   applyConnectStroke,
   edgeIsDotted,
   incomingSorted,
-  isConvex,
   maybeExclusiveSplit,
   outgoingSorted,
   positionOf,
@@ -18,11 +17,9 @@ import {
 import { nid } from "./ids";
 import {
   isStepNode,
-  stepDisplayLabel,
   type AfterOverlay,
   type Assignments,
   type EdgeDto,
-  type MergeGroupDto,
   type NodeDto,
   type PositionMap,
   type StepNodeDto,
@@ -40,7 +37,7 @@ export type RemovalPairing = {
   dashed: boolean;
 };
 
-/** Overlay after a base Node is removed (BA-09 / MG-10 skeleton). */
+/** Overlay after a base Node is removed (BA-09). */
 export type OverlayEffects = {
   after: AfterOverlay;
   notices: string[];
@@ -70,12 +67,6 @@ export const MSG = {
   notStep: "The first Node on a board must be a Step.",
   missingNode: "That Node is not on the board.",
   invalidPairings: "Every successor needs at least one incoming Path after removal.",
-  mergeNeedSteps: "Select Before-origin Steps to merge.",
-  mergeData: "Data Nodes cannot be merge members.",
-  mergeAfterOnly: "After-only Steps cannot be merge members.",
-  mergeDisconnected: "Those Steps are not connected by base Paths.",
-  mergeMissing: "Select a merged Step to Unmerge.",
-  mergeInternalPath: "That Path would stay inside the merge group.",
   insertSelf: "Drop the Node onto a Path that does not already touch it.",
   rootInsert: "The root cannot be moved onto a Path.",
   insertHostGone: "That Path is gone after reconnecting the Node’s old neighborhood.",
@@ -151,47 +142,18 @@ export function collapseStroke(...dotted: boolean[]): boolean {
   return dotted.some(Boolean);
 }
 
-function weaklyConnected(ids: string[], nodes: NodeDto[], edges: EdgeDto[]): boolean {
-  if (ids.length <= 1) return true;
-  const adj = new Map<string, string[]>();
-  const ensure = (id: string) => {
-    if (!adj.has(id)) adj.set(id, []);
-  };
-  for (const n of nodes) ensure(n.id);
-  for (const e of edges) {
-    ensure(e.source);
-    ensure(e.target);
-    adj.get(e.source)!.push(e.target);
-    adj.get(e.target)!.push(e.source);
-  }
-  const start = ids[0]!;
-  const seen = new Set<string>([start]);
-  const queue = [start];
-  while (queue.length) {
-    const id = queue.shift()!;
-    for (const next of adj.get(id) ?? []) {
-      if (seen.has(next)) continue;
-      seen.add(next);
-      queue.push(next);
-    }
-  }
-  return ids.every((id) => seen.has(id));
-}
-
 /**
- * BA-09 / MG-10: restitch After-only Paths on the After graph with the same
- * fan/nearest rules so After-only Steps stay reachable; prune merge members
- * and dissolve empty or split groups.
+ * BA-09: restitch After-only Paths on the After graph with the same
+ * fan/nearest rules so After-only Steps stay reachable.
  */
 export function pruneAfterOverlay(
   after: AfterOverlay,
   removedNodeId: string,
-  remainingNodes: NodeDto[],
-  remainingEdges: EdgeDto[],
+  _remainingNodes: NodeDto[],
+  _remainingEdges: EdgeDto[],
   original?: { nodes: NodeDto[]; edges: EdgeDto[] },
   positions?: PositionMap,
 ): OverlayEffects {
-  const notices: string[] = [];
   const extraIds = new Set(after.extraNodes.map((n) => n.id));
   let extraEdges = after.extraEdges.filter(
     (e) => e.source !== removedNodeId && e.target !== removedNodeId,
@@ -214,32 +176,14 @@ export function pruneAfterOverlay(
     extraEdges = applyPairings(afterNodes, extraEdges, extraPairings);
   }
 
-  const remainingIds = new Set(remainingNodes.map((n) => n.id));
-  const groups: MergeGroupDto[] = [];
-  for (const g of after.groups) {
-    const memberIds = g.memberIds.filter((id) => id !== removedNodeId && remainingIds.has(id));
-    if (!memberIds.length) {
-      notices.push(`Merge group "${g.id}" dissolved because no member remains.`);
-      continue;
-    }
-    if (!weaklyConnected(memberIds, remainingNodes, remainingEdges)) {
-      notices.push(`Merge group "${g.id}" dissolved because it is no longer contiguous.`);
-      continue;
-    }
-    if (!isConvex(memberIds, remainingNodes, remainingEdges)) {
-      notices.push(`Merge group "${g.id}" dissolved because it is no longer convex.`);
-      continue;
-    }
-    groups.push({ ...g, memberIds });
-  }
   return {
     after: {
       extraNodes: after.extraNodes,
       extraEdges,
-      groups,
+      groups: [],
       assignments: dropAssign(after.assignments, removedNodeId),
     },
-    notices,
+    notices: [],
   };
 }
 
@@ -405,23 +349,6 @@ export function connectNodes(
   }
   if (wouldCreateCycle(doc.edges, source, target)) {
     return fail("cycle", MSG.cycle);
-  }
-  const trial: EdgeDto[] = [
-    ...doc.edges,
-    { id: "__trial__", source, target, label: "" },
-  ];
-  const broken = doc.after.groups.find((g) => !isConvex(g.memberIds, doc.nodes, trial));
-  if (broken) {
-    const names = broken.memberIds
-      .map((id) => {
-        const n = doc.nodes.find((x) => x.id === id);
-        return n && isStepNode(n) ? stepDisplayLabel(n.stepKind, n.title) : id;
-      })
-      .join(", ");
-    return fail(
-      "merge-convexity",
-      `That Path would leave merge group "${names || broken.id}" and re-enter it. Unmerge first.`,
-    );
   }
   const previousOutgoing = doc.edges.filter((e) => e.source === source).length;
   const edgeId = options?.id ?? nid(IdPrefix.Edge);
@@ -720,19 +647,6 @@ export function insertNodeOnPath(
     )
   ) {
     return fail("cycle", MSG.cycle);
-  }
-  const broken = doc.after.groups.find((g) => !isConvex(g.memberIds, doc.nodes, rawEdges));
-  if (broken) {
-    const names = broken.memberIds
-      .map((id) => {
-        const n = doc.nodes.find((x) => x.id === id);
-        return n && isStepNode(n) ? stepDisplayLabel(n.stepKind, n.title) : id;
-      })
-      .join(", ");
-    return fail(
-      "merge-convexity",
-      `That Path would leave merge group "${names || broken.id}" and re-enter it. Unmerge first.`,
-    );
   }
   let nodes = maybeExclusiveSplit(doc.nodes, rawEdges, liveHost.source);
   nodes = maybeExclusiveSplit(nodes, rawEdges, nodeId);

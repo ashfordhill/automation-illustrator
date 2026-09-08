@@ -14,8 +14,9 @@ import {
   writeWorkflow,
   type StorageLike,
 } from "./persistence";
-import { emptyAfterOverlay, emptyWorkflow, type WorkflowDoc } from "../workflow/types";
+import { robotMailroom, MAILROOM_IDS } from "../demos/robotMailroom";
 import { ColorScheme, SplitKind, StepKind, WorkflowNodeKind } from "../workflow/catalogs";
+import { emptyAfterOverlay, emptyWorkflow, type WorkflowDoc } from "../workflow/types";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -102,6 +103,30 @@ test("valid v1 storage migrates and overwrites with v2", () => {
   expect(saved.version).toBe(2);
   expect(saved.after.groups).toEqual([]);
   expect(saved.assignments).toEqual({});
+});
+
+test("grouped v2 storage unfolds groups and keeps After Who", () => {
+  const storage = new MemoryStorage();
+  const mail = robotMailroom();
+  const grouped = {
+    ...mail,
+    after: {
+      ...mail.after,
+      groups: [
+        {
+          id: MAILROOM_IDS.group,
+          memberIds: [MAILROOM_IDS.scan, MAILROOM_IDS.lookup, MAILROOM_IDS.route],
+        },
+      ],
+    },
+  };
+  storage.setItem(LS_WORKFLOW, JSON.stringify(grouped));
+  const result = hydratePersistedWorkflow(fallback, storage);
+  expect(result.recovery).toBeNull();
+  expect(result.unfolded).toBe(true);
+  expect(result.workflow.after.groups).toEqual([]);
+  expect(result.workflow.after.assignments[MAILROOM_IDS.scan]).toBe(MAILROOM_IDS.mailbot);
+  expect(JSON.parse(storage.getItem(LS_WORKFLOW)!).after.groups).toEqual([]);
 });
 
 test("invalid graph keeps the raw key and returns recovery (SH-09, SH-10)", () => {

@@ -115,15 +115,6 @@ export function useAppKeys() {
         return;
       }
 
-      if (!readOnlyBoard && s.interaction.kind === "merge-pick") {
-        if (keyIs(map, KeyAction.Confirm, e) || e.key === "Enter" || action === KeyAction.Merge) {
-          e.preventDefault();
-          s.confirmMerge();
-          return;
-        }
-        return;
-      }
-
       if (!readOnlyBoard && s.interaction.kind === "connect-existing") {
         if (keyIs(map, KeyAction.RemoveNode, e) || isDeleteKey(e) || action === KeyAction.Delete) {
           e.preventDefault();
@@ -177,27 +168,6 @@ export function useAppKeys() {
           s.removeTarget(s.selected.id);
           return;
         }
-        if (action === KeyAction.Merge) {
-          e.preventDefault();
-          s.beginMerge();
-          return;
-        }
-        if (action === KeyAction.Unmerge) {
-          e.preventDefault();
-          s.unmerge();
-          return;
-        }
-      }
-
-      if (!readOnlyBoard && action === KeyAction.Merge) {
-        e.preventDefault();
-        s.beginMerge();
-        return;
-      }
-      if (!readOnlyBoard && action === KeyAction.Unmerge) {
-        e.preventDefault();
-        s.unmerge();
-        return;
       }
 
       if (

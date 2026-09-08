@@ -16,7 +16,6 @@ import {
 import "@xyflow/react/dist/style.css";
 import {
   ReactFlowEdgeKind,
-  ReactFlowNodeKind,
   ViewMode,
   reactFlowTypeFor,
   SelectionKind,
@@ -34,7 +33,6 @@ import { useStore } from "../state/store";
 import { edgeTypes, nodeTypes, type Lane } from "./nodes/reactFlowRegistry";
 import { GRID, nodeSize } from "./layout/tileMetrics";
 import { insertPreviewGeom } from "./layout/insertPreview";
-import { mergeTileSize } from "./layout/mergeFlow";
 import { findNode } from "../workflow/selectors";
 import { measureLabelBox, type LabelBox } from "./layout/labelBox";
 import type { TileSizes } from "./layout/elkGraph";
@@ -67,11 +65,8 @@ function nodeClassName(
   id: string,
   interaction: ReturnType<typeof useStore.getState>["interaction"],
   departingId: string | null,
-  merge?: boolean,
-  mergePicked?: boolean,
 ): string {
   const parts = ["nopan"];
-  if (merge) parts.push("is-merge-group");
   if (departingId === id) parts.push("node-departing");
   if (interaction.kind === "remove-preview" && interaction.plan.nodeId === id) {
     parts.push("remove-candidate-on");
@@ -84,9 +79,6 @@ function nodeClassName(
   }
   if (interaction.kind === "tile-drag" && interaction.nodeId === id) {
     parts.push("tile-drag-origin-fade");
-  }
-  if (interaction.kind === "merge-pick" && mergePicked) {
-    parts.push("merge-candidate-on");
   }
   return parts.join(" ");
 }
@@ -117,12 +109,8 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
   }, [projection.edges]);
 
   const tileSizes = useMemo(() => {
-    const sizes: TileSizes = {};
-    for (const g of projection.internals) {
-      sizes[g.groupId] = mergeTileSize(workflow, g);
-    }
-    return sizes;
-  }, [workflow, projection.internals]);
+    return {} as TileSizes;
+  }, []);
 
   const { layout, phase, error } = useLaneLayout(lane, projection, labelBoxes, tileSizes);
   const shown = useAnimatedLayout(layout);
@@ -261,11 +249,6 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
   const rfNodes: Node[] = projection.nodes.map((n) => {
     const pos = pointAt(display, n.id, n.position);
     const size = tileSizes[n.id] ?? nodeSize(n.type);
-    const mergePicked =
-      interaction.kind === "merge-pick" &&
-      (interaction.memberIds.includes(n.id) ||
-        (n.memberIds ?? []).some((id) => interaction.memberIds.includes(id)));
-    const internals = projection.internals.find((g) => g.groupId === n.id);
     const shift =
       insertPreview && !reduceMotion
         ? n.id === insertPreview.sourceId
@@ -282,27 +265,18 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
     };
     return {
       id: n.id,
-      type: n.projectedKind === "group" ? ReactFlowNodeKind.MergeGroup : reactFlowTypeFor(n.type),
+      type: reactFlowTypeFor(n.type),
       position: pos,
       data: {
         lane,
         node: n,
         projectedKind: n.projectedKind,
         originId: n.originId,
-        memberIds: n.memberIds,
-        supportingIds: n.supportingIds,
-        internals,
       },
       draggable: false,
       selectable: editing,
       selected: selected?.type === SelectionKind.Node && selected.id === n.id,
-      className: `${nodeClassName(
-        n.id,
-        interaction,
-        null,
-        n.projectedKind === "group",
-        mergePicked,
-      )}${easing ? " is-insert-easing" : ""}`,
+      className: `${nodeClassName(n.id, interaction, null)}${easing ? " is-insert-easing" : ""}`,
       width: size.w,
       height: size.h,
       measured: { width: size.w, height: size.h },
@@ -407,10 +381,6 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
       return;
     }
     if (s.interaction.kind === "plus-pull" || s.interaction.kind === "tile-drag") {
-      return;
-    }
-    if (s.interaction.kind === "merge-pick") {
-      s.toggleMergeMember(n.id);
       return;
     }
     if (s.interaction.kind === "remove-preview") return;

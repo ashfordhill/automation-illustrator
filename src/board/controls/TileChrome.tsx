@@ -14,7 +14,7 @@ import { useReactFlow, ViewportPortal } from "@xyflow/react";
 import { IconX } from "@tabler/icons-react";
 import { ViewMode, WorkflowNodeKind } from "../../workflow/catalogs";
 import { useStore } from "../../state/store";
-import { findMergeGroup, findNode } from "../../workflow/selectors";
+import { findNode } from "../../workflow/selectors";
 import { nodeCaption } from "../../workflow/types";
 import { useLaneLayoutContext } from "../routing/LaneLayoutContext";
 import { hitPathId } from "../layout/pathHit";
@@ -129,9 +129,7 @@ export function TileChrome({
   const showChrome =
     editing &&
     selected &&
-    interaction.kind !== "merge-pick" &&
     interaction.kind !== "remove-preview";
-  const group = findMergeGroup(workflow, id);
   const caption = nodeCaption(findNode(workflow, id), id);
   const tabPulling =
     (interaction.kind === "plus-pull" && interaction.sourceId === id) ||
@@ -155,8 +153,8 @@ export function TileChrome({
           <button
             type="button"
             className="node-remove-x-btn tile-remove-x"
-            aria-label={group && view === ViewMode.After ? "Unmerge" : `Remove ${caption}`}
-            title={group && view === ViewMode.After ? "Unmerge" : `Remove ${caption}`}
+            aria-label={`Remove ${caption}`}
+            title={`Remove ${caption}`}
             onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => {
               e.stopPropagation();
@@ -529,9 +527,6 @@ function TilePickup({
     if (!origin.current) return;
     const dist = Math.hypot(e.clientX - origin.current.x, e.clientY - origin.current.y);
     if (!dragging.current && dist < 10) return;
-    if (view === ViewMode.After && findMergeGroup(useStore.getState().workflow, id)) {
-      return;
-    }
     if (!dragging.current) {
       dragging.current = true;
       useStore.getState().beginTileDrag(id);

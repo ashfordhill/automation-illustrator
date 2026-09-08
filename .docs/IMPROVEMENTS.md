@@ -357,7 +357,7 @@ When done: run `npm run build`, `npm run test:unit`, `npm run test:e2e`; save sc
 
 ---
 
-# Improvement 07 — surgical merge removal
+# Improvement 07 — surgical merge removal (COMPLETE)
 
 Approved 2026-09-07. Start only after Improvement 06 is COMPLETE.
 
@@ -381,3 +381,28 @@ Then implement Improvement 07 exactly as specified in that plan. Surgical remova
 When done: run `npm run build`, `npm run test:unit`, `npm run test:e2e`; save screenshots under .docs/evidence/improve-07-no-merge/; append one handoff entry ending in `Status: COMPLETE`; commit everything as `feat(improve-07): remove merge groups from the product`; confirm a clean tree; report the hash, exact test results, and evidence paths. Never push, branch, or start other work.
 ```
 
+---
+
+# Improvement 08 — restore + taffy, tuck tabs, fix Path stroke
+
+Approved 2026-09-07. Start only after Improvement 07 is COMPLETE. **Do not mix into Improvement 07.**
+
+Full spec: [`.docs/improve-08-plus-chrome.plan.md`](improve-08-plus-chrome.plan.md). Pictures: [plus submenu](visual-improvements/2026-09-07-plus-submenu.gif), [tabs overlap](visual-improvements/2026-09-07-plus-tabs-overlap.png), liked taffy [plus-pull](visual-improvements/2026-09-07-plus-pull.gif), tab draft [menu-tab-plus](menu-tab-plus.png).
+
+Commit: `feat(improve-08): restore plus taffy and fix Path stroke`.  
+Evidence: `.docs/evidence/improve-08-plus-chrome/`.
+
+### Kickoff prompt for the implementing agent
+
+```text
+You are the agent for Improvement 08 of the Automation Pitch project. Work only on Improvement 08 as specified in .docs/improve-08-plus-chrome.plan.md. Do not reopen Improvement 07. Do not reopen Improvements 03–06 except the defects named in that plan.
+
+Before changing anything:
+1. Read .docs/GOAL.md (including Amendments), .docs/BUILD_PLAN.md Sections 3-4, .docs/IMPROVEMENTS.md, .docs/improve-08-plus-chrome.plan.md, .docs/VISUAL_IMPROVEMENTS.md, every entry in .docs/handoff.md, and .cursor/rules/agent-handoff.mdc.
+2. Run `git status` and `git log -1`. HEAD must be the COMPLETE commit of Improvement 07 (`feat(improve-07): remove merge groups from the product`) and the tree must be clean. If not, stop and report.
+3. Run `npm install`, `npm run build`, `npm run test:unit` to confirm a green start.
+
+Then implement Improvement 08 exactly as specified in that plan. Restore the green + taffy and keep the dim scrim; drop the wedge. Dismiss the fan immediately on empty release. Tuck + and Path tabs behind the tile. Spindle-and-string Path glyph. X hover is color-only. Data fan thumb matches Step. Path double-click and inspector Dotted/Solid must change the drawn stroke. Locked decisions are not open for redesign. If something in the spec is impossible or contradictory, stop and ask; do not widen scope.
+
+When done: run `npm run build`, `npm run test:unit`, `npm run test:e2e`; save screenshots under .docs/evidence/improve-08-plus-chrome/; append one handoff entry ending in `Status: COMPLETE`; commit everything as `feat(improve-08): restore plus taffy and fix Path stroke`; confirm a clean tree; report the hash, exact test results, and evidence paths. Never push, branch, or start other work.
+```

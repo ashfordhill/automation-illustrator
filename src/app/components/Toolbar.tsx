@@ -1,24 +1,15 @@
 /**
  * Top bar: Undo, sound, Not saved, Before/After/Both, hamburger.
- * Present keeps the automation score here because the right rail is hidden (P-07).
  * Pointer/Hand were removed (P-08); sound toggle sits after Undo (SH-03).
+ * Hamburger items are text only (no left-section icons).
  */
 import { useEffect, useRef, useState } from "react";
-import { ActionIcon, Group, Menu, Text, Tooltip } from "@mantine/core";
-import {
-  IconArrowBackUp,
-  IconFileImport,
-  IconMenu2,
-  IconMoon,
-  IconPresentation,
-  IconQuestionMark,
-  IconSun,
-} from "@tabler/icons-react";
+import { ActionIcon, Group, Menu, Tooltip } from "@mantine/core";
+import { IconArrowBackUp, IconMenu2 } from "@tabler/icons-react";
 import { DEMO_CHOICES } from "../../demos/catalog";
 import { prettyKey, KeyAction } from "../../keyboard/bindings";
 import { useStore } from "../../state/store";
 import { ColorScheme, ViewMode } from "../../workflow/catalogs";
-import { automationScore } from "../../workflow/scoring";
 import { PersistStatusChip } from "./PersistStatusChip";
 import { SoundToggle } from "./SoundToggle";
 import { hamburgerShouldClose } from "./hamburgerDismiss";
@@ -56,7 +47,6 @@ function ViewSwitch() {
 
 export function Toolbar() {
   const present = useStore((s) => s.present);
-  const workflow = useStore((s) => s.workflow);
   const keymap = useStore((s) => s.keymap);
   const past = useStore((s) => s.past);
   const colorScheme = useStore((s) => s.colorScheme);
@@ -120,11 +110,6 @@ export function Toolbar() {
 
         <Group gap="sm" wrap="nowrap" style={{ minWidth: 0, flex: 1, justifyContent: "center" }}>
           <ViewSwitch />
-          {present ? (
-            <Text className="present-score" size="sm" fw={800} lineClamp={2} style={{ maxWidth: 380 }}>
-              {automationScore(workflow)}
-            </Text>
-          ) : null}
         </Group>
 
         <Group gap="xs" wrap="nowrap">
@@ -149,31 +134,13 @@ export function Toolbar() {
               </ActionIcon>
             </Menu.Target>
             <Menu.Dropdown className="app-hamburger-dropdown">
-              <Menu.Item
-                leftSection={<IconPresentation size={16} />}
-                onClick={() => useStore.getState().setPresent(!present)}
-              >
+              <Menu.Item onClick={() => useStore.getState().setPresent(!present)}>
                 {present ? "Exit present" : "Present"}
               </Menu.Item>
               <Menu.Item onClick={() => useStore.getState().requestNew()}>New</Menu.Item>
-              <Menu.Item
-                leftSection={<IconFileImport size={16} />}
-                onClick={() => fileRef.current?.click()}
-              >
-                Import
-              </Menu.Item>
-              <Menu.Item
-                leftSection={<IconQuestionMark size={16} />}
-                onClick={() => useStore.getState().setHelp(true)}
-              >
-                Keybinds
-              </Menu.Item>
-              <Menu.Item
-                leftSection={
-                  colorScheme === ColorScheme.Dark ? <IconSun size={16} /> : <IconMoon size={16} />
-                }
-                onClick={() => useStore.getState().toggleColorScheme()}
-              >
+              <Menu.Item onClick={() => fileRef.current?.click()}>Import</Menu.Item>
+              <Menu.Item onClick={() => useStore.getState().setHelp(true)}>Keybinds</Menu.Item>
+              <Menu.Item onClick={() => useStore.getState().toggleColorScheme()}>
                 {colorScheme === ColorScheme.Dark ? "Light mode" : "Dark mode"}
               </Menu.Item>
               <Menu.Divider />

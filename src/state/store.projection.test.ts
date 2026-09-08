@@ -58,7 +58,7 @@ test("Both does not mutate; After cannot remove a Before-origin Step (BA-04, BA-
   expect(useStore.getState().workflow.nodes.some((n) => n.id === OAK_PARK_IDS.review)).toBe(true);
 });
 
-test("Robot Mailroom After projection includes the receipt and hides merge internals", () => {
+test("Robot Mailroom After projection includes the receipt as a normal tile", () => {
   const s = useStore.getState();
   s.requestDemo(DemoId.RobotMailroom);
   s.confirmReplaceDiscard();
@@ -66,8 +66,10 @@ test("Robot Mailroom After projection includes the receipt and hides merge inter
   expect(projectBefore(doc).nodes.some((n) => n.id === MAILROOM_IDS.receipt)).toBe(false);
   const after = projectAfter(doc);
   expect(after.nodes.some((n) => n.id === MAILROOM_IDS.receipt)).toBe(true);
-  expect(after.nodes.some((n) => n.id === MAILROOM_IDS.group)).toBe(true);
-  expect(after.nodes.some((n) => n.id === MAILROOM_IDS.recipient)).toBe(false);
+  expect(after.nodes.some((n) => n.id === MAILROOM_IDS.scan)).toBe(true);
+  expect(after.nodes.some((n) => n.id === MAILROOM_IDS.group)).toBe(false);
+  expect(after.nodes.some((n) => n.id === MAILROOM_IDS.recipient)).toBe(true);
+  expect(doc.after.groups).toEqual([]);
 });
 
 test("focusedLane follows the view and Both keeps the last pan target (BA-05)", () => {

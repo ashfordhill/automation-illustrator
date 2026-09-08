@@ -1,6 +1,6 @@
 /**
  * Wrapper around a React Flow node: selected-tile + / Path-pull / X chrome (CX-01).
- * Click selects, completes a Path pull, or toggles merge membership.
+ * Click selects, completes a Path pull, or finishes Connect existing.
  */
 import { type ReactNode } from "react";
 import { SelectionKind } from "../../workflow/catalogs";
@@ -24,7 +24,7 @@ export function PathHostFrame({
       className={`nopan${departing ? " node-squash-inner" : ""}`}
       style={{ position: "relative", width: "100%", height: "100%", overflow: "visible" }}
       aria-hidden={departing || undefined}
-      onClick={(e) => {
+      onClick={() => {
         const s = useStore.getState();
         if (s.present || departing) return;
         if (s.interaction.kind === "path-pull") {
@@ -33,11 +33,6 @@ export function PathHostFrame({
         }
         if (s.interaction.kind === "connect-existing") {
           if (s.interaction.sourceId !== id) s.completeLinkTo(id);
-          return;
-        }
-        if (s.interaction.kind === "merge-pick") {
-          e.stopPropagation();
-          s.toggleMergeMember(id);
           return;
         }
         if (s.interaction.kind === "remove-preview") return;

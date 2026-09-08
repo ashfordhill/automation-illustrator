@@ -466,7 +466,7 @@ test("duplicate collapse is dotted if any collapsed or existing Path was dotted 
   expect(applied.value.edges[0]?.dashed).toBe(true);
 });
 
-test("pruneAfterOverlay drops extra Paths, Who, and empty or split groups", () => {
+test("pruneAfterOverlay drops extra Paths and Who; groups stay empty", () => {
   const remaining = [step("r"), step("keep", 0, 40), step("other", 80, 40)];
   const remainingEdges = [path("e1", "r", "keep")];
   const after = {
@@ -474,7 +474,6 @@ test("pruneAfterOverlay drops extra Paths, Who, and empty or split groups", () =
     groups: [
       { id: "g_empty", memberIds: ["gone"] },
       { id: "g_ok", memberIds: ["keep"] },
-      { id: "g_split", memberIds: ["keep", "other"] },
     ],
     extraNodes: [
       {
@@ -495,24 +494,9 @@ test("pruneAfterOverlay drops extra Paths, Who, and empty or split groups", () =
   const pruned = pruneAfterOverlay(after, "gone", remaining, remainingEdges);
   expect(pruned.after.extraEdges.map((e) => e.id)).toEqual(["ex2"]);
   expect(pruned.after.assignments).toEqual({ keep: "h1" });
-  expect(pruned.after.groups.map((g) => g.id)).toEqual(["g_ok"]);
-  expect(pruned.notices.some((n) => n.includes("g_empty"))).toBe(true);
-  expect(pruned.notices.some((n) => n.includes("g_split"))).toBe(true);
-  expect(pruned.after.extraNodes).toHaveLength(1);
-});
-
-test("pruneAfterOverlay dissolves a group that is no longer convex (MG-10)", () => {
-  const remaining = [step("r"), step("a", 0, 40), step("out", 80, 40), step("c", 0, 80)];
-  const remainingEdges = [path("e0", "r", "a"), path("e1", "a", "out"), path("e2", "out", "c")];
-  const after = {
-    assignments: { a: "r1", out: "h1", c: "r1" },
-    groups: [{ id: "g_bent", memberIds: ["a", "c"] }],
-    extraNodes: [] as StepNodeDto[],
-    extraEdges: [] as EdgeDto[],
-  };
-  const pruned = pruneAfterOverlay(after, "gone", remaining, remainingEdges);
   expect(pruned.after.groups).toEqual([]);
-  expect(pruned.notices.some((n) => n.includes("g_bent") && n.includes("convex"))).toBe(true);
+  expect(pruned.notices).toEqual([]);
+  expect(pruned.after.extraNodes).toHaveLength(1);
 });
 
 test("BA-09 restitch keeps After-only Steps reachable after a Before-origin removal", () => {

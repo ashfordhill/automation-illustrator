@@ -237,55 +237,6 @@ export function wouldCreateCycle(edges: EdgeDto[], source: string, target: strin
   return reachableFrom(target, edges).has(source);
 }
 
-/**
- * Nodes that sit on a directed base path between two members (MG-03).
- * Callers treat Steps as members and Data as supporting internals.
- */
-export function supportingInternalIds(
-  memberIds: string[],
-  nodes: NodeDto[],
-  edges: EdgeDto[],
-): string[] {
-  const members = new Set(memberIds);
-  if (members.size < 2) return [];
-  const fromMember = new Map<string, Set<string>>();
-  for (const id of memberIds) {
-    fromMember.set(id, reachableFrom(id, edges));
-  }
-  const supporting: string[] = [];
-  for (const n of nodes) {
-    if (members.has(n.id)) continue;
-    const fromHere = reachableFrom(n.id, edges);
-    let onPath = false;
-    for (const a of memberIds) {
-      if (!fromMember.get(a)?.has(n.id)) continue;
-      for (const b of memberIds) {
-        if (a === b) continue;
-        if (fromHere.has(b)) {
-          onPath = true;
-          break;
-        }
-      }
-      if (onPath) break;
-    }
-    if (onPath) supporting.push(n.id);
-  }
-  return supporting;
-}
-
-/**
- * MG-04: no directed path between members may visit a Step that is not a member
- * (that path would leave the group and re-enter it). Data on those paths is supporting.
- */
-export function isConvex(memberIds: string[], nodes: NodeDto[], edges: EdgeDto[]): boolean {
-  if (memberIds.length <= 1) return true;
-  for (const id of supportingInternalIds(memberIds, nodes, edges)) {
-    const n = nodes.find((x) => x.id === id);
-    if (n && isStepNode(n)) return false;
-  }
-  return true;
-}
-
 /** Mark a Step Exclusive once it has two or more outgoing Paths (unless already Parallel). */
 export function maybeExclusiveSplit(
   nodes: NodeDto[],

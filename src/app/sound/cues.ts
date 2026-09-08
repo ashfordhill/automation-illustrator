@@ -62,7 +62,7 @@ function tone(
   };
 }
 
-/** Play one SH-04 cue. No-op when Web Audio is missing. Merge/unmerge plays `twoNote`. */
+/** Play one SH-04 cue. No-op when Web Audio is missing. */
 export function playCue(kind: CueKind): void {
   const ac = audioContext();
   if (!ac) return;

@@ -22,7 +22,6 @@ export type WorkflowNodeKind =
 export const ReactFlowNodeKind = {
   Step: "step",
   DataField: "field",
-  MergeGroup: "mergeGroup",
 } as const;
 export type ReactFlowNodeKind =
   (typeof ReactFlowNodeKind)[keyof typeof ReactFlowNodeKind];
@@ -147,7 +146,5 @@ export const KeyAction = {
   AddBranchStep: "addBranchStep",
   AddBranchData: "addBranchData",
   LinkExisting: "linkExisting",
-  Merge: "merge",
-  Unmerge: "unmerge",
 } as const;
 export type KeyAction = (typeof KeyAction)[keyof typeof KeyAction];

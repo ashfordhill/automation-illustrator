@@ -53,6 +53,9 @@ test.describe("Improvement 06 Who, trash, Other, chips, hamburger", () => {
     await loadOakPark(page);
     await page.getByRole("button", { name: "Menu" }).click();
     await expect(page.getByRole("menuitem", { name: "Present" })).toBeVisible();
+    const items = page.getByRole("menuitem");
+    await expect(items.first()).toBeVisible();
+    expect(await items.locator("svg").count()).toBe(0);
     const lane = page.locator(".board-lane").first();
     const box = await lane.boundingBox();
     expect(box).toBeTruthy();

@@ -57,13 +57,6 @@ function hintsFor(): Hint[] {
       { key: "Esc", label: "Cancel" },
     ];
   }
-  if (s.interaction.kind === "merge-pick") {
-    return [
-      { key: "Click", label: "Add or remove a Step" },
-      { key: pk(KeyAction.Confirm), label: "Confirm merge" },
-      { key: "Esc", label: "Cancel" },
-    ];
-  }
   if (s.selected?.type === SelectionKind.Edge) {
     if (s.view === ViewMode.Both) return [];
     return [
@@ -73,7 +66,6 @@ function hintsFor(): Hint[] {
     ];
   }
   if (s.selected?.type === SelectionKind.Node) {
-    const group = s.workflow.after.groups.find((g) => g.id === s.selected!.id);
     const n =
       s.workflow.nodes.find((x) => x.id === s.selected!.id) ??
       s.workflow.after.extraNodes.find((x) => x.id === s.selected!.id);
@@ -81,10 +73,7 @@ function hintsFor(): Hint[] {
     if (s.view === ViewMode.Both) return [];
     if (s.view === ViewMode.After) {
       items.push({ key: pk(KeyAction.AddBranchStep), label: "After-only Step" });
-      items.push({ key: pk(KeyAction.Merge), label: "Merge" });
-      if (group) {
-        items.push({ key: pk(KeyAction.Unmerge), label: "Unmerge" });
-      } else if (s.workflow.after.extraNodes.some((x) => x.id === s.selected!.id)) {
+      if (s.workflow.after.extraNodes.some((x) => x.id === s.selected!.id)) {
         items.push({ key: pk(KeyAction.RemoveNode), label: "Remove Step" });
       }
       return items;

@@ -212,7 +212,7 @@ test.describe("slice 12 surfaces, dialogs, and final screenshots", () => {
     await page.getByRole("menuitem", { name: "Present" }).click();
     await expect(page.locator("aside")).toHaveCount(0);
     await expect(page.getByRole("region", { name: "Merge and Unmerge" })).toHaveCount(0);
-    await expect(page.getByText(/will become automated/)).toBeVisible();
+    await expect(page.getByText(/will become automated/)).toHaveCount(0);
     await screenshotBoard(page, `${EVIDENCE}/present-light-1440.png`);
     await openMenu(page);
     await page.getByRole("menuitem", { name: "Exit present" }).click();
@@ -226,11 +226,11 @@ test.describe("slice 12 surfaces, dialogs, and final screenshots", () => {
     await capturePage(page, `${EVIDENCE}/empty-new-1440.png`);
   });
 
-  test("Mailroom After merge dock in both themes", async ({ page }) => {
+  test("Mailroom After has no merge dock in both themes", async ({ page }) => {
     await loadMailroom(page);
     await viewRadio(page, "After").click();
     await waitForLayout(page);
-    await expect(page.getByRole("region", { name: "Merge and Unmerge" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Merge and Unmerge" })).toHaveCount(0);
     await expect(page.getByText(RECEIPT).first()).toBeVisible();
     await screenshotBoard(page, `${EVIDENCE}/mailroom-after-1440.png`);
     await openMenu(page);

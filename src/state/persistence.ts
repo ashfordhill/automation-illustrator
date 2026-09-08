@@ -25,6 +25,7 @@ export type HydrateResult = {
   workflow: WorkflowDoc;
   persistStatus: PersistStatus;
   recovery: RecoveryState | null;
+  unfolded?: boolean;
 };
 
 /** Pretty JSON for localStorage and the Import file picker. */
@@ -137,6 +138,7 @@ export function hydratePersistedWorkflow(
     workflow: parsed.doc,
     persistStatus: writeWorkflow(parsed.doc, storage),
     recovery: null,
+    unfolded: parsed.unfolded,
   };
 }
 

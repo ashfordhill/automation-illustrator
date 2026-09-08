@@ -1,5 +1,5 @@
 /**
- * App shell: header Toolbar, right DetailsPanel + score, center Board.
+ * App shell: header Toolbar, right DetailsPanel, center Board.
  * Present mode hides the right rail. Under 1024 CSS px the board is replaced (P-04).
  * Theme is dataset.theme for CSS plus Mantine forceColorScheme.
  */
@@ -10,14 +10,12 @@ import { KeybindsModal } from "../keyboard/KeybindsModal";
 import { useAppKeys } from "../keyboard/useAppKeys";
 import { useStore } from "../state/store";
 import { AssignmentLane, ViewMode } from "../workflow/catalogs";
-import { automationScore } from "../workflow/scoring";
 import { CanvasHelper } from "./components/CanvasHelper";
 import { EmptyBoardCta } from "./components/EmptyBoardCta";
 import { ImportErrorModal } from "./components/ImportErrorModal";
 import { RecoveryModal } from "./components/RecoveryModal";
 import { RemovePickerHud } from "./components/RemovePickerHud";
 import { ReplaceDocumentModal } from "./components/ReplaceDocumentModal";
-import { MergeDock } from "./components/MergeDock";
 import { Toolbar } from "./components/Toolbar";
 import { TransientNotice } from "./components/TransientNotice";
 import { UnsupportedViewport } from "./components/UnsupportedViewport";
@@ -61,11 +59,6 @@ function CanvasArea() {
       />
     </div>
   );
-}
-
-function ScoreFooter() {
-  const workflow = useStore((s) => s.workflow);
-  return <div className="details-score">{automationScore(workflow)}</div>;
 }
 
 export default function App() {
@@ -115,7 +108,6 @@ export default function App() {
               <div className="details-rail-body">
                 <DetailsPanel />
               </div>
-              <ScoreFooter />
             </div>
           </AppShell.Aside>
         )}
@@ -131,7 +123,6 @@ export default function App() {
             <CanvasHelper />
             <TransientNotice />
             <RemovePickerHud />
-            <MergeDock />
           </div>
         </AppShell.Main>
       </AppShell>

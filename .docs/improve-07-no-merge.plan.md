@@ -26,7 +26,7 @@ Merge is clunky (dock, pick, giant tile, Unmerge on the tile and in the inspecto
 - **UI gone:** `MergeDock`, merge-pick interaction, Merge / Unmerge keybinds, inspector Unmerge, tile X-as-Unmerge, `MergeGroupNode` / `MergedStepTile` / `MergeWhoColumn` / `mergeFlow.ts`, RF type `mergeGroup`, CanvasHelper Merge/Unmerge chips, two-note merge cue **call sites** (the synthesizer function may remain unused).
 - **Projection:** never emit `projectedKind: "group"`. After shows every Step as a normal tile.
 - **Graph commands:** delete `merge` / `unmerge` / convexity-for-groups. `insertNodeOnPath` merge-convexity branch goes away (groups are empty). After still cannot remove Before-origin Steps (BA-04 without Unmerge — explain, no Unmerge offer).
-- **Scoring:** BA-08 still counts each Before-origin Step whose After Who is a Robot (now always a real tile). After-only still omitted.
+- **Scoring:** withdrawn 2026-09-07 (P-07, BA-08). Do not restore the inspector footer or Present “N Steps out of M will become automated…” copy.
 - **Tests:** delete or rewrite `src/workflow/merge.test.ts`, `src/state/store.merge.test.ts`, `e2e/merge.spec.ts`. Other specs that click Merge, Unmerge, or `[data-merge-group]` must drop those assertions. Keep Mailroom After as a layout/score story without a giant tile.
 - **Past evidence** under `.docs/evidence/11-merge/` and improve-02 merge screenshots stays; do not delete history.
 - **Do not** remove After-only Steps, After-only Paths, Who-per-lane, or the After overlay. Only merge groups.
@@ -39,7 +39,7 @@ Newest last, dated 2026-09-07, “approved by user”:
 
 - **P-02, P-05, P-07, MG-01..MG-10, BA-04, BA-05, SH-07, SH-14** — Merge / Unmerge is withdrawn from the product until a later redesign. There is no merge dock, no merge tile, no Merge/Unmerge keys. After shows Before-origin Steps individually. Saved documents may still contain `after.groups`; load unfolds them and writes empty groups. Robot Mailroom has no preconfigured merge group.
 
-Also note BA-08 scoring still counts members individually (now the only representation).
+Also note BA-08 score copy is gone; After still shows Before-origin Steps individually.
 
 ---
 
@@ -65,7 +65,7 @@ Keep: `mergeGroupSchema` + empty `groups: []` in `emptyAfterOverlay`.
 ## 5. Tests and evidence
 
 - `npm run build`, `npm run test:unit`, `npm run test:e2e`
-- Unit: load a cloned Mailroom (or a tiny doc with one group) → `groups` empty, members still assigned Robot in After; score unchanged vs counting those Steps individually.
+- Unit: load a cloned Mailroom (or a tiny doc with one group) → `groups` empty, members still assigned Robot in After.
 - E2E: Mailroom After has no merge dock, no Unmerge, no `[data-merge-group]`; After-only Step still exists; Before-origin X in After still explains (no Unmerge).
 - Evidence: `mailroom-after-no-merge-1440.png`, `after-inspector-no-unmerge-1440.png`, `keybinds-no-merge-1440.png`.
 

@@ -16,7 +16,7 @@ function viewRadio(page: Page, name: "Before" | "After" | "Both") {
 }
 
 test.describe("slice 8 shell, typography, and sound", () => {
-  test("chunky Before/After/Both, sound off by default, Present score and restore", async ({
+  test("chunky Before/After/Both, sound off by default, Present hides inspector and restore", async ({
     page,
   }) => {
     await loadDemo(page);
@@ -35,7 +35,7 @@ test.describe("slice 8 shell, typography, and sound", () => {
     await page.getByRole("button", { name: "Menu" }).click();
     await page.getByRole("menuitem", { name: "Present" }).click();
     await expect(page.locator("aside")).toHaveCount(0);
-    await expect(page.getByText(/will become automated/)).toBeVisible();
+    await expect(page.getByText(/will become automated/)).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Add Step or Data" })).toHaveCount(
       0,
     );

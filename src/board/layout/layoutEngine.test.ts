@@ -97,7 +97,7 @@ test("different lanes do not supersede each other", async () => {
 test("an empty projection resolves without calling ELK", async () => {
   const { elk, layout } = fakeElk();
   const engine = createLayoutEngine(elk);
-  const empty: LaneProjection = { lane: AssignmentLane.Before, nodes: [], edges: [], internals: [] };
+  const empty: LaneProjection = { lane: AssignmentLane.Before, nodes: [], edges: [] };
   const result = await engine.request(AssignmentLane.Before, empty, {});
   expect(layout).not.toHaveBeenCalled();
   expect(result.positions).toEqual({});

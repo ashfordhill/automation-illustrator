@@ -4,14 +4,12 @@
  */
 import { ReactFlowEdgeKind, ReactFlowNodeKind, type AssignmentLane } from "../../workflow/catalogs";
 import { DataFieldNode } from "./DataFieldNode";
-import { MergeGroupNode } from "./MergeGroupNode";
 import { FlowArrow } from "../routing/FlowArrow";
 import { StepNode } from "./StepNode";
 
 export const nodeTypes = {
   [ReactFlowNodeKind.Step]: StepNode,
   [ReactFlowNodeKind.DataField]: DataFieldNode,
-  [ReactFlowNodeKind.MergeGroup]: MergeGroupNode,
 };
 
 export const edgeTypes = {

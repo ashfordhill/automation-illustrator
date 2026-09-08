@@ -10,8 +10,8 @@ import {
   WorkflowNodeKind,
 } from "../../workflow/catalogs";
 import { afterGraph, edgeIsDotted } from "../../workflow/graph";
-import { isStepNode, laneAssignments } from "../../workflow/types";
-import { findEdge, findMergeGroup, findNode, isAfterOnlyNode } from "../../workflow/selectors";
+import { laneAssignments } from "../../workflow/types";
+import { findEdge, findNode, isAfterOnlyNode } from "../../workflow/selectors";
 import { useStore } from "../../state/store";
 import { ManageActorsPanel } from "./ManageActorsPanel";
 import { TypeButtons } from "./TypeButtons";
@@ -111,43 +111,6 @@ export function DetailsPanel() {
   }
 
   if (selected.type === SelectionKind.Node) {
-    const group = findMergeGroup(workflow, selected.id);
-    if (group) {
-      const names = group.memberIds.map((id) => {
-        const n = findNode(workflow, id);
-        if (n && isStepNode(n)) return n.title.trim() || n.stepKind;
-        return id;
-      });
-      const whoId = laneAssignments(workflow, lane)[group.memberIds[0] ?? ""] ?? "";
-      return (
-        <Stack gap="xs" p="sm" className="chrome-hide">
-          <Text fw={800}>Merged Steps</Text>
-          <Text size="sm" className="hint-copy">
-            {names.join(" · ") || "Merged Before-origin Steps."}
-          </Text>
-          <Text size="sm" fw={700}>
-            Who
-          </Text>
-          <WhoButtons
-            actors={workflow.actors}
-            value={whoId}
-            onChange={(id) => useStore.getState().assignActor(group.id, id)}
-            disabled={readOnly}
-          />
-          {readOnly ? null : (
-            <Button
-              color="red"
-              variant="light"
-              size="xs"
-              onClick={() => useStore.getState().unmerge(group.id)}
-            >
-              Unmerge
-            </Button>
-          )}
-        </Stack>
-      );
-    }
-
     const n = findNode(workflow, selected.id);
     if (!n) return null;
     const extra = isAfterOnlyNode(workflow, n.id);
