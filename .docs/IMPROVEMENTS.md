@@ -482,3 +482,12 @@ Approved 2026-09-08. New Other Steps get Name **Task** so the tile shows copy. C
 
 Commit: `feat(improve-16): default Other Steps to Task`.  
 Evidence: `.docs/evidence/improve-16-other-task/`.
+
+---
+
+# Improvement 15 — larger + and Path tabs
+
+Approved 2026-09-08. Tile `+` (create Step / Data) and Path-pull tabs are **44×44** (were 36×36) and peek **24px** past the right edge (were 18px) so they are easier to click. Glyphs scale with the tab. The X stays the same size. No new dependency.
+
+Commit: `feat(improve-15): enlarge tile plus and Path tabs`.  
+Evidence: `.docs/evidence/improve-15-tab-size/`.

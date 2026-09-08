@@ -1401,4 +1401,3 @@ Corrections in the same chat before the next slice starts get their own short en
 - Known limitations / follow-ups: Concurrent WIP from other chats remains unstaged. At fitView zoom the CSS bump is modest on screen.
 - Status: COMPLETE
 - Commit: `feat(improve-15): enlarge tile plus and Path tabs`
-

@@ -117,3 +117,9 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 - Issue: Creating a Step from another Step (or from Data under that Step) assigned the default Alice instead of the parent’s actor.
 - Resolution: Child Steps inherit the parent Step’s Who; Data walks to the nearest upstream Step.
 - Attachments: [child defaults Alice](visual-improvements/2026-09-08-child-step-defaults-alice.jpg)
+
+## 2026-09-08 — tile create tabs too small
+
+- Issue: The Tile `+` and Path create tabs on a Tile are small and hard to grab.
+- Resolution: Shipped in `feat(improve-15): enlarge tile plus and Path tabs` — 44×44 tabs, 24px peek.
+- Attachments: [tile create tabs](visual-improvements/2026-09-08-tile-create-tabs.gif)
