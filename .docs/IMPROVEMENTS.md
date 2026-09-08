@@ -431,6 +431,8 @@ Evidence: `.docs/evidence/improve-10-drag-preview/`.
 
 Correction 2 (2026-09-08): empty paper and `+` / Path tabs use a chunky ink+halo grab SVG (same recipe as move) instead of the blurry system grab bitmap.
 
+Correction 3 (2026-09-08): drop the custom black SVG cursors. Tiles use the platform `move` cursor; pan and pull-tabs use platform `grab` / `grabbing`; the tile X stays `pointer`.
+
 ---
 
 # Improvement 11 — Path Delete menu and hit pad (COMPLETE)

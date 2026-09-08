@@ -1340,3 +1340,15 @@ Corrections in the same chat before the next slice starts get their own short en
 - Evidence: `.docs/evidence/improve-10-drag-preview/grab-cursors-1440.png` — move vs grab glyphs at 96px and native size (1440×900)
 - Status: COMPLETE
 - Commit: `feat(improve-10): sharpen grab and grabbing cursors`
+
+## Improvement 10 — correction 3 — 2026-09-08
+
+- Requested: The custom hand and movement cursors look too black and weird; use something standard. The delete-button pointer is the right look.
+- Changed: Removed the custom SVG cursors. Editable tiles use the platform `move` cursor; empty paper and `+` / Path tabs use platform `grab` / `grabbing`; the tile X stays `pointer`. GOAL P-08/CX-07 amendment. Deleted `src/app/cursors/grab.svg`.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning)
+  - `npm run test:unit` — pass (31 files, 180 tests)
+  - `npm run test:e2e` — pass (99 passed, Chromium, 3 workers, 62.6s)
+- Evidence: n/a (OS cursors are not captured in screenshots)
+- Status: COMPLETE
+- Commit: `feat(improve-10): use platform move and grab cursors`
