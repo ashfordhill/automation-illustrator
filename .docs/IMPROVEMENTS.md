@@ -513,3 +513,12 @@ Approved 2026-09-08. The Read task icon is an **open book** (blue covers, cream 
 
 Commit: `feat(improve-17): use an open book for Read`.  
 Evidence: `.docs/evidence/improve-17-read-book/`.
+
+---
+
+# Improvement 18 — Path zip vs Tile blip
+
+Approved 2026-09-08. Tile create keeps the existing soft sine blip. Pulling a Path from the tile Path tab (or Connect existing) plays a distinct original **zip**: a short rising bandpass-noise sweep plus a taut-string triangle, same low-volume toy-synth family as the other cues (P-01, SH-04). No samples, no new dependency.
+
+Commit: `feat(improve-18): zip Path create apart from Tile blip`.  
+Evidence: `.docs/evidence/improve-18-path-zip/`.

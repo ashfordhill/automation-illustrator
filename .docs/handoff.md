@@ -1464,3 +1464,56 @@ Corrections in the same chat before the next slice starts get their own short en
 - Known limitations / follow-ups: Concurrent WIP from other chats remains unstaged.
 - Status: COMPLETE
 - Commit: `feat(improve-17): use an open book for Read`
+
+## Improvement 19 — closer Step/Data + fan — 2026-09-08
+
+- Starting commit: `04873d3de2ecad68b6e9a2b5c3099224d10daf5a` (`feat(improve-10): insert Tiles on unique sibling Paths`)
+- Working tree at start: not clean. Concurrent Path-zip, Read-book, and evidence recaptures were left unstaged and are not in this commit.
+- GOAL clauses addressed: WG-07 (amendment dated 2026-09-08). Drop rules, After Step-only, and `1` / `2` unchanged.
+- Library research and decisions: no new runtime dependency. The 28px `PREVIEW_OUT` was leftover from the Improvement 03 wedge. Fan placement is now a short 104px arc from the rest `+` (`plusPreviewLayout.ts`).
+- Files changed:
+  - `src/board/controls/plusPreviewLayout.ts` and `plusPreviewLayout.test.ts`
+  - `src/board/controls/TileChrome.tsx` (uses shared `previewCenters`)
+  - Tests: `e2e/improve-19-plus-fan.spec.ts`
+  - Contract/docs: `.docs/GOAL.md` (WG-07 amendment); `.docs/IMPROVEMENTS.md` (19); `.docs/VISUAL_IMPROVEMENTS.md`; this handoff entry
+  - Evidence: `.docs/evidence/improve-19-plus-fan/`
+- Behavior implemented:
+  - Pulling `+` on a selected or hovered tile shows Step and Data closer to that tile (no extra outward offset).
+  - After still shows Step only. Drop-on-preview, empty release, taffy, and scrim are unchanged.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning)
+  - `npm run test:unit` — pass (32 files, 191 tests)
+  - `npm run test:e2e` — `e2e/improve-19-plus-fan.spec.ts` pass (1). Full suite not re-run here; port 4177 `reuseExistingServer` was false in a concurrent edit.
+- Evidence:
+  - `.docs/evidence/improve-19-plus-fan/plus-fan-close-1440.png` — `+` pulled on Read invoice.pdf; Step and Data sit close to the tile (1440×900)
+- Earlier-slice defects fixed: none
+- Known limitations / follow-ups: Resting `+` / Path tab peek (Improvement 15) is unchanged. Concurrent WIP from other chats remains unstaged.
+- Status: COMPLETE
+- Commit: `feat(improve-19): pull Step Data fan closer`
+
+## Improvement 18 — Path zip vs Tile blip — 2026-09-08
+
+- Starting commit: `01b7314426f409a38a9f6c372e333cb12e355e8e` (`feat(improve-17): use an open book for Read`)
+- Working tree at start: not clean. Concurrent Read-book, plus-fan, grab-cursor, evidence recaptures, and other chats’ WIP were left unstaged and are not in this commit.
+- GOAL clauses addressed: SH-04, P-01 (amendment dated 2026-09-08). Tile create keeps the existing blip; Path create is a distinct original zip.
+- Library research and decisions: no new runtime dependency. Zip is original Web Audio: bandpass-filtered noise rising 420→2400 Hz plus a triangle taut-string sweep 260→1480 Hz, same low peak as the other cues. Not a sampled zipper. Connect existing and Path-pull share `connect()`, so both zip. `spawnBranch` / empty-board Add Step / Add Data / insert-on-Path stay the Tile blip.
+- Files changed:
+  - Sound: `src/app/sound/cues.ts`, `src/app/sound/cues.test.ts`
+  - Store: `src/state/store.ts` (`connect` plays `zip`); `src/state/store.commands.test.ts`
+  - Contract/docs: `.docs/GOAL.md` (SH-04 amendment); `.docs/IMPROVEMENTS.md` (18); this handoff entry
+  - Tests: `e2e/improve-18-path-zip.spec.ts`
+  - Evidence: `.docs/evidence/improve-18-path-zip/`
+- Behavior implemented:
+  - With sound on, creating a Tile still plays the soft sine blip.
+  - Pulling a Path from the tile Path tab onto another Node (or Connect existing) plays a short zip instead.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning)
+  - `npm run test:unit` — pass (32 files, 191 tests)
+  - `npm run test:e2e` — `e2e/improve-18-path-zip.spec.ts` pass (1). Full Playwright suite not run in this chat because port 4177 was in use by another agent.
+- Evidence:
+  - `.docs/evidence/improve-18-path-zip/path-pull-zip-1440.png` — Path-pull from Search website toward Search filesystem; sound on (1440×900)
+  - `.docs/evidence/improve-18-path-zip/path-connected-1440.png` — after drop; new Path connects the two Search tiles; filesystem selected (1440×900)
+- Earlier-slice defects fixed: none
+- Known limitations / follow-ups: Zip cannot be shown in a PNG; turn sound on and Path-pull to hear it. Concurrent WIP from other chats remains unstaged.
+- Status: COMPLETE
+- Commit: `feat(improve-18): zip Path create apart from Tile blip`

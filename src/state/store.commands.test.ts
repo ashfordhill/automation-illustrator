@@ -1,4 +1,6 @@
-import { afterEach, beforeEach, expect, test } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
+import * as cues from "../app/sound/cues";
+import { OAK_PARK_IDS } from "../demos/oakParkInvoice";
 import { ColorScheme, SelectionKind, ViewMode, WorkflowNodeKind } from "../workflow/catalogs";
 import { MSG } from "../workflow/commands";
 import { defaultRemovalCandidateId, validateWorkflow } from "../workflow/graph";
@@ -290,4 +292,26 @@ test("insertOnPath relocates a leaf onto an existing Path", () => {
   expect(next.edges.some((e) => e.source === "c" && e.target === "b" && e.label === "")).toBe(true);
   expect(next.edges.some((e) => e.source === "r" && e.target === "c")).toBe(false);
   expect(validateWorkflow(next)).toEqual([]);
+});
+
+test("Path connect plays zip; Tile spawn keeps the blip (SH-04)", () => {
+  const spy = vi.spyOn(cues, "playCueWhen");
+  useStore.getState().setSoundEnabled(true);
+
+  spy.mockClear();
+  useStore.getState().connect(OAK_PARK_IDS.web, OAK_PARK_IDS.fs);
+  expect(
+    useStore.getState().workflow.edges.some(
+      (e) => e.source === OAK_PARK_IDS.web && e.target === OAK_PARK_IDS.fs,
+    ),
+  ).toBe(true);
+  expect(spy).toHaveBeenCalledWith(true, "zip");
+  expect(spy).not.toHaveBeenCalledWith(true, "blip");
+
+  spy.mockClear();
+  const id = useStore.getState().spawnBranch(OAK_PARK_IDS.review, WorkflowNodeKind.Step);
+  expect(id).toBeTruthy();
+  expect(spy).toHaveBeenCalledWith(true, "blip");
+  expect(spy).not.toHaveBeenCalledWith(true, "zip");
+  spy.mockRestore();
 });

@@ -761,7 +761,7 @@ export const useStore = create<{
       return;
     }
     get().commit(result.value);
-    playCueWhen(get().soundEnabled, "blip");
+    playCueWhen(get().soundEnabled, "zip");
   },
   deleteSelection: () => {
     if (get().present || get().view === ViewMode.Both) return;
