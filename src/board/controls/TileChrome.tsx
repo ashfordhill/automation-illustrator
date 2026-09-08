@@ -29,7 +29,7 @@ const PREVIEW_RADIUS = 118;
 const PREVIEW_OUT = 28;
 const PREVIEW_SPREAD = 56;
 
-type TileRect = { x: number; y: number; w: number; h: number };
+type TileRect = { x: number; y: number; w: number; h: number; rx: number };
 
 function previewCenters(restX: number, restY: number, count: number): { x: number; y: number }[] {
   const out: { x: number; y: number }[] = [];
@@ -44,38 +44,29 @@ function previewCenters(restX: number, restY: number, count: number): { x: numbe
   return out;
 }
 
-/** Green taffy from the tile’s right edge to the pointer. Flat join, rounded far cap. */
-function taffyPath(tile: TileRect, restY: number, x1: number, y1: number): string {
-  const joinX = tile.x + tile.w - 3;
-  const half = 20;
-  let yA = restY - half;
-  let yB = restY + half;
-  const minY = tile.y + 8;
-  const maxY = tile.y + tile.h - 8;
-  yA = Math.min(Math.max(yA, minY), maxY);
-  yB = Math.min(Math.max(yB, minY), maxY);
-  if (yB - yA < 24) {
-    const mid = (yA + yB) / 2;
-    yA = mid - 12;
-    yB = mid + 12;
-  }
-  const midY = (yA + yB) / 2;
-  const dx = x1 - joinX;
-  const dy = y1 - midY;
+/** Capsule taffy from an origin under the tile face to the pointer (round caps, no tile-edge cut). */
+function taffyPath(x0: number, y0: number, x1: number, y1: number): string {
+  const dx = x1 - x0;
+  const dy = y1 - y0;
   const len = Math.max(1, Math.hypot(dx, dy));
   const ux = dx / len;
   const uy = dy / len;
   const px = -uy;
   const py = ux;
+  const r0 = 16;
   const r1 = Math.max(10, 18 - len * 0.04);
   const bulge = Math.min(22, len * 0.18);
-  const mx = (joinX + x1) / 2 + px * bulge;
-  const my = (midY + y1) / 2 + py * bulge;
+  const mx = (x0 + x1) / 2 + px * bulge;
+  const my = (y0 + y1) / 2 + py * bulge;
+  const a0x = x0 + px * r0;
+  const a0y = y0 + py * r0;
+  const b0x = x0 - px * r0;
+  const b0y = y0 - py * r0;
   const a1x = x1 + px * r1;
   const a1y = y1 + py * r1;
   const b1x = x1 - px * r1;
   const b1y = y1 - py * r1;
-  return `M ${joinX} ${yA} Q ${mx + px * 16} ${my + py * 16} ${a1x} ${a1y} A ${r1} ${r1} 0 0 1 ${b1x} ${b1y} Q ${mx - px * 16} ${my - py * 16} ${joinX} ${yB} Z`;
+  return `M ${a0x} ${a0y} Q ${mx + px * r0} ${my + py * r0} ${a1x} ${a1y} A ${r1} ${r1} 0 0 1 ${b1x} ${b1y} Q ${mx - px * r0} ${my - py * r0} ${b0x} ${b0y} A ${r0} ${r0} 0 0 1 ${a0x} ${a0y} Z`;
 }
 
 function nodeScreenRect(nodeId: string): TileRect | null {
@@ -84,7 +75,25 @@ function nodeScreenRect(nodeId: string): TileRect | null {
   );
   if (!(el instanceof HTMLElement)) return null;
   const b = el.getBoundingClientRect();
-  return { x: b.left, y: b.top, w: b.width, h: b.height };
+  const radius = Number.parseFloat(getComputedStyle(el).borderTopLeftRadius);
+  const rx = Number.isFinite(radius) && radius > 0 ? radius : el.classList.contains("field-piece") ? 32 : 14;
+  return { x: b.left, y: b.top, w: b.width, h: b.height, rx };
+}
+
+function underTileOrigin(tile: TileRect, restY: number): { x: number; y: number } {
+  return {
+    x: tile.x + tile.w - 22,
+    y: Math.min(Math.max(restY, tile.y + tile.rx + 8), tile.y + tile.h - tile.rx - 8),
+  };
+}
+
+function TileExitMask({ id, tile }: { id: string; tile: TileRect }) {
+  return (
+    <mask id={id} maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse">
+      <rect width="100%" height="100%" fill="white" />
+      <rect x={tile.x} y={tile.y} width={tile.w} height={tile.h} rx={tile.rx} fill="black" />
+    </mask>
+  );
 }
 
 function reducedMotion(): boolean {
@@ -232,6 +241,7 @@ function PlusPullTab({ nodeId }: { nodeId: string }) {
       y: rest.top - 8,
       w: 160,
       h: 96,
+      rx: 14,
     };
     e.currentTarget.setPointerCapture(e.pointerId);
     useStore.getState().beginPlusPull(nodeId);
@@ -269,6 +279,7 @@ function PlusPullTab({ nodeId }: { nodeId: string }) {
   const tabX = drag?.live ? drag.x : drag ? drag.restX : 0;
   const tabY = drag?.live ? drag.y : drag ? drag.restY : 0;
   const centers = drag ? previewCenters(drag.restX, drag.restY, items.length) : [];
+  const plusOrigin = drag ? underTileOrigin(drag.tile, drag.restY) : { x: 0, y: 0 };
   const overlay =
     drag && typeof document !== "undefined"
       ? createPortal(
@@ -299,13 +310,15 @@ function PlusPullTab({ nodeId }: { nodeId: string }) {
             ) : null}
             {drag.live ? (
               <svg className="plus-taffy" width="100%" height="100%">
+                <defs>
+                  <TileExitMask id={`plus-taffy-exit-${nodeId}`} tile={drag.tile} />
+                </defs>
                 <path
                   data-plus-taffy="true"
-                  d={taffyPath(drag.tile, drag.restY, tabX, tabY)}
+                  d={taffyPath(plusOrigin.x, plusOrigin.y, tabX, tabY)}
                   fill="var(--plus)"
                   fillOpacity={0.88}
-                  stroke="var(--line)"
-                  strokeWidth={2}
+                  mask={`url(#plus-taffy-exit-${nodeId})`}
                 />
               </svg>
             ) : null}
@@ -363,6 +376,7 @@ function PathPullTab({ nodeId }: { nodeId: string }) {
     restX: number;
     restY: number;
     live: boolean;
+    tile: TileRect;
   } | null>(null);
 
   useEffect(() => {
@@ -383,6 +397,13 @@ function PathPullTab({ nodeId }: { nodeId: string }) {
     e.stopPropagation();
     const rest = restRef.current?.getBoundingClientRect();
     if (!rest) return;
+    const tile = nodeScreenRect(nodeId) ?? {
+      x: rest.right - 160,
+      y: rest.top - 8,
+      w: 160,
+      h: 96,
+      rx: 14,
+    };
     e.currentTarget.setPointerCapture(e.pointerId);
     useStore.getState().beginPathPull(nodeId);
     setDrag({
@@ -391,6 +412,7 @@ function PathPullTab({ nodeId }: { nodeId: string }) {
       restX: rest.left + rest.width / 2,
       restY: rest.top + rest.height / 2,
       live: true,
+      tile,
     });
   };
 
@@ -399,7 +421,7 @@ function PathPullTab({ nodeId }: { nodeId: string }) {
     e.stopPropagation();
     const hover = targetIdAt(e.clientX, e.clientY);
     useStore.getState().setPathPullHover(hover);
-    setDrag({ ...drag, x: e.clientX, y: e.clientY });
+    setDrag({ ...drag, x: e.clientX, y: e.clientY, tile: nodeScreenRect(nodeId) ?? drag.tile });
   };
 
   const onPointerUp = (e: ReactPointerEvent<HTMLButtonElement>) => {
@@ -423,18 +445,32 @@ function PathPullTab({ nodeId }: { nodeId: string }) {
 
   const endX = drag?.live ? drag.x : drag?.restX ?? 0;
   const endY = drag?.live ? drag.y : drag?.restY ?? 0;
+  const pathOrigin = drag ? underTileOrigin(drag.tile, drag.restY) : { x: 0, y: 0 };
+  const pathMid = (() => {
+    const dx = endX - pathOrigin.x;
+    const dy = endY - pathOrigin.y;
+    const len = Math.max(1, Math.hypot(dx, dy));
+    const px = -dy / len;
+    const py = dx / len;
+    const bulge = Math.min(16, len * 0.12);
+    return { x: (pathOrigin.x + endX) / 2 + px * bulge, y: (pathOrigin.y + endY) / 2 + py * bulge };
+  })();
   const overlay =
     drag && typeof document !== "undefined"
       ? createPortal(
           <div className="path-pull-layer">
             <svg className="plus-taffy" width="100%" height="100%">
+              <defs>
+                <TileExitMask id={`path-pull-exit-${nodeId}`} tile={drag.tile} />
+              </defs>
               <path
-                d={`M ${drag.restX} ${drag.restY} Q ${(drag.restX + endX) / 2 + 24} ${(drag.restY + endY) / 2} ${endX} ${endY}`}
+                d={`M ${pathOrigin.x} ${pathOrigin.y} Q ${pathMid.x} ${pathMid.y} ${endX} ${endY}`}
                 fill="none"
                 stroke="var(--ink)"
                 strokeWidth={4}
                 strokeLinecap="round"
                 strokeDasharray="10 7"
+                mask={`url(#path-pull-exit-${nodeId})`}
               />
             </svg>
             {drag.live ? (

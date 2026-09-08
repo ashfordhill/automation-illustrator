@@ -70,7 +70,7 @@ export async function pathScreenPoint(page: Page, edgeId: string, at = 0.55): Pr
   return pt;
 }
 export function tabPeekPoint(box: { x: number; y: number; width: number; height: number }) {
-  return { x: box.x + box.width * 0.78, y: box.y + box.height / 2 };
+  return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
 }
 
 /** Drag the selected-tile + tab onto a Step / Data preview (36px pull, then drop). */

@@ -1142,3 +1142,14 @@ Corrections in the same chat before the next slice starts get their own short en
 - Known limitations / follow-ups: Merge redesign is later work. After `+` still creates After-only Steps; After does not add Data. Global `--chrome-line` remains out of scope. Untracked ELK planner dumps still not committed.
 - Status: COMPLETE
 - Commit: `feat(improve-09): center tabs Data root and After remove`
+
+## Improvement 09 — correction 1 — 2026-09-08
+
+- Requested: `+` and Path tabs on top of the tile (not under the border). Pull should come from under the face without a triangular twist or a hard left cut. The `+` ghost stays on top.
+- Changed: `TileChrome.tsx` (capsule taffy + Path string masked to exit under the tile); `tokens.css` (tabs `z-index` 5, overlap the right edge); `e2e/ready.ts` (`tabPeekPoint` is the tab center); GOAL CX-01 amendment; visual log copies
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2)
+  - `npm run test:unit` — pass (31 files, 170 tests)
+  - `npm run test:e2e` — pass (86 passed on rerun of the one flaky empty-release timing; full suite 85 passed + 1 timing flake under load, then 5/5 on the chrome specs)
+- Status: COMPLETE
+- Commit: `feat(improve-09): sit plus Path tabs on the tile`

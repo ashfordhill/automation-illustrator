@@ -57,3 +57,9 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 - Issue: `+` and Path tabs sit in the top-right instead of vertically centered on the right edge. Their icons should be slightly larger (X stays the same). The cyan select outline covers the X and the tabs. Pulled `+` taffy has a concave half-circle bite where it leaves the tile.
 - Resolution: Planned for Improvement 09 (center the tabs, larger `+`/Path glyphs, shadow selection instead of a ring, solid taffy join).
 - Attachments: [tabs and select](visual-improvements/2026-09-08-tile-tabs-select-x.png) · [taffy hole](visual-improvements/2026-09-08-plus-taffy-hole.png)
+
+## 2026-09-08 — tabs on top, pull from under
+
+- Issue: `+` and Path tabs still sit under the tile border. Pulling them out shows a triangular twist and a hard left edge against the tile.
+- Resolution: Shipped in `feat(improve-09): sit plus Path tabs on the tile` (tabs on the right edge like X; taffy/string exit from under the face; ghost stays on top).
+- Attachments: [tabs under tile](visual-improvements/2026-09-08-tabs-under-tile.png) · [pull twist](visual-improvements/2026-09-08-plus-path-pull-twist.gif)

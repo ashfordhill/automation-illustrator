@@ -46,6 +46,13 @@ test.describe("Improvement 09 — tile chrome, Data root, After removal", () => 
     const clusterMid = (clusterTop + clusterBottom) / 2;
     const tileMid = tileBox!.y + tileBox!.height / 2;
     expect(Math.abs(clusterMid - tileMid)).toBeLessThan(12);
+    expect(plusBox!.x).toBeLessThan(tileBox!.x + tileBox!.width);
+    expect(plusBox!.x + plusBox!.width).toBeGreaterThan(tileBox!.x + tileBox!.width);
+    const tabZ = await page.locator(".tile-side-tabs").evaluate((el) => Number(getComputedStyle(el).zIndex));
+    const faceZ = await page
+      .locator(".tile-chrome-host.is-selected .tile-pickup")
+      .evaluate((el) => Number(getComputedStyle(el).zIndex));
+    expect(tabZ).toBeGreaterThan(faceZ);
 
     const outline = await tile.evaluate((el) => {
       const s = getComputedStyle(el);
