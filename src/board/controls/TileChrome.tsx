@@ -28,8 +28,8 @@ const SPRING_MS = 200;
 const PREVIEW_RADIUS = 118;
 const PREVIEW_OUT = 28;
 const PREVIEW_SPREAD = 56;
-/** Matches tile / tab `--line` borders; long edges only so round caps stay under the join. */
-const TAFFY_STROKE = 3;
+/** Outside pad so ~3px of solid `--line` remains after antialiasing (matches tile/tab borders). */
+const TAFFY_BORDER = 5;
 
 type TileRect = { x: number; y: number; w: number; h: number; rx: number };
 
@@ -46,7 +46,7 @@ function previewCenters(restX: number, restY: number, count: number): { x: numbe
   return out;
 }
 
-type TaffyRibbon = { fill: string; top: string; bottom: string };
+type TaffyRibbon = { fill: string; outline: string };
 
 /** Capsule taffy from an origin under the tile face to the pointer (round caps, no tile-edge cut). */
 function taffyRibbon(x0: number, y0: number, x1: number, y1: number): TaffyRibbon {
@@ -62,20 +62,24 @@ function taffyRibbon(x0: number, y0: number, x1: number, y1: number): TaffyRibbo
   const bulge = Math.min(22, len * 0.18);
   const mx = (x0 + x1) / 2 + px * bulge;
   const my = (y0 + y1) / 2 + py * bulge;
-  const a0x = x0 + px * r0;
-  const a0y = y0 + py * r0;
-  const b0x = x0 - px * r0;
-  const b0y = y0 - py * r0;
-  const a1x = x1 + px * r1;
-  const a1y = y1 + py * r1;
-  const b1x = x1 - px * r1;
-  const b1y = y1 - py * r1;
-  const topC = `${mx + px * r0} ${my + py * r0}`;
-  const botC = `${mx - px * r0} ${my - py * r0}`;
+  const capsule = (pad: number) => {
+    const a = r0 + pad;
+    const b = r1 + pad;
+    const a0x = x0 + px * a;
+    const a0y = y0 + py * a;
+    const b0x = x0 - px * a;
+    const b0y = y0 - py * a;
+    const a1x = x1 + px * b;
+    const a1y = y1 + py * b;
+    const b1x = x1 - px * b;
+    const b1y = y1 - py * b;
+    const topC = `${mx + px * a} ${my + py * a}`;
+    const botC = `${mx - px * a} ${my - py * a}`;
+    return `M ${a0x} ${a0y} Q ${topC} ${a1x} ${a1y} A ${b} ${b} 0 0 1 ${b1x} ${b1y} Q ${botC} ${b0x} ${b0y} A ${a} ${a} 0 0 1 ${a0x} ${a0y} Z`;
+  };
   return {
-    fill: `M ${a0x} ${a0y} Q ${topC} ${a1x} ${a1y} A ${r1} ${r1} 0 0 1 ${b1x} ${b1y} Q ${botC} ${b0x} ${b0y} A ${r0} ${r0} 0 0 1 ${a0x} ${a0y} Z`,
-    top: `M ${a0x} ${a0y} Q ${topC} ${a1x} ${a1y}`,
-    bottom: `M ${b0x} ${b0y} Q ${botC} ${b1x} ${b1y}`,
+    fill: capsule(0),
+    outline: capsule(TAFFY_BORDER),
   };
 }
 
@@ -317,32 +321,20 @@ function PlusPullTab({ nodeId }: { nodeId: string }) {
               </svg>
             ) : null}
             {drag.live && ribbon ? (
-              <svg className="plus-taffy" width="100%" height="100%">
+              <svg className="plus-taffy" width="100%" height="100%" overflow="visible">
                 <defs>
                   <TileExitMask id={`plus-taffy-exit-${nodeId}`} tile={drag.tile} />
                 </defs>
                 <g mask={`url(#plus-taffy-exit-${nodeId})`}>
                   <path
+                    data-plus-taffy-stroke="true"
+                    d={ribbon.outline}
+                    fill="var(--line)"
+                  />
+                  <path
                     data-plus-taffy="true"
                     d={ribbon.fill}
                     fill="var(--plus)"
-                    fillOpacity={0.88}
-                  />
-                  <path
-                    data-plus-taffy-stroke="true"
-                    d={ribbon.top}
-                    fill="none"
-                    stroke="var(--line)"
-                    strokeWidth={TAFFY_STROKE}
-                    strokeLinecap="butt"
-                  />
-                  <path
-                    data-plus-taffy-stroke="true"
-                    d={ribbon.bottom}
-                    fill="none"
-                    stroke="var(--line)"
-                    strokeWidth={TAFFY_STROKE}
-                    strokeLinecap="butt"
                   />
                 </g>
               </svg>

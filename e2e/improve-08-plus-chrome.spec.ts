@@ -27,8 +27,8 @@ test.describe("Improvement 08 plus taffy, tucked tabs, Path stroke", () => {
     await expect(page.getByRole("button", { name: "New Step" })).toBeVisible();
     await expect(page.getByRole("button", { name: "New Data" })).toBeVisible();
     await expect(page.locator("[data-plus-taffy]")).toBeVisible();
-    await expect(page.locator("[data-plus-taffy-stroke]")).toHaveCount(2);
-    await expect(page.locator("[data-plus-taffy-stroke]").first()).toHaveAttribute("stroke", "var(--line)");
+    await expect(page.locator("[data-plus-taffy-stroke]")).toHaveCount(1);
+    await expect(page.locator("[data-plus-taffy-stroke]")).toHaveAttribute("fill", "var(--line)");
     await expect(page.locator("[data-plus-wedge]")).toHaveCount(0);
     await expect(page.locator("[data-plus-scrim]")).toBeVisible();
     const stepThumb = page.locator('[data-plus-preview="step"] .plus-preview-thumb');

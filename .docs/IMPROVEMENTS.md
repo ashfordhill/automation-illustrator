@@ -392,6 +392,8 @@ Full spec: [`.docs/improve-08-plus-chrome.plan.md`](improve-08-plus-chrome.plan.
 Commit: `feat(improve-08): restore plus taffy and fix Path stroke`.  
 Evidence: `.docs/evidence/improve-08-plus-chrome/`.
 
+Correction 2 (2026-09-08): pulled `+` taffy outline is a 3px `--line` band fully outside the green fill, matching tile borders.
+
 ### Kickoff prompt for the implementing agent
 
 ```text

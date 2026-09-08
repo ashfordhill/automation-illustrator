@@ -1401,3 +1401,16 @@ Corrections in the same chat before the next slice starts get their own short en
 - Known limitations / follow-ups: Concurrent WIP from other chats remains unstaged. At fitView zoom the CSS bump is modest on screen.
 - Status: COMPLETE
 - Commit: `feat(improve-15): enlarge tile plus and Path tabs`
+
+## Improvement 08 — correction 2 — 2026-09-08
+
+- Requested: The pulled `+` taffy outline was not visible. A 3px centered `--line` hairline disappears on the dim scrim next to ink-bordered tiles.
+- Changed: `TileChrome.tsx` draws a larger `--line` capsule behind an opaque green fill (5px pad so about 3px of solid navy remains after antialiasing), matching tile and tab borders. E2E asserts one `[data-plus-taffy-stroke]` with `fill="var(--line)"`. Visual log updated.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning)
+  - `npm run test:unit` — pass (31 files, 187 tests on the dirty tree)
+  - `npm run test:e2e` — 106 passed, 1 failed (`e2e/inspector.spec.ts` Path chip Enter focus — unrelated concurrent WIP). Improvement 08 plus-chrome passed (2 tests). Pixel sample of `plus-taffy-outline-1440.png` showed 10 consecutive `--line` pixels on the long edge.
+- Evidence: `.docs/evidence/improve-08-plus-chrome/plus-taffy-outline-1440.png` — `+` pulled onto Step; chunky `--line` outline on the taffy’s long edges (1440×900)
+- Status: COMPLETE
+- Commit: `feat(improve-08): make plus taffy outline chunky`
+
