@@ -603,3 +603,14 @@ Approved 2026-09-08. The plus-pull dim scrim punched a Step-shaped hole (`rx="14
 
 Commit: `feat(improve-29): match Data radius in plus-pull scrim`.  
 Evidence: `.docs/evidence/improve-29-data-scrim/`.
+
+---
+
+# Improvement 28 — Who select is ink, not yellow
+
+Approved 2026-09-08. Picture: [manage actors yellow](visual-improvements/2026-09-08-manage-actors-yellow-highlight.gif).
+
+Selected Who / Manage actors cards use a **cream fill and 4px ink border** (pressed: no chip shadow), not mustard yellow. The inspector chrome is dark in both themes; yellow wrapping a pastel figure is the clash. Type and fat buttons keep yellow. View switch and Right Click Delete stay yellow. No new dependency.
+
+Commit: `feat(improve-28): restyle selected Who without yellow`.  
+Evidence: `.docs/evidence/improve-28-who-select/`.

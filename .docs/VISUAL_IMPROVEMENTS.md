@@ -154,3 +154,9 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 - Issue: Pulling `+` from Data leaves paper gaps between the cream fill and the ink border (Step-shaped scrim hole on a rounder Data tile).
 - Resolution: Shipped in `feat(improve-29): match Data radius in plus-pull scrim` — overlay holes use the tile’s own screen-scaled radius.
 - Attachments: [data create gaps](visual-improvements/2026-09-08-data-create-gaps.gif)
+
+## 2026-09-08 — Manage actors yellow highlight
+
+- Issue: Selected actor cards in Manage actors (and Who) use a mustard fill and yellow name bar that clash with pastel figures on dark chrome.
+- Resolution: Selected Who is cream with a chunky ink border, not yellow. Yellow stays on the view switch and Type / fat buttons.
+- Attachments: [manage actors yellow highlight](visual-improvements/2026-09-08-manage-actors-yellow-highlight.gif)

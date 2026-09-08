@@ -1266,18 +1266,23 @@ body.is-tile-dragging * {
   line-height: 1.2;
   cursor: pointer;
   box-shadow: var(--chip-shadow);
+  box-sizing: border-box;
 }
 
 .inspector-type.is-on,
-.inspector-who.is-on,
 .inspector-fat.is-on {
   background: var(--yellow);
   color: var(--on-yellow);
 }
 
-:root[data-theme="dark"] .inspector-who.is-on {
+/* Who sits on always-dark chrome; mustard fill fights the pastel figure.
+   Selected = cream well + chunky ink frame (SH-01, P-09, CX-07). */
+.inspector-who.is-on {
   background: var(--cream);
   color: var(--ink);
+  border-width: 4px;
+  border-color: var(--ink);
+  box-shadow: none;
 }
 
 .inspector-header {

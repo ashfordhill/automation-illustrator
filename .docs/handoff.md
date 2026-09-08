@@ -1745,3 +1745,31 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(improve-29): match Data radius in plus-pull scrim`
 
+## Improvement 28 — Who select is ink, not yellow — 2026-09-08
+
+- Starting commit: `1d030e1986050ef90ec2579f8b0c229bf613e3f6` (`feat(improve-29): match Data radius in plus-pull scrim`)
+- Working tree at start: not clean. Improvement 29 landed first. Concurrent status-bar / hamburger Actors / tile-pie / Type-picker WIP remains unstaged and is not in this commit.
+- GOAL clauses addressed: P-01, P-09, SH-01, CX-07, NA-06. No amendment — Who selected fill is not in the contract. Improve-06 already used cream for dark-theme Who; the inspector chrome is dark in both themes, so cream + chunky ink is the chrome treatment.
+- Library research and decisions: no new runtime dependency. Yellow fill on a pastel actor figure against steel chrome is the clash. View switch / Type / fat / Right Click Delete keep yellow (text pills). Selected Who is cream, 4px `--ink` border, no chip-shadow (pressed). Distinguishable without color alone (CX-07). Keyboard `:focus-visible` stays the blue outline.
+- Files changed:
+  - `src/app/styles/tokens.css` (`.inspector-who.is-on` only)
+  - Tests: `src/app/inspector/whoSelect.test.tsx`, `e2e/improve-28-who-select.spec.ts`
+  - Docs: `.docs/IMPROVEMENTS.md` (28); `.docs/VISUAL_IMPROVEMENTS.md`; this handoff entry
+  - User GIF: `.docs/visual-improvements/2026-09-08-manage-actors-yellow-highlight.gif`
+  - Evidence: `.docs/evidence/improve-28-who-select/`
+- Behavior implemented:
+  - Selected Who / Manage actors cards no longer use mustard fill. They stay cream with a chunky ink frame.
+  - Type and fat selected buttons are unchanged (still yellow).
+- Tests and exact results:
+  - `npm run build` — `tsc --noEmit` blocked on concurrent untracked `src/board/tiles/pieGeometry.test.ts` (missing `./pieGeometry`). This commit’s files typecheck. `npx vite build` pass (Vite 8.2.2; existing chunk-size warning).
+  - `npm run test:unit` — this commit: `src/app/inspector/whoSelect.test.tsx` pass (1). Full suite excluding concurrent pieGeometry: 37 files, 214 tests pass.
+  - `npm run test:e2e` — `e2e/improve-28-who-select.spec.ts` pass (3). Full suite not re-run; port 4177 reserved (ran on 4199). Chromium via `LD_LIBRARY_PATH` `~/.local/pw-libs`.
+- Evidence:
+  - `.docs/evidence/improve-28-who-select/manage-actors-light-1440.png` — Manage actors Alice selected; cream card, ink frame, no yellow (1440×900)
+  - `.docs/evidence/improve-28-who-select/manage-actors-dark-1440.png` — same in dark (1440×900)
+  - `.docs/evidence/improve-28-who-select/who-selected-light-1440.png` — Step inspector Who Alice; cream + ink, Type Read still yellow (1440×900)
+  - `.docs/evidence/improve-28-who-select/manage-actors-1024.png` — Manage actors at 1024×768
+- Earlier-slice defects fixed: none. Improve-06 dark-theme cream Who was invisible against unselected cream; both themes now share the ink frame.
+- Known limitations / follow-ups: Concurrent hamburger-Actors / tile-pie WIP remains unstaged. Type / fat selected yellow is unchanged (text pills, same family as the view switch).
+- Status: COMPLETE
+- Commit: `feat(improve-28): restyle selected Who without yellow`
