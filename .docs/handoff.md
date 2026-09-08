@@ -1253,3 +1253,15 @@ Corrections in the same chat before the next slice starts get their own short en
   - `npm run test:e2e` — pass (91 passed, Chromium, 3 workers, 52.8s)
 - Status: COMPLETE
 - Commit: `feat(improve-10): pick up unselected tiles on drag`
+
+## Improvement 11 — correction 1 — 2026-09-08
+
+- Requested: When a Path is selected, the bottom advice hints should include Right-click along with the other hotkeys.
+- Changed: `CanvasHelper.tsx` — selected-Path strip always lists Right-click Delete with Dotted/Solid and Edit label; Delete Remove Path still appears only when the Path may be removed. Unit + e2e coverage; GOAL P-06/WG-05 amendment; evidence `path-hints-1440.png`.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning)
+  - `npm run test:unit` — pass (31 files, 178 tests)
+  - `npm run test:e2e` — pass (92 passed, Chromium, 3 workers, 56.9s)
+- Evidence: `.docs/evidence/improve-11-path-delete/path-hints-1440.png` — selected Path; hint strip shows Right-click Delete with the other Path hotkeys (1440×900)
+- Status: COMPLETE
+- Commit: `feat(improve-11): show Right-click Delete in Path hints`

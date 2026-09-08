@@ -63,6 +63,7 @@ function hintsFor(): Hint[] {
     const items: Hint[] = [
       { key: pk(KeyAction.ToggleDash), label: "Dotted / Solid" },
       { key: pk(KeyAction.Confirm), label: "Edit label" },
+      { key: "Right-click", label: "Delete" },
     ];
     if (canRemovePath(s.workflow, s.selected.id)) {
       items.push({ key: pk(KeyAction.Delete), label: "Remove Path" });

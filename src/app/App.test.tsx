@@ -111,6 +111,25 @@ test("inspector Type buttons are alphabetical with Other last; Who offers every 
   expect(useStore.getState().workflow.assignments[OAK_PARK_IDS.read]).toBe(OAK_PARK_IDS.robot);
 });
 
+test("selected Path hints include Right-click Delete with the other hotkeys", () => {
+  act(() => {
+    useStore.getState().select({ type: SelectionKind.Edge, id: OAK_PARK_IDS.webAcct });
+  });
+  const helper = host.querySelector(".canvas-helper")?.textContent ?? "";
+  expect(helper).toMatch(/Dotted \/ Solid/);
+  expect(helper).toMatch(/Edit label/);
+  expect(helper).toMatch(/Right-click/);
+  expect(helper).toMatch(/Delete/);
+  expect(helper).toMatch(/Remove Path/);
+  act(() => {
+    useStore.getState().select({ type: SelectionKind.Edge, id: OAK_PARK_IDS.gt });
+  });
+  const bridge = host.querySelector(".canvas-helper")?.textContent ?? "";
+  expect(bridge).toMatch(/Right-click/);
+  expect(bridge).toMatch(/Delete/);
+  expect(bridge).not.toMatch(/Remove Path/);
+});
+
 test("Path inspector has label plus Dotted / Solid (NA-07)", () => {
   act(() => {
     useStore.getState().select({ type: SelectionKind.Edge, id: OAK_PARK_IDS.gt });

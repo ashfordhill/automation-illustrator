@@ -439,3 +439,5 @@ Full spec: [`.docs/improve-11-path-delete.plan.md`](improve-11-path-delete.plan.
 
 Commit: `feat(improve-11): delete redundant Paths from the context menu`.  
 Evidence: `.docs/evidence/improve-11-path-delete/`.
+
+Correction 1 (2026-09-08): selected-Path hint strip includes Right-click Delete with the other hotkeys.
