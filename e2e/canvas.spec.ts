@@ -46,7 +46,10 @@ test.describe("slice 6 canvas create / connect / remove", () => {
 
     await expect(page.getByRole("button", { name: "Add Step or Data" })).toHaveCount(0);
     await page.getByText(DEMO_STEP).first().hover();
-    await expect(page.getByRole("button", { name: "Add Step or Data" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Add Step or Data" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Pull a Path to an existing Node" })).toBeVisible();
+    await expect(page.getByRole("button", { name: `Remove ${DEMO_STEP}` })).toBeVisible();
+    await expect(page.locator(".tile-chrome-host.is-selected")).toHaveCount(0);
     await page.getByText(DEMO_STEP).first().click();
     await expect(page.getByRole("button", { name: "Add Step or Data" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Pull a Path to an existing Node" })).toBeVisible();
@@ -68,6 +71,7 @@ test.describe("slice 6 canvas create / connect / remove", () => {
     await expect(page.getByRole("button", { name: "New Data" })).toBeVisible();
     await expect(page.locator('[data-plus-preview="data"] ellipse')).toBeVisible();
     await expect(page.locator("[data-plus-taffy]")).toBeVisible();
+    await expect(page.locator("[data-plus-taffy-stroke]")).toHaveCount(2);
     await expect(page.locator("[data-plus-wedge]")).toHaveCount(0);
     await capturePage(page, `${EVIDENCE}/plus-menu-1440.png`);
     await capturePage(page, ".docs/evidence/improve-02-merge-drag/plus-pull-previews-1440.png");

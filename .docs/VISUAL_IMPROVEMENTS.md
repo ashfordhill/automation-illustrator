@@ -93,3 +93,9 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 - Issue: Redundant Paths (either circled Path into Jack) cannot be removed. Path strokes are hard to click.
 - Resolution: Shipped in `feat(improve-11): delete redundant Paths from the context menu`.
 - Attachments: [path delete hit](visual-improvements/2026-09-08-path-delete-hit.png)
+
+## 2026-09-08 — tile hover chrome
+
+- Issue: X, `+`, and Path only appear after a Tile is selected, so a hover is not enough to act on it.
+- Resolution: Shipped in `feat(improve-12): show tile chrome on hover`.
+- Attachments: [tile hover chrome](visual-improvements/2026-09-08-tile-hover-chrome.gif)

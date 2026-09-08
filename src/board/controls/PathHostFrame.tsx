@@ -1,5 +1,5 @@
 /**
- * Wrapper around a React Flow node: selected-tile + / Path-pull / X chrome (CX-01).
+ * Wrapper around a React Flow node: hover/selected-tile + / Path-pull / X chrome (CX-01).
  * Click selects, completes a Path pull, or finishes Connect existing.
  */
 import { type ReactNode } from "react";

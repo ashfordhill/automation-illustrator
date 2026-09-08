@@ -790,6 +790,11 @@ body.is-tile-dragging * {
   z-index: 6;
 }
 
+.tile-chrome-host:not(.is-selected):not(:hover):not(.is-pulling) .tile-chrome-actions {
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .step-piece,
 .field-piece {
   box-shadow: 0 5px 0 var(--btn-shadow);

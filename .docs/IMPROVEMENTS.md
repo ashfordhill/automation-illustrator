@@ -441,3 +441,16 @@ Commit: `feat(improve-11): delete redundant Paths from the context menu`.
 Evidence: `.docs/evidence/improve-11-path-delete/`.
 
 Correction 1 (2026-09-08): selected-Path hint strip includes Right-click Delete with the other hotkeys.
+
+---
+
+# Improvement 12 — tile chrome on hover (COMPLETE)
+
+Approved 2026-09-08. Start only after Improvement 11 correction 1 is COMPLETE.
+
+GIF: [tile hover chrome](visual-improvements/2026-09-08-tile-hover-chrome.gif).
+
+Commit: `feat(improve-12): show tile chrome on hover`.  
+Evidence: `.docs/evidence/improve-12-hover-chrome/`.
+
+X, `+`, and Path appear while an editable tile is **hovered or selected** (or that tile’s `+` / Path pull is in progress). Hover does not select; the inspector stays on the current selection. Present and Both still hide chrome. Pull and X still work from an unselected hover. No new dependency.

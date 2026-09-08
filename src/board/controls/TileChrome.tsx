@@ -1,5 +1,5 @@
 /**
- * Selected-tile chrome: stretchy + tab (Step / Data), Path-pull tracks, and X.
+ * Hover/selected-tile chrome: stretchy + tab (Step / Data), Path-pull tracks, and X (CX-01).
  * Pointer capture stays on the tabs so tile pickup and pan do not steal the gesture.
  */
 import {
@@ -150,16 +150,13 @@ export function TileChrome({
   const interaction = useStore((s) => s.interaction);
   const workflow = useStore((s) => s.workflow);
   const editing = !present && view !== ViewMode.Both && !departing;
-  const showChrome =
-    editing &&
-    selected &&
-    interaction.kind !== "remove-preview";
-  const caption = nodeCaption(findNode(workflow, id), id);
   const tabPulling =
     (interaction.kind === "plus-pull" && interaction.sourceId === id) ||
     (interaction.kind === "path-pull" && interaction.sourceId === id);
   const pulling =
     tabPulling || (interaction.kind === "tile-drag" && interaction.nodeId === id);
+  const showChrome = editing && interaction.kind !== "remove-preview";
+  const caption = nodeCaption(findNode(workflow, id), id);
 
   return (
     <div
@@ -171,7 +168,7 @@ export function TileChrome({
       </TilePickup>
       {interaction.kind === "tile-drag" && interaction.nodeId === id ? <InsertSilhouette nodeId={id} /> : null}
       {showChrome ? (
-        <>
+        <div className="tile-chrome-actions">
           <div className="tile-side-tabs">
             <PlusPullTab nodeId={id} />
             <PathPullTab nodeId={id} />
@@ -189,7 +186,7 @@ export function TileChrome({
           >
             <IconX size={20} stroke={2.6} aria-hidden />
           </button>
-        </>
+        </div>
       ) : null}
     </div>
   );

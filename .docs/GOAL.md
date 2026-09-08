@@ -194,3 +194,4 @@ Append only, newest last. Format: `- YYYY-MM-DD — <clause IDs> — <decision a
 - 2026-09-08 — NA-03, BA-02 — Who stays lane-specific except: changing a Before-origin Step from one Human to another also sets After Who to that Human when After’s current Who is not a Robot. A Robot on After is left alone. Assigning a Robot on Before does not copy to After. — approved by user
 - 2026-09-08 — P-08, CX-07 — Hovering any editable Step or Data shows the four-way move cursor. Click-dragging a tile picks it up even if it was not selected; a plain click still selects. — approved by user
 - 2026-09-08 — P-06, WG-05 — While a Path is selected, the contextual hint strip lists Right-click Delete with the other Path hotkeys. — approved by user
+- 2026-09-08 — CX-01 — Tile-local X, `+`, and Path controls appear while that tile is hovered or selected (or its `+` / Path pull is in progress). Hover does not select. Present and Both still hide them. — approved by user

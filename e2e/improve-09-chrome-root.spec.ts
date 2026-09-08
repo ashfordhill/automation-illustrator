@@ -49,7 +49,9 @@ test.describe("Improvement 09 — tile chrome, Data root, After removal", () => 
     expect(Math.abs(clusterMid - tileMid)).toBeLessThan(12);
     expect(plusBox!.x).toBeLessThan(tileBox!.x + tileBox!.width);
     expect(plusBox!.x + plusBox!.width).toBeGreaterThan(tileBox!.x + tileBox!.width);
-    const tabZ = await page.locator(".tile-side-tabs").evaluate((el) => Number(getComputedStyle(el).zIndex));
+    const tabZ = await page
+      .locator(".tile-chrome-host.is-selected .tile-side-tabs")
+      .evaluate((el) => Number(getComputedStyle(el).zIndex));
     const faceZ = await page
       .locator(".tile-chrome-host.is-selected .tile-pickup")
       .evaluate((el) => Number(getComputedStyle(el).zIndex));
@@ -70,6 +72,7 @@ test.describe("Improvement 09 — tile chrome, Data root, After removal", () => 
     await page.mouse.down();
     await page.mouse.move(grab.x + 140, grab.y, { steps: 12 });
     await expect(page.locator("[data-plus-taffy]")).toBeVisible();
+    await expect(page.locator("[data-plus-taffy-stroke]")).toHaveCount(2);
     await capturePage(page, `${EVIDENCE}/plus-taffy-solid-1440.png`);
     await page.mouse.up();
     await expect(page.locator("[data-plus-taffy]")).toHaveCount(0);

@@ -1265,3 +1265,28 @@ Corrections in the same chat before the next slice starts get their own short en
 - Evidence: `.docs/evidence/improve-11-path-delete/path-hints-1440.png` — selected Path; hint strip shows Right-click Delete with the other Path hotkeys (1440×900)
 - Status: COMPLETE
 - Commit: `feat(improve-11): show Right-click Delete in Path hints`
+
+## Improvement 12 — tile chrome on hover — 2026-09-08
+
+- Starting commit: `9117253abe91969ac7194bd02d39a6bac0135049` (`feat(improve-11): show Right-click Delete in Path hints`)
+- Working tree at start: not clean. Concurrent Who-inherit / taffy-outline work, evidence recaptures, and untracked ELK planner dumps were left unstaged and are not in this commit.
+- GOAL clauses addressed: CX-01 (amendment dated 2026-09-08). Present / Both still hide chrome (P-07, BA-05).
+- Library research and decisions: no new runtime dependency. Chrome stays mounted on every editable tile and is shown with CSS `:hover` / `.is-selected` so X / `+` / Path can be used without a prior click. Hover does not call `select`. Pull and remove still select as they start.
+- Files changed:
+  - Contract/docs: `.docs/GOAL.md` (CX-01 amendment); `.docs/IMPROVEMENTS.md` (12); `.docs/VISUAL_IMPROVEMENTS.md` plus the user GIF; this handoff entry
+  - Chrome: `TileChrome.tsx` (actions wrapper; show whenever the lane is editable); `tokens.css` (hide unless hovered, selected, or pulling); `PathHostFrame.tsx` comment
+  - Tests: `e2e/improve-12-hover-chrome.spec.ts`; `e2e/canvas.spec.ts` hover now expects chrome; `e2e/improve-09-chrome-root.spec.ts` scopes tab z-index to the selected host
+  - Evidence: `.docs/evidence/improve-12-hover-chrome/`
+- Behavior implemented:
+  - Hovering an editable Step or Data shows X, `+`, and Path without selecting the tile or changing the inspector.
+  - Selected-tile chrome still stays when the pointer leaves. Present and Both still hide it. Pulling `+` from an unselected hover still creates a Step.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning)
+  - `npm run test:unit` — pass (31 files, 178 tests)
+  - `npm run test:e2e` — pass (98 passed, Chromium, 3 workers, 1.3m)
+- Evidence:
+  - `.docs/evidence/improve-12-hover-chrome/hover-unselected-1440.png` — Review hovered, not selected; X / `+` / Path visible; inspector idle (1440×900)
+- Earlier-slice defects fixed: none
+- Known limitations / follow-ups: Concurrent Who-inherit and taffy-outline work remains unstaged. Untracked ELK planner dumps still not committed.
+- Status: COMPLETE
+- Commit: `feat(improve-12): show tile chrome on hover`
