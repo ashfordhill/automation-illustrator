@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { waitForLayout, laneZoom, waitForZoomIdle, capturePage } from "./ready";
+import { waitForLayout, laneZoom, waitForZoomIdle, capturePage, tabPeekPoint } from "./ready";
 
 const DEMO_STEP = "Read invoice.pdf";
 const EVIDENCE = ".docs/evidence/06-canvas";
@@ -60,16 +60,17 @@ test.describe("slice 6 canvas create / connect / remove", () => {
     const plus = page.getByRole("button", { name: "Add Step or Data" });
     const box = await plus.boundingBox();
     expect(box).toBeTruthy();
-    await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
+    const grab = tabPeekPoint(box!);
+    await page.mouse.move(grab.x, grab.y);
     await page.mouse.down();
-    await page.mouse.move(box!.x + box!.width / 2 + 140, box!.y + box!.height / 2, { steps: 12 });
+    await page.mouse.move(grab.x + 140, grab.y, { steps: 12 });
     await expect(page.getByRole("button", { name: "New Step" })).toBeVisible();
     await expect(page.getByRole("button", { name: "New Data" })).toBeVisible();
     await expect(page.locator('[data-plus-preview="data"] ellipse')).toBeVisible();
-    await expect(page.locator("[data-plus-wedge]")).toBeVisible();
+    await expect(page.locator("[data-plus-taffy]")).toBeVisible();
+    await expect(page.locator("[data-plus-wedge]")).toHaveCount(0);
     await capturePage(page, `${EVIDENCE}/plus-menu-1440.png`);
     await capturePage(page, ".docs/evidence/improve-02-merge-drag/plus-pull-previews-1440.png");
-    await capturePage(page, ".docs/evidence/improve-03-polish/plus-wedge-1440.png");
     await page.mouse.up();
     await page.keyboard.press("Escape");
 
@@ -77,9 +78,10 @@ test.describe("slice 6 canvas create / connect / remove", () => {
     const knot = page.getByRole("button", { name: "Pull a Path to an existing Node" });
     const knotBox = await knot.boundingBox();
     expect(knotBox).toBeTruthy();
-    await page.mouse.move(knotBox!.x + knotBox!.width / 2, knotBox!.y + knotBox!.height / 2);
+    const knotGrab = tabPeekPoint(knotBox!);
+    await page.mouse.move(knotGrab.x, knotGrab.y);
     await page.mouse.down();
-    await page.mouse.move(knotBox!.x + knotBox!.width / 2 + 90, knotBox!.y + knotBox!.height / 2 + 20, {
+    await page.mouse.move(knotGrab.x + 90, knotGrab.y + 20, {
       steps: 10,
     });
     await capturePage(page, ".docs/evidence/improve-02-merge-drag/path-knot-pull-1440.png");
@@ -98,9 +100,10 @@ test.describe("slice 6 canvas create / connect / remove", () => {
     const afterPlus = page.getByRole("button", { name: "Add After-only Step" });
     const afterBox = await afterPlus.boundingBox();
     expect(afterBox).toBeTruthy();
-    await page.mouse.move(afterBox!.x + afterBox!.width / 2, afterBox!.y + afterBox!.height / 2);
+    const afterGrab = tabPeekPoint(afterBox!);
+    await page.mouse.move(afterGrab.x, afterGrab.y);
     await page.mouse.down();
-    await page.mouse.move(afterBox!.x + afterBox!.width / 2 + 140, afterBox!.y + afterBox!.height / 2, {
+    await page.mouse.move(afterGrab.x + 140, afterGrab.y, {
       steps: 12,
     });
     await expect(page.getByRole("button", { name: "After-only Step" })).toBeVisible();
@@ -213,7 +216,8 @@ test.describe("slice 6 canvas create / connect / remove", () => {
     const pathTab = page.getByRole("button", { name: "Pull a Path to an existing Node" });
     const tabBox = await pathTab.boundingBox();
     expect(tabBox).toBeTruthy();
-    await page.mouse.move(tabBox!.x + tabBox!.width / 2, tabBox!.y + tabBox!.height / 2);
+    const pathGrab = tabPeekPoint(tabBox!);
+    await page.mouse.move(pathGrab.x, pathGrab.y);
     await page.mouse.down();
     await page.mouse.move(40, 40, { steps: 10 });
     await page.mouse.up();

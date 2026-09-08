@@ -36,6 +36,7 @@ export type FlowPathData = {
   restitch?: boolean;
   condition?: string;
   dashed?: boolean;
+  dotted?: boolean;
   stretch?: boolean;
   viaX?: number;
   viaY?: number;
@@ -211,7 +212,12 @@ export function FlowArrow({
   })();
 
   const lines = label ? wrapConditionLines(label) : [];
-  const className = restitch ? "edge-restitch" : stretch && stretched ? "edge-stretch" : undefined;
+  const motionClass = restitch ? "edge-restitch" : stretch && stretched ? "edge-stretch" : undefined;
+  const hitOnly = showDots || hideFullStroke;
+  const strokeClass = showDots ? "path-stroke-dotted" : "path-stroke-solid";
+  const edgePathClass = [hitOnly ? undefined : motionClass, strokeClass, hitOnly ? "path-hit-only" : undefined]
+    .filter(Boolean)
+    .join(" ");
 
   const stroke = restitch ? "var(--blue-deep)" : "var(--line)";
   const strokeWidth = selected || restitch || insertHover ? 4 : 2.75;
@@ -242,7 +248,7 @@ export function FlowArrow({
       <BaseEdge
         id={id}
         path={path}
-        className={showDots || hideFullStroke ? undefined : className}
+        className={edgePathClass}
         interactionWidth={28}
         style={{
           stroke: showDots || hideFullStroke ? "transparent" : stroke,
@@ -283,6 +289,7 @@ export function FlowArrow({
         ? segments.map((seg, i) => (
             <path
               key={`${i}-${seg.x1}-${seg.y1}-${seg.x2}-${seg.y2}`}
+              data-path-overlay={id}
               d={`M ${seg.x1} ${seg.y1} L ${seg.x2} ${seg.y2}`}
               fill="none"
               pointerEvents="none"
@@ -302,6 +309,7 @@ export function FlowArrow({
             <path
               key={`stub-${i}-${seg.x1}-${seg.y1}-${seg.x2}-${seg.y2}`}
               className="path-insert-stub"
+              data-path-overlay={id}
               d={`M ${seg.x1} ${seg.y1} L ${seg.x2} ${seg.y2}`}
               fill="none"
               pointerEvents="none"

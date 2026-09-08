@@ -332,6 +332,9 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
   const laneEdges = projection.edges.map((e) => {
     const stretching = stretchIds.has(e.id);
     const isSelected = selected?.type === SelectionKind.Edge && selected.id === e.originId;
+    const dotted = pathIsDotted(workflow, e.originId);
+    const insertHover =
+      interaction.kind === "tile-drag" && interaction.hoverEdgeId === e.originId;
     const rfEdge: Edge<FlowPathData> = {
       id: e.id,
       source: e.source,
@@ -339,13 +342,15 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
       type: ReactFlowEdgeKind.Flow,
       selectable: editing && interaction.kind !== "remove-preview" && interaction.kind !== "tile-drag",
       selected: isSelected,
-      className:
-        interaction.kind === "tile-drag" && interaction.hoverEdgeId === e.originId
-          ? "path-insert-hover"
-          : undefined,
-      data: stretching && via ? { stretch: true, viaX: via.x, viaY: via.y, originId: e.originId } : { originId: e.originId },
+      className: [insertHover ? "path-insert-hover" : undefined, dotted ? "is-path-dotted" : "is-path-solid"]
+        .filter(Boolean)
+        .join(" "),
+      data:
+        stretching && via
+          ? { stretch: true, viaX: via.x, viaY: via.y, originId: e.originId, dotted }
+          : { originId: e.originId, dotted },
     };
-    return { rfEdge, isSelected, dotted: pathIsDotted(workflow, e.originId) };
+    return { rfEdge, isSelected, dotted };
   });
   laneEdges.sort((a, b) => {
     const ra = a.isSelected ? 2 : a.dotted ? 0 : 1;

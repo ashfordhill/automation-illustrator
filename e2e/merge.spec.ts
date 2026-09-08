@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { loadOakPark, screenshotBoard, waitForLayout } from "./ready";
+import { loadOakPark, screenshotBoard, waitForLayout, tabPeekPoint } from "./ready";
 
 const EVIDENCE = ".docs/evidence/11-merge";
 
@@ -16,9 +16,10 @@ test.describe("After-only Steps (merge withdrawn)", () => {
     const afterPlus = page.getByRole("button", { name: "Add After-only Step" });
     const box = await afterPlus.boundingBox();
     expect(box).toBeTruthy();
-    await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
+    const grab = tabPeekPoint(box!);
+    await page.mouse.move(grab.x, grab.y);
     await page.mouse.down();
-    await page.mouse.move(box!.x + box!.width / 2 + 140, box!.y + box!.height / 2, { steps: 12 });
+    await page.mouse.move(grab.x + 140, grab.y, { steps: 12 });
     await expect(page.getByRole("button", { name: "After-only Step" })).toBeVisible();
     await expect(page.getByRole("button", { name: "New Data" })).toHaveCount(0);
     await screenshotBoard(page, `${EVIDENCE}/after-plus-1440.png`);

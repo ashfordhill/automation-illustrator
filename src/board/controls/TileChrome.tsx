@@ -1,5 +1,5 @@
 /**
- * Selected-tile chrome: stretchy + tab (Step / Data), Path-pull knot, and X.
+ * Selected-tile chrome: stretchy + tab (Step / Data), Path-pull spindle, and X.
  * Pointer capture stays on the tabs so tile pickup and pan do not steal the gesture.
  */
 import {
@@ -20,16 +20,14 @@ import { useLaneLayoutContext } from "../routing/LaneLayoutContext";
 import { hitPathId } from "../layout/pathHit";
 import { insertPreviewGeom } from "../layout/insertPreview";
 import { nodeSize } from "../layout/tileMetrics";
-import { PathKnotIcon } from "./PathKnotIcon";
+import { PathSpindleIcon } from "./PathKnotIcon";
 import { DataChip } from "../tiles/DataChip";
 
 const PULL_THRESHOLD = 36;
-const SPRING_MS = 520;
+const SPRING_MS = 200;
 const PREVIEW_RADIUS = 118;
 const PREVIEW_OUT = 28;
 const PREVIEW_SPREAD = 56;
-const PREVIEW_W = 92;
-const PREVIEW_H = 88;
 
 type TileRect = { x: number; y: number; w: number; h: number };
 
@@ -46,23 +44,29 @@ function previewCenters(restX: number, restY: number, count: number): { x: numbe
   return out;
 }
 
-function clusterBox(centers: { x: number; y: number }[]): TileRect {
-  const left = Math.min(...centers.map((c) => c.x)) - PREVIEW_W / 2;
-  const right = Math.max(...centers.map((c) => c.x)) + PREVIEW_W / 2;
-  const top = Math.min(...centers.map((c) => c.y)) - PREVIEW_H / 2;
-  const bottom = Math.max(...centers.map((c) => c.y)) + PREVIEW_H / 2;
-  return { x: left, y: top, w: right - left, h: bottom - top };
-}
-
-/** Trapezoid from the source tile's right edge to the preview cluster (WG-07). */
-function wedgePath(tile: TileRect, cluster: TileRect): string {
-  const x0 = tile.x + tile.w;
-  const y0a = tile.y;
-  const y0b = tile.y + tile.h;
-  const x1 = cluster.x;
-  const y1a = cluster.y;
-  const y1b = cluster.y + cluster.h;
-  return `M ${x0} ${y0a} L ${x1} ${y1a} L ${x1} ${y1b} L ${x0} ${y0b} Z`;
+/** Green organic ribbon from the rest `+` to the pointer (Improvement 02 taffy). */
+function taffyPath(x0: number, y0: number, x1: number, y1: number): string {
+  const dx = x1 - x0;
+  const dy = y1 - y0;
+  const len = Math.max(1, Math.hypot(dx, dy));
+  const ux = dx / len;
+  const uy = dy / len;
+  const px = -uy;
+  const py = ux;
+  const r0 = 16;
+  const r1 = Math.max(10, 18 - len * 0.04);
+  const bulge = Math.min(22, len * 0.18);
+  const mx = (x0 + x1) / 2 + px * bulge;
+  const my = (y0 + y1) / 2 + py * bulge;
+  const a0x = x0 + px * r0;
+  const a0y = y0 + py * r0;
+  const b0x = x0 - px * r0;
+  const b0y = y0 - py * r0;
+  const a1x = x1 + px * r1;
+  const a1y = y1 + py * r1;
+  const b1x = x1 - px * r1;
+  const b1y = y1 - py * r1;
+  return `M ${a0x} ${a0y} Q ${mx + px * r0} ${my + py * r0} ${a1x} ${a1y} A ${r1} ${r1} 0 0 1 ${b1x} ${b1y} Q ${mx - px * r0} ${my - py * r0} ${b0x} ${b0y} A ${r0} ${r0} 0 0 1 ${a0x} ${a0y} Z`;
 }
 
 function nodeScreenRect(nodeId: string): TileRect | null {
@@ -186,25 +190,20 @@ function PlusPullTab({ nodeId }: { nodeId: string }) {
   const stretched = drag
     ? Math.hypot(drag.x - drag.restX, drag.y - drag.restY) >= PULL_THRESHOLD
     : false;
-  const showFan = stretched || Boolean(drag?.live && reducedMotion());
+  const showFan = Boolean(drag?.live && (stretched || reducedMotion()));
 
   useEffect(() => {
     if (interaction.kind === "path-pull" || interaction.kind === "tile-drag") setDrag(null);
   }, [interaction.kind]);
 
-  const finish = (next: typeof drag, spawn: "step" | "data" | null) => {
+  const finish = (spawn: "step" | "data" | null) => {
     if (spawn === "step") {
       useStore.getState().spawnBranch(nodeId, WorkflowNodeKind.Step);
     } else if (spawn === "data") {
       useStore.getState().spawnBranch(nodeId, WorkflowNodeKind.DataField);
     }
     useStore.getState().closeBoardModes();
-    if (!spawn && next && !reducedMotion()) {
-      setDrag({ ...next, live: false, hovering: null });
-      window.setTimeout(() => setDrag(null), SPRING_MS);
-    } else {
-      setDrag(null);
-    }
+    setDrag(null);
   };
 
   const onPointerDown = (e: ReactPointerEvent<HTMLButtonElement>) => {
@@ -251,13 +250,12 @@ function PlusPullTab({ nodeId }: { nodeId: string }) {
     }
     const dist = Math.hypot(e.clientX - drag.restX, e.clientY - drag.restY);
     const spawn = dist >= PULL_THRESHOLD ? drag.hovering : null;
-    finish({ ...drag, x: e.clientX, y: e.clientY, live: false }, spawn);
+    finish(spawn);
   };
 
   const tabX = drag?.live ? drag.x : drag ? drag.restX : 0;
   const tabY = drag?.live ? drag.y : drag ? drag.restY : 0;
   const centers = drag ? previewCenters(drag.restX, drag.restY, items.length) : [];
-  const cluster = centers.length ? clusterBox(centers) : null;
   const overlay =
     drag && typeof document !== "undefined"
       ? createPortal(
@@ -284,9 +282,18 @@ function PlusPullTab({ nodeId }: { nodeId: string }) {
                   mask={`url(#plus-pull-hole-${nodeId})`}
                   data-plus-scrim="true"
                 />
-                {cluster ? (
-                  <path className="plus-wedge" data-plus-wedge="true" d={wedgePath(drag.tile, cluster)} />
-                ) : null}
+              </svg>
+            ) : null}
+            {drag.live ? (
+              <svg className="plus-taffy" width="100%" height="100%">
+                <path
+                  data-plus-taffy="true"
+                  d={taffyPath(drag.restX, drag.restY, tabX, tabY)}
+                  fill="var(--plus)"
+                  fillOpacity={0.88}
+                  stroke="var(--line)"
+                  strokeWidth={2}
+                />
               </svg>
             ) : null}
             {showFan
@@ -419,7 +426,7 @@ function PathPullTab({ nodeId }: { nodeId: string }) {
             </svg>
             {drag.live ? (
               <div className="path-tab-ghost" style={{ left: endX, top: endY }}>
-                <PathKnotIcon size={20} />
+                <PathSpindleIcon size={20} />
               </div>
             ) : null}
           </div>,
@@ -441,7 +448,7 @@ function PathPullTab({ nodeId }: { nodeId: string }) {
         onPointerCancel={onPointerUp}
         onClick={(e) => e.stopPropagation()}
       >
-        <PathKnotIcon size={20} />
+        <PathSpindleIcon size={20} />
       </button>
       {overlay}
     </>

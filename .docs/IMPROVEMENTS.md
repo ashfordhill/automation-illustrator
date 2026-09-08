@@ -383,7 +383,7 @@ When done: run `npm run build`, `npm run test:unit`, `npm run test:e2e`; save sc
 
 ---
 
-# Improvement 08 — restore + taffy, tuck tabs, fix Path stroke
+# Improvement 08 — restore + taffy, tuck tabs, fix Path stroke (COMPLETE)
 
 Approved 2026-09-07. Start only after Improvement 07 is COMPLETE. **Do not mix into Improvement 07.**
 

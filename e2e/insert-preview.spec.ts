@@ -1,22 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
-import { loadOakPark, screenshotBoard, waitForLayout, capturePage } from "./ready";
+import { loadOakPark, screenshotBoard, waitForLayout, capturePage, pathScreenPoint } from "./ready";
 
 const EVIDENCE = ".docs/evidence/improve-04-insert-preview";
 const REVIEW = "Review BS&A Software";
-
-/** Screen point on an ELK Path stroke (bbox center can miss a fan-out polyline). */
-async function pathScreenPoint(page: Page, edgeId: string, at = 0.55): Promise<{ x: number; y: number }> {
-  const pt = await page.locator(`path#${edgeId}`).evaluate((el, t) => {
-    const path = el as SVGPathElement;
-    const len = path.getTotalLength();
-    const p = path.getPointAtLength(len * Number(t));
-    const ctm = path.getScreenCTM();
-    if (!ctm) return null;
-    return { x: ctm.a * p.x + ctm.c * p.y + ctm.e, y: ctm.b * p.x + ctm.d * p.y + ctm.f };
-  }, at);
-  if (!pt) throw new Error(`no screen point for ${edgeId}`);
-  return pt;
-}
 
 async function dragReviewToward(page: Page, x: number, y: number) {
   const tile = page.locator('.react-flow__node[data-id="s_review"] .tile-pickup');

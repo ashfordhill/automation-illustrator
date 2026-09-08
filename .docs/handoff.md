@@ -1076,3 +1076,38 @@ Corrections in the same chat before the next slice starts get their own short en
 - Known limitations / follow-ups: Merge redesign is later work, not Improvement 08. Improvement 08 is plus taffy, tucked tabs, and Path stroke. Tile `--select-ring` and global `--chrome-line` remain out of scope. `after.groups` still parses on disk.
 - Status: COMPLETE
 - Commit: `feat(improve-07): remove merge groups from the product`
+
+## Improvement 08 — restore + taffy, tuck tabs, fix Path stroke — 2026-09-08
+
+- Starting commit: `10af73ccee7aa13d6d1c7dbb5db374e5b8604175` (`feat(improve-07): remove merge groups from the product`)
+- Working tree at start: not fully clean. Untracked ELK planner dumps (`.docs/elk_layout_and_routing_*.plan.md`) left uncommitted, as prior agents did. Product tree matched Improvement 07 HEAD.
+- GOAL clauses addressed: WG-07, CX-01, AQ-01 (amendments dated 2026-09-07); stroke toggle already under P-08 / NA-07 / PC-02 / PC-03 — this slice fixes the drawn stroke, no extra amendment
+- Library research and decisions: no new runtime dependency. Restored `taffyPath` from improve-02 (`8315e52`). Path glyph is original SVG (spindle + string), not Tabler. Did not reopen merge, ELK, or insert-on-Path.
+- Files changed:
+  - Contract/docs: `.docs/GOAL.md` amendments; `.docs/IMPROVEMENTS.md` (08 COMPLETE); this handoff entry
+  - Chrome: `src/board/controls/TileChrome.tsx` (taffy, drop wedge, `showFan` requires `drag.live`, empty release clears immediately); `src/board/controls/PathKnotIcon.tsx` (`PathSpindleIcon`); `src/app/styles/tokens.css` (tabs behind `.tile-pickup`, X hover color-only, Data thumb 72×44, Path hit stroke transparent)
+  - Stroke: `src/board/routing/FlowArrow.tsx` (`path-hit-only` / overlay `data-path-overlay`); `src/board/Board.tsx` (edge `data.dotted` so RF remounts)
+  - Tests: `e2e/ready.ts` (`tabPeekPoint`, shared `pathScreenPoint`); `e2e/canvas.spec.ts`, `e2e/merge.spec.ts`, `e2e/insert-preview.spec.ts`, `e2e/inspector.spec.ts`; `e2e/improve-08-plus-chrome.spec.ts`
+  - Evidence: `.docs/evidence/improve-08-plus-chrome/`
+- Behavior implemented:
+  - Pulling `+` draws the green taffy while the pointer is down. Fan and scrim appear only past the pull threshold. Empty release dismisses fan and scrim immediately (no 520 ms linger).
+  - Selected-tile `+` and Path tabs peek from behind the tile face (~22 px). X stays on top; hover is color/opacity only.
+  - Path tab glyph is a spindle with a string. Accessible name unchanged.
+  - Data fan thumb uses the same 72×44 box as Step, chip centered.
+  - Inspector Solid / Path double-click change the drawn stroke on that Path (`path-stroke-solid` on `path#e_gt`; sibling `e_lt` stays dotted). Shared-trunk solid-wins rule from Improvement 01 unchanged.
+- Tests and exact results:
+  - `npm run build` at start — pass (`tsc --noEmit && vite build`; Vite 8.2.2)
+  - `npm run test:unit` at start — pass (31 files, 163 tests)
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning)
+  - `npm run test:unit` — pass (31 files, 163 tests)
+  - `npm run test:e2e` — pass (83 passed, Chromium, 3 workers, ~47.8s including webServer)
+- Evidence:
+  - `.docs/evidence/improve-08-plus-chrome/plus-taffy-1440.png` — `+` pulled; green taffy; Step/Data fan; no wedge (1440×900)
+  - `.docs/evidence/improve-08-plus-chrome/tabs-tucked-1440.png` — selected Step; `+` / Path tabs peek from behind the tile face (1440×900)
+  - `.docs/evidence/improve-08-plus-chrome/plus-fan-thumbs-1440.png` — fan thumbs same 72×44 box; Data chip centered (1440×900)
+  - `.docs/evidence/improve-08-plus-chrome/path-tab-1440.png` — Path tab spindle glyph (1440×900)
+  - `.docs/evidence/improve-08-plus-chrome/path-stroke-solid-1440.png` — `e_gt` Solid (solid stroke); `e_lt` still dotted (1440×900)
+- Earlier-slice defects fixed: `.react-flow__edge-path { stroke: var(--line) !important }` overpainted dotted overlays, so Solid/Dotted looked like a no-op. Hit-only Paths now use `stroke: transparent !important`. Empty-release linger was `showFan` staying true while `stretched` after `live: false` for `SPRING_MS` (520 ms). Peek grabs needed `tabPeekPoint` because tab bbox center is under the tile face. Path double-click via bbox center missed the polyline; tests use `pathScreenPoint`.
+- Known limitations / follow-ups: Empty `+` release clears drag immediately (no ≤200 ms ghost snap). Tile `--select-ring` and global `--chrome-line` remain out of scope. Untracked ELK planner dumps still not committed.
+- Status: COMPLETE
+- Commit: `feat(improve-08): restore plus taffy and fix Path stroke`

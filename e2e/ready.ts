@@ -56,15 +56,33 @@ export async function confirmRemoveNode(page: Page, candidateName?: string) {
   await page.getByRole("button", { name: /^Remove / }).first().click();
 }
 
+/** Screen point on an ELK Path stroke (bbox center can miss a fan-out polyline). */
+export async function pathScreenPoint(page: Page, edgeId: string, at = 0.55): Promise<{ x: number; y: number }> {
+  const pt = await page.locator(`path#${edgeId}`).evaluate((el, t) => {
+    const path = el as SVGPathElement;
+    const len = path.getTotalLength();
+    const p = path.getPointAtLength(len * Number(t));
+    const ctm = path.getScreenCTM();
+    if (!ctm) return null;
+    return { x: ctm.a * p.x + ctm.c * p.y + ctm.e, y: ctm.b * p.x + ctm.d * p.y + ctm.f };
+  }, at);
+  if (!pt) throw new Error(`no screen point for ${edgeId}`);
+  return pt;
+}
+export function tabPeekPoint(box: { x: number; y: number; width: number; height: number }) {
+  return { x: box.x + box.width * 0.78, y: box.y + box.height / 2 };
+}
+
 /** Drag the selected-tile + tab onto a Step / Data preview (36px pull, then drop). */
 export async function pullPlusPreview(page: Page, preview: string) {
   const plus = page.getByRole("button", { name: /Add Step or Data|Add After-only Step/ }).first();
   await expect(plus).toBeVisible();
   const box = await plus.boundingBox();
   if (!box) throw new Error("plus tab has no box");
-  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  const grab = tabPeekPoint(box);
+  await page.mouse.move(grab.x, grab.y);
   await page.mouse.down();
-  await page.mouse.move(box.x + box.width / 2 + 140, box.y + box.height / 2, { steps: 12 });
+  await page.mouse.move(grab.x + 140, grab.y, { steps: 12 });
   const previewBtn = page.getByRole("button", { name: preview });
   await expect(previewBtn).toBeVisible();
   const pb = await previewBtn.boundingBox();

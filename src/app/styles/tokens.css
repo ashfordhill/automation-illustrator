@@ -143,6 +143,10 @@ body,
   stroke: var(--line) !important;
 }
 
+.react-flow__edge-path.path-hit-only {
+  stroke: transparent !important;
+}
+
 .present-mode .chrome-hide {
   display: none !important;
 }
@@ -714,8 +718,6 @@ body,
   opacity: 0.45;
   box-shadow: 0 4px 0 var(--btn-shadow);
   transition:
-    transform 140ms ease,
-    box-shadow 140ms ease,
     background 140ms ease,
     opacity 140ms ease;
 }
@@ -724,8 +726,6 @@ body,
 .node-remove-x-btn:focus-visible {
   opacity: 1;
   background: var(--minus-active);
-  transform: translateY(-4px);
-  box-shadow: 0 8px 0 var(--btn-shadow);
   outline: none;
 }
 
@@ -745,8 +745,8 @@ body,
 .plus-tab,
 .path-tab {
   position: absolute;
-  right: -18px;
-  z-index: 5;
+  right: -22px;
+  z-index: 1;
   width: 36px;
   height: 36px;
   box-sizing: border-box;
@@ -807,13 +807,6 @@ body,
   fill: rgba(0, 0, 0, 0.45);
 }
 
-.plus-wedge {
-  fill: color-mix(in srgb, var(--plus) 26%, var(--cream));
-  stroke: var(--line);
-  stroke-width: 3;
-  stroke-linejoin: miter;
-}
-
 .plus-preview {
   pointer-events: auto;
   position: absolute;
@@ -852,11 +845,8 @@ body,
 }
 
 .plus-preview-thumb.is-data {
-  width: auto;
-  height: auto;
-  border: none;
-  background: transparent;
-  overflow: visible;
+  align-items: center;
+  justify-content: center;
 }
 
 .plus-preview-who {
@@ -945,8 +935,11 @@ body,
 }
 
 .tile-pickup {
+  position: relative;
+  z-index: 3;
   width: 100%;
   height: 100%;
+  pointer-events: auto;
 }
 
 @keyframes bubble-pop {
@@ -1198,12 +1191,6 @@ body,
 
   .node-remove-x-btn {
     transition: none;
-  }
-
-  .node-remove-x-btn:hover,
-  .node-remove-x-btn:focus-visible {
-    transform: none;
-    box-shadow: 0 4px 0 var(--btn-shadow);
   }
 }
 

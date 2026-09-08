@@ -88,6 +88,9 @@ test.describe("slice 7 inspector and actors", () => {
 
     await stroke.getByRole("button", { name: "Solid" }).click();
     await expect(stroke.getByRole("button", { name: "Solid" })).toHaveAttribute("aria-pressed", "true");
+    await expect(page.locator("path#e_gt")).toHaveClass(/path-stroke-solid/);
+    await expect(page.locator('[data-path-overlay="e_gt"]')).toHaveCount(0);
+    await expect(page.locator('[data-path-overlay="e_lt"]')).not.toHaveCount(0);
     await expect(aside(page).locator("#path-condition-field")).toBeVisible();
     await capturePage(page, `${EVIDENCE}/split-every-1440.png`);
   });
