@@ -14,6 +14,8 @@ function resetSession() {
   s.closeBoardModes();
   s.setColorScheme(ColorScheme.Light);
   s.setSoundEnabled(false);
+  s.setRightClickDelete(false);
+  s.setInspectorCollapsed(false);
 }
 
 beforeEach(() => {
@@ -38,6 +40,31 @@ test("theme persists across setColorScheme (P-09)", () => {
   expect(localStorage.getItem("automation-pitch.theme")).toBe(ColorScheme.Dark);
   useStore.getState().setColorScheme(ColorScheme.Light);
   expect(localStorage.getItem("automation-pitch.theme")).toBe(ColorScheme.Light);
+});
+
+test("inspector fold persists and defaults open (P-05)", () => {
+  expect(useStore.getState().inspectorCollapsed).toBe(false);
+  useStore.getState().setInspectorCollapsed(true);
+  expect(useStore.getState().inspectorCollapsed).toBe(true);
+  expect(localStorage.getItem("automation-pitch.inspectorCollapsed")).toBe("on");
+  useStore.getState().setInspectorCollapsed(false);
+  expect(localStorage.getItem("automation-pitch.inspectorCollapsed")).toBe("off");
+});
+
+test("right-click-delete is off by default and persists on/off", () => {
+  expect(useStore.getState().rightClickDelete).toBe(false);
+  useStore.getState().setRightClickDelete(true);
+  expect(useStore.getState().rightClickDelete).toBe(true);
+  expect(localStorage.getItem("automation-pitch.right-click-delete")).toBe("on");
+  useStore.getState().setRightClickDelete(false);
+  expect(localStorage.getItem("automation-pitch.right-click-delete")).toBe("off");
+});
+
+test("focusDataLabel opens a folded inspector (NA-08)", () => {
+  useStore.getState().select({ type: SelectionKind.Node, id: OAK_PARK_IDS.acct });
+  useStore.getState().setInspectorCollapsed(true);
+  useStore.getState().focusDataLabel();
+  expect(useStore.getState().inspectorCollapsed).toBe(false);
 });
 
 test("exiting Present restores the previous view and selection (P-07)", () => {

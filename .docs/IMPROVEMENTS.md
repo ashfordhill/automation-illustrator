@@ -525,9 +525,45 @@ Evidence: `.docs/evidence/improve-18-path-zip/`.
 
 ---
 
+# Improvement 20 — foldable right inspector
+
+Approved 2026-09-08. The right inspector folds to a thin strip with a ‹ so the board can use the extra space. Click the strip (or Hide inspector when open, ›) to toggle. Present still hides the inspector and the strip. Preference persists. No new dependency.
+
+Commit: `feat(improve-20): fold the right inspector`.  
+Evidence: `.docs/evidence/improve-20-inspector-fold/`.
+
+---
+
+# Improvement 21 — bottom status bar
+
+Approved 2026-09-08. A thin chrome status bar spans the bottom of the window and overlaps the right inspector. It shows the loaded project name (Untitled when unnamed), a persisted **right-click-delete: on/off** toggle, an **Actors** button that opens Manage actors, and **v** plus the version from `package.json` (set to 1.0.0). When the toggle is on, right-clicking a Tile removes it through the same path as X / Delete. Off by default. Present and Both hide Actors. No new dependency.
+
+Commit: `feat(improve-21): add bottom status bar`.  
+Evidence: `.docs/evidence/improve-21-status-bar/`.
+
+---
+
 # Improvement 22 — create tabs closer to the tile
 
 Approved 2026-09-08. Tile `+` (create Step / Data) and Path-pull tabs stay 44×44 and on top of the right edge, but peek **14px** past it (were 24px) so they sit against the tile like the X. Glyphs, pull, hover, and Present/Both hide rules are unchanged. No new dependency.
 
 Commit: `feat(improve-22): sit create tabs closer to the tile`.  
 Evidence: `.docs/evidence/improve-22-tab-peek/`.
+
+---
+
+# Improvement 23 — on-canvas tile text and Type/Who pie
+
+Approved 2026-09-08. Double-click a Step’s Name, Details, actor name, or Human role to edit that field on the tile (same values as the inspector; actor name/role edits the roster). Double-click the task icon for a Type pie wheel; double-click the actor figure for a Who pie; double-click Robot Type for LLM / Agent / Script. Inspector Who/Type remain. Present and Both stay read-only. No new dependency.
+
+Commit: `feat(improve-23): edit tile text and icons on double-click`.  
+Evidence: `.docs/evidence/improve-23-tile-edit/`.
+
+---
+
+# Improvement 24 — first Tile from New is centered
+
+Approved 2026-09-08. Starting from New, Add Step or Add Data places the first Tile at the **center of the board** at the current zoom. Empty layouts no longer consume the one-time camera, so the Tile is not stuck in the top left. Demos still fitView on first load. No new dependency.
+
+Commit: `feat(improve-24): center the first Tile from New`.  
+Evidence: `.docs/evidence/improve-24-first-tile-center/`.

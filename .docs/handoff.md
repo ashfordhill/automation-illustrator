@@ -1518,6 +1518,36 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(improve-18): zip Path create apart from Tile blip`
 
+## Improvement 20 — foldable right inspector — 2026-09-08
+
+- Starting commit: `11e059532f3189773f9d48d88fe877f0baa899f9` (`feat(improve-19): pull Step Data fan closer`)
+- Working tree at start: not clean. Concurrent status-bar / tile-pie / evidence recaptures were left unstaged and are not this improvement.
+- GOAL clauses addressed: P-05, P-07, NA-09 (amendment dated 2026-09-08). Present still hides the inspector and the strip.
+- Library research and decisions: no new runtime dependency. Not a Mantine overlay Drawer (that would cover the board). AppShell aside width folds 320→28 so the canvas actually grows. Tabler chevrons. Preference persists like sound. Selecting a tile does not auto-expand. Enter on Data still opens the inspector (NA-08). Native Tab order on the strip (AQ-01); no new KeyAction.
+- Files changed:
+  - Shell: `src/app/App.tsx`, `src/main.tsx`, `src/app/inspector/InspectorFold.tsx`, `src/app/inspector/inspectorFold.css`
+  - State: `src/state/store.ts`, `src/state/persistence.ts`
+  - Tests: `src/app/App.test.tsx`, `src/state/store.shell.test.ts`, `src/state/persistence.test.ts`, `e2e/improve-20-inspector-fold.spec.ts`
+  - Contract/docs: `.docs/GOAL.md` (P-05 amendment); `.docs/IMPROVEMENTS.md` (20); this handoff entry
+  - Evidence: `.docs/evidence/improve-20-inspector-fold/`
+- Behavior implemented:
+  - Hide inspector (›) folds the right rail to a thin strip with ‹.
+  - Click the strip to expand. The board uses the extra space. Present still removes the rail entirely.
+  - Folded preference survives reload.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning)
+  - `npm run test:unit` — pass (34 files, 204 tests; excluded concurrent untracked `pieGeometry.test.ts`)
+  - `npm run test:e2e` — `e2e/improve-20-inspector-fold.spec.ts` pass (4). Full suite not re-run here; port 4177 was in use by another agent after the spec passed.
+- Evidence:
+  - `.docs/evidence/improve-20-inspector-fold/inspector-open-1440.png` — inspector open; Hide › on the left edge (1440×900)
+  - `.docs/evidence/improve-20-inspector-fold/inspector-collapsed-1440.png` — folded strip with ‹; board uses the extra width (1440×900)
+  - `.docs/evidence/improve-20-inspector-fold/inspector-collapsed-dark-1440.png` — same strip in dark (1440×900)
+  - `.docs/evidence/improve-20-inspector-fold/inspector-collapsed-1024.png` — folded strip at 1024×768
+- Earlier-slice defects fixed: none
+- Known limitations / follow-ups: Concurrent status-bar / tile-pie WIP from other chats remains unstaged. No inspector keybind (the strip is in Tab order).
+- Status: COMPLETE
+- Commit: `feat(improve-20): fold the right inspector`
+
 ## Improvement 22 — create tabs closer to the tile — 2026-09-08
 
 - Starting commit: `11e059532f3189773f9d48d88fe877f0baa899f9` (`feat(improve-19): pull Step Data fan closer`)

@@ -16,6 +16,7 @@ function resetSession() {
   s.closeBoardModes();
   s.setColorScheme(ColorScheme.Light);
   s.setSoundEnabled(false);
+  s.setInspectorCollapsed(false);
   if (s.recovery) s.clearRecoveryHold();
 }
 

@@ -1,6 +1,6 @@
 /**
  * Load/save the workflow document as JSON (Import menu + localStorage).
- * Theme, keybind, and sound keys live here so persist concerns stay in one module.
+ * Theme, keybind, sound, and inspector-fold keys live here so persist concerns stay in one module.
  *
  * Persistence status is saved / dirty / unavailable (SH-11). Failed startup
  * payloads stay under LS_WORKFLOW until the user downloads or starts fresh (SH-10).
@@ -46,6 +46,8 @@ export const LS_WORKFLOW = "automation-pitch.workflow";
 export const LS_KEYMAP = "automation-pitch.keymap";
 export const LS_THEME = "automation-pitch.theme";
 export const LS_SOUND = "automation-pitch.sound";
+export const LS_RIGHT_CLICK_DELETE = "automation-pitch.right-click-delete";
+export const LS_INSPECTOR_COLLAPSED = "automation-pitch.inspectorCollapsed";
 export const SAVE_COPY_FILENAME = "automation-pitch.json";
 export const RECOVERY_COPY_FILENAME = "automation-pitch.recovery.json";
 
@@ -173,6 +175,40 @@ export function loadSound(): boolean {
 export function saveSound(on: boolean) {
   try {
     localStorage.setItem(LS_SOUND, on ? "on" : "off");
+  } catch {
+    /* preference is session-only if storage is denied */
+  }
+}
+
+/** Right-click Tile delete is off unless the saved value is exactly `on`. */
+export function loadRightClickDelete(): boolean {
+  try {
+    return localStorage.getItem(LS_RIGHT_CLICK_DELETE) === "on";
+  } catch {
+    return false;
+  }
+}
+
+export function saveRightClickDelete(on: boolean) {
+  try {
+    localStorage.setItem(LS_RIGHT_CLICK_DELETE, on ? "on" : "off");
+  } catch {
+    /* preference is session-only if storage is denied */
+  }
+}
+
+/** Inspector starts open unless the saved value is exactly `on` (folded strip). */
+export function loadInspectorCollapsed(): boolean {
+  try {
+    return localStorage.getItem(LS_INSPECTOR_COLLAPSED) === "on";
+  } catch {
+    return false;
+  }
+}
+
+export function saveInspectorCollapsed(collapsed: boolean) {
+  try {
+    localStorage.setItem(LS_INSPECTOR_COLLAPSED, collapsed ? "on" : "off");
   } catch {
     /* preference is session-only if storage is denied */
   }

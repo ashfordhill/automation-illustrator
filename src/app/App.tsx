@@ -1,10 +1,12 @@
 /**
  * App shell: header Toolbar, right DetailsPanel, center Board.
- * Present mode hides the right rail. Under 1024 CSS px the board is replaced (P-04).
+ * Present mode hides the right rail. The inspector folds to a thin strip (P-05).
+ * Under 1024 CSS px the board is replaced (P-04).
  * Theme is dataset.theme for CSS plus Mantine forceColorScheme.
  */
 import { useEffect } from "react";
 import { AppShell, MantineProvider, createTheme } from "@mantine/core";
+import { useReducedMotion } from "@mantine/hooks";
 import { Board } from "../board/Board";
 import { KeybindsModal } from "../keyboard/KeybindsModal";
 import { useAppKeys } from "../keyboard/useAppKeys";
@@ -20,6 +22,7 @@ import { Toolbar } from "./components/Toolbar";
 import { TransientNotice } from "./components/TransientNotice";
 import { PathContextMenu } from "../board/controls/PathContextMenu";
 import { UnsupportedViewport } from "./components/UnsupportedViewport";
+import { InspectorFold, INSPECTOR_OPEN_WIDTH, INSPECTOR_STRIP_WIDTH } from "./inspector/InspectorFold";
 import { DetailsPanel } from "./inspector/SelectedItemForm";
 import { useSupportedViewport } from "./viewport";
 
@@ -65,8 +68,15 @@ function CanvasArea() {
 export default function App() {
   useAppKeys();
   const present = useStore((s) => s.present);
+  const inspectorCollapsed = useStore((s) => s.inspectorCollapsed);
   const colorScheme = useStore((s) => s.colorScheme);
   const supported = useSupportedViewport();
+  const reduceMotion = useReducedMotion();
+  const asideWidth = present
+    ? 0
+    : inspectorCollapsed
+      ? INSPECTOR_STRIP_WIDTH
+      : INSPECTOR_OPEN_WIDTH;
 
   useEffect(() => {
     document.documentElement.dataset.theme = colorScheme;
@@ -77,10 +87,18 @@ export default function App() {
       {supported ? (
         <AppShell
         header={{ height: 56 }}
-        aside={{ width: present ? 0 : 320, breakpoint: "xs" }}
+        aside={{ width: asideWidth, breakpoint: "xs" }}
         padding={0}
-        className={present ? "present-mode" : undefined}
+        transitionDuration={reduceMotion ? 0 : 200}
+        className={["app-shell-fold", present ? "present-mode" : undefined]
+          .filter(Boolean)
+          .join(" ")}
+        data-inspector-collapsed={inspectorCollapsed ? "true" : "false"}
         styles={{
+          root: {
+            "--app-shell-aside-width": `${asideWidth}px`,
+            "--app-shell-aside-offset": `${asideWidth}px`,
+          },
           main: {
             background: "var(--paper)",
             height: "100dvh",
@@ -93,6 +111,9 @@ export default function App() {
             flexDirection: "column",
             height: "calc(100dvh - 56px)",
             minHeight: 0,
+            width: asideWidth,
+            minWidth: asideWidth,
+            maxWidth: asideWidth,
           },
         }}
       >
@@ -105,8 +126,17 @@ export default function App() {
             className="chrome-bar"
             style={{ borderLeft: "3px solid var(--chrome-line)" }}
           >
-            <div className="details-rail">
-              <div className="details-rail-body">
+            <div
+              className={`details-rail${inspectorCollapsed ? " is-collapsed" : ""}`}
+              data-inspector={inspectorCollapsed ? "collapsed" : "open"}
+            >
+              <InspectorFold />
+              <div
+                id="details-rail-body"
+                className="details-rail-body"
+                inert={inspectorCollapsed ? true : undefined}
+                aria-hidden={inspectorCollapsed}
+              >
                 <DetailsPanel />
               </div>
             </div>

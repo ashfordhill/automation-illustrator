@@ -20,6 +20,7 @@ function resetSession() {
   s.closeManageActors({ restoreFocus: false });
   s.setNotice(null);
   s.setColorScheme(ColorScheme.Light);
+  s.setInspectorCollapsed(false);
   if (s.recovery) s.clearRecoveryHold();
 }
 
@@ -152,6 +153,44 @@ test("removeActor blocks used humans and deletes unused Priya (NA-02)", () => {
   s.confirmReplaceDiscard();
   expect(useStore.getState().removeActor(MAILROOM_IDS.priya)).toBe(true);
   expect(useStore.getState().workflow.actors.some((a) => a.id === MAILROOM_IDS.priya)).toBe(false);
+});
+
+test("beginTileTextEdit and beginTilePie open on-canvas Step edit (NA-08, NA-11)", () => {
+  const { read, roy } = OAK_PARK_IDS;
+  const s = useStore.getState();
+  s.beginTileTextEdit(read, "title");
+  expect(useStore.getState().interaction).toEqual({
+    kind: "tile-text-edit",
+    nodeId: read,
+    field: "title",
+  });
+  expect(useStore.getState().selected).toEqual({ type: SelectionKind.Node, id: read });
+
+  s.beginTilePie(read, "type", 100, 80);
+  expect(useStore.getState().interaction).toMatchObject({
+    kind: "tile-pie",
+    nodeId: read,
+    pie: "type",
+    x: 100,
+    y: 80,
+  });
+
+  s.beginTilePie(read, "who", 10, 10);
+  expect(useStore.getState().interaction.kind).toBe("tile-pie");
+  s.assignActor(read, roy);
+  expect(useStore.getState().workflow.assignments[read]).toBe(roy);
+
+  s.closeBoardModes();
+  s.setPresent(true);
+  s.beginTileTextEdit(read, "detail");
+  expect(useStore.getState().interaction).toEqual({ kind: "idle" });
+  s.setPresent(false);
+  s.setView(ViewMode.Both);
+  s.beginTilePie(read, "type", 0, 0);
+  expect(useStore.getState().interaction).toEqual({ kind: "idle" });
+  s.setView(ViewMode.Before);
+  s.closeBoardModes();
+  expect(useStore.getState().interaction).toEqual({ kind: "idle" });
 });
 
 test("new Other Steps are named Task; choosing Other fills an empty Name once", () => {

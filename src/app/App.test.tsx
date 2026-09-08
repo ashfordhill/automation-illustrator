@@ -26,6 +26,8 @@ function resetSession() {
   s.closeManageActors({ restoreFocus: false });
   s.setColorScheme(ColorScheme.Light);
   s.setSoundEnabled(false);
+  s.setRightClickDelete(false);
+  s.setInspectorCollapsed(false);
 }
 
 beforeEach(() => {
@@ -166,12 +168,38 @@ test("sound toggle is off by default and Present restores the inspector", () => 
     useStore.getState().setPresent(true);
   });
   expect(host.querySelector("aside")).toBeNull();
+  expect(host.querySelector("[data-inspector-fold]")).toBeNull();
   expect(host.textContent).not.toMatch(/will become automated/);
   act(() => {
     useStore.getState().setPresent(false);
   });
   expect(host.querySelector("aside")).not.toBeNull();
   expect(useStore.getState().selected?.id).toBe(OAK_PARK_IDS.read);
+});
+
+test("inspector folds to a Show strip and selecting a tile does not reopen it", () => {
+  act(() => {
+    useStore.getState().select({ type: SelectionKind.Node, id: OAK_PARK_IDS.read });
+  });
+  expect(host.querySelector('[data-inspector="open"]')).not.toBeNull();
+  expect(host.querySelector('[aria-label="Hide inspector"]')).not.toBeNull();
+  act(() => {
+    host.querySelector<HTMLButtonElement>('[aria-label="Hide inspector"]')?.click();
+  });
+  expect(useStore.getState().inspectorCollapsed).toBe(true);
+  expect(host.querySelector('[data-inspector="collapsed"]')).not.toBeNull();
+  expect(host.querySelector('[aria-label="Show inspector"]')).not.toBeNull();
+  expect(host.querySelector("#details-rail-body")?.getAttribute("aria-hidden")).toBe("true");
+  act(() => {
+    useStore.getState().select({ type: SelectionKind.Node, id: OAK_PARK_IDS.review });
+  });
+  expect(useStore.getState().inspectorCollapsed).toBe(true);
+  expect(host.querySelector('[data-inspector="collapsed"]')).not.toBeNull();
+  act(() => {
+    host.querySelector<HTMLButtonElement>('[aria-label="Show inspector"]')?.click();
+  });
+  expect(host.querySelector('[data-inspector="open"]')).not.toBeNull();
+  expect(host.querySelector('[aria-label="Type Review"]')).not.toBeNull();
 });
 
 test("view switching has no BEFORE/AFTER corner chips", () => {

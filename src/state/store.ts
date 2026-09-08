@@ -13,6 +13,8 @@
  * requestNew / requestDemo / importRaw — replacement gate (SH-06, SH-12)
  * startFresh / downloadHeldRecovery — corrupt-storage recovery (SH-10)
  * setSoundEnabled — persisted Web Audio cues (SH-03, SH-04)
+ * setRightClickDelete — persisted Tile right-click remove (off by default)
+ * setInspectorCollapsed — persisted right-inspector fold (P-05)
  * setPresent — saves and restores view + selection (P-07)
  */
 import { create } from "zustand";
@@ -81,6 +83,7 @@ import {
 import { nid } from "../workflow/ids";
 import {
   isHuman,
+  isRobot,
   isStepNode,
   STEP_KIND_META,
   titleForStepKindChange,
@@ -106,13 +109,23 @@ import {
   undoHistory,
   type HistoryKind,
 } from "./history";
-import { IDLE, type DepartingTile, type Interaction } from "./interaction";
+import {
+  IDLE,
+  type DepartingTile,
+  type Interaction,
+  type TilePieKind,
+  type TileTextField,
+} from "./interaction";
 import {
   downloadRecoveryCopy,
   downloadWorkflowCopy,
   hydratePersistedWorkflow,
+  loadInspectorCollapsed,
+  loadRightClickDelete,
   loadSound,
   loadTheme,
+  saveInspectorCollapsed,
+  saveRightClickDelete,
   saveSound,
   saveTheme,
   writeWorkflow,
@@ -207,6 +220,8 @@ export const useStore = create<{
   presentResume: { view: ViewModeT; selected: Selection } | null;
   selected: Selection;
   soundEnabled: boolean;
+  rightClickDelete: boolean;
+  inspectorCollapsed: boolean;
   keymap: Keymap;
   helpOpen: boolean;
   capturing: KeyAction | null;
@@ -238,6 +253,8 @@ export const useStore = create<{
   canvasEditable: () => boolean;
   setPresent: (p: boolean) => void;
   setSoundEnabled: (on: boolean) => void;
+  setRightClickDelete: (on: boolean) => void;
+  setInspectorCollapsed: (collapsed: boolean) => void;
   select: (s: Selection) => void;
   setHelp: (v: boolean) => void;
   setCapturing: (a: KeyAction | null) => void;
@@ -279,6 +296,8 @@ export const useStore = create<{
   toggleSelectedDash: () => void;
   focusPathLabel: () => void;
   focusDataLabel: () => void;
+  beginTileTextEdit: (nodeId: string, field: TileTextField) => void;
+  beginTilePie: (nodeId: string, pie: TilePieKind, x: number, y: number) => void;
   removeTarget: (nodeId: string) => void;
   beginRemovePick: (hostId: string) => void;
   confirmRemove: () => void;
@@ -311,6 +330,8 @@ export const useStore = create<{
   presentResume: null,
   selected: null,
   soundEnabled: loadSound(),
+  rightClickDelete: loadRightClickDelete(),
+  inspectorCollapsed: loadInspectorCollapsed(),
   keymap: loadKeymap(),
   helpOpen: false,
   capturing: null,
@@ -472,11 +493,30 @@ export const useStore = create<{
     set({ soundEnabled });
     if (soundEnabled) playCue("tick");
   },
+  setRightClickDelete: (rightClickDelete) => {
+    saveRightClickDelete(rightClickDelete);
+    set({ rightClickDelete });
+  },
+  setInspectorCollapsed: (inspectorCollapsed) => {
+    saveInspectorCollapsed(inspectorCollapsed);
+    if (inspectorCollapsed) {
+      const ae = document.activeElement;
+      if (ae instanceof HTMLElement && ae.closest(".details-rail-body")) ae.blur();
+    }
+    set({ inspectorCollapsed });
+  },
   select: (selected) => {
     const { interaction } = get();
     if (
       interaction.kind === "path-label-edit" &&
       (selected?.type !== SelectionKind.Edge || selected.id !== interaction.edgeId)
+    ) {
+      set({ selected, manageActorsOpen: false, manageActorId: null, interaction: IDLE });
+      return;
+    }
+    if (
+      (interaction.kind === "tile-text-edit" || interaction.kind === "tile-pie") &&
+      (selected?.type !== SelectionKind.Node || selected.id !== interaction.nodeId)
     ) {
       set({ selected, manageActorsOpen: false, manageActorId: null, interaction: IDLE });
       return;
@@ -641,6 +681,7 @@ export const useStore = create<{
     return true;
   },
   openManageActors: () => {
+    if (get().inspectorCollapsed) get().setInspectorCollapsed(false);
     const { workflow, manageActorId } = get();
     const nextId =
       manageActorId && workflow.actors.some((a) => a.id === manageActorId)
@@ -652,7 +693,10 @@ export const useStore = create<{
     set({ manageActorsOpen: false, manageActorId: null });
     if (opts?.restoreFocus === false) return;
     queueMicrotask(() => {
-      document.getElementById("manage-actors-btn")?.focus();
+      (
+        document.getElementById("manage-actors-btn") ??
+        document.getElementById("status-actors-btn")
+      )?.focus();
     });
   },
   setManageActorId: (manageActorId) => set({ manageActorId }),
@@ -789,7 +833,9 @@ export const useStore = create<{
       kind === "plus-pull" ||
       kind === "path-pull" ||
       kind === "remove-preview" ||
-      kind === "path-label-edit"
+      kind === "path-label-edit" ||
+      kind === "tile-text-edit" ||
+      kind === "tile-pie"
     ) {
       return;
     }
@@ -1030,7 +1076,38 @@ export const useStore = create<{
     set({ interaction: { kind: "path-label-edit", edgeId: selected.id } });
   },
   focusDataLabel: () => {
+    if (get().inspectorCollapsed) {
+      get().setInspectorCollapsed(false);
+      window.setTimeout(() => focusNamedField("data-label-field"), 0);
+      return;
+    }
     focusNamedField("data-label-field");
+  },
+  beginTileTextEdit: (nodeId, field) => {
+    if (!get().canvasEditable()) return;
+    const found = findNode(get().workflow, nodeId);
+    if (!found || !isStepNode(found)) return;
+    set({
+      selected: { type: SelectionKind.Node, id: nodeId },
+      manageActorsOpen: false,
+      manageActorId: null,
+      interaction: { kind: "tile-text-edit", nodeId, field },
+    });
+  },
+  beginTilePie: (nodeId, pie, x, y) => {
+    if (!get().canvasEditable()) return;
+    const found = findNode(get().workflow, nodeId);
+    if (!found || !isStepNode(found)) return;
+    if (pie === "robot-kind") {
+      const actor = get().actorFor(nodeId);
+      if (!isRobot(actor)) return;
+    }
+    set({
+      selected: { type: SelectionKind.Node, id: nodeId },
+      manageActorsOpen: false,
+      manageActorId: null,
+      interaction: { kind: "tile-pie", nodeId, pie, x, y },
+    });
   },
 
   removeTarget: (nodeId) => {

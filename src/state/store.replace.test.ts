@@ -19,6 +19,7 @@ function resetSession() {
   s.clearImportError();
   s.closeBoardModes();
   s.setColorScheme(ColorScheme.Light);
+  s.setInspectorCollapsed(false);
   if (s.recovery) s.clearRecoveryHold();
 }
 

@@ -21,6 +21,7 @@ function resetSession() {
   s.closeManageActors({ restoreFocus: false });
   s.setColorScheme(ColorScheme.Light);
   s.setSoundEnabled(false);
+  s.setInspectorCollapsed(false);
 }
 
 beforeEach(() => {

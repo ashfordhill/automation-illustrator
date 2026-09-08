@@ -6,6 +6,12 @@
 import type { ActorDto, NodeDto } from "../workflow/types";
 import type { RemovalPlan } from "../workflow/commands";
 
+/** On-canvas Step field opened by double-click (Name, Details, actor name, Human role). */
+export type TileTextField = "actor-name" | "actor-role" | "title" | "detail";
+
+/** Pie around a Step icon: Type, Who, or Robot Type (LLM / Agent / Script). */
+export type TilePieKind = "type" | "who" | "robot-kind";
+
 export type Interaction =
   | { kind: "idle" }
   | { kind: "plus-pull"; sourceId: string }
@@ -14,7 +20,9 @@ export type Interaction =
   | { kind: "connect-existing"; sourceId: string }
   | { kind: "remove-preview"; plan: RemovalPlan }
   | { kind: "path-label-edit"; edgeId: string }
-  | { kind: "path-menu"; edgeId: string; x: number; y: number };
+  | { kind: "path-menu"; edgeId: string; x: number; y: number }
+  | { kind: "tile-text-edit"; nodeId: string; field: TileTextField }
+  | { kind: "tile-pie"; nodeId: string; pie: TilePieKind; x: number; y: number };
 
 export const IDLE: Interaction = { kind: "idle" };
 
@@ -25,6 +33,10 @@ export type DepartingTile = {
 
 export function isTransient(interaction: Interaction): boolean {
   return interaction.kind !== "idle";
+}
+
+export function isTileEdit(interaction: Interaction): boolean {
+  return interaction.kind === "tile-text-edit" || interaction.kind === "tile-pie";
 }
 
 export function addMenuSource(interaction: Interaction): string | null {

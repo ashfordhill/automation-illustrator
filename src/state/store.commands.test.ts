@@ -22,6 +22,7 @@ function resetSession() {
   s.setNotice(null);
   s.setColorScheme(ColorScheme.Light);
   if (s.recovery) s.clearRecoveryHold();
+  s.setInspectorCollapsed(false);
 }
 
 beforeEach(() => {

@@ -3,12 +3,18 @@ import {
   downloadTextFile,
   downloadWorkflowCopy,
   hydratePersistedWorkflow,
+  loadInspectorCollapsed,
+  loadRightClickDelete,
   loadSound,
   loadTheme,
+  LS_INSPECTOR_COLLAPSED,
+  LS_RIGHT_CLICK_DELETE,
   LS_SOUND,
   LS_THEME,
   LS_WORKFLOW,
   SAVE_COPY_FILENAME,
+  saveInspectorCollapsed,
+  saveRightClickDelete,
   saveSound,
   saveTheme,
   writeWorkflow,
@@ -233,4 +239,28 @@ test("theme preference defaults light and round-trips (P-09)", () => {
   expect(loadTheme()).toBe(ColorScheme.Dark);
   saveTheme(ColorScheme.Light);
   expect(loadTheme()).toBe(ColorScheme.Light);
+});
+
+test("inspector fold defaults open and only 'on' collapses it (P-05)", () => {
+  localStorage.clear();
+  expect(loadInspectorCollapsed()).toBe(false);
+  saveInspectorCollapsed(true);
+  expect(localStorage.getItem(LS_INSPECTOR_COLLAPSED)).toBe("on");
+  expect(loadInspectorCollapsed()).toBe(true);
+  saveInspectorCollapsed(false);
+  expect(loadInspectorCollapsed()).toBe(false);
+  localStorage.setItem(LS_INSPECTOR_COLLAPSED, "yes");
+  expect(loadInspectorCollapsed()).toBe(false);
+});
+
+test("right-click-delete defaults off and only 'on' enables it", () => {
+  localStorage.clear();
+  expect(loadRightClickDelete()).toBe(false);
+  saveRightClickDelete(true);
+  expect(localStorage.getItem(LS_RIGHT_CLICK_DELETE)).toBe("on");
+  expect(loadRightClickDelete()).toBe(true);
+  saveRightClickDelete(false);
+  expect(loadRightClickDelete()).toBe(false);
+  localStorage.setItem(LS_RIGHT_CLICK_DELETE, "yes");
+  expect(loadRightClickDelete()).toBe(false);
 });
