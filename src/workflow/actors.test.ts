@@ -6,6 +6,7 @@ import {
   defaultHumanId,
   HUMAN_PRESETS,
   removeActor,
+  whoForChildStep,
 } from "./actors";
 import { emptyAfterOverlay, emptyWorkflow, type WorkflowDoc } from "./types";
 
@@ -47,6 +48,30 @@ const doc: WorkflowDoc = {
 
 test("Roy’s fill is honey-apricot, not Script-robot blue", () => {
   expect(HUMAN_PRESETS[1]).toEqual({ name: "Roy", color: "#f4c07a" });
+});
+
+test("whoForChildStep inherits a Step parent’s Who and ignores last-used Human (NA-03)", () => {
+  expect(whoForChildStep(doc, "s_read", "h_priya")).toEqual({
+    beforeId: "h_ada",
+    afterId: "h_ada",
+  });
+  const fromData = whoForChildStep(
+    {
+      ...doc,
+      nodes: [
+        ...doc.nodes,
+        {
+          id: "d1",
+          type: WorkflowNodeKind.DataField,
+          position: { x: 40, y: 0 },
+          label: "Account",
+        },
+      ],
+    },
+    "d1",
+    "h_priya",
+  );
+  expect(fromData).toEqual({ beforeId: "h_priya", afterId: "h_priya" });
 });
 
 test("defaultHumanId prefers last-used Human, then Alice, then the first Human (NA-03)", () => {

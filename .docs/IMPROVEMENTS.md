@@ -454,3 +454,14 @@ Commit: `feat(improve-12): show tile chrome on hover`.
 Evidence: `.docs/evidence/improve-12-hover-chrome/`.
 
 X, `+`, and Path appear while an editable tile is **hovered or selected** (or that tile’s `+` / Path pull is in progress). Hover does not select; the inspector stays on the current selection. Present and Both still hide chrome. Pull and X still work from an unselected hover. No new dependency.
+
+---
+
+# Improvement 13 — inherit parent Who on child Step
+
+Approved 2026-09-08. Start only after Improvement 11 correction 1 is COMPLETE. Do not mix into Improvement 12 hover chrome.
+
+When a Before-origin Step is created from another Step (`+` / `1`), the child gets that parent’s Before actor on both lanes. Empty-board Add Step still defaults to last-used Human, else Alice, else the first Human. Spawning from Data uses that fallback. After-only Steps stay the default Robot (BA-07).
+
+Commit: `feat(improve-13): inherit parent actor on child Steps`.  
+Evidence: `.docs/evidence/improve-13-who-inherit/`.

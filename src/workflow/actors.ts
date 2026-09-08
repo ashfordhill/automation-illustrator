@@ -63,7 +63,8 @@ export function aliceId(actors: ActorDto[]) {
 }
 
 /**
- * New Before-origin Steps: last-used Human, else Alice, else the first Human (NA-03).
+ * Empty-board Add Step and a child spawned from Data: last-used Human,
+ * else Alice, else the first Human (NA-03).
  */
 export function defaultHumanId(
   actors: ActorDto[],
@@ -74,6 +75,30 @@ export function defaultHumanId(
     if (last) return last.id;
   }
   return aliceId(actors) ?? actors.find((a) => a.kind === ActorKind.Human)?.id;
+}
+
+export type ChildStepWho = { beforeId?: string; afterId?: string };
+
+/**
+ * A new Before-origin Step hanging off `sourceId` (NA-03).
+ * A Step parent stamps its Before Who on both lanes so the child matches
+ * the parent instead of last-used Human / Alice. Data (no Who) and a
+ * missing assignment fall back to `defaultHumanId`.
+ */
+export function whoForChildStep(
+  doc: WorkflowDoc,
+  sourceId: string,
+  lastHumanId?: string | null,
+): ChildStepWho {
+  const source = doc.nodes.find((n) => n.id === sourceId);
+  if (source && isStepNode(source)) {
+    const parentId = doc.assignments[sourceId];
+    if (parentId && doc.actors.some((a) => a.id === parentId)) {
+      return { beforeId: parentId, afterId: parentId };
+    }
+  }
+  const human = defaultHumanId(doc.actors, lastHumanId);
+  return human ? { beforeId: human, afterId: human } : {};
 }
 
 /** First robot on the roster (NA-04). */

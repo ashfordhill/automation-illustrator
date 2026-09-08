@@ -1290,3 +1290,29 @@ Corrections in the same chat before the next slice starts get their own short en
 - Known limitations / follow-ups: Concurrent Who-inherit and taffy-outline work remains unstaged. Untracked ELK planner dumps still not committed.
 - Status: COMPLETE
 - Commit: `feat(improve-12): show tile chrome on hover`
+
+## Improvement 13 — inherit parent Who on child Step — 2026-09-08
+
+- Starting commit: `40c0659d3a7968397f78847ad9767047a5a208b6` (`feat(improve-12): show tile chrome on hover`)
+- Working tree at start: not clean. Taffy-outline work, evidence recaptures, and untracked ELK planner dumps were left unstaged and are not in this commit.
+- GOAL clauses addressed: NA-03 (amendment dated 2026-09-08). After-only Robot default (BA-07) unchanged. Empty-board Add Step still last-used Human / Alice (WG-01).
+- Library research and decisions: no new runtime dependency. A child Step from a Step parent copies that parent’s Before Who onto both lanes so a Roy Step does not spawn Alice. Last-used Human remains only for the empty-board root and for a child spawned from Data (no Who). After `+` / `1` still creates an After-only Robot Step.
+- Files changed:
+  - Contract/docs: `.docs/GOAL.md` (NA-03 amendment); `.docs/IMPROVEMENTS.md` (13); this handoff entry
+  - Who helper: `src/workflow/actors.ts` (`whoForChildStep`); `src/state/store.ts` (`spawnBranch`)
+  - Tests: `src/workflow/actors.test.ts`, `src/state/store.actors.test.ts`, `e2e/improve-13-who-inherit.spec.ts`
+  - Evidence: `.docs/evidence/improve-13-who-inherit/`
+- Behavior implemented:
+  - Pull `+` onto Step or press `1` on a selected Step: the new Before-origin Step is the same actor as the parent (Roy’s Step → Roy, including a Robot parent).
+  - Spawning from Data still uses last-used Human, else Alice. Assigning Roy on a different Step does not steal Who from an Alice parent.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning)
+  - `npm run test:unit` — pass (31 files, 180 tests)
+  - `npm run test:e2e` — pass (98 passed, Chromium, 3 workers, 1.1m)
+- Evidence:
+  - `.docs/evidence/improve-13-who-inherit/child-inherits-roy-1440.png` — Review set to Roy; `1` creates an Other child with Who Roy (1440×900)
+  - `.docs/evidence/improve-13-who-inherit/child-keeps-parent-alice-1440.png` — Read set to Roy; child of Alice Review stays Alice (1440×900)
+- Earlier-slice defects fixed: none
+- Known limitations / follow-ups: After-only children stay the default Robot (BA-07). Taffy-outline WIP from other chats remains unstaged. Untracked ELK planner dumps still not committed.
+- Status: COMPLETE
+- Commit: `feat(improve-13): inherit parent actor on child Steps`

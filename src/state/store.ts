@@ -33,6 +33,7 @@ import {
   makeHuman,
   makeRobot,
   removeActor as removeActorFromDoc,
+  whoForChildStep,
 } from "../workflow/actors";
 import {
   AssignmentLane,
@@ -724,7 +725,7 @@ export const useStore = create<{
       ),
     }, textOnly ? "text" : "structural");
   },
-  /** Who is offered in both lanes (NA-03, NA-11). lastHumanId stamps new Before-origin Steps. */
+  /** Who is offered in both lanes (NA-03, NA-11). lastHumanId stamps Data-spawned and root Steps. */
   assignActor: (stepId, actorId) => {
     if (get().present || get().view === ViewMode.Both) return;
     const { workflow, commit, assignmentLane } = get();
@@ -943,7 +944,7 @@ export const useStore = create<{
       return id;
     }
     const id = nid(IdPrefix.Step);
-    const human = defaultHumanId(workflow.actors, lastHumanId);
+    const who = whoForChildStep(workflow, sourceId, lastHumanId);
     const result = addConnectedNode(
       workflow,
       sourceId,
@@ -956,7 +957,7 @@ export const useStore = create<{
         detail: "",
         split: SplitKind.Exclusive,
       },
-      human ? { beforeId: human, afterId: human } : undefined,
+      who.beforeId || who.afterId ? who : undefined,
     );
     if (!result.ok) {
       get().setNotice(result.message);
@@ -964,9 +965,11 @@ export const useStore = create<{
     }
     get().commit(result.value);
     playCueWhen(get().soundEnabled, "blip");
+    const inherited = workflow.actors.find((a) => a.id === who.beforeId);
     set({
       interaction: IDLE,
       selected: { type: SelectionKind.Node, id },
+      ...(inherited && isHuman(inherited) ? { lastHumanId: inherited.id } : {}),
     });
     get().requestFocus(id);
     return id;

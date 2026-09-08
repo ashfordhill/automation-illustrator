@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, expect, test } from "vitest";
-import { ColorScheme, SelectionKind, SplitKind, ViewMode } from "../workflow/catalogs";
+import { ColorScheme, SelectionKind, SplitKind, ViewMode, WorkflowNodeKind } from "../workflow/catalogs";
 import { OAK_PARK_IDS } from "../demos/oakParkInvoice";
 import { MAILROOM_IDS } from "../demos/robotMailroom";
 import { DemoId } from "../demos/catalog";
@@ -28,6 +28,32 @@ beforeEach(() => {
 
 afterEach(() => {
   resetSession();
+});
+
+test("spawnBranch from a Step inherits that Step’s Who, not last-used Human (NA-03)", () => {
+  const { read, review, acct, roy, alice, robot } = OAK_PARK_IDS;
+  const s = useStore.getState();
+  s.assignActor(read, roy);
+  expect(useStore.getState().lastHumanId).toBe(roy);
+
+  const childOfAlice = useStore.getState().spawnBranch(review, WorkflowNodeKind.Step);
+  expect(childOfAlice).toBeTruthy();
+  expect(useStore.getState().workflow.assignments[childOfAlice]).toBe(alice);
+  expect(useStore.getState().workflow.after.assignments[childOfAlice]).toBe(alice);
+
+  s.assignActor(review, roy);
+  const childOfRoy = useStore.getState().spawnBranch(review, WorkflowNodeKind.Step);
+  expect(useStore.getState().workflow.assignments[childOfRoy]).toBe(roy);
+  expect(useStore.getState().workflow.after.assignments[childOfRoy]).toBe(roy);
+  expect(useStore.getState().lastHumanId).toBe(roy);
+
+  s.assignActor(review, robot);
+  const childOfRobot = useStore.getState().spawnBranch(review, WorkflowNodeKind.Step);
+  expect(useStore.getState().workflow.assignments[childOfRobot]).toBe(robot);
+  expect(useStore.getState().workflow.after.assignments[childOfRobot]).toBe(robot);
+
+  const fromData = useStore.getState().spawnBranch(acct, WorkflowNodeKind.Step);
+  expect(useStore.getState().workflow.assignments[fromData]).toBe(roy);
 });
 
 test("Who assigns in both lanes, including a Robot in Before (NA-03, NA-11)", () => {
