@@ -1316,3 +1316,15 @@ Corrections in the same chat before the next slice starts get their own short en
 - Known limitations / follow-ups: After-only children stay the default Robot (BA-07). Taffy-outline WIP from other chats remains unstaged. Untracked ELK planner dumps still not committed.
 - Status: COMPLETE
 - Commit: `feat(improve-13): inherit parent actor on child Steps`
+
+## Improvement 08 — correction 1 — 2026-09-08
+
+- Requested: The pulled `+` taffy should have an ink outline on its long edges (user orange marks), matching the bordered tiles it joins.
+- Changed: `TileChrome.tsx` — `taffyRibbon` draws the green fill plus two `--line` strokes along the top and bottom edges (3px, not the round caps). GOAL WG-07 amendment. Visual log copies of the marks. E2E asserts `[data-plus-taffy-stroke]` and captures hover-on-Step.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning)
+  - `npm run test:unit` — pass (31 files, 180 tests)
+  - `npm run test:e2e` — pass (99 passed, Chromium, 3 workers, 57.5s)
+- Evidence: `.docs/evidence/improve-08-plus-chrome/plus-taffy-outline-1440.png` — `+` pulled onto Step; ink outline on the taffy’s long edges (1440×900)
+- Status: COMPLETE
+- Commit: `feat(improve-08): outline the plus taffy`

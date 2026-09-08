@@ -27,6 +27,8 @@ test.describe("Improvement 08 plus taffy, tucked tabs, Path stroke", () => {
     await expect(page.getByRole("button", { name: "New Step" })).toBeVisible();
     await expect(page.getByRole("button", { name: "New Data" })).toBeVisible();
     await expect(page.locator("[data-plus-taffy]")).toBeVisible();
+    await expect(page.locator("[data-plus-taffy-stroke]")).toHaveCount(2);
+    await expect(page.locator("[data-plus-taffy-stroke]").first()).toHaveAttribute("stroke", "var(--line)");
     await expect(page.locator("[data-plus-wedge]")).toHaveCount(0);
     await expect(page.locator("[data-plus-scrim]")).toBeVisible();
     const stepThumb = page.locator('[data-plus-preview="step"] .plus-preview-thumb');
@@ -39,6 +41,12 @@ test.describe("Improvement 08 plus taffy, tucked tabs, Path stroke", () => {
     expect(Math.abs(stepBox!.height - dataBox!.height)).toBeLessThan(2);
     await capturePage(page, `${EVIDENCE}/plus-taffy-1440.png`);
     await capturePage(page, `${EVIDENCE}/plus-fan-thumbs-1440.png`);
+    const stepPreview = page.getByRole("button", { name: "New Step" });
+    const stepHit = await stepPreview.boundingBox();
+    expect(stepHit).toBeTruthy();
+    await page.mouse.move(stepHit!.x + 10, stepHit!.y + stepHit!.height / 2, { steps: 8 });
+    await expect(page.locator('[data-plus-preview="step"]')).toHaveClass(/is-hover/);
+    await capturePage(page, `${EVIDENCE}/plus-taffy-outline-1440.png`);
 
     const pane = page.locator(".board-lane").first();
     const paneBox = await pane.boundingBox();

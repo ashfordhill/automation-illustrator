@@ -99,3 +99,9 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 - Issue: X, `+`, and Path only appear after a Tile is selected, so a hover is not enough to act on it.
 - Resolution: Shipped in `feat(improve-12): show tile chrome on hover`.
 - Attachments: [tile hover chrome](visual-improvements/2026-09-08-tile-hover-chrome.gif)
+
+## 2026-09-08 — taffy ink outline
+
+- Issue: Pulled `+` taffy is a flat green band with no outline, unlike the ink-bordered tiles it joins.
+- Resolution: Shipped in `feat(improve-08): outline the plus taffy` — ink stroke on the taffy’s long edges (not the round caps).
+- Attachments: [outline marks](visual-improvements/2026-09-08-taffy-outline-marks.png) · [no outline](visual-improvements/2026-09-08-taffy-no-outline.png)

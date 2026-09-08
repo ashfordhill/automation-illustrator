@@ -28,6 +28,8 @@ const SPRING_MS = 200;
 const PREVIEW_RADIUS = 118;
 const PREVIEW_OUT = 28;
 const PREVIEW_SPREAD = 56;
+/** Matches tile / tab `--line` borders; long edges only so round caps stay under the join. */
+const TAFFY_STROKE = 3;
 
 type TileRect = { x: number; y: number; w: number; h: number; rx: number };
 
@@ -44,8 +46,10 @@ function previewCenters(restX: number, restY: number, count: number): { x: numbe
   return out;
 }
 
+type TaffyRibbon = { fill: string; top: string; bottom: string };
+
 /** Capsule taffy from an origin under the tile face to the pointer (round caps, no tile-edge cut). */
-function taffyPath(x0: number, y0: number, x1: number, y1: number): string {
+function taffyRibbon(x0: number, y0: number, x1: number, y1: number): TaffyRibbon {
   const dx = x1 - x0;
   const dy = y1 - y0;
   const len = Math.max(1, Math.hypot(dx, dy));
@@ -66,7 +70,13 @@ function taffyPath(x0: number, y0: number, x1: number, y1: number): string {
   const a1y = y1 + py * r1;
   const b1x = x1 - px * r1;
   const b1y = y1 - py * r1;
-  return `M ${a0x} ${a0y} Q ${mx + px * r0} ${my + py * r0} ${a1x} ${a1y} A ${r1} ${r1} 0 0 1 ${b1x} ${b1y} Q ${mx - px * r0} ${my - py * r0} ${b0x} ${b0y} A ${r0} ${r0} 0 0 1 ${a0x} ${a0y} Z`;
+  const topC = `${mx + px * r0} ${my + py * r0}`;
+  const botC = `${mx - px * r0} ${my - py * r0}`;
+  return {
+    fill: `M ${a0x} ${a0y} Q ${topC} ${a1x} ${a1y} A ${r1} ${r1} 0 0 1 ${b1x} ${b1y} Q ${botC} ${b0x} ${b0y} A ${r0} ${r0} 0 0 1 ${a0x} ${a0y} Z`,
+    top: `M ${a0x} ${a0y} Q ${topC} ${a1x} ${a1y}`,
+    bottom: `M ${b0x} ${b0y} Q ${botC} ${b1x} ${b1y}`,
+  };
 }
 
 function nodeScreenRect(nodeId: string): TileRect | null {
@@ -277,6 +287,7 @@ function PlusPullTab({ nodeId }: { nodeId: string }) {
   const tabY = drag?.live ? drag.y : drag ? drag.restY : 0;
   const centers = drag ? previewCenters(drag.restX, drag.restY, items.length) : [];
   const plusOrigin = drag ? underTileOrigin(drag.tile, drag.restY) : { x: 0, y: 0 };
+  const ribbon = drag ? taffyRibbon(plusOrigin.x, plusOrigin.y, tabX, tabY) : null;
   const overlay =
     drag && typeof document !== "undefined"
       ? createPortal(
@@ -305,18 +316,35 @@ function PlusPullTab({ nodeId }: { nodeId: string }) {
                 />
               </svg>
             ) : null}
-            {drag.live ? (
+            {drag.live && ribbon ? (
               <svg className="plus-taffy" width="100%" height="100%">
                 <defs>
                   <TileExitMask id={`plus-taffy-exit-${nodeId}`} tile={drag.tile} />
                 </defs>
-                <path
-                  data-plus-taffy="true"
-                  d={taffyPath(plusOrigin.x, plusOrigin.y, tabX, tabY)}
-                  fill="var(--plus)"
-                  fillOpacity={0.88}
-                  mask={`url(#plus-taffy-exit-${nodeId})`}
-                />
+                <g mask={`url(#plus-taffy-exit-${nodeId})`}>
+                  <path
+                    data-plus-taffy="true"
+                    d={ribbon.fill}
+                    fill="var(--plus)"
+                    fillOpacity={0.88}
+                  />
+                  <path
+                    data-plus-taffy-stroke="true"
+                    d={ribbon.top}
+                    fill="none"
+                    stroke="var(--line)"
+                    strokeWidth={TAFFY_STROKE}
+                    strokeLinecap="butt"
+                  />
+                  <path
+                    data-plus-taffy-stroke="true"
+                    d={ribbon.bottom}
+                    fill="none"
+                    stroke="var(--line)"
+                    strokeWidth={TAFFY_STROKE}
+                    strokeLinecap="butt"
+                  />
+                </g>
               </svg>
             ) : null}
             {showFan
