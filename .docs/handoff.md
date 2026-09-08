@@ -1186,3 +1186,31 @@ Corrections in the same chat before the next slice starts get their own short en
   - `npm run test:e2e` — pass (87 passed, Chromium, 3 workers, 54.0s)
 - Status: COMPLETE
 - Commit: `feat(improve-09): drop select glow`
+
+## Improvement 10 — insert preview Paths and move cursor — 2026-09-08
+
+- Starting commit: `704c69003396c5714e57c59acfb05f0b36ba4c0f` (`feat(improve-09): drop select glow`)
+- Working tree at start: not fully clean. Untracked ELK planner dumps left uncommitted, as prior agents did. Uncommitted Path-tab dotted glyph (PathKnotIcon) and in-progress Path-delete / Who-follow work from other chats were present. Improvement 10 files are this commit; Path-delete and Who-follow code left unstaged.
+- GOAL clauses addressed: NG-02, CX-05, P-08, CX-07 (amendments dated 2026-09-08)
+- Library research and decisions: no new runtime dependency. Insert preview is the existing blue ELK band only (user: “the blue paths are actually good”). Split stubs + `ensureOrthogonal` were the boxy rectangle. Bundled sibling Paths share the same trunk, so they are skipped as drop targets and faded with the origin. Move cursor is a 24×24 four-way SVG (ink + white halo), CSS `move` fallback — not the Mantine pointer hand. Empty paper stays grab.
+- Files changed:
+  - Contract/docs: `.docs/GOAL.md` amendments; `.docs/IMPROVEMENTS.md`; `.docs/improve-10-drag-preview.plan.md`; `.docs/VISUAL_IMPROVEMENTS.md` plus the user GIF; this handoff entry
+  - Preview: `pathHit.ts` (`skipInsertHover`, `routesShareBundle`); `FlowArrow.tsx` (blue band, no stubs); `Board.tsx` (fade incident/bundled Paths, `data-tile-drag` / `data-editable`); `TileChrome.tsx` (bundled skip, After insert hit-test, pickup from unselected)
+  - Cursor: `tokens.css` (`--tile-move-cursor`, body class while dragging)
+  - Glyph leftover required by TileChrome import: `PathKnotIcon.tsx` (three equal capsule dashes)
+  - Tests: `pathHit.test.ts`, `App.test.tsx`, `e2e/improve-10-drag-preview.spec.ts`
+  - Evidence: `.docs/evidence/improve-10-drag-preview/`
+- Behavior implemented:
+  - Dragging a tile over a Path shows the blue ELK insert band, landing silhouette, and neighbor gap. No split orthogonal stub overlay. Incident Paths and bundled siblings fade and are not drop targets.
+  - Editable Step/Data tiles use a four-way move cursor. During tile-drag the move cursor follows the pointer. `+` / Path tabs stay grab. Pointer-down on an unselected editable tile selects it; drag still starts after 10 px. After may insert on a base Path.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning)
+  - `npm run test:unit` — pass (31 files, 175 tests)
+  - `npm run test:e2e` — pass (90 passed, Chromium, 3 workers, 54.3s)
+- Evidence:
+  - `.docs/evidence/improve-10-drag-preview/insert-hover-blue-1440.png` — Review dragged over a Path; blue ELK band; silhouette; no stub overlay (1440×900)
+  - `.docs/evidence/improve-10-drag-preview/insert-drop-after-1440.png` — after drop onto `e_gt`; layout `ready` (1440×900)
+- Earlier-slice defects fixed: After insert-on-Path hit-test was still Before-only after Improvement 09 allowed After insert. TileChrome now hit-tests After too.
+- Known limitations / follow-ups: Uncommitted Who-follow and Path-delete work from other chats remains unstaged. Untracked ELK planner dumps still not committed. Incident Paths are faded, not rubber-banded to the ghost (NG-02).
+- Status: COMPLETE
+- Commit: `feat(improve-10): clean insert preview and move cursor`

@@ -33,6 +33,7 @@ import { useStore } from "../state/store";
 import { edgeTypes, nodeTypes, type Lane } from "./nodes/reactFlowRegistry";
 import { GRID, nodeSize } from "./layout/tileMetrics";
 import { insertPreviewGeom } from "./layout/insertPreview";
+import { incidentPathIds, skipInsertHover } from "./layout/pathHit";
 import { findNode } from "../workflow/selectors";
 import { measureLabelBox, type LabelBox } from "./layout/labelBox";
 import type { TileSizes } from "./layout/elkGraph";
@@ -122,6 +123,12 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
   shownRef.current = shown;
 
   const insertHoverId = interaction.kind === "tile-drag" ? interaction.hoverEdgeId : null;
+  const dragNodeId = interaction.kind === "tile-drag" ? interaction.nodeId : null;
+  const fadeInsertPath = useMemo(() => {
+    if (!dragNodeId || !shown) return (_id: string) => false;
+    const edgeList = [...workflow.edges, ...workflow.after.extraEdges];
+    return skipInsertHover(shown, incidentPathIds(edgeList, dragNodeId));
+  }, [dragNodeId, shown, workflow.edges, workflow.after.extraEdges]);
   const reduceMotion =
     typeof window !== "undefined" &&
     typeof window.matchMedia === "function" &&
@@ -182,6 +189,12 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
     }, 240);
     return () => window.clearTimeout(t);
   }, [departing]);
+
+  useEffect(() => {
+    const on = interaction.kind === "tile-drag";
+    document.body.classList.toggle("is-tile-dragging", on);
+    return () => document.body.classList.remove("is-tile-dragging");
+  }, [interaction.kind]);
 
   useEffect(() => {
     const host = hostRef.current;
@@ -335,6 +348,7 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
     const dotted = pathIsDotted(workflow, e.originId);
     const insertHover =
       interaction.kind === "tile-drag" && interaction.hoverEdgeId === e.originId;
+    const fadeIncident = Boolean(dragNodeId) && fadeInsertPath(e.id);
     const rfEdge: Edge<FlowPathData> = {
       id: e.id,
       source: e.source,
@@ -342,7 +356,11 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
       type: ReactFlowEdgeKind.Flow,
       selectable: editing && interaction.kind !== "remove-preview" && interaction.kind !== "tile-drag",
       selected: isSelected,
-      className: [insertHover ? "path-insert-hover" : undefined, dotted ? "is-path-dotted" : "is-path-solid"]
+      className: [
+        insertHover ? "path-insert-hover" : undefined,
+        fadeIncident ? "path-drag-incident" : undefined,
+        dotted ? "is-path-dotted" : "is-path-solid",
+      ]
         .filter(Boolean)
         .join(" "),
       data:
@@ -403,6 +421,8 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
       data-layout={phase}
       data-layout-error={error ? "true" : undefined}
       data-insert-preview={insertHoverId ? "true" : undefined}
+      data-tile-drag={dragNodeId ? "true" : undefined}
+      data-editable={editing && view !== ViewMode.Both ? "true" : undefined}
       data-lane={lane}
       data-pan-target={panTarget ? "true" : "false"}
       aria-label={lane === "after" ? "After lane" : "Before lane"}
@@ -461,6 +481,19 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
             const originId = (e.data as FlowPathData | undefined)?.originId;
             s.select({ type: SelectionKind.Edge, id: typeof originId === "string" ? originId : e.id });
             blurDetailsFocus();
+          }}
+          onEdgeContextMenu={(event, e) => {
+            event.preventDefault();
+            event.stopPropagation();
+            const s = useStore.getState();
+            s.setFocusedLane(lane);
+            if (!s.canvasEditable()) return;
+            if (s.interaction.kind === "remove-preview" || s.interaction.kind === "tile-drag") {
+              return;
+            }
+            const originId = (e.data as FlowPathData | undefined)?.originId;
+            const id = typeof originId === "string" ? originId : e.id;
+            s.openPathMenu(id, event.clientX, event.clientY);
           }}
           onEdgeDoubleClick={(_, e) => {
             const s = useStore.getState();

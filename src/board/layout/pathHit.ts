@@ -58,3 +58,53 @@ export function hitPathId(
   }
   return bestId;
 }
+
+const BUNDLE_EPS = 2;
+
+function samePt(a: Point, b: Point): boolean {
+  return Math.abs(a.x - b.x) <= BUNDLE_EPS && Math.abs(a.y - b.y) <= BUNDLE_EPS;
+}
+
+export function incidentPathIds(
+  edges: { id: string; source: string; target: string }[],
+  nodeId: string,
+): Set<string> {
+  const ids = new Set<string>();
+  for (const e of edges) {
+    if (e.source === nodeId || e.target === nodeId) ids.add(e.id);
+  }
+  return ids;
+}
+
+/** Shared ELK trunk (same start + same first-bend x) or shared inbound merge. */
+export function routesShareBundle(a: Point[], b: Point[]): boolean {
+  if (a.length < 2 || b.length < 2) return false;
+  if (samePt(a[0]!, b[0]!)) {
+    const a1 = a[1]!, b1 = b[1]!;
+    if (Math.abs(a1.x - b1.x) <= BUNDLE_EPS) return true;
+  }
+  const ae = a[a.length - 1]!;
+  const be = b[b.length - 1]!;
+  if (samePt(ae, be) && a.length >= 2 && b.length >= 2) {
+    const a2 = a[a.length - 2]!;
+    const b2 = b[b.length - 2]!;
+    if (Math.abs(a2.x - b2.x) <= BUNDLE_EPS) return true;
+  }
+  return false;
+}
+
+/** Skip incident Paths and any Path that shares their ELK trunk or inbound merge. */
+export function skipInsertHover(
+  layout: LaneLayout,
+  incidentIds: ReadonlySet<string>,
+): (edgeId: string) => boolean {
+  const incidentRoutes = [...incidentIds]
+    .map((id) => layout.routes[id])
+    .filter((r): r is Point[] => Boolean(r && r.length >= 2));
+  return (edgeId: string) => {
+    if (incidentIds.has(edgeId)) return true;
+    const route = layout.routes[edgeId];
+    if (!route || route.length < 2) return true;
+    return incidentRoutes.some((other) => routesShareBundle(route, other));
+  };
+}

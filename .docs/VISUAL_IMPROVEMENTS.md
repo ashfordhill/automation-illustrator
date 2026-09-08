@@ -69,3 +69,27 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 - Issue: Path-pull spindle does not read as “add a Path.” User wants a three-capsule staggered track mark.
 - Resolution: Path tab uses a chunky orthogonal fork of rounded capsules (trunk splitting into two Paths), so it reads as “pull a Path” and stays distinct from `+`.
 - Attachments: [path tracks motif](visual-improvements/2026-09-08-path-adding-tracks.png)
+
+## 2026-09-08 — Path-adding connect / dotted
+
+- Issue: Fork still feels abstract. User wants a connecting-wires mark (circles or dotted ends, not plugs) or a plain dotted line.
+- Resolution: Path tab is a short dotted Path (three round dashes). Plug drawing is too busy at tab size; a row of dots read as an ellipsis.
+- Attachments: [connect wires](visual-improvements/2026-09-08-path-connect-wires.png)
+
+## 2026-09-08 — Path dash uneven
+
+- Issue: `stroke-dasharray` on the Path tab is uneven (long dash, then two stubs).
+- Resolution: Three equal capsule dashes, drawn as rects.
+- Attachments: [uneven dashes](visual-improvements/2026-09-08-path-dash-uneven.png)
+
+## 2026-09-08 — tile-drag Path preview and move cursor
+
+- Issue: While dragging a tile, preview Paths sometimes draw as a big orthogonal box (shared trunk/spine plus stub jogs) instead of following the tile. The blue insert-band on the real ELK route is the good preview. Default tile cursor is a pointer hand; it should be a four-way move icon like Excalidraw.
+- Resolution: Shipped in `feat(improve-10): clean insert preview and move cursor`.
+- Attachments: [drag preview Paths](visual-improvements/2026-09-08-drag-preview-paths.gif)
+
+## 2026-09-08 — Path delete hit and menu
+
+- Issue: Redundant Paths (either circled Path into Jack) cannot be removed. Path strokes are hard to click.
+- Resolution: Shipped in `feat(improve-11): delete redundant Paths from the context menu`.
+- Attachments: [path delete hit](visual-improvements/2026-09-08-path-delete-hit.png)

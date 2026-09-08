@@ -9,11 +9,9 @@ import { BaseEdge, EdgeLabelRenderer, type EdgeProps } from "@xyflow/react";
 import { SelectionKind, ViewMode } from "../../workflow/catalogs";
 import { useStore } from "../../state/store";
 import { afterGraph, edgeIsDotted } from "../../workflow/graph";
-import { findEdge, findNode } from "../../workflow/selectors";
+import { findEdge } from "../../workflow/selectors";
 import type { WorkflowDoc } from "../../workflow/types";
 import { wrapConditionLines } from "../layout/labelBox";
-import { insertPreviewGeom, stubsWithNeighborShift } from "../layout/insertPreview";
-import { nodeSize } from "../layout/tileMetrics";
 import { useLaneLayoutContext } from "./LaneLayoutContext";
 import {
   lerpPolylines,
@@ -41,6 +39,9 @@ export type FlowPathData = {
   viaX?: number;
   viaY?: number;
 } & Record<string, unknown>;
+
+/** Invisible Path hit pad in SVG units — wider than the drawn stroke. */
+export const PATH_HIT_WIDTH = 44;
 
 /** Stroke for a document Path by origin id: dotted = choice, solid = always visited. */
 export function pathIsDotted(workflow: WorkflowDoc, originId: string): boolean {
@@ -175,37 +176,10 @@ export function FlowArrow({
   const insertHover = useStore(
     (s) => s.interaction.kind === "tile-drag" && s.interaction.hoverEdgeId === originId,
   );
-  const dragNodeType = useStore((s) => {
-    if (s.interaction.kind !== "tile-drag") return null;
-    return findNode(s.workflow, s.interaction.nodeId)?.type ?? null;
-  });
-  const dragTile = dragNodeType ? nodeSize(dragNodeType) : null;
-  const insertGeom =
-    insertHover && layout && dragTile && !restitch
-      ? insertPreviewGeom(layout, id, dragTile)
-      : null;
-  const easeNeighbors = Boolean(insertGeom) && !prefersReducedMotion();
-  const insertStubs = insertGeom ? stubsWithNeighborShift(insertGeom, easeNeighbors) : null;
-  const hideFullStroke = Boolean(insertStubs);
+  const hideFullStroke = insertHover && !restitch;
 
   const rect = layout?.labels[id];
   const chip = (() => {
-    if (insertGeom && insertStubs) {
-      const onSside =
-        rect &&
-        rect.x + rect.w / 2 < insertGeom.gap.x + insertGeom.gap.w / 2 &&
-        !(
-          rect.x < insertGeom.gap.x + insertGeom.gap.w &&
-          insertGeom.gap.x < rect.x + rect.w &&
-          rect.y < insertGeom.gap.y + insertGeom.gap.h &&
-          insertGeom.gap.y < rect.y + rect.h
-        );
-      if (onSside && rect) {
-        return { x: rect.x + rect.w / 2, y: rect.y + rect.h / 2, w: rect.w, h: rect.h };
-      }
-      const mid = pointAtLength(insertStubs.left, pathLength(insertStubs.left) / 2);
-      return { x: mid.x, y: mid.y, w: rect?.w, h: rect?.h };
-    }
     if (rect) return { x: rect.x + rect.w / 2, y: rect.y + rect.h / 2, w: rect.w, h: rect.h };
     const mid = pointAtLength(points, pathLength(points) / 2);
     return { x: mid.x, y: mid.y, w: undefined, h: undefined };
@@ -221,12 +195,6 @@ export function FlowArrow({
 
   const stroke = restitch ? "var(--blue-deep)" : "var(--line)";
   const strokeWidth = selected || restitch || insertHover ? 4 : 2.75;
-  const stubSegments = insertStubs
-    ? {
-        left: showDots ? polylineDrawSegments(insertStubs.left, dashPeriod) : [],
-        right: showDots ? polylineDrawSegments(insertStubs.right, dashPeriod) : [],
-      }
-    : null;
 
   return (
     <>
@@ -249,7 +217,7 @@ export function FlowArrow({
         id={id}
         path={path}
         className={edgePathClass}
-        interactionWidth={28}
+        interactionWidth={PATH_HIT_WIDTH}
         style={{
           stroke: showDots || hideFullStroke ? "transparent" : stroke,
           strokeWidth,
@@ -257,58 +225,10 @@ export function FlowArrow({
           strokeLinejoin: "miter",
         }}
       />
-      {insertStubs ? (
-        <>
-          <BaseEdge
-            id={`${id}-insert-left`}
-            path={polylineToSvg(insertStubs.left)}
-            className="path-insert-stub"
-            interactionWidth={0}
-            style={{
-              stroke: showDots ? "transparent" : stroke,
-              strokeWidth,
-              strokeLinecap: "butt",
-              strokeLinejoin: "miter",
-            }}
-          />
-          <BaseEdge
-            id={`${id}-insert-right`}
-            path={polylineToSvg(insertStubs.right)}
-            className="path-insert-stub"
-            interactionWidth={0}
-            style={{
-              stroke: showDots ? "transparent" : stroke,
-              strokeWidth,
-              strokeLinecap: "butt",
-              strokeLinejoin: "miter",
-            }}
-          />
-        </>
-      ) : null}
       {showDots && !hideFullStroke
         ? segments.map((seg, i) => (
             <path
               key={`${i}-${seg.x1}-${seg.y1}-${seg.x2}-${seg.y2}`}
-              data-path-overlay={id}
-              d={`M ${seg.x1} ${seg.y1} L ${seg.x2} ${seg.y2}`}
-              fill="none"
-              pointerEvents="none"
-              style={{
-                stroke,
-                strokeWidth,
-                strokeDasharray: dashArray,
-                strokeDashoffset: seg.dashOffset,
-                strokeLinecap: "butt",
-                strokeLinejoin: "miter",
-              }}
-            />
-          ))
-        : null}
-      {showDots && stubSegments
-        ? [...stubSegments.left, ...stubSegments.right].map((seg, i) => (
-            <path
-              key={`stub-${i}-${seg.x1}-${seg.y1}-${seg.x2}-${seg.y2}`}
-              className="path-insert-stub"
               data-path-overlay={id}
               d={`M ${seg.x1} ${seg.y1} L ${seg.x2} ${seg.y2}`}
               fill="none"
@@ -366,6 +286,12 @@ export function FlowArrow({
                 e.stopPropagation();
                 if (present || restitch) return;
                 useStore.getState().select({ type: SelectionKind.Edge, id: originId });
+              }}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (present || restitch || view === ViewMode.Both) return;
+                useStore.getState().openPathMenu(originId, e.clientX, e.clientY);
               }}
               onDoubleClick={(e) => {
                 e.stopPropagation();

@@ -12,15 +12,15 @@ import {
 import { createPortal } from "react-dom";
 import { useReactFlow, ViewportPortal } from "@xyflow/react";
 import { IconX } from "@tabler/icons-react";
-import { ViewMode, WorkflowNodeKind } from "../../workflow/catalogs";
+import { SelectionKind, ViewMode, WorkflowNodeKind } from "../../workflow/catalogs";
 import { useStore } from "../../state/store";
 import { findNode } from "../../workflow/selectors";
 import { nodeCaption } from "../../workflow/types";
 import { useLaneLayoutContext } from "../routing/LaneLayoutContext";
-import { hitPathId } from "../layout/pathHit";
+import { hitPathId, incidentPathIds, skipInsertHover } from "../layout/pathHit";
 import { insertPreviewGeom } from "../layout/insertPreview";
 import { nodeSize } from "../layout/tileMetrics";
-import { PathTracksIcon } from "./PathKnotIcon";
+import { PathKnotIcon } from "./PathKnotIcon";
 import { DataChip } from "../tiles/DataChip";
 
 const PULL_THRESHOLD = 36;
@@ -166,7 +166,7 @@ export function TileChrome({
       className={`tile-chrome-host${pulling ? " is-pulling" : ""}${selected && editing ? " is-selected" : ""}`}
       style={{ position: "relative", width: "100%", height: "100%", overflow: "visible" }}
     >
-      <TilePickup id={id} selected={!!selected && editing} disabled={!editing || !selected || tabPulling}>
+      <TilePickup id={id} selected={!!selected && editing} disabled={!editing || tabPulling}>
         {children}
       </TilePickup>
       {interaction.kind === "tile-drag" && interaction.nodeId === id ? <InsertSilhouette nodeId={id} /> : null}
@@ -475,7 +475,7 @@ function PathPullTab({ nodeId }: { nodeId: string }) {
             </svg>
             {drag.live ? (
               <div className="path-tab-ghost" style={{ left: endX, top: endY }}>
-                <PathTracksIcon size={24} />
+                <PathKnotIcon size={24} />
               </div>
             ) : null}
           </div>,
@@ -497,7 +497,7 @@ function PathPullTab({ nodeId }: { nodeId: string }) {
         onPointerCancel={onPointerUp}
         onClick={(e) => e.stopPropagation()}
       >
-        <PathTracksIcon size={24} />
+        <PathKnotIcon size={24} />
       </button>
       {overlay}
     </>
@@ -563,16 +563,19 @@ function TilePickup({
     }
   }, [disabled]);
 
-  const skipEdge = (edgeId: string) => {
+  const skipHover = (edgeId: string) => {
     const doc = useStore.getState().workflow;
-    const e = doc.edges.find((x) => x.id === edgeId) ?? doc.after.extraEdges.find((x) => x.id === edgeId);
-    if (!e) return true;
-    return e.source === id || e.target === id;
+    if (!layout) return true;
+    const edges = [...doc.edges, ...doc.after.extraEdges];
+    return skipInsertHover(layout, incidentPathIds(edges, id))(edgeId);
   };
 
   const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
-    if (disabled || !selected || e.button !== 0) return;
+    if (disabled || e.button !== 0) return;
     if ((e.target as HTMLElement).closest("button, a, input, textarea")) return;
+    if (!selected) {
+      useStore.getState().select({ type: SelectionKind.Node, id });
+    }
     origin.current = { x: e.clientX, y: e.clientY };
     dragging.current = false;
     e.stopPropagation();
@@ -590,7 +593,7 @@ function TilePickup({
       setGhost({ x: e.clientX, y: e.clientY, w: box?.width ?? 160, h: box?.height ?? 96 });
     }
     const flow = rf.screenToFlowPosition({ x: e.clientX, y: e.clientY });
-    const hover = view === ViewMode.Before ? hitPathId(layout, flow, skipEdge) : null;
+    const hover = view === ViewMode.Both ? null : hitPathId(layout, flow, skipHover);
     useStore.getState().setTileDragHover(hover);
     setGhost((g) => (g ? { ...g, x: e.clientX, y: e.clientY } : g));
   };

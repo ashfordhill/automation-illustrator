@@ -193,11 +193,13 @@ test("tile-drag hover sets insert preview on the lane without mutating the docum
     useStore.getState().setTileDragHover(OAK_PARK_IDS.gt);
   });
   expect(host.querySelector('[data-insert-preview="true"]')).not.toBeNull();
+  expect(host.querySelector('[data-tile-drag="true"]')).not.toBeNull();
   expect(host.textContent).toMatch(/Neighbors make a gap/);
   expect(useStore.getState().workflow.edges.map((e) => e.id).sort()).toEqual(edges);
   act(() => {
     useStore.getState().closeBoardModes();
   });
   expect(host.querySelector('[data-insert-preview="true"]')).toBeNull();
+  expect(host.querySelector('[data-tile-drag="true"]')).toBeNull();
   expect(useStore.getState().workflow.edges.map((e) => e.id).sort()).toEqual(edges);
 });
