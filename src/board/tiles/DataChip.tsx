@@ -1,6 +1,6 @@
 /**
- * Coral oval mark on Data tiles — not yellow (yellow is inspector/view selection)
- * and not teal (Path tab / icy paper family).
+ * Purple oval mark on Data tiles — not yellow (inspector/view selection),
+ * not teal (Path tab), not Missy’s pastel lavender Who.
  * Lives next to StepKindIcon so board marks stay in tiles/.
  */
 import type { CSSProperties } from "react";

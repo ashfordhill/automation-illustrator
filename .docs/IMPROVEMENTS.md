@@ -585,3 +585,12 @@ Approved 2026-09-08. The stacked comparison switch is **Compare** (stored view s
 
 Commit: `feat(improve-26): compare view without pan outline`.  
 Evidence: `.docs/evidence/improve-26-compare/`.
+
+---
+
+# Improvement 27 — purple Data mark
+
+Approved 2026-09-08. The Data oval is **grape purple** (`#7b3fe0` light, `#b07dff` dark) instead of coral. Distinct from Missy’s pastel lavender Who (`#c89bf5`). Path-pull tab stays teal. No new dependency.
+
+Commit: `feat(improve-27): recolor the Data mark purple`.  
+Evidence: `.docs/evidence/improve-27-data-purple/`.

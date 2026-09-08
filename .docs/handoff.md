@@ -1687,3 +1687,30 @@ Corrections in the same chat before the next slice starts get their own short en
 - Known limitations / follow-ups: Concurrent tile-pie / Compare / inspector WIP remains unstaged. jsdom cannot mount Manage actors Textarea autosize; e2e covers that panel.
 - Status: COMPLETE
 - Commit: `feat(improve-21): add bottom status bar`
+
+## Improvement 27 — purple Data mark — 2026-09-08
+
+- Starting commit: `6145df4` (`feat(improve-21): add bottom status bar`)
+- Working tree at start: not clean. Concurrent tile-pie / evidence recaptures were left unstaged and are not in this commit.
+- GOAL clauses addressed: P-09 (light and dark Data mark contrast). No amendment — Data fill hex is not in the contract.
+- Library research and decisions: no new runtime dependency. Coral `#e8784a` read as orange. Saturated grape `#7b3fe0` (dark `#b07dff`) sits apart from Missy’s pastel lavender Who `#c89bf5`, yellow select, teal Path tab, plus green, and minus red. Path tab stays `--data` teal.
+- Files changed:
+  - `src/board/tiles/dataMark.css`, `src/board/tiles/DataChip.tsx`
+  - Tests: `e2e/improve-27-data-purple.spec.ts`; `e2e/improve-25-data-mark.spec.ts` (expects the current mark, not coral)
+  - Docs: `.docs/IMPROVEMENTS.md` (27); this handoff entry
+  - Evidence: `.docs/evidence/improve-27-data-purple/`
+- Behavior implemented:
+  - Data tiles and the `+` Data preview oval are grape purple instead of coral.
+  - Path-pull tab fill is unchanged (still washed teal).
+- Tests and exact results:
+  - `npm run build` — `tsc --noEmit` blocked on concurrent missing `pieGeometry.ts`; this commit’s files typecheck. Vite not re-run here.
+  - `npm run test:unit` — not re-run (CSS token only). Concurrent App.test status-bar failures remain on the dirty tree.
+  - `npm run test:e2e` — `e2e/improve-27-data-purple.spec.ts` pass (1); `e2e/improve-25-data-mark.spec.ts` pass (1). Full suite not re-run; port 4177 was in use (ran on 4196).
+- Evidence:
+  - `.docs/evidence/improve-27-data-purple/data-mark-light-1440.png` — Account # selected; grape oval, teal Path tab (1440×900)
+  - `.docs/evidence/improve-27-data-purple/data-mark-dark-1440.png` — same in dark (1440×900)
+- Earlier-slice defects fixed: none
+- Known limitations / follow-ups: Concurrent tile-pie WIP remains unstaged.
+- Status: COMPLETE
+- Commit: `feat(improve-27): recolor the Data mark purple`
+

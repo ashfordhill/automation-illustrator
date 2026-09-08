@@ -1,27 +1,27 @@
 import { expect, test } from "@playwright/test";
 import { capturePage, loadOakPark } from "./ready";
 
-const EVIDENCE = ".docs/evidence/improve-25-data-mark";
-const MARK_LIGHT = "rgb(123, 63, 224)";
-const MARK_DARK = "rgb(176, 125, 255)";
-const TEAL_LIGHT = "rgb(29, 184, 168)";
+const EVIDENCE = ".docs/evidence/improve-27-data-purple";
+const PURPLE_LIGHT = "rgb(123, 63, 224)";
+const PURPLE_DARK = "rgb(176, 125, 255)";
 const CORAL_LIGHT = "rgb(232, 120, 74)";
+const MISSY = "rgb(200, 155, 245)";
 
-test.describe("Improvement 25 — Data mark is not teal", () => {
-  test("Account # oval is the Data mark color, not teal, in light and dark", async ({ page }) => {
+test.describe("Improvement 27 — purple Data mark", () => {
+  test("Account # oval is grape purple, not coral, in light and dark", async ({ page }) => {
     await loadOakPark(page);
     await page.getByText("Account #").first().click();
     const mark = page.locator(".field-piece.selected ellipse").first();
     await expect(mark).toBeVisible();
     await expect
       .poll(async () => mark.evaluate((el) => getComputedStyle(el).fill))
-      .toBe(MARK_LIGHT);
-    await expect
-      .poll(async () => mark.evaluate((el) => getComputedStyle(el).fill))
-      .not.toBe(TEAL_LIGHT);
+      .toBe(PURPLE_LIGHT);
     await expect
       .poll(async () => mark.evaluate((el) => getComputedStyle(el).fill))
       .not.toBe(CORAL_LIGHT);
+    await expect
+      .poll(async () => mark.evaluate((el) => getComputedStyle(el).fill))
+      .not.toBe(MISSY);
     await capturePage(page, `${EVIDENCE}/data-mark-light-1440.png`);
 
     await page.getByRole("button", { name: "Menu" }).click();
@@ -29,7 +29,7 @@ test.describe("Improvement 25 — Data mark is not teal", () => {
     await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
     await expect
       .poll(async () => mark.evaluate((el) => getComputedStyle(el).fill))
-      .toBe(MARK_DARK);
+      .toBe(PURPLE_DARK);
     await capturePage(page, `${EVIDENCE}/data-mark-dark-1440.png`);
   });
 });
