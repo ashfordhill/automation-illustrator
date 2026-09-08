@@ -53,6 +53,13 @@ import {
   viewportZoomAround,
   wheelZoomFactor,
 } from "./zoom";
+import {
+  FIRST_LAYOUT_FIT_PADDING,
+  canApplyFirstLayoutCamera,
+  firstLayoutCentersAtCurrentZoom,
+  layoutBoundsAreUsable,
+  viewportToCenterRect,
+} from "./firstLayoutCamera";
 
 /** Clicking a tile should send Delete to the board, not a leftover inspector field. */
 function blurDetailsFocus() {
@@ -145,11 +152,19 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
     return { geom, sourceId: edge.source, targetId: edge.target };
   })();
 
-  /* First layout: fit once unless this lane already has a saved viewport.
+  /* First nonempty layout: fit once unless this lane already has a saved viewport.
+     Empty New does not consume that fit (P-08). A sole Tile is centered at the
+     current zoom so Add Step / Add Data is not stuck at the top left.
      In Both, copy the other lane's camera instead of fitting independently (BA-05). */
+  const nodeCount = projection.nodes.length;
+  const layoutKey = layout?.key ?? "";
   const fitted = useRef(Boolean(initialViewport.current));
   useEffect(() => {
-    if (fitted.current || phase === "initial") return;
+    if (nodeCount === 0) {
+      fitted.current = false;
+      return;
+    }
+    if (fitted.current || !canApplyFirstLayoutCamera(phase, nodeCount)) return;
     if (useStore.getState().view === ViewMode.Both) {
       const other = getReactFlow(otherLane(lane));
       if (other) {
@@ -162,10 +177,33 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
         }
       }
     }
+    const targetBounds = layout?.bounds;
+    if (firstLayoutCentersAtCurrentZoom(nodeCount) && !layoutBoundsAreUsable(targetBounds)) {
+      return;
+    }
     fitted.current = true;
     let raf = 0;
     const attempt = () => {
-      void rf.fitView({ padding: 0.28 }).then((done) => {
+      if (firstLayoutCentersAtCurrentZoom(nodeCount)) {
+        const paneEl = hostRef.current?.querySelector(".react-flow");
+        const pane = paneEl instanceof HTMLElement ? paneEl.getBoundingClientRect() : null;
+        const box = targetBounds;
+        if (!pane || pane.width < 1 || pane.height < 1 || !layoutBoundsAreUsable(box)) {
+          raf = requestAnimationFrame(attempt);
+          return;
+        }
+        const zoom = rf.getViewport().zoom || 1;
+        const next = viewportToCenterRect(pane, box, zoom);
+        applyViewport(lane, next);
+        const s = useStore.getState();
+        s.setLaneViewport(lane, next);
+        if (s.view === ViewMode.Both) {
+          s.setLaneViewport(otherLane(lane), next);
+          applyViewport(otherLane(lane), next);
+        }
+        return;
+      }
+      void rf.fitView({ padding: FIRST_LAYOUT_FIT_PADDING }).then((done) => {
         if (!done) {
           raf = requestAnimationFrame(attempt);
           return;
@@ -181,7 +219,8 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
     };
     attempt();
     return () => cancelAnimationFrame(raf);
-  }, [phase, rf, lane]);
+    // layout.bounds is keyed by layoutKey; do not retrigger on animated `shown`.
+  }, [phase, rf, lane, nodeCount, layoutKey]);
 
   useEffect(() => {
     if (!departing) return;

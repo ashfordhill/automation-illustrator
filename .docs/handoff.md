@@ -1570,3 +1570,31 @@ Corrections in the same chat before the next slice starts get their own short en
 - Known limitations / follow-ups: Concurrent inspector-fold / status-bar / tile-pie WIP remains unstaged.
 - Status: COMPLETE
 - Commit: `feat(improve-22): sit create tabs closer to the tile`
+
+## Improvement 24 — first Tile from New is centered — 2026-09-08
+
+- Starting commit: `e735abe` (`feat(improve-20): fold the right inspector`)
+- Working tree at start: not clean. Concurrent status-bar, tile-pie, and evidence recaptures were left unstaged and are not in this commit. GOAL P-08 amendment and Improvement 24 plan text were already on HEAD from concurrent doc commits.
+- GOAL clauses addressed: P-08 (amendment dated 2026-09-08). One-time fitView remains for demos; empty New no longer consumes it.
+- Library research and decisions: no new runtime dependency. Displayed positions still come from ELK (CX-05), so the camera pans: a sole Tile is centered at the current zoom instead of `fitView` zooming in on the island. Empty layouts reset the one-time fit so deleting the last Tile and Add Step/Data also centers.
+- Files changed:
+  - `src/board/firstLayoutCamera.ts`, `src/board/firstLayoutCamera.test.ts`
+  - `src/board/Board.tsx` (skip empty fit; center a sole Tile)
+  - Tests: `e2e/improve-24-first-tile-center.spec.ts`
+  - Contract/docs: `.docs/GOAL.md` (P-08 amendment); `.docs/IMPROVEMENTS.md` (24); this handoff entry
+  - Evidence: `.docs/evidence/improve-24-first-tile-center/`
+- Behavior implemented:
+  - New → Add Step or Add Data places the first Tile in the center of the board at zoom 1, not the top left.
+  - Demo / Import first layout still uses `fitView` with padding 0.28.
+- Tests and exact results:
+  - `npm run build` — `tsc --noEmit` blocked on concurrent unused imports in `App.tsx` (StatusBar / TilePieMenu); this commit’s files typecheck.
+  - `npm run test:unit` — `src/board/firstLayoutCamera.test.ts` pass (4). Full suite has concurrent status-bar / pieGeometry failures unrelated to this commit.
+  - `npm run test:e2e` — `e2e/improve-24-first-tile-center.spec.ts` pass (2). Full suite not re-run; port 4177 was in use.
+- Evidence:
+  - `.docs/evidence/improve-24-first-tile-center/add-step-centered-1440.png` — New board Add Step; Task tile centered in the board (1440×900)
+  - `.docs/evidence/improve-24-first-tile-center/add-data-centered-1440.png` — New board Add Data; Data tile centered in the board (1440×900)
+- Earlier-slice defects fixed: empty `emptyLayout` was consuming the one-time `fitView`, so the first Tile stayed at ELK origin (top left).
+- Known limitations / follow-ups: Concurrent inspector-fold / status-bar / tab-peek / tile-pie WIP remains unstaged.
+- Status: COMPLETE
+- Commit: `feat(improve-24): center the first Tile from New`
+
