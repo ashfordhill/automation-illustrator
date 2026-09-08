@@ -978,3 +978,33 @@ Corrections in the same chat before the next slice starts get their own short en
 - Known limitations / follow-ups: Step-select jump and view-switch fill — Improvement 05. Inspector Who/trash/zoom/hamburger — Improvement 06. Merge removal — Improvement 07. After-only insert-on-Path and Path `−` remain out of scope. Packed ELK gutters may clamp neighbor ease to zero (split + silhouette still show).
 - Status: COMPLETE
 - Commit: `feat(improve-04): preview tile insert on Path while dragging`
+
+## Improvement 05 — Step select stay-put, chunky view switch — 2026-09-07
+
+- Starting commit: `66cc0f1a9513c07e32ef025dd0b6533d18c649f8` (`feat(improve-04): preview tile insert on Path while dragging`)
+- Working tree at start: tracked files clean; untracked ELK planner dumps left uncommitted
+- GOAL clauses addressed: CX-07, P-01, SH-01, SH-02 (amendments appended 2026-09-07; clauses not edited in place)
+- Library research and decisions: no new runtime dependency. Kept the existing `ViewSwitch` radiogroup of three buttons; did not use Mantine `SegmentedControl`. Frame is 4 px `var(--ink)` (ink in light, ice in dark) with an inner overflow-hidden track at radius 10 px so the selected yellow fill meets the outer curve. Dropped the `.is-on` inset yellow ring. `--chrome-line` cyan stays on the rest of the chrome. Tile `--select-ring` unchanged. Drag-lift `translateY(-3px)` kept.
+- Files changed:
+  - Contract/docs: `.docs/GOAL.md` amendments; `.docs/IMPROVEMENTS.md` (05 marked COMPLETE); this handoff entry
+  - Tiles: `StepTile.tsx`, `MergedStepTile.tsx` (select no longer translates)
+  - Shell: `Toolbar.tsx` (inner `.view-switch-track`), `tokens.css` (ink/cream frame, full-cell yellow, ink dividers)
+  - Tests: `e2e/view-switch.spec.ts`
+  - Evidence: `.docs/evidence/improve-05-chrome/`; existing shell/e2e screenshots recaptured with the new switch
+- Behavior implemented:
+  - Selecting a Step or merge tile no longer nudges it 1 px. Data was already still. Drag still lifts.
+  - Before / After / Both uses a chunky ink (light) or ice (dark) frame. Selected yellow fill goes edge-to-edge of that cell, including Before’s left radius and Both’s right. No cyan hairline on this control. Present still shows the switch.
+- Tests and exact results:
+  - `npm install` at start — up to date, 137 packages, 0 vulnerabilities
+  - `npm run build` at start — pass (`tsc --noEmit && vite build`; Vite 8.2.2)
+  - `npm run test:unit` at start — pass (31 files, 162 tests)
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning; client `index-Ddrg4ON3.js` 874.71 kB)
+  - `npm run test:unit` — pass (31 files, 162 tests)
+  - `npm run test:e2e` — pass (81 passed, Chromium, 3 workers, 40.3s including webServer)
+- Evidence:
+  - `.docs/evidence/improve-05-chrome/view-switch-before-1440.png` — Before selected; yellow meets the left radius; 4 px ink frame, no cyan (1440×900)
+  - `.docs/evidence/improve-05-chrome/step-select-1440.png` — Search website selected next to unselected Search filesystem; no 1 px hop (1440×900)
+- Earlier-slice defects fixed: none
+- Known limitations / follow-ups: Inspector Who/trash/Other/zoom/hamburger — Improvement 06. Merge removal — Improvement 07. Global `--chrome-line` restyle and tile `--select-ring` remain out of scope.
+- Status: COMPLETE
+- Commit: `feat(improve-05): keep Steps still and chunk the view switch`

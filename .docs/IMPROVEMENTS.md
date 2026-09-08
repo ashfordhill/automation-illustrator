@@ -305,7 +305,7 @@ When done: run `npm run build`, `npm run test:unit`, `npm run test:e2e`; save sc
 
 ---
 
-# Improvement 05 — Step select stay-put, chunky view switch
+# Improvement 05 — Step select stay-put, chunky view switch (COMPLETE)
 
 Approved 2026-09-07. Start only after Improvement 04 is COMPLETE.
 

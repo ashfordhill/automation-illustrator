@@ -65,7 +65,7 @@ export function StepTile({
         boxShadow: lifted
           ? "0 10px 0 var(--btn-shadow), 0 18px 24px var(--btn-shadow)"
           : "0 5px 0 var(--btn-shadow)",
-        transform: lifted ? "translateY(-3px)" : selected ? "translateY(-1px)" : undefined,
+        transform: lifted ? "translateY(-3px)" : undefined,
         outline: selected ? "3px solid var(--select-ring)" : "none",
         outlineOffset: 4,
         transition: "transform 140ms ease, box-shadow 140ms ease",

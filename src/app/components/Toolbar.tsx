@@ -32,21 +32,23 @@ function ViewSwitch() {
   const view = useStore((s) => s.view);
   return (
     <div className="view-switch" role="radiogroup" aria-label="Before, After, or Both">
-      {VIEW_OPTIONS.map((opt) => {
-        const on = view === opt.value;
-        return (
-          <button
-            key={opt.value}
-            type="button"
-            role="radio"
-            aria-checked={on}
-            className={`view-switch-btn${on ? " is-on" : ""}`}
-            onClick={() => useStore.getState().setView(opt.value)}
-          >
-            {opt.label}
-          </button>
-        );
-      })}
+      <div className="view-switch-track">
+        {VIEW_OPTIONS.map((opt) => {
+          const on = view === opt.value;
+          return (
+            <button
+              key={opt.value}
+              type="button"
+              role="radio"
+              aria-checked={on}
+              className={`view-switch-btn${on ? " is-on" : ""}`}
+              onClick={() => useStore.getState().setView(opt.value)}
+            >
+              {opt.label}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
