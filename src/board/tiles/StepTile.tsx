@@ -3,7 +3,7 @@
  * Mounted by board/nodes/StepNode.tsx inside React Flow.
  */
 import { STEP_H, STEP_W } from "../layout/tileMetrics";
-import { stepDisplayLabel, type ActorDto, type StepKind } from "../../workflow/types";
+import { StepKind, stepDisplayLabel, type ActorDto } from "../../workflow/types";
 import { ActorColumn } from "./ActorColumn";
 import { FitLabel } from "./FitLabel";
 import { StepKindIcon } from "./StepKindIcon";
@@ -22,7 +22,7 @@ function TaskCard({
   const trimmedDetail = detail.trim();
   return (
     <div className="task-card">
-      <StepKindIcon kind={kind} />
+      <StepKindIcon kind={kind} size={kind === StepKind.Other ? 60 : 52} />
       {headline ? (
         <div className="task-card-title">
           <FitLabel text={headline} maxFontSizePx={14} mode="box" maxLines={3} />

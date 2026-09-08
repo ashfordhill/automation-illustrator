@@ -2,8 +2,8 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { DemoId } from "../demos/catalog";
 import { freshBoard, isEmptyBoard, OAK_PARK_IDS } from "../demos/oakParkInvoice";
 import { MAILROOM_IDS, robotMailroom } from "../demos/robotMailroom";
-import { ColorScheme, ViewMode, WorkflowNodeKind } from "../workflow/catalogs";
-import { UNFOLD_NOTICE } from "../workflow/types";
+import { ColorScheme, StepKind, ViewMode, WorkflowNodeKind } from "../workflow/catalogs";
+import { UNFOLD_NOTICE, isStepNode } from "../workflow/types";
 import * as persist from "./persistence";
 import { useStore } from "./store";
 
@@ -96,7 +96,10 @@ test("addStep on an empty board creates the root (WG-01)", () => {
   const id = useStore.getState().addStep();
   expect(id).toBeTruthy();
   expect(useStore.getState().workflow.nodes).toHaveLength(1);
-  expect(useStore.getState().workflow.nodes[0]?.id).toBe(id);
+  const root = useStore.getState().workflow.nodes[0];
+  expect(root?.id).toBe(id);
+  expect(root && isStepNode(root) && root.stepKind).toBe(StepKind.Other);
+  expect(root && isStepNode(root) && root.title).toBe("Task");
 });
 
 test("addField on an empty board creates a Data root (WG-01)", () => {

@@ -257,8 +257,23 @@ export const STEP_KIND_META: Record<
   [StepKind.Approve]: { label: "Approve", defaultTitle: "" },
   [StepKind.Call]: { label: "Call", defaultTitle: "" },
   [StepKind.File]: { label: "File", defaultTitle: "" },
-  [StepKind.Other]: { label: "Other", defaultTitle: "" },
+  [StepKind.Other]: { label: "Other", defaultTitle: "Task" },
 };
+
+/**
+ * The first time a Step becomes Other with an empty Name, fill "Task" so the tile
+ * has copy. A Name the user already typed is kept.
+ */
+export function titleForStepKindChange(
+  nextKind: StepKind,
+  previousKind: StepKind,
+  title: string,
+): string {
+  if (nextKind === StepKind.Other && previousKind !== StepKind.Other && !title.trim()) {
+    return STEP_KIND_META[StepKind.Other].defaultTitle;
+  }
+  return title;
+}
 
 /** On-tile copy: Type, then a space, then Name. Other is Name only (never the word Other). */
 export function stepDisplayLabel(kind: StepKind, target: string): string {

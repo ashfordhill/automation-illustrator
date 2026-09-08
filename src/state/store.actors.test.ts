@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, expect, test } from "vitest";
-import { ColorScheme, SelectionKind, SplitKind, ViewMode, WorkflowNodeKind } from "../workflow/catalogs";
+import { ColorScheme, SelectionKind, SplitKind, StepKind, ViewMode, WorkflowNodeKind } from "../workflow/catalogs";
 import { OAK_PARK_IDS } from "../demos/oakParkInvoice";
 import { MAILROOM_IDS } from "../demos/robotMailroom";
 import { DemoId } from "../demos/catalog";
+import { isStepNode } from "../workflow/types";
 import { useStore } from "./store";
 
 function resetSession() {
@@ -132,4 +133,21 @@ test("removeActor blocks used humans and deletes unused Priya (NA-02)", () => {
   s.confirmReplaceDiscard();
   expect(useStore.getState().removeActor(MAILROOM_IDS.priya)).toBe(true);
   expect(useStore.getState().workflow.actors.some((a) => a.id === MAILROOM_IDS.priya)).toBe(false);
+});
+
+test("new Other Steps are named Task; choosing Other fills an empty Name once", () => {
+  const { review, read } = OAK_PARK_IDS;
+  const child = useStore.getState().spawnBranch(review, WorkflowNodeKind.Step);
+  const spawned = useStore.getState().workflow.nodes.find((n) => n.id === child);
+  expect(spawned && isStepNode(spawned) && spawned.stepKind).toBe(StepKind.Other);
+  expect(spawned && isStepNode(spawned) && spawned.title).toBe("Task");
+
+  useStore.getState().updateNode(read, { stepKind: StepKind.Other });
+  const kept = useStore.getState().workflow.nodes.find((n) => n.id === read);
+  expect(kept && isStepNode(kept) && kept.title).toBe("invoice.pdf");
+
+  useStore.getState().updateNode(read, { title: "", stepKind: StepKind.Read });
+  useStore.getState().updateNode(read, { stepKind: StepKind.Other });
+  const seeded = useStore.getState().workflow.nodes.find((n) => n.id === read);
+  expect(seeded && isStepNode(seeded) && seeded.title).toBe("Task");
 });

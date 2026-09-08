@@ -1352,3 +1352,29 @@ Corrections in the same chat before the next slice starts get their own short en
 - Evidence: n/a (OS cursors are not captured in screenshots)
 - Status: COMPLETE
 - Commit: `feat(improve-10): use platform move and grab cursors`
+
+## Improvement 16 — Other Task name and clipboard — 2026-09-08
+
+- Starting commit: `559c907e98dda9885bfd76808fabb4febdb41730` (`feat(improve-10): use platform move and grab cursors`)
+- Working tree at start: not clean. Concurrent tab-size, taffy, cursor, and evidence recaptures were left unstaged and are not in this commit.
+- GOAL clauses addressed: NA-05, NA-10 (amendment dated 2026-09-08). Other still never prints the word Other.
+- Library research and decisions: no new runtime dependency. Other Type icon is a custom cream/blue/ink clipboard (same recipe as Read/File), not Tabler and not a circled exclamation. Tile icon 60px (others 52); inspector Other mark 30px.
+- Files changed:
+  - `src/workflow/types.ts` (`defaultTitle: "Task"`, `titleForStepKindChange`)
+  - `src/state/store.ts` (`updateNode` seeds empty Name when Type first becomes Other)
+  - `src/board/tiles/StepKindIcon.tsx`, `src/board/tiles/StepTile.tsx`, `src/app/inspector/TypeButtons.tsx`
+  - Tests: `src/workflow/types.test.ts`, `src/state/store.replace.test.ts`, `src/state/store.actors.test.ts`, `src/app/App.test.tsx`, `e2e/improve-16-other-task.spec.ts`
+  - Contract/docs: `.docs/GOAL.md`, `.docs/IMPROVEMENTS.md`, `.docs/VISUAL_IMPROVEMENTS.md`, this handoff entry
+- Behavior implemented:
+  - Empty-board Add Step, `+` / `1` child, and After-only Other Steps get Name **Task** so the tile shows that word.
+  - Choosing Type Other with an empty Name fills Task once; a Name already typed is kept.
+  - Other uses a larger clipboard (generic work), not an exclamation.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning)
+  - `npm run test:unit` — pass (31 files, 183 tests)
+  - `npm run test:e2e` — not run here (Playwright Chromium missing `libnspr4.so` on this WSL). Spec added: `e2e/improve-16-other-task.spec.ts`
+- Evidence: e2e captures under `.docs/evidence/improve-16-other-task/` when Playwright can launch. Unit/App tests cover Name Task and no “Other Task” copy.
+- Earlier-slice defects fixed: none
+- Known limitations / follow-ups: Playwright evidence PNGs still needed on a machine with Chromium libs. Concurrent tab-size / taffy / cursor WIP remains unstaged.
+- Status: COMPLETE
+- Commit: `feat(improve-16): default Other Steps to Task`

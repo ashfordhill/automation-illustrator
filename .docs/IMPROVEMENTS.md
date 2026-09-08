@@ -469,3 +469,12 @@ When a Before-origin Step is created from another Step (`+` / `1`), the child ge
 
 Commit: `feat(improve-13): inherit parent actor on child Steps`.  
 Evidence: `.docs/evidence/improve-13-who-inherit/`.
+
+---
+
+# Improvement 16 — Other Task name and clipboard (COMPLETE)
+
+Approved 2026-09-08. New Other Steps get Name **Task** so the tile shows copy. Choosing Type Other with an empty Name fills Task once; a typed Name is kept. The Other icon is a clipboard (generic work), a little larger than the other Type icons — not a circled exclamation. The tile still never prints the word Other.
+
+Commit: `feat(improve-16): default Other Steps to Task`.  
+Evidence: `.docs/evidence/improve-16-other-task/`.

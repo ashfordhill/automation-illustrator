@@ -105,3 +105,9 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 - Issue: Pulled `+` taffy is a flat green band with no outline, unlike the ink-bordered tiles it joins.
 - Resolution: Shipped in `feat(improve-08): outline the plus taffy` — ink stroke on the taffy’s long edges (not the round caps).
 - Attachments: [outline marks](visual-improvements/2026-09-08-taffy-outline-marks.png) · [no outline](visual-improvements/2026-09-08-taffy-no-outline.png)
+
+## 2026-09-08 — Other Task name and icon
+
+- Issue: New Other Steps show only a small circled exclamation and no Name, so the task half is blank.
+- Resolution: Shipped Name “Task” on first Other, with a larger clipboard icon instead of the exclamation.
+- Attachments: [other blank](visual-improvements/2026-09-08-other-task-blank.jpg)

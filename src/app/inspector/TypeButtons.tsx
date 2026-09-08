@@ -1,7 +1,7 @@
 /**
  * Alphabetical Step Type fat buttons; Other last (NA-05).
  */
-import { STEP_KIND_META, typePickerKinds, type StepKind } from "../../workflow/types";
+import { STEP_KIND_META, StepKind, typePickerKinds } from "../../workflow/types";
 import { StepKindIcon } from "../../board/tiles/StepKindIcon";
 
 export function TypeButtons({
@@ -18,6 +18,7 @@ export function TypeButtons({
       {typePickerKinds(value).map((kind) => {
         const label = STEP_KIND_META[kind].label;
         const on = value === kind;
+        const other = kind === StepKind.Other;
         return (
           <button
             key={kind}
@@ -28,8 +29,23 @@ export function TypeButtons({
             disabled={disabled}
             onClick={() => onChange(kind)}
           >
-            <span className="inspector-type-icon">
-              <StepKindIcon kind={kind} />
+            <span
+              className={other ? undefined : "inspector-type-icon"}
+              style={
+                other
+                  ? {
+                      width: 30,
+                      height: 30,
+                      flex: "0 0 30px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      overflow: "hidden",
+                    }
+                  : undefined
+              }
+            >
+              <StepKindIcon kind={kind} size={other ? 30 : 52} />
             </span>
             {label}
           </button>

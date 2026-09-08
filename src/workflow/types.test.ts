@@ -1,5 +1,12 @@
 import { expect, test } from "vitest";
-import { StepKind, nodeCaption, stepDisplayLabel, typePickerKinds } from "./types";
+import {
+  STEP_KIND_META,
+  StepKind,
+  nodeCaption,
+  stepDisplayLabel,
+  titleForStepKindChange,
+  typePickerKinds,
+} from "./types";
 import type { StepNodeDto } from "./types";
 
 test("Type picker omits Scan, Drag, Approve, and File", () => {
@@ -25,10 +32,19 @@ test("a retired Type still appears when the selected Step already has it", () =>
 
 test("Other on-tile copy is the Name only", () => {
   expect(stepDisplayLabel(StepKind.Other, "")).toBe("");
+  expect(stepDisplayLabel(StepKind.Other, "Task")).toBe("Task");
   expect(stepDisplayLabel(StepKind.Other, "File boxes")).toBe("File boxes");
   expect(stepDisplayLabel(StepKind.Other, "  File boxes  ")).toBe("File boxes");
   expect(stepDisplayLabel(StepKind.Email, "")).toBe("Email");
   expect(stepDisplayLabel(StepKind.Email, "invoice.pdf")).toBe("Email invoice.pdf");
+});
+
+test("Other first gets Name Task; a typed Name is kept", () => {
+  expect(STEP_KIND_META[StepKind.Other].defaultTitle).toBe("Task");
+  expect(titleForStepKindChange(StepKind.Other, StepKind.Read, "")).toBe("Task");
+  expect(titleForStepKindChange(StepKind.Other, StepKind.Read, "invoice.pdf")).toBe("invoice.pdf");
+  expect(titleForStepKindChange(StepKind.Other, StepKind.Other, "")).toBe("");
+  expect(titleForStepKindChange(StepKind.Email, StepKind.Other, "Task")).toBe("Task");
 });
 
 test("unnamed Other nodeCaption is Step, not Other", () => {
@@ -42,5 +58,6 @@ test("unnamed Other nodeCaption is Step, not Other", () => {
     split: "exclusive",
   };
   expect(nodeCaption(unnamed)).toBe("Step");
+  expect(nodeCaption({ ...unnamed, title: "Task" })).toBe("Task");
   expect(nodeCaption({ ...unnamed, title: "File boxes" })).toBe("File boxes");
 });

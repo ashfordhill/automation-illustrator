@@ -83,6 +83,7 @@ import {
   isHuman,
   isStepNode,
   STEP_KIND_META,
+  titleForStepKindChange,
   laneAssignments,
   withLaneAssignments,
   type ActorDto,
@@ -661,12 +662,25 @@ export const useStore = create<{
     const inBase = workflow.nodes.some((n) => n.id === id);
     const inExtra = workflow.after.extraNodes.some((n) => n.id === id);
     if (!inBase && !inExtra) return;
+    const current = inBase
+      ? workflow.nodes.find((n) => n.id === id)
+      : workflow.after.extraNodes.find((n) => n.id === id);
+    let nextPatch = patch;
+    if (current && isStepNode(current) && !("title" in nextPatch)) {
+      const nextKind = (nextPatch as Partial<StepNodeDto>).stepKind;
+      if (nextKind) {
+        const title = titleForStepKindChange(nextKind, current.stepKind, current.title);
+        if (title !== current.title) nextPatch = { ...nextPatch, title };
+      }
+    }
     let nodes = workflow.nodes;
     let extraNodes = workflow.after.extraNodes;
     if (inBase) {
-      nodes = nodes.map((n) => (n.id === id ? ({ ...n, ...patch } as NodeDto) : n));
+      nodes = nodes.map((n) => (n.id === id ? ({ ...n, ...nextPatch } as NodeDto) : n));
     } else {
-      extraNodes = extraNodes.map((n) => (n.id === id ? ({ ...n, ...patch } as typeof n) : n));
+      extraNodes = extraNodes.map((n) =>
+        n.id === id ? ({ ...n, ...nextPatch } as typeof n) : n,
+      );
     }
     let edges = workflow.edges;
     let extraEdges = workflow.after.extraEdges;

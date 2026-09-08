@@ -222,3 +222,18 @@ test("tile-drag hover sets insert preview on the lane without mutating the docum
   expect(host.querySelector('[data-tile-drag="true"]')).toBeNull();
   expect(useStore.getState().workflow.edges.map((e) => e.id).sort()).toEqual(edges);
 });
+
+test("Add Step names Other as Task and the tile does not print Other", () => {
+  act(() => {
+    useStore.getState().requestNew();
+    useStore.getState().confirmReplaceDiscard();
+    useStore.getState().addStep();
+  });
+  const name = host.querySelector<HTMLInputElement>("#step-name-field");
+  expect(name?.value).toBe("Task");
+  expect(host.textContent).toContain("Task");
+  expect(host.textContent).not.toContain("Other Task");
+  const otherBtn = host.querySelector('[aria-label="Type Other"]');
+  expect(otherBtn).not.toBeNull();
+  expect(otherBtn?.querySelector("svg")).not.toBeNull();
+});
