@@ -30,7 +30,10 @@ test.describe("slice 10 After projection and comparison", () => {
     await screenshotBoard(page, `${EVIDENCE}/before-light-1440.png`);
 
     await viewLabel(page, "After").click();
-    await expect(page.getByText("AFTER", { exact: true })).toBeVisible();
+    await expect(page.getByRole("radio", { name: "After", exact: true })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
     await waitForLayout(page);
     await expect(page.getByText(RECEIPT).first()).toBeVisible();
     await expect(page.locator("[data-merge-group]").first()).toBeVisible();
@@ -62,8 +65,12 @@ test.describe("slice 10 After projection and comparison", () => {
     await loadOakPark(page);
     await viewLabel(page, "Both").click();
     await waitForLayout(page);
-    await expect(page.getByText("BEFORE", { exact: true })).toBeVisible();
-    await expect(page.getByText("AFTER", { exact: true })).toBeVisible();
+    await expect(page.getByRole("radio", { name: "Both", exact: true })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
+    await expect(page.locator('.board-lane[data-lane="before"]')).toBeVisible();
+    await expect(page.locator('.board-lane[data-lane="after"]')).toBeVisible();
     await expect(page.getByRole("button", { name: "Add Step or Data" })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Remove Node" })).toHaveCount(0);
 

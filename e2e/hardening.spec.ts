@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { expectAxeClean } from "./axe";
-import { DEMO_STEP, loadOakPark, screenshotBoard, waitForLayout } from "./ready";
+import { DEMO_STEP, loadOakPark, screenshotBoard, waitForLayout, capturePage } from "./ready";
 
 const EVIDENCE = ".docs/evidence/12-release";
 const MAIL_STEP = "Read incoming mail";
@@ -67,10 +67,7 @@ test.describe("slice 12 unsupported viewport (P-04)", () => {
     await expect(page.getByText("at least 1024 pixels wide")).toBeVisible();
     await expect(page.getByText(DEMO_STEP)).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Menu" })).toHaveCount(0);
-    await page.screenshot({
-      path: `${EVIDENCE}/unsupported-900.png`,
-      animations: "disabled",
-    });
+    await capturePage(page, `${EVIDENCE}/unsupported-900.png`);
     await expectAxeClean(page);
   });
 });
@@ -120,10 +117,7 @@ test.describe("slice 12 persistence, keymap, and reload", () => {
     await expect(dialog).toBeVisible();
     await expect(dialog.getByRole("button", { name: "Undo last (Z)" })).toBeVisible();
     await expect(dialog.getByRole("button", { name: /Pointer/ })).toHaveCount(0);
-    await page.screenshot({
-      path: `${EVIDENCE}/keybinds-1440.png`,
-      animations: "disabled",
-    });
+    await capturePage(page, `${EVIDENCE}/keybinds-1440.png`);
     await page.keyboard.press("Escape");
     await expect(dialog).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Menu" })).toBeFocused();
@@ -149,10 +143,7 @@ test.describe("slice 12 persistence, keymap, and reload", () => {
     await page.goto("/");
     await expect(page.getByText("Not saved")).toBeVisible({ timeout: 15_000 });
     await expect(page.getByText(DEMO_STEP).first()).toBeVisible();
-    await page.screenshot({
-      path: `${EVIDENCE}/not-saved-1440.png`,
-      animations: "disabled",
-    });
+    await capturePage(page, `${EVIDENCE}/not-saved-1440.png`);
   });
 
   test("valid v1 localStorage migrates on startup (SH-08)", async ({ page }) => {
@@ -199,10 +190,7 @@ test.describe("slice 12 surfaces, dialogs, and final screenshots", () => {
     ]);
     await expect(page.getByRole("menuitem", { name: "Export" })).toHaveCount(0);
     await expect(page.getByRole("button", { name: /Redo/ })).toHaveCount(0);
-    await page.screenshot({
-      path: `${EVIDENCE}/hamburger-1440.png`,
-      animations: "disabled",
-    });
+    await capturePage(page, `${EVIDENCE}/hamburger-1440.png`);
     await page.keyboard.press("Escape");
 
     await openMenu(page);
@@ -232,16 +220,10 @@ test.describe("slice 12 surfaces, dialogs, and final screenshots", () => {
     await openMenu(page);
     await page.getByRole("menuitem", { name: "New" }).click();
     await expect(page.getByRole("dialog", { name: "Start a new board?" })).toBeVisible();
-    await page.screenshot({
-      path: `${EVIDENCE}/replace-gate-1440.png`,
-      animations: "disabled",
-    });
+    await capturePage(page, `${EVIDENCE}/replace-gate-1440.png`);
     await page.getByRole("button", { name: "Discard" }).click();
     await expect(page.getByRole("button", { name: "Add Step" })).toBeVisible();
-    await page.screenshot({
-      path: `${EVIDENCE}/empty-new-1440.png`,
-      animations: "disabled",
-    });
+    await capturePage(page, `${EVIDENCE}/empty-new-1440.png`);
   });
 
   test("Mailroom After merge dock in both themes", async ({ page }) => {
@@ -267,10 +249,7 @@ test.describe("slice 12 surfaces, dialogs, and final screenshots", () => {
     });
     await expect(page.getByRole("button", { name: "Download recovery copy" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Start fresh" })).toBeVisible();
-    await page.screenshot({
-      path: `${EVIDENCE}/recovery-1440.png`,
-      animations: "disabled",
-    });
+    await capturePage(page, `${EVIDENCE}/recovery-1440.png`);
   });
 });
 

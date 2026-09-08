@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { expectAxeClean } from "./axe";
-import { waitForLayout } from "./ready";
+import { waitForLayout, capturePage } from "./ready";
 
 const DEMO_STEP = "Read invoice.pdf";
 
@@ -20,34 +20,35 @@ test.describe("baseline smoke", () => {
     await loadDemo(page);
     await expect(page.getByRole("button", { name: "Menu" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Manage actors" })).toBeVisible();
-    await page.screenshot({
-      path: ".docs/evidence/01-harness/before-light-1440.png",
-      animations: "disabled",
-    });
+    await capturePage(page, ".docs/evidence/01-harness/before-light-1440.png");
   });
 
   test("Before / After / Both view switching", async ({ page }) => {
     await loadDemo(page);
     await viewLabel(page, "After").click();
-    await expect(page.getByText("AFTER", { exact: true })).toBeVisible();
+    await expect(page.getByRole("radio", { name: "After", exact: true })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
     await expect(page.getByText(DEMO_STEP).first()).toBeVisible();
     await waitForLayout(page);
-    await page.screenshot({
-      path: ".docs/evidence/01-harness/after-light-1440.png",
-      animations: "disabled",
-    });
+    await capturePage(page, ".docs/evidence/01-harness/after-light-1440.png");
 
     await viewLabel(page, "Both").click();
-    await expect(page.getByText("BEFORE", { exact: true })).toBeVisible();
-    await expect(page.getByText("AFTER", { exact: true })).toBeVisible();
+    await expect(page.getByRole("radio", { name: "Both", exact: true })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
+    await expect(page.locator('.board-lane[data-lane="before"]')).toBeVisible();
+    await expect(page.locator('.board-lane[data-lane="after"]')).toBeVisible();
     await waitForLayout(page);
-    await page.screenshot({
-      path: ".docs/evidence/01-harness/both-light-1440.png",
-      animations: "disabled",
-    });
+    await capturePage(page, ".docs/evidence/01-harness/both-light-1440.png");
 
     await viewLabel(page, "Before").click();
-    await expect(page.getByText("BEFORE", { exact: true })).toBeVisible();
+    await expect(page.getByRole("radio", { name: "Before", exact: true })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
   });
 
   test("top bar is reachable from the keyboard", async ({ page }) => {
@@ -63,10 +64,7 @@ test.describe("baseline smoke", () => {
     await expect(page.getByRole("button", { name: "Menu" })).toBeFocused();
     await page.keyboard.press("Enter");
     await expect(page.getByRole("menuitem", { name: "Present" })).toBeVisible();
-    await page.screenshot({
-      path: ".docs/evidence/01-harness/hamburger-keyboard-1440.png",
-      animations: "disabled",
-    });
+    await capturePage(page, ".docs/evidence/01-harness/hamburger-keyboard-1440.png");
   });
 
   test("axe WCAG 2.2 AA on the initial demo state", async ({ page }) => {
@@ -81,9 +79,6 @@ test.describe("supported min-width", () => {
   test("demo board is usable at 1024 CSS pixels", async ({ page }) => {
     await loadDemo(page);
     await expect(viewLabel(page, "Before")).toBeVisible();
-    await page.screenshot({
-      path: ".docs/evidence/01-harness/before-light-1024.png",
-      animations: "disabled",
-    });
+    await capturePage(page, ".docs/evidence/01-harness/before-light-1024.png");
   });
 });

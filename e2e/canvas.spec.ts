@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { waitForLayout, laneZoom, waitForZoomIdle } from "./ready";
+import { waitForLayout, laneZoom, waitForZoomIdle, capturePage } from "./ready";
 
 const DEMO_STEP = "Read invoice.pdf";
 const EVIDENCE = ".docs/evidence/06-canvas";
@@ -53,18 +53,9 @@ test.describe("slice 6 canvas create / connect / remove", () => {
     await expect(page.getByRole("button", { name: `Remove ${DEMO_STEP}` })).toBeVisible();
     await expect(page.getByRole("button", { name: "Remove Node" })).toHaveCount(0);
     await expect(page.locator(".remove-candidate, .remove-candidate-on")).toHaveCount(0);
-    await page.screenshot({
-      path: `${EVIDENCE}/before-light-1440.png`,
-      animations: "disabled",
-    });
-    await page.screenshot({
-      path: ".docs/evidence/improve-02-merge-drag/selected-x-1440.png",
-      animations: "disabled",
-    });
-    await page.screenshot({
-      path: ".docs/evidence/improve-03-polish/path-tab-1440.png",
-      animations: "disabled",
-    });
+    await capturePage(page, `${EVIDENCE}/before-light-1440.png`);
+    await capturePage(page, ".docs/evidence/improve-02-merge-drag/selected-x-1440.png");
+    await capturePage(page, ".docs/evidence/improve-03-polish/path-tab-1440.png");
 
     const plus = page.getByRole("button", { name: "Add Step or Data" });
     const box = await plus.boundingBox();
@@ -76,18 +67,9 @@ test.describe("slice 6 canvas create / connect / remove", () => {
     await expect(page.getByRole("button", { name: "New Data" })).toBeVisible();
     await expect(page.locator('[data-plus-preview="data"] ellipse')).toBeVisible();
     await expect(page.locator("[data-plus-wedge]")).toBeVisible();
-    await page.screenshot({
-      path: `${EVIDENCE}/plus-menu-1440.png`,
-      animations: "disabled",
-    });
-    await page.screenshot({
-      path: ".docs/evidence/improve-02-merge-drag/plus-pull-previews-1440.png",
-      animations: "disabled",
-    });
-    await page.screenshot({
-      path: ".docs/evidence/improve-03-polish/plus-wedge-1440.png",
-      animations: "disabled",
-    });
+    await capturePage(page, `${EVIDENCE}/plus-menu-1440.png`);
+    await capturePage(page, ".docs/evidence/improve-02-merge-drag/plus-pull-previews-1440.png");
+    await capturePage(page, ".docs/evidence/improve-03-polish/plus-wedge-1440.png");
     await page.mouse.up();
     await page.keyboard.press("Escape");
 
@@ -100,22 +82,19 @@ test.describe("slice 6 canvas create / connect / remove", () => {
     await page.mouse.move(knotBox!.x + knotBox!.width / 2 + 90, knotBox!.y + knotBox!.height / 2 + 20, {
       steps: 10,
     });
-    await page.screenshot({
-      path: ".docs/evidence/improve-02-merge-drag/path-knot-pull-1440.png",
-      animations: "disabled",
-    });
+    await capturePage(page, ".docs/evidence/improve-02-merge-drag/path-knot-pull-1440.png");
     await page.mouse.up();
     await page.keyboard.press("Escape");
 
     await viewLabel(page, "After").click();
-    await expect(page.getByText("AFTER", { exact: true })).toBeVisible();
+    await expect(page.getByRole("radio", { name: "After", exact: true })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
     await page.getByText(DEMO_STEP).first().click();
     await expect(page.getByRole("button", { name: "Add After-only Step" })).toBeVisible();
     await expect(page.getByRole("button", { name: `Remove ${DEMO_STEP}` })).toBeVisible();
-    await page.screenshot({
-      path: `${EVIDENCE}/after-light-1440.png`,
-      animations: "disabled",
-    });
+    await capturePage(page, `${EVIDENCE}/after-light-1440.png`);
     const afterPlus = page.getByRole("button", { name: "Add After-only Step" });
     const afterBox = await afterPlus.boundingBox();
     expect(afterBox).toBeTruthy();
@@ -126,20 +105,18 @@ test.describe("slice 6 canvas create / connect / remove", () => {
     });
     await expect(page.getByRole("button", { name: "After-only Step" })).toBeVisible();
     await expect(page.getByRole("button", { name: "New Data" })).toHaveCount(0);
-    await page.screenshot({
-      path: `${EVIDENCE}/after-no-plus-1440.png`,
-      animations: "disabled",
-    });
+    await capturePage(page, `${EVIDENCE}/after-no-plus-1440.png`);
     await page.mouse.up();
     await page.keyboard.press("Escape");
 
     await viewLabel(page, "Both").click();
-    await expect(page.getByText("BEFORE", { exact: true })).toBeVisible();
-    await expect(page.getByText("AFTER", { exact: true })).toBeVisible();
-    await page.screenshot({
-      path: `${EVIDENCE}/both-light-1440.png`,
-      animations: "disabled",
-    });
+    await expect(page.getByRole("radio", { name: "Both", exact: true })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
+    await expect(page.locator('.board-lane[data-lane="before"]')).toBeVisible();
+    await expect(page.locator('.board-lane[data-lane="after"]')).toBeVisible();
+    await capturePage(page, `${EVIDENCE}/both-light-1440.png`);
   });
 
   test("leaf, 1:1, N:1, canceled removal, and Backspace undo", async ({ page }) => {
@@ -149,10 +126,7 @@ test.describe("slice 6 canvas create / connect / remove", () => {
     await expect(page.getByRole("button", { name: "Remove Review BS&A Software" })).toBeVisible();
     await page.locator(".react-flow__pane").click({ position: { x: 24, y: 24 }, force: true });
     await expect(page.getByText("Review BS&A Software").first()).toBeVisible();
-    await page.screenshot({
-      path: `${EVIDENCE}/remove-cancel-1440.png`,
-      animations: "disabled",
-    });
+    await capturePage(page, `${EVIDENCE}/remove-cancel-1440.png`);
 
     await page.getByText("Review BS&A Software").first().click();
     await page.keyboard.press("Delete");
@@ -168,10 +142,7 @@ test.describe("slice 6 canvas create / connect / remove", () => {
 
     await page.getByText("Account #").first().click();
     await expect(page.getByRole("button", { name: "Remove Account #" })).toBeVisible();
-    await page.screenshot({
-      path: `${EVIDENCE}/remove-pick-1440.png`,
-      animations: "disabled",
-    });
+    await capturePage(page, `${EVIDENCE}/remove-pick-1440.png`);
     await page.keyboard.press("Delete");
     await expect(page.getByText("Account #")).toHaveCount(0);
     await expect(page.getByText("Search website").first()).toBeVisible();
@@ -204,19 +175,16 @@ test.describe("slice 6 canvas create / connect / remove", () => {
       buffer: Buffer.from(JSON.stringify(MN_DOC)),
     });
     await page.getByRole("button", { name: "Discard" }).click();
-    await expect(page.getByText("Other hub").first()).toBeVisible();
+    await expect(page.getByText("hub").first()).toBeVisible();
 
-    await page.getByText("Other hub").first().click();
+    await page.getByText("hub").first().click();
     await page.keyboard.press("Delete");
     await expect(page.getByRole("dialog", { name: "Confirm Node removal pairings" })).toBeVisible();
-    await page.screenshot({
-      path: `${EVIDENCE}/remove-mn-preview-1440.png`,
-      animations: "disabled",
-    });
+    await capturePage(page, `${EVIDENCE}/remove-mn-preview-1440.png`);
     await page.getByRole("dialog", { name: "Confirm Node removal pairings" }).getByRole("button", { name: "Confirm" }).click();
-    await expect(page.getByText("Other hub")).toHaveCount(0);
-    await expect(page.getByText("Other root").first()).toBeVisible();
-    await expect(page.getByText("Other out-a").first()).toBeVisible();
+    await expect(page.getByText("hub")).toHaveCount(0);
+    await expect(page.getByText("root").first()).toBeVisible();
+    await expect(page.getByText("out-a").first()).toBeVisible();
   });
 
   test("blocked root, Path-delete explanation, empty-canvas does not create a Step", async ({
@@ -226,20 +194,14 @@ test.describe("slice 6 canvas create / connect / remove", () => {
     await page.getByText(DEMO_STEP).first().click();
     await page.keyboard.press("Delete");
     await expect(page.getByText(/root Node cannot be removed/i)).toBeVisible();
-    await page.screenshot({
-      path: `${EVIDENCE}/root-blocked-1440.png`,
-      animations: "disabled",
-    });
+    await capturePage(page, `${EVIDENCE}/root-blocked-1440.png`);
     await page.keyboard.press("Escape");
     await expect(page.getByText(DEMO_STEP).first()).toBeVisible();
 
     await page.getByText("invoice > $50,000").first().click();
     await page.keyboard.press("Delete");
     await expect(page.getByText(/cannot be removed on its own/i)).toBeVisible();
-    await page.screenshot({
-      path: `${EVIDENCE}/path-no-delete-1440.png`,
-      animations: "disabled",
-    });
+    await capturePage(page, `${EVIDENCE}/path-no-delete-1440.png`);
 
     await page.getByRole("button", { name: "Menu" }).click();
     await page.getByRole("menuitem", { name: "New" }).click();
@@ -265,20 +227,14 @@ test.describe("slice 6 canvas create / connect / remove", () => {
     await waitForLayout(page);
     await expect(page.getByText("Data", { exact: true }).first()).toBeVisible();
     await page.getByText("Data", { exact: true }).first().click();
-    await page.screenshot({
-      path: ".docs/evidence/improve-03-polish/data-centered-1440.png",
-      animations: "disabled",
-    });
+    await capturePage(page, ".docs/evidence/improve-03-polish/data-centered-1440.png");
 
     await page.getByRole("button", { name: "Menu" }).click();
     await page.getByRole("menuitem", { name: "Robot Mailroom" }).click();
     await page.getByRole("button", { name: "Discard" }).click();
     await expect(page.getByText("Read incoming mail").first()).toBeVisible({ timeout: 15_000 });
     await waitForLayout(page);
-    await page.screenshot({
-      path: ".docs/evidence/improve-03-polish/dana-card-1440.png",
-      animations: "disabled",
-    });
+    await capturePage(page, ".docs/evidence/improve-03-polish/dana-card-1440.png");
   });
 });
 
@@ -309,9 +265,6 @@ test.describe("supported min-width", () => {
   test("demo board is usable at 1024 CSS pixels", async ({ page }) => {
     await loadDemo(page);
     await expect(viewLabel(page, "Before")).toBeVisible();
-    await page.screenshot({
-      path: `${EVIDENCE}/before-light-1024.png`,
-      animations: "disabled",
-    });
+    await capturePage(page, `${EVIDENCE}/before-light-1024.png`);
   });
 });

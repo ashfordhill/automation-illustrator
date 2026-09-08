@@ -32,32 +32,7 @@ const theme = createTheme({
   cursorType: "pointer",
 });
 
-/** Corner chip on a Board so Both view can label BEFORE vs AFTER. */
-function LaneLabel({ text }: { text: string }) {
-  return (
-    <div
-      style={{
-        position: "absolute",
-        top: 10,
-        left: 14,
-        pointerEvents: "none",
-        fontWeight: 800,
-        fontSize: 13,
-        letterSpacing: 0.6,
-        background: "var(--cream)",
-        color: "var(--ink)",
-        border: "3px solid var(--line)",
-        borderRadius: 999,
-        padding: "3px 12px",
-        boxShadow: "var(--chip-shadow)",
-      }}
-    >
-      {text}
-    </div>
-  );
-}
-
-/** One Board, or stacked Before/After when view is Both. */
+/** One Board, or stacked Before/After when view is Both. View name lives only on the switch (SH-02). */
 function CanvasArea() {
   const view = useStore((s) => s.view);
   if (view === ViewMode.Both) {
@@ -71,11 +46,9 @@ function CanvasArea() {
             borderBottom: "3px solid var(--chrome-line)",
           }}
         >
-          <LaneLabel text="BEFORE" />
           <Board lane={AssignmentLane.Before} />
         </div>
         <div style={{ flex: 1, minHeight: 0, position: "relative" }}>
-          <LaneLabel text="AFTER" />
           <Board lane={AssignmentLane.After} />
         </div>
       </div>
@@ -83,7 +56,6 @@ function CanvasArea() {
   }
   return (
     <div style={{ height: "100%", position: "relative" }}>
-      <LaneLabel text={view.toUpperCase()} />
       <Board
         lane={view === ViewMode.After ? AssignmentLane.After : AssignmentLane.Before}
       />

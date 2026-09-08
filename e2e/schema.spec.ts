@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { waitForLayout } from "./ready";
+import { waitForLayout, capturePage } from "./ready";
 
 const DEMO_STEP = "Read invoice.pdf";
 const EVIDENCE = ".docs/evidence/03-schema";
@@ -32,25 +32,23 @@ test.describe("slice 3 schema evidence", () => {
     );
     expect(doc.assignments.before).toBeUndefined();
 
-    await page.screenshot({
-      path: `${EVIDENCE}/before-light-1440.png`,
-      animations: "disabled",
-    });
+    await capturePage(page, `${EVIDENCE}/before-light-1440.png`);
 
     await viewLabel(page, "After").click();
-    await expect(page.getByText("AFTER", { exact: true })).toBeVisible();
-    await page.screenshot({
-      path: `${EVIDENCE}/after-light-1440.png`,
-      animations: "disabled",
-    });
+    await expect(page.getByRole("radio", { name: "After", exact: true })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
+    await capturePage(page, `${EVIDENCE}/after-light-1440.png`);
 
     await viewLabel(page, "Both").click();
-    await expect(page.getByText("BEFORE", { exact: true })).toBeVisible();
-    await expect(page.getByText("AFTER", { exact: true })).toBeVisible();
-    await page.screenshot({
-      path: `${EVIDENCE}/both-light-1440.png`,
-      animations: "disabled",
-    });
+    await expect(page.getByRole("radio", { name: "Both", exact: true })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
+    await expect(page.locator('.board-lane[data-lane="before"]')).toBeVisible();
+    await expect(page.locator('.board-lane[data-lane="after"]')).toBeVisible();
+    await capturePage(page, `${EVIDENCE}/both-light-1440.png`);
   });
 });
 
@@ -60,9 +58,6 @@ test.describe("supported min-width", () => {
   test("demo board is usable at 1024 CSS pixels", async ({ page }) => {
     await loadDemo(page);
     await expect(viewLabel(page, "Before")).toBeVisible();
-    await page.screenshot({
-      path: `${EVIDENCE}/before-light-1024.png`,
-      animations: "disabled",
-    });
+    await capturePage(page, `${EVIDENCE}/before-light-1024.png`);
   });
 });

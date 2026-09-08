@@ -105,7 +105,10 @@ test.describe("ELK layout and bundled Path routing (Improvement 01)", () => {
     await waitForLayout(page);
     await screenshotBoard(page, `${EVIDENCE}/mailroom-dana-card-1440.png`);
     await viewLabel(page, "After").click();
-    await expect(page.getByText("AFTER", { exact: true })).toBeVisible();
+    await expect(page.getByRole("radio", { name: "After", exact: true })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
     await waitForLayout(page);
     await screenshotBoard(page, `${EVIDENCE}/mailroom-after-1440.png`);
   });
@@ -174,12 +177,18 @@ test.describe("ELK layout and bundled Path routing (Improvement 01)", () => {
   test("Before / After / Both after routing settles", async ({ page }) => {
     await loadOakPark(page);
     await viewLabel(page, "After").click();
-    await expect(page.getByText("AFTER", { exact: true })).toBeVisible();
+    await expect(page.getByRole("radio", { name: "After", exact: true })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
     await waitForLayout(page);
     await screenshotBoard(page, `${EVIDENCE}/after-light-1440.png`);
 
     await viewLabel(page, "Both").click();
-    await expect(page.getByText("BEFORE", { exact: true })).toBeVisible();
+    await expect(page.getByRole("radio", { name: "Both", exact: true })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
     await waitForLayout(page);
     await screenshotBoard(page, `${EVIDENCE}/both-light-1440.png`);
   });

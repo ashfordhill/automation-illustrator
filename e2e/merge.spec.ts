@@ -82,7 +82,7 @@ test.describe("slice 11 merge / unmerge and After-only Steps", () => {
     await page.keyboard.press("1");
     await waitForLayout(page);
     await expect(page.locator("aside").getByRole("button", { name: "Type Other" })).toBeVisible();
-    await page.locator("aside").getByRole("button", { name: "Remove" }).click();
+    await page.locator("aside").getByRole("button", { name: "Remove Step" }).click();
     await waitForLayout(page);
     await expect(page.locator("aside").getByRole("button", { name: "Manage actors" })).toBeVisible();
     await screenshotBoard(page, `${EVIDENCE}/after-only-removed-1440.png`);

@@ -23,9 +23,11 @@ function TaskCard({
   return (
     <div className="task-card">
       <StepKindIcon kind={kind} />
-      <div className="task-card-title">
-        <FitLabel text={headline} maxFontSizePx={14} mode="box" maxLines={3} />
-      </div>
+      {headline ? (
+        <div className="task-card-title">
+          <FitLabel text={headline} maxFontSizePx={14} mode="box" maxLines={3} />
+        </div>
+      ) : null}
       {trimmedDetail ? (
         <div className="task-card-detail">
           <FitLabel text={trimmedDetail} maxFontSizePx={12} mode="box" maxLines={2} />

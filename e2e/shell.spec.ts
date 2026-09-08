@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
-import { waitForLayout } from "./ready";
+import { waitForLayout, capturePage } from "./ready";
 
 const DEMO_STEP = "Read invoice.pdf";
 const EVIDENCE = ".docs/evidence/08-shell";
@@ -27,10 +27,7 @@ test.describe("slice 8 shell, typography, and sound", () => {
     );
     await expect(viewRadio(page, "Before")).toHaveAttribute("aria-checked", "true");
 
-    await page.screenshot({
-      path: `${EVIDENCE}/before-light-1440.png`,
-      animations: "disabled",
-    });
+    await capturePage(page, `${EVIDENCE}/before-light-1440.png`);
 
     await page.getByText(DEMO_STEP).first().click();
     await expect(page.locator("aside").getByRole("button", { name: "Type Read" })).toBeVisible();
@@ -42,14 +39,10 @@ test.describe("slice 8 shell, typography, and sound", () => {
     await expect(page.getByRole("button", { name: "Add Step or Data" })).toHaveCount(
       0,
     );
-    await page.screenshot({
-      path: `${EVIDENCE}/present-light-1440.png`,
-      animations: "disabled",
-    });
+    await capturePage(page, `${EVIDENCE}/present-light-1440.png`);
 
     await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
     await page.keyboard.press("Space");
-    await expect(page.getByText("AFTER", { exact: true })).toBeVisible();
     await expect(viewRadio(page, "After")).toHaveAttribute("aria-checked", "true");
 
     await page.getByRole("button", { name: "Menu" }).click();
@@ -71,10 +64,7 @@ test.describe("slice 8 shell, typography, and sound", () => {
     await expect(page.locator('[aria-live="polite"]').getByText("Sound on", { exact: true })).toHaveCount(
       1,
     );
-    await page.screenshot({
-      path: `${EVIDENCE}/sound-on-1440.png`,
-      animations: "disabled",
-    });
+    await capturePage(page, `${EVIDENCE}/sound-on-1440.png`);
     await page.getByRole("button", { name: "Sound on" }).click();
     await expect(page.getByRole("button", { name: "Sound off" })).toHaveAttribute(
       "aria-pressed",
@@ -85,27 +75,19 @@ test.describe("slice 8 shell, typography, and sound", () => {
   test("After, Both, hamburger, and long tile text clamp", async ({ page }) => {
     await loadDemo(page);
     await viewRadio(page, "After").click();
-    await expect(page.getByText("AFTER", { exact: true })).toBeVisible();
-    await page.screenshot({
-      path: `${EVIDENCE}/after-light-1440.png`,
-      animations: "disabled",
-    });
+    await expect(viewRadio(page, "After")).toHaveAttribute("aria-checked", "true");
+    await capturePage(page, `${EVIDENCE}/after-light-1440.png`);
 
     await viewRadio(page, "Both").click();
-    await expect(page.getByText("BEFORE", { exact: true })).toBeVisible();
-    await expect(page.getByText("AFTER", { exact: true })).toBeVisible();
-    await page.screenshot({
-      path: `${EVIDENCE}/both-light-1440.png`,
-      animations: "disabled",
-    });
+    await expect(viewRadio(page, "Both")).toHaveAttribute("aria-checked", "true");
+    await expect(page.locator('.board-lane[data-lane="before"]')).toBeVisible();
+    await expect(page.locator('.board-lane[data-lane="after"]')).toBeVisible();
+    await capturePage(page, `${EVIDENCE}/both-light-1440.png`);
 
     await viewRadio(page, "Before").click();
     await page.getByRole("button", { name: "Menu" }).click();
     await expect(page.getByRole("menuitem", { name: "Present" })).toBeVisible();
-    await page.screenshot({
-      path: `${EVIDENCE}/hamburger-1440.png`,
-      animations: "disabled",
-    });
+    await capturePage(page, `${EVIDENCE}/hamburger-1440.png`);
     await page.keyboard.press("Escape");
 
     await page.getByText(DEMO_STEP).first().click();
@@ -120,10 +102,7 @@ test.describe("slice 8 shell, typography, and sound", () => {
         name: "Read invoice.pdf that must wrap then shrink then clamp with an ellipsis for NA-10",
       }),
     ).toBeVisible();
-    await page.screenshot({
-      path: `${EVIDENCE}/tile-text-clamp-1440.png`,
-      animations: "disabled",
-    });
+    await capturePage(page, `${EVIDENCE}/tile-text-clamp-1440.png`);
   });
 
   test("dark theme shell contrast and axe on the restyled view switch", async ({ page }) => {
@@ -131,20 +110,11 @@ test.describe("slice 8 shell, typography, and sound", () => {
     await page.getByRole("button", { name: "Menu" }).click();
     await page.getByRole("menuitem", { name: "Dark mode" }).click();
     await expect(page.getByRole("button", { name: "Menu" })).toBeVisible();
-    await page.screenshot({
-      path: `${EVIDENCE}/before-dark-1440.png`,
-      animations: "disabled",
-    });
+    await capturePage(page, `${EVIDENCE}/before-dark-1440.png`);
     await viewRadio(page, "After").click();
-    await page.screenshot({
-      path: `${EVIDENCE}/after-dark-1440.png`,
-      animations: "disabled",
-    });
+    await capturePage(page, `${EVIDENCE}/after-dark-1440.png`);
     await viewRadio(page, "Both").click();
-    await page.screenshot({
-      path: `${EVIDENCE}/both-dark-1440.png`,
-      animations: "disabled",
-    });
+    await capturePage(page, `${EVIDENCE}/both-dark-1440.png`);
     await viewRadio(page, "Before").click();
 
     const results = await new AxeBuilder({ page })
@@ -166,9 +136,6 @@ test.describe("supported min-width", () => {
   test("chunky shell remains usable at 1024 CSS pixels", async ({ page }) => {
     await loadDemo(page);
     await expect(viewRadio(page, "Before")).toBeVisible();
-    await page.screenshot({
-      path: `${EVIDENCE}/before-light-1024.png`,
-      animations: "disabled",
-    });
+    await capturePage(page, `${EVIDENCE}/before-light-1024.png`);
   });
 });

@@ -245,20 +245,21 @@ export const STEP_KIND_META: Record<
   [StepKind.Other]: { label: "Other", defaultTitle: "" },
 };
 
-/** On-tile copy: Type, then a space, then Target. Skips a repeated Type prefix. */
+/** On-tile copy: Type, then a space, then Name. Other is Name only (never the word Other). */
 export function stepDisplayLabel(kind: StepKind, target: string): string {
-  const type = STEP_KIND_META[kind].label.trim();
   const t = target.trim();
+  if (kind === StepKind.Other) return t;
+  const type = STEP_KIND_META[kind].label.trim();
   if (!t) return type;
   if (t.toLowerCase() === type.toLowerCase()) return type;
   if (t.toLowerCase().startsWith(`${type.toLowerCase()} `)) return t;
   return `${type} ${t}`;
 }
 
-/** Accessible caption for a Node (picker, on-tile Remove). */
+/** Accessible caption for a Node (picker, on-tile Remove). Unnamed Other is "Step". */
 export function nodeCaption(node: NodeDto | undefined, fallback = "Node"): string {
   if (!node) return fallback;
   if (isDataFieldNode(node)) return node.label.trim() || "Data";
-  if (isStepNode(node)) return stepDisplayLabel(node.stepKind, node.title);
+  if (isStepNode(node)) return stepDisplayLabel(node.stepKind, node.title) || "Step";
   return fallback;
 }

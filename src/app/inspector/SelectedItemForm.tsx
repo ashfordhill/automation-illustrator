@@ -2,7 +2,8 @@
  * Right inspector: Step / Data / Path forms, Who, Manage actors (NA-01..12, PC-02..03).
  * Both is read-only comparison (BA-05). After-only Nodes/Paths resolve from the overlay.
  */
-import { Button, Stack, Text, TextInput } from "@mantine/core";
+import { ActionIcon, Button, Stack, Text, TextInput, Tooltip } from "@mantine/core";
+import { IconTrash } from "@tabler/icons-react";
 import {
   SelectionKind,
   ViewMode,
@@ -15,6 +16,34 @@ import { useStore } from "../../state/store";
 import { ManageActorsPanel } from "./ManageActorsPanel";
 import { TypeButtons } from "./TypeButtons";
 import { WhoButtons } from "./WhoButtons";
+
+function InspectorHeader({
+  title,
+  removeLabel,
+  onRemove,
+}: {
+  title: string;
+  removeLabel?: string;
+  onRemove?: () => void;
+}) {
+  return (
+    <div className="inspector-header">
+      <Text fw={800}>{title}</Text>
+      {removeLabel && onRemove ? (
+        <Tooltip label={removeLabel}>
+          <ActionIcon
+            className="inspector-trash"
+            variant="default"
+            aria-label={removeLabel}
+            onClick={onRemove}
+          >
+            <IconTrash size={16} />
+          </ActionIcon>
+        </Tooltip>
+      ) : null}
+    </div>
+  );
+}
 
 function ManageActorsButton() {
   return (
@@ -128,7 +157,11 @@ export function DetailsPanel() {
     if (n.type === WorkflowNodeKind.DataField) {
       return (
         <Stack gap="xs" p="sm" className="chrome-hide">
-          <Text fw={800}>Data</Text>
+          <InspectorHeader
+            title="Data"
+            removeLabel={showRemove ? "Remove Data" : undefined}
+            onRemove={showRemove ? () => useStore.getState().removeTarget(n.id) : undefined}
+          />
           <TextInput
             id="data-label-field"
             label="Label"
@@ -136,18 +169,17 @@ export function DetailsPanel() {
             readOnly={readOnly}
             onChange={(e) => useStore.getState().updateNode(n.id, { label: e.target.value })}
           />
-          {showRemove ? (
-            <Button color="red" variant="light" size="xs" onClick={() => useStore.getState().removeTarget(n.id)}>
-              Remove
-            </Button>
-          ) : null}
         </Stack>
       );
     }
     const actorId = laneAssignments(workflow, lane)[n.id] ?? "";
     return (
       <Stack gap="xs" p="sm" className="chrome-hide">
-        <Text fw={800}>Step</Text>
+        <InspectorHeader
+          title="Step"
+          removeLabel={showRemove ? "Remove Step" : undefined}
+          onRemove={showRemove ? () => useStore.getState().removeTarget(n.id) : undefined}
+        />
         <Text size="sm" fw={700}>
           Type
         </Text>
@@ -180,11 +212,6 @@ export function DetailsPanel() {
           onChange={(id) => useStore.getState().assignActor(n.id, id)}
         />
         {readOnly ? null : <ManageActorsButton />}
-        {showRemove ? (
-          <Button color="red" variant="light" size="xs" onClick={() => useStore.getState().removeTarget(n.id)}>
-            Remove
-          </Button>
-        ) : null}
       </Stack>
     );
   }

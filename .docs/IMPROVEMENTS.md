@@ -331,7 +331,7 @@ When done: run `npm run build`, `npm run test:unit`, `npm run test:e2e`; save sc
 
 ---
 
-# Improvement 06 — inspector Who, trash, Other copy, zoom, hamburger
+# Improvement 06 — inspector Who, trash, Other copy, zoom, hamburger (COMPLETE)
 
 Approved 2026-09-07. Start only after Improvement 05 is COMPLETE. **Do not implement Improvement 07 in the same chat.**
 

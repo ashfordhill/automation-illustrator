@@ -143,17 +143,35 @@ test("sound toggle is off by default and Present restores the inspector", () => 
   expect(useStore.getState().selected?.id).toBe(OAK_PARK_IDS.read);
 });
 
-test("view switching updates the on-canvas lane name", () => {
-  expect(host.textContent).toContain("BEFORE");
+test("view switching has no BEFORE/AFTER corner chips", () => {
+  expect(host.textContent).not.toMatch(/\bBEFORE\b/);
+  expect(host.textContent).not.toMatch(/\bAFTER\b/);
+  expect(host.querySelector('[role="radio"][aria-checked="true"]')?.textContent).toBe("Before");
   act(() => {
     useStore.getState().setView(ViewMode.After);
   });
-  expect(host.textContent).toContain("AFTER");
+  expect(host.querySelector('[role="radio"][aria-checked="true"]')?.textContent).toBe("After");
+  expect(host.textContent).not.toMatch(/\bAFTER\b/);
   act(() => {
     useStore.getState().setView(ViewMode.Both);
   });
-  expect(host.textContent).toContain("BEFORE");
-  expect(host.textContent).toContain("AFTER");
+  expect(host.querySelector('[role="radio"][aria-checked="true"]')?.textContent).toBe("Both");
+  expect(host.querySelectorAll(".board-lane")).toHaveLength(2);
+  expect(host.textContent).not.toMatch(/\bBEFORE\b/);
+});
+
+test("Step inspector uses a trash control, not a Remove text button", () => {
+  act(() => {
+    useStore.getState().select({ type: SelectionKind.Node, id: OAK_PARK_IDS.read });
+  });
+  const rail = host.querySelector(".details-rail-body");
+  expect(rail?.querySelector('[aria-label="Remove Step"]')).not.toBeNull();
+  expect(
+    [...(rail?.querySelectorAll("button") ?? [])].some((b) => b.textContent?.trim() === "Remove"),
+  ).toBe(false);
+  const whoOn = host.querySelector(".inspector-who.is-on") as HTMLElement | null;
+  expect(whoOn).not.toBeNull();
+  expect(getComputedStyle(whoOn!).outlineStyle === "dashed").toBe(false);
 });
 
 test("tile-drag hover sets insert preview on the lane without mutating the document", () => {

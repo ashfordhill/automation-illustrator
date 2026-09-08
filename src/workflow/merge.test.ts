@@ -188,7 +188,7 @@ test("Before connect that would break convexity is rejected (MG-10)", () => {
   expect(blocked.ok).toBe(false);
   if (blocked.ok) return;
   expect(blocked.message).toMatch(/Unmerge first/);
-  expect(blocked.message).toMatch(/Other a, Other c/);
+  expect(blocked.message).toMatch(/"a, c"/);
 });
 
 test("connectAfter and addAfterStep stay off the Before graph (BA-06, BA-07)", () => {

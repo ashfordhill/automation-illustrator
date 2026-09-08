@@ -42,10 +42,18 @@ import { useLaneLayout } from "./layout/useLaneLayout";
 import { pointAt, useAnimatedLayout } from "./layout/useAnimatedLayout";
 import { LaneLayoutContext } from "./routing/LaneLayoutContext";
 import { pathIsDotted, type FlowPathData } from "./routing/FlowArrow";
-
-/** Scroll/pinch zoom only (P-08). Wide enough for several wheel stops between overview and a single tile. */
-const MIN_ZOOM = 0.2;
-const MAX_ZOOM = 2.5;
+import {
+  MIN_ZOOM,
+  MAX_ZOOM,
+  ZOOM_BOUNDS_PAD,
+  clampZoom,
+  graphIsIsland,
+  pointInPaddedBounds,
+  pointerOverNodeOrPath,
+  shouldZoomTowardBounds,
+  viewportZoomAround,
+  wheelZoomFactor,
+} from "./zoom";
 
 /** Clicking a tile should send Delete to the board, not a leftover inspector field. */
 function blurDetailsFocus() {
@@ -121,6 +129,9 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
   const display = shown?.positions;
   const lastPos = useRef<Record<string, { x: number; y: number }>>({});
   if (display) lastPos.current = { ...lastPos.current, ...display };
+  const hostRef = useRef<HTMLDivElement>(null);
+  const shownRef = useRef(shown);
+  shownRef.current = shown;
 
   const insertHoverId = interaction.kind === "tile-drag" ? interaction.hoverEdgeId : null;
   const reduceMotion =
@@ -183,6 +194,57 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
     }, 240);
     return () => window.clearTimeout(t);
   }, [departing]);
+
+  useEffect(() => {
+    const host = hostRef.current;
+    if (!host) return;
+    const onWheel = (e: WheelEvent) => {
+      if (e.ctrlKey) return;
+      if (e.deltaY === 0) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const vp = rf.getViewport();
+      const nextZoom = clampZoom(vp.zoom * wheelZoomFactor(e.deltaY, e.deltaMode));
+      if (Math.abs(nextZoom - vp.zoom) < 1e-6) return;
+      const paneEl = host.querySelector(".react-flow");
+      const pane = (paneEl instanceof HTMLElement ? paneEl : host).getBoundingClientRect();
+      const flowPointer = rf.screenToFlowPosition({ x: e.clientX, y: e.clientY });
+      const bounds = shownRef.current?.bounds;
+      const hasBounds = Boolean(bounds && bounds.w > 0 && bounds.h > 0);
+      const toward =
+        hasBounds &&
+        bounds &&
+        shouldZoomTowardBounds({
+          zoomingIn: nextZoom > vp.zoom,
+          pointerOverNodeOrPath: pointerOverNodeOrPath(e.target),
+          pointerInPaddedBounds: pointInPaddedBounds(flowPointer, bounds, ZOOM_BOUNDS_PAD),
+          graphIsland: graphIsIsland(bounds, vp.zoom, pane),
+        });
+      const flowFocal = toward && bounds
+        ? { x: bounds.x + bounds.w / 2, y: bounds.y + bounds.h / 2 }
+        : flowPointer;
+      const screenFocal = toward
+        ? rf.flowToScreenPosition(flowFocal)
+        : { x: e.clientX, y: e.clientY };
+      const next = viewportZoomAround({
+        paneLeft: pane.left,
+        paneTop: pane.top,
+        clientX: screenFocal.x,
+        clientY: screenFocal.y,
+        flowX: flowFocal.x,
+        flowY: flowFocal.y,
+        nextZoom,
+      });
+      /* Copy onto the other Both lane before marking this instance programmatic. */
+      syncBothViewports(lane, next);
+      applyViewport(lane, next);
+      const s = useStore.getState();
+      s.setLaneViewport(lane, next);
+      if (s.view === ViewMode.Both) s.setLaneViewport(otherLane(lane), next);
+    };
+    host.addEventListener("wheel", onWheel, { passive: false });
+    return () => host.removeEventListener("wheel", onWheel);
+  }, [rf, lane]);
 
   const prevEdgeIds = useRef(new Set(projection.edges.map((e) => e.id)));
   const [stretchIds, setStretchIds] = useState<Set<string>>(new Set());
@@ -361,6 +423,7 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
 
   return (
     <div
+      ref={hostRef}
       className={`board-lane${panTarget ? " is-pan-target" : ""}`}
       data-layout={phase}
       data-layout-error={error ? "true" : undefined}
@@ -384,7 +447,7 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
           panOnDrag
           selectionOnDrag={false}
           selectNodesOnDrag={false}
-          zoomOnScroll
+          zoomOnScroll={false}
           zoomOnPinch
           zoomOnDoubleClick={false}
           autoPanOnNodeFocus={false}

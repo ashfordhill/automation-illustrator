@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { loadOakPark, screenshotBoard, waitForLayout } from "./ready";
+import { loadOakPark, screenshotBoard, waitForLayout, capturePage } from "./ready";
 
 const EVIDENCE = ".docs/evidence/improve-04-insert-preview";
 const REVIEW = "Review BS&A Software";
@@ -41,10 +41,7 @@ test.describe("Improvement 04 insert-on-Path preview", () => {
     });
     await expect(page.locator("[data-insert-silhouette]")).toBeVisible();
     await expect(page.locator(".tile-drag-ghost")).toBeVisible();
-    await page.screenshot({
-      path: `${EVIDENCE}/insert-hover-gap-1440.png`,
-      animations: "disabled",
-    });
+    await capturePage(page, `${EVIDENCE}/insert-hover-gap-1440.png`);
     await page.mouse.up();
     await expect(page.locator(".board-lane").first()).not.toHaveAttribute(
       "data-insert-preview",

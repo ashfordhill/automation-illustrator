@@ -3,7 +3,7 @@
  * Present keeps the automation score here because the right rail is hidden (P-07).
  * Pointer/Hand were removed (P-08); sound toggle sits after Undo (SH-03).
  */
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ActionIcon, Group, Menu, Text, Tooltip } from "@mantine/core";
 import {
   IconArrowBackUp,
@@ -21,6 +21,7 @@ import { ColorScheme, ViewMode } from "../../workflow/catalogs";
 import { automationScore } from "../../workflow/scoring";
 import { PersistStatusChip } from "./PersistStatusChip";
 import { SoundToggle } from "./SoundToggle";
+import { hamburgerShouldClose } from "./hamburgerDismiss";
 
 const VIEW_OPTIONS: Array<{ value: (typeof ViewMode)[keyof typeof ViewMode]; label: string }> = [
   { value: ViewMode.Before, label: "Before" },
@@ -60,6 +61,33 @@ export function Toolbar() {
   const past = useStore((s) => s.past);
   const colorScheme = useStore((s) => s.colorScheme);
   const fileRef = useRef<HTMLInputElement>(null);
+  const menuBtnRef = useRef<HTMLButtonElement>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onMove = (e: PointerEvent) => {
+      const hit = document.elementFromPoint(e.clientX, e.clientY);
+      const btn = menuBtnRef.current?.getBoundingClientRect();
+      const drop = document.querySelector(".app-hamburger-dropdown")?.getBoundingClientRect();
+      let menuUnion = null;
+      if (btn && drop) {
+        menuUnion = {
+          left: Math.min(btn.left, drop.left),
+          top: Math.min(btn.top, drop.top),
+          right: Math.max(btn.right, drop.right),
+          bottom: Math.max(btn.bottom, drop.bottom),
+        };
+      } else if (btn) {
+        menuUnion = { left: btn.left, top: btn.top, right: btn.right, bottom: btn.bottom };
+      }
+      if (hamburgerShouldClose({ hit, clientX: e.clientX, clientY: e.clientY, menuUnion })) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("pointermove", onMove);
+    return () => document.removeEventListener("pointermove", onMove);
+  }, [menuOpen]);
 
   return (
     <>
@@ -114,13 +142,13 @@ export function Toolbar() {
               });
             }}
           />
-          <Menu shadow="md" width={240} position="bottom-end">
+          <Menu shadow="md" width={240} position="bottom-end" opened={menuOpen} onChange={setMenuOpen}>
             <Menu.Target>
-              <ActionIcon variant="default" aria-label="Menu">
+              <ActionIcon ref={menuBtnRef} variant="default" aria-label="Menu">
                 <IconMenu2 size={18} />
               </ActionIcon>
             </Menu.Target>
-            <Menu.Dropdown>
+            <Menu.Dropdown className="app-hamburger-dropdown">
               <Menu.Item
                 leftSection={<IconPresentation size={16} />}
                 onClick={() => useStore.getState().setPresent(!present)}

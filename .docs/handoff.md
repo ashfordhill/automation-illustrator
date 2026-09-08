@@ -1008,3 +1008,39 @@ Corrections in the same chat before the next slice starts get their own short en
 - Known limitations / follow-ups: Inspector Who/trash/Other/zoom/hamburger — Improvement 06. Merge removal — Improvement 07. Global `--chrome-line` restyle and tile `--select-ring` remain out of scope.
 - Status: COMPLETE
 - Commit: `feat(improve-05): keep Steps still and chunk the view switch`
+
+## Improvement 06 — inspector Who, trash, Other copy, zoom, hamburger — 2026-09-07
+
+- Starting commit: `e941863148e9f462f092d8ff0067f73ce937449e` (`feat(improve-05): keep Steps still and chunk the view switch`)
+- Working tree at start: tracked files clean; untracked ELK planner dumps left uncommitted
+- GOAL clauses addressed: NA-05, NA-10, NA-12, SH-02, P-08 (amendments appended 2026-09-07; clauses not edited in place)
+- Library research and decisions: no new runtime dependency. Tabler `IconTrash`. Who/Type/fat selected drop the dashed outline; dark Who selected uses `--cream` + `--ink`. Wheel zoom is custom (`zoomOnScroll={false}`); pinch stays React Flow. Each 100 px notch multiplies zoom by 1.08, clamped 0.2–2.5. Zoom-in on empty paper or a graph island (<40% of the pane on both axes) uses `LaneLayout.bounds` center; pointer over a Node or Path, and all zoom-out, stay cursor-centered. Both-view wheel copies the viewport onto the other lane before marking this instance programmatic (otherwise `syncBothViewports` skipped). Hamburger is a controlled Mantine Menu; pointer on `.board-lane` closes; inspector does not; leave the button+dropdown union by >40 px closes.
+- Files changed:
+  - Contract/docs: `.docs/GOAL.md` amendments; `.docs/IMPROVEMENTS.md` (06 marked COMPLETE); this handoff entry
+  - Inspector/shell: `SelectedItemForm.tsx`, `tokens.css`, `Toolbar.tsx`, `hamburgerDismiss.ts`, `App.tsx` (LaneLabel removed)
+  - Copy/zoom: `types.ts`, `StepTile.tsx`, `Board.tsx`, `zoom.ts`
+  - Tests: `types.test.ts`, `zoom.test.ts`, `hamburgerDismiss.test.ts`, `merge.test.ts`, `App.test.tsx`, `e2e/improve-06-shell.spec.ts`, existing e2e that asserted `BEFORE`/`AFTER` chips or inspector `Remove`; `e2e/ready.ts` `capturePage` retries evidence PNG writes on Windows
+  - Evidence: `.docs/evidence/improve-06-shell/`; existing e2e folders recaptured without lane chips
+- Behavior implemented:
+  - Selected Who/Type/fat is fill only (no dashed ring). Dark Who selected is cream fill with ink text.
+  - Step/Data inspector Remove is a top-right trash (`Remove Step` / `Remove Data`); same `removeTarget` rules; no Path trash; tile X unchanged.
+  - Type Other tiles show Name only (empty Name → icon, no headline). Unnamed Other `nodeCaption` is `Step`.
+  - BEFORE/AFTER corner chips are gone. View switch is the only view name.
+  - Open hamburger closes when the pointer returns to the board (also if it leaves the menu by ~40 px). Inspector hover keeps it open.
+  - Mouse-wheel zoom is finer (~1.08× per notch). Zoom-in on empty paper aims at the laid-out graph.
+- Tests and exact results:
+  - `npm install` at start — up to date, 137 packages, 0 vulnerabilities
+  - `npm run build` at start — pass (`tsc --noEmit && vite build`; Vite 8.2.2)
+  - `npm run test:unit` at start — pass (31 files, 162 tests)
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning; client `index-CP-tRgCm.js` 877.68 kB)
+  - `npm run test:unit` — pass (33 files, 177 tests)
+  - `npm run test:e2e` — pass (83 passed, Chromium, 3 workers, 44.1s including webServer)
+- Evidence:
+  - `.docs/evidence/improve-06-shell/who-selected-1440.png` — Alice selected in Who; yellow fill, no dashed ring (1440×900)
+  - `.docs/evidence/improve-06-shell/inspector-trash-1440.png` — Step inspector; trash top-right, no Remove text button (1440×900)
+  - `.docs/evidence/improve-06-shell/other-tile-1440.png` — Type Other + Name “File boxes”; tile has no “Other” word (1440×900)
+  - `.docs/evidence/improve-06-shell/no-lane-chip-1440.png` — Before view; view switch only, no BEFORE chip (1440×900)
+- Earlier-slice defects fixed: Both-view custom wheel must sync the other lane before `applyViewport` marks the source programmatic. Evidence PNG overwrite on Windows (`UNKNOWN: open`) retried via `capturePage`.
+- Known limitations / follow-ups: Merge / Unmerge / merge dock — Improvement 07. Tile `--select-ring` and global `--chrome-line` remain out of scope. Dark Who selected fill uses `--cream`, which is also the unselected Who well in dark (fill-only, no ring). Zoom did not need the `< 0.55` fallback.
+- Status: COMPLETE
+- Commit: `feat(improve-06): quiet Who select trash Other and finer zoom`

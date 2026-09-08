@@ -37,16 +37,14 @@ test.describe("Improvement 05 Step stay-put and chunky view switch", () => {
 
     await viewRadio(page, "After").click();
     await expect(viewRadio(page, "After")).toHaveAttribute("aria-checked", "true");
-    await expect(page.getByText("AFTER", { exact: true })).toBeVisible();
 
     await viewRadio(page, "Both").click();
     await expect(viewRadio(page, "Both")).toHaveAttribute("aria-checked", "true");
-    await expect(page.getByText("BEFORE", { exact: true })).toBeVisible();
-    await expect(page.getByText("AFTER", { exact: true })).toBeVisible();
+    await expect(page.locator('.board-lane[data-lane="before"]')).toBeVisible();
+    await expect(page.locator('.board-lane[data-lane="after"]')).toBeVisible();
 
     await viewRadio(page, "Before").click();
     await expect(viewRadio(page, "Before")).toHaveAttribute("aria-checked", "true");
-    await expect(page.getByText("BEFORE", { exact: true })).toBeVisible();
 
     await page.getByText("Search website", { exact: true }).first().click();
     await expect(page.locator("aside").getByRole("button", { name: "Type Search" })).toBeVisible();

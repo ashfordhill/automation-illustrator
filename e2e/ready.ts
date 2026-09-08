@@ -1,3 +1,5 @@
+import { mkdir, writeFile } from "node:fs/promises";
+import { dirname } from "node:path";
 import { expect, type Page } from "@playwright/test";
 
 /** Oak Park root Step title as shown on the tile. */
@@ -21,9 +23,26 @@ export async function loadOakPark(page: Page) {
   await waitForLayout(page);
 }
 
+/** Write a PNG via buffer so a briefly locked evidence file can be retried (Windows). */
+export async function capturePage(page: Page, path: string) {
+  const buf = await page.screenshot({ animations: "disabled" });
+  await mkdir(dirname(path), { recursive: true });
+  let lastErr: unknown;
+  for (let i = 0; i < 8; i++) {
+    try {
+      await writeFile(path, buf);
+      return;
+    } catch (err) {
+      lastErr = err;
+      await new Promise((r) => setTimeout(r, 120 * (i + 1)));
+    }
+  }
+  throw lastErr;
+}
+
 export async function screenshotBoard(page: Page, path: string) {
   await waitForLayout(page);
-  await page.screenshot({ path, animations: "disabled" });
+  await capturePage(page, path);
 }
 
 /** Click the on-tile red X for the selected Node. */
