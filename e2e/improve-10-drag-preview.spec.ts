@@ -21,6 +21,21 @@ test.describe("Improvement 10 insert preview and move cursor", () => {
     expect(cursor).toMatch(/move/);
   });
 
+  test("empty paper and pull tabs use a custom grab cursor", async ({ page }) => {
+    await loadOakPark(page);
+    const pane = page.locator(".board-lane .react-flow__pane").first();
+    const paneCursor = await pane.evaluate((el) => getComputedStyle(el).cursor);
+    expect(paneCursor).toMatch(/url\(/);
+    expect(paneCursor).toMatch(/grab/);
+
+    await page.getByText("Review BS&A Software").first().click();
+    const plus = page.getByRole("button", { name: "Add Step or Data" });
+    await expect(plus).toBeVisible();
+    const tabCursor = await plus.evaluate((el) => getComputedStyle(el).cursor);
+    expect(tabCursor).toMatch(/url\(/);
+    expect(tabCursor).toMatch(/grab/);
+  });
+
   test("click-dragging an unselected tile inserts on a Path", async ({ page }) => {
     await loadOakPark(page);
     const onto = await pathScreenPoint(page, "e_gt");

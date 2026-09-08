@@ -429,6 +429,8 @@ Full spec: [`.docs/improve-10-drag-preview.plan.md`](improve-10-drag-preview.pla
 Commit: `feat(improve-10): clean insert preview and move cursor`.  
 Evidence: `.docs/evidence/improve-10-drag-preview/`.
 
+Correction 2 (2026-09-08): empty paper and `+` / Path tabs use a chunky ink+halo grab SVG (same recipe as move) instead of the blurry system grab bitmap.
+
 ---
 
 # Improvement 11 — Path Delete menu and hit pad (COMPLETE)

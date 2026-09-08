@@ -1328,3 +1328,15 @@ Corrections in the same chat before the next slice starts get their own short en
 - Evidence: `.docs/evidence/improve-08-plus-chrome/plus-taffy-outline-1440.png` — `+` pulled onto Step; ink outline on the taffy’s long edges (1440×900)
 - Status: COMPLETE
 - Commit: `feat(improve-08): outline the plus taffy`
+
+## Improvement 10 — correction 2 — 2026-09-08
+
+- Requested: The hand-grabbing cursor is blurry; the movement and pointer cursors are not.
+- Changed: `tokens.css` — pan and `+` / Path tabs use a 32×32 ink+halo grab SVG (same recipe as the move cursor) instead of the system `grab` / `grabbing` bitmap. Source: `src/app/cursors/grab.svg`. E2E asserts a `url(` grab cursor on the pane and plus tab.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning)
+  - `npm run test:unit` — pass (31 files, 180 tests)
+  - `npm run test:e2e` — pass (99 passed, Chromium, 3 workers, 59.0s)
+- Evidence: `.docs/evidence/improve-10-drag-preview/grab-cursors-1440.png` — move vs grab glyphs at 96px and native size (1440×900)
+- Status: COMPLETE
+- Commit: `feat(improve-10): sharpen grab and grabbing cursors`

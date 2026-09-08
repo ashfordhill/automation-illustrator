@@ -35,6 +35,9 @@
   --banner: #d4f0f8;
   --mantine-color-dimmed: var(--ink-soft);
   --tile-move-cursor: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%23fff' d='M12 .5 17.2 7.2h-2.3v3.2h3.2V8.1L23.5 12 18.1 15.9v-2.3h-3.2v3.2h2.3L12 23.5 6.8 16.8h2.3v-3.2H5.9v2.3L.5 12 5.9 8.1v2.3h3.2V7.2H6.8z'/%3E%3Cpath fill='%23071c28' d='M12 2.2 15.8 7.4h-1.6v3.8h3.8V9.6L21.8 12 18 14.4v-1.6h-3.8v3.8h1.6L12 21.8 8.2 16.6h1.6v-3.8H6v1.6L2.2 12 6 9.6v1.6h3.8V7.4H8.2z'/%3E%3C/svg%3E") 12 12, move;
+  /* Same ink+halo recipe as move (src/app/cursors/grab.svg). System grab is a 1x bitmap and looks soft. */
+  --tile-grab-cursor: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cpath fill='%23fff' stroke='%23fff' stroke-width='3' stroke-linejoin='round' d='M4 17c-1-2-1-5 2-6 2-1 4 1 5 4V7a2 2 0 0 1 4 0v8h1V5a2 2 0 0 1 4 0v10h1V7a2 2 0 0 1 4 0v8h1v-5a2 2 0 0 1 4 0v8a7 7 0 0 1-7 7h-8a7 7 0 0 1-7-7v-3c-2 0-3-1-4-2z'/%3E%3Cpath fill='%23071c28' d='M4 17c-1-2-1-5 2-6 2-1 4 1 5 4V7a2 2 0 0 1 4 0v8h1V5a2 2 0 0 1 4 0v10h1V7a2 2 0 0 1 4 0v8h1v-5a2 2 0 0 1 4 0v8a7 7 0 0 1-7 7h-8a7 7 0 0 1-7-7v-3c-2 0-3-1-4-2z'/%3E%3C/svg%3E") 16 13, grab;
+  --tile-grabbing-cursor: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cpath fill='%23fff' stroke='%23fff' stroke-width='3' stroke-linejoin='round' d='M4 17c-1-2-1-5 2-6 2-1 4 1 5 4V7a2 2 0 0 1 4 0v8h1V5a2 2 0 0 1 4 0v10h1V7a2 2 0 0 1 4 0v8h1v-5a2 2 0 0 1 4 0v8a7 7 0 0 1-7 7h-8a7 7 0 0 1-7-7v-3c-2 0-3-1-4-2z'/%3E%3Cpath fill='%23071c28' d='M4 17c-1-2-1-5 2-6 2-1 4 1 5 4V7a2 2 0 0 1 4 0v8h1V5a2 2 0 0 1 4 0v10h1V7a2 2 0 0 1 4 0v8h1v-5a2 2 0 0 1 4 0v8a7 7 0 0 1-7 7h-8a7 7 0 0 1-7-7v-3c-2 0-3-1-4-2z'/%3E%3C/svg%3E") 16 13, grabbing;
 }
 
 :root[data-theme="dark"] {
@@ -112,11 +115,11 @@ body,
 }
 
 .board-pan .react-flow__pane {
-  cursor: grab;
+  cursor: var(--tile-grab-cursor);
 }
 
 .board-pan .react-flow__pane:active {
-  cursor: grabbing;
+  cursor: var(--tile-grabbing-cursor);
 }
 
 .board-pan .react-flow__node {
@@ -139,7 +142,12 @@ body.is-tile-dragging * {
 
 .board-lane[data-editable="true"] .plus-tab,
 .board-lane[data-editable="true"] .path-tab {
-  cursor: grab !important;
+  cursor: var(--tile-grab-cursor) !important;
+}
+
+.board-lane[data-editable="true"] .plus-tab:active,
+.board-lane[data-editable="true"] .path-tab:active {
+  cursor: var(--tile-grabbing-cursor) !important;
 }
 
 .board-lane[data-editable="true"] .tile-remove-x,
@@ -852,10 +860,15 @@ body.is-tile-dragging * {
   font-weight: 800;
   font-size: 26px;
   line-height: 1;
-  cursor: grab;
+  cursor: var(--tile-grab-cursor);
   font-family: inherit;
   box-shadow: 0 3px 0 var(--btn-shadow);
   pointer-events: auto;
+}
+
+.plus-tab:active,
+.path-tab:active {
+  cursor: var(--tile-grabbing-cursor);
 }
 
 .plus-tab {
