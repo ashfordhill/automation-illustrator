@@ -130,3 +130,9 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 - Resolution: Unique segments after the split are drop targets; only Paths that touch the dragged Tile fade. Shared trunk still does not pick a Path.
 - Attachments: [sibling insert](visual-improvements/2026-09-08-insert-sibling-path.gif)
 
+
+## 2026-09-08 — Step/Data fan too far
+
+- Issue: The Step and Data boxes on the pulled `+` fan sit too far to the right of the tile.
+- Resolution: Shipped in `feat(improve-19): pull Step Data fan closer` — shorter arc, no extra outward offset.
+- Attachments: n/a

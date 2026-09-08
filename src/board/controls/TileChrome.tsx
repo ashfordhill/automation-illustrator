@@ -22,29 +22,14 @@ import { insertPreviewGeom } from "../layout/insertPreview";
 import { nodeSize } from "../layout/tileMetrics";
 import { PathKnotIcon } from "./PathKnotIcon";
 import { DataChip } from "../tiles/DataChip";
+import { previewCenters } from "./plusPreviewLayout";
 
 const PULL_THRESHOLD = 36;
 const SPRING_MS = 200;
-const PREVIEW_RADIUS = 118;
-const PREVIEW_OUT = 28;
-const PREVIEW_SPREAD = 56;
 /** Outside pad so ~3px of solid `--line` remains after antialiasing (matches tile/tab borders). */
 const TAFFY_BORDER = 5;
 
 type TileRect = { x: number; y: number; w: number; h: number; rx: number };
-
-function previewCenters(restX: number, restY: number, count: number): { x: number; y: number }[] {
-  const out: { x: number; y: number }[] = [];
-  for (let i = 0; i < count; i += 1) {
-    const angle = count === 1 ? 0 : -PREVIEW_SPREAD / 2 + (i * PREVIEW_SPREAD) / Math.max(1, count - 1);
-    const rad = (angle * Math.PI) / 180;
-    out.push({
-      x: restX + PREVIEW_OUT + Math.cos(rad) * PREVIEW_RADIUS,
-      y: restY + Math.sin(rad) * PREVIEW_RADIUS,
-    });
-  }
-  return out;
-}
 
 type TaffyRibbon = { fill: string; outline: string };
 
