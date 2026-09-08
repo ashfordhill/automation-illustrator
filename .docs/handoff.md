@@ -1651,3 +1651,39 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(improve-26): compare view without pan outline`
 
+
+## Improvement 21 — bottom status bar — 2026-09-08
+
+- Starting commit: `88b25f0af78cb86a39863ec371eaf32b9a1e29f2` (`feat(improve-25): recolor the Data mark coral`)
+- Working tree at start: not clean. Concurrent tile-pie, Compare, and inspector WIP were left unstaged and are not in this commit.
+- GOAL clauses addressed: P-05, P-09, NA-06, AQ-01, WG-08, NA-12 (amendments dated 2026-09-08 already on HEAD).
+- Library research and decisions: no new runtime dependency. Version is Vite `define` from `package.json` (`__APP_VERSION__`). Status bar is `position: fixed` at z-index 150 so it overlaps the inspector (aside z-index 80). Right-click Tile delete reuses `removeTarget`. Preference persists like sound (`localStorage`, off by default). Present and Both hide Actors.
+- Files changed:
+  - Shell: `src/app/components/StatusBar.tsx`, `src/app/App.tsx`, `src/app/styles/tokens.css`, `src/app/inspector/inspectorFold.css`, `src/app/components/CanvasHelper.tsx`
+  - Version: `package.json` (1.0.0), `vite.config.ts`, `src/vite-env.d.ts`, `src/app/version.ts`
+  - Document name: `src/workflow/types.ts`, `src/workflow/schema.ts`, `src/demos/oakParkInvoice.ts`, `src/demos/robotMailroom.ts`
+  - Board: `src/board/Board.tsx` (`onNodeContextMenu` → `removeTarget` when the toggle is on)
+  - Tests: `src/app/App.test.tsx`, `src/app/version.test.ts`, `src/workflow/types.test.ts`, `src/workflow/schema.test.ts`, `e2e/improve-21-status-bar.spec.ts`
+  - Contract/docs: `.docs/GOAL.md` and `.docs/IMPROVEMENTS.md` already on HEAD; this handoff entry
+  - Evidence: `.docs/evidence/improve-21-status-bar/`
+- Behavior implemented:
+  - Thin chrome status bar spans the window and overlaps the right inspector.
+  - Shows the project name, or Untitled when unnamed / New.
+  - `right-click-delete: on/off` toggle; on, right-click a Tile deletes it (same path as X / Delete / inspector Remove).
+  - Actors opens Manage actors.
+  - Bottom-right `v1.0.0` reads `package.json` via Vite, not a hardcoded UI string.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning)
+  - `npm run test:unit` — pass (34 files, 208 tests)
+  - `npm run test:e2e` — `e2e/improve-21-status-bar.spec.ts` pass (5). Full suite not re-run; concurrent untracked specs were set aside. Chromium via `LD_LIBRARY_PATH` `~/.local/pw-libs`.
+- Evidence:
+  - `.docs/evidence/improve-21-status-bar/oak-park-1440.png` — Oak Park Invoice, Actors, toggle off, v1.0.0 overlapping inspector (1440×900)
+  - `.docs/evidence/improve-21-status-bar/untitled-1440.png` — New board Untitled (1440×900)
+  - `.docs/evidence/improve-21-status-bar/actors-1440.png` — Actors opens Manage actors (1440×900)
+  - `.docs/evidence/improve-21-status-bar/right-click-on-1440.png` — toggle on (1440×900)
+  - `.docs/evidence/improve-21-status-bar/dark-1440.png` — dark chrome status bar (1440×900)
+  - `.docs/evidence/improve-21-status-bar/status-bar-1024.png` — bar still overlaps inspector at 1024×768
+- Earlier-slice defects fixed: none
+- Known limitations / follow-ups: Concurrent tile-pie / Compare / inspector WIP remains unstaged. jsdom cannot mount Manage actors Textarea autosize; e2e covers that panel.
+- Status: COMPLETE
+- Commit: `feat(improve-21): add bottom status bar`

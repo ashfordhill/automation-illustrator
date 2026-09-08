@@ -1,6 +1,7 @@
 /**
  * App shell: header Toolbar, right DetailsPanel, center Board.
  * Present mode hides the right rail. The inspector folds to a thin strip (P-05).
+ * A thin status bar overlaps the inspector (P-05 amendment).
  * Under 1024 CSS px the board is replaced (P-04).
  * Theme is dataset.theme for CSS plus Mantine forceColorScheme.
  */
@@ -18,6 +19,7 @@ import { ImportErrorModal } from "./components/ImportErrorModal";
 import { RecoveryModal } from "./components/RecoveryModal";
 import { RemovePickerHud } from "./components/RemovePickerHud";
 import { ReplaceDocumentModal } from "./components/ReplaceDocumentModal";
+import { StatusBar } from "./components/StatusBar";
 import { Toolbar } from "./components/Toolbar";
 import { TransientNotice } from "./components/TransientNotice";
 import { PathContextMenu } from "../board/controls/PathContextMenu";
@@ -26,12 +28,22 @@ import { InspectorFold, INSPECTOR_OPEN_WIDTH, INSPECTOR_STRIP_WIDTH } from "./in
 import { DetailsPanel } from "./inspector/SelectedItemForm";
 import { useSupportedViewport } from "./viewport";
 
+const FONT_FAMILY = '"Nunito Variable", Nunito, system-ui, sans-serif';
+
 const theme = createTheme({
-  fontFamily: '"Nunito Variable", Nunito, system-ui, sans-serif',
-  headings: { fontFamily: '"Nunito Variable", Nunito, system-ui, sans-serif' },
+  fontFamily: FONT_FAMILY,
+  headings: { fontFamily: FONT_FAMILY },
   defaultRadius: "md",
   primaryColor: "cyan",
   cursorType: "pointer",
+  components: {
+    Button: {
+      styles: {
+        root: { fontFamily: FONT_FAMILY },
+        label: { fontFamily: FONT_FAMILY },
+      },
+    },
+  },
 });
 
 /** One Board, or stacked Before/After when view is Both. View name lives only on the switch (SH-02). */
@@ -114,6 +126,7 @@ export default function App() {
             width: asideWidth,
             minWidth: asideWidth,
             maxWidth: asideWidth,
+            zIndex: 80,
           },
         }}
       >
@@ -161,6 +174,7 @@ export default function App() {
       ) : (
         <UnsupportedViewport />
       )}
+      {supported ? <StatusBar /> : null}
       <KeybindsModal />
       <ReplaceDocumentModal />
       <RecoveryModal />

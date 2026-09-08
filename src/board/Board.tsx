@@ -511,6 +511,23 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
             s.select(null);
           }}
           onNodeClick={onNodeClick}
+          onNodeContextMenu={(event, n) => {
+            event.preventDefault();
+            event.stopPropagation();
+            const s = useStore.getState();
+            s.setFocusedLane(lane);
+            if (!s.canvasEditable()) return;
+            if (!s.rightClickDelete) return;
+            if (
+              s.interaction.kind === "remove-preview" ||
+              s.interaction.kind === "tile-drag" ||
+              s.interaction.kind === "plus-pull" ||
+              s.interaction.kind === "path-pull"
+            ) {
+              return;
+            }
+            s.removeTarget(n.id);
+          }}
           onEdgeClick={(_, e) => {
             const s = useStore.getState();
             s.setFocusedLane(lane);

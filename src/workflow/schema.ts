@@ -123,9 +123,10 @@ export const workflowDocV1Shape = z.object({
   }),
 });
 
-/** v2 shape (BA-01 overlay; no stub). */
+/** v2 shape (BA-01 overlay; no stub). Optional name is the status-bar project title. */
 export const workflowDocV2Shape = z.object({
   version: z.literal(WORKFLOW_VERSION),
+  name: z.string().optional(),
   actors: z.array(actorV2Schema),
   nodes: z.array(nodeV2Schema),
   edges: z.array(edgeSchema),

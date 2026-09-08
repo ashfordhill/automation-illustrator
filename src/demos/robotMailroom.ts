@@ -44,6 +44,7 @@ export function robotMailroom(): WorkflowDoc {
 
   return {
     version: WORKFLOW_VERSION,
+    name: "Robot Mailroom",
     actors: [
       {
         id: id.dana,

@@ -33,6 +33,7 @@
   --select-glow: var(--blue);
   --actor-empty: #cfe8f2;
   --banner: #d4f0f8;
+  --status-bar-height: 36px;
   --mantine-color-dimmed: var(--ink-soft);
   /* Windows has no native grab cursor; Chrome’s bitmap is 1x and looks soft next to move/pointer.
      White fill + black outline matches the OS pointer the delete X already uses. */
@@ -106,7 +107,7 @@ body,
   min-height: 0;
   overflow-x: hidden;
   overflow-y: auto;
-  padding-bottom: 20px;
+  padding-bottom: calc(20px + var(--status-bar-height));
   overscroll-behavior: contain;
 }
 
@@ -224,6 +225,95 @@ body.is-tile-dragging * {
 }
 
 .chrome-bar .mantine-ActionIcon-root:focus-visible {
+  outline: 3px solid var(--yellow);
+  outline-offset: 2px;
+}
+
+.status-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 150;
+  box-sizing: border-box;
+  height: var(--status-bar-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 12px;
+  border-top: 3px solid var(--chrome-line) !important;
+  box-shadow: 0 -3px 0 rgba(0, 0, 0, 0.2);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.status-project {
+  min-width: 0;
+  flex: 1 1 10rem;
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--chrome-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.status-version {
+  flex: 0 0 auto;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--chrome-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.status-btn,
+.status-toggle {
+  margin: 0;
+  font-family: inherit;
+  font-weight: 800;
+  font-size: 12px;
+  line-height: 1;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.status-btn {
+  padding: 5px 10px;
+  border: 2.5px solid var(--ink);
+  background: var(--cream);
+  color: var(--ink);
+  box-shadow: 0 2px 0 var(--btn-shadow);
+}
+
+.status-btn[aria-pressed="true"] {
+  background: var(--yellow);
+  color: var(--on-yellow);
+}
+
+.status-toggle {
+  padding: 5px 10px;
+  border: 2.5px solid var(--ink);
+  background: var(--chrome-well);
+  color: var(--chrome-ink);
+}
+
+.status-toggle.is-on {
+  background: var(--yellow);
+  color: var(--on-yellow);
+}
+
+.status-btn:focus-visible,
+.status-toggle:focus-visible {
   outline: 3px solid var(--yellow);
   outline-offset: 2px;
 }
@@ -500,7 +590,7 @@ body.is-tile-dragging * {
 
 .canvas-helper {
   position: absolute;
-  bottom: 14px;
+  bottom: calc(14px + var(--status-bar-height));
   left: 50%;
   transform: translateX(-50%);
   z-index: 8;
@@ -1090,7 +1180,7 @@ body.is-tile-dragging * {
 
 .remove-picker-hud {
   position: absolute;
-  bottom: 16px;
+  bottom: calc(16px + var(--status-bar-height));
   left: 50%;
   transform: translateX(-50%);
   z-index: 10;

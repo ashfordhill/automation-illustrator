@@ -61,7 +61,7 @@
   width: calc(320px - 28px);
   overflow-x: hidden;
   overflow-y: auto;
-  padding-bottom: 20px;
+  padding-bottom: calc(20px + var(--status-bar-height));
   overscroll-behavior: contain;
 }
 

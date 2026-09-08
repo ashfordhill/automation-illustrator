@@ -57,6 +57,7 @@ export function oakParkInvoice(): WorkflowDoc {
 
   return {
     version: WORKFLOW_VERSION,
+    name: "Oak Park Invoice",
     actors: [
       { id: alice, kind: ActorKind.Human, name: "Alice", color: HUMAN_PRESETS[0].color, role: "worker" },
       { id: roy, kind: ActorKind.Human, name: "Roy", color: HUMAN_PRESETS[1].color, role: "worker" },

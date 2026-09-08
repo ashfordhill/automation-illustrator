@@ -58,6 +58,18 @@ test("empty board and both demos are valid v2 documents", () => {
   expect(parseDocument(JSON.stringify(robotMailroom())).ok).toBe(true);
 });
 
+test("v2 documents may omit name; demos keep their titles", () => {
+  const parsedEmpty = parseDocument(JSON.stringify(emptyWorkflow()));
+  expect(parsedEmpty.ok).toBe(true);
+  if (parsedEmpty.ok) expect(parsedEmpty.doc.name).toBeUndefined();
+  const oak = parseDocument(JSON.stringify(oakParkInvoice()));
+  expect(oak.ok).toBe(true);
+  if (oak.ok) expect(oak.doc.name).toBe("Oak Park Invoice");
+  const mail = parseDocument(JSON.stringify(robotMailroom()));
+  expect(mail.ok).toBe(true);
+  if (mail.ok) expect(mail.doc.name).toBe("Robot Mailroom");
+});
+
 test("invalid shape: missing fields, bad enums, empty color, non-object", () => {
   const invalidJson = parseDocument("{");
   expect(invalidJson.ok).toBe(false);

@@ -81,6 +81,9 @@ function hintsFor(): Hint[] {
       if (s.workflow.after.extraNodes.some((x) => x.id === s.selected!.id)) {
         items.push({ key: pk(KeyAction.RemoveNode), label: "Remove Step" });
       }
+      if (s.rightClickDelete) {
+        items.push({ key: "Right-click", label: "Delete" });
+      }
       return items;
     }
     items.push({ key: pk(KeyAction.AddBranchStep), label: "New Step" });
@@ -89,6 +92,9 @@ function hintsFor(): Hint[] {
       key: pk(KeyAction.RemoveNode),
       label: n?.type === WorkflowNodeKind.DataField ? "Remove Data" : "Remove Step",
     });
+    if (s.rightClickDelete) {
+      items.push({ key: "Right-click", label: "Delete" });
+    }
     return items;
   }
   return [];
@@ -100,6 +106,7 @@ export function CanvasHelper() {
   useStore((s) => s.interaction);
   useStore((s) => s.keymap);
   useStore((s) => s.view);
+  useStore((s) => s.rightClickDelete);
   if (present) return null;
   const items = hintsFor();
   if (!items.length) return null;

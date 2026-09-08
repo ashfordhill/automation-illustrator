@@ -148,6 +148,8 @@ export type AfterOverlay = {
 /** Version 2 document: shared base workflow plus one After overlay (BA-01). */
 export type WorkflowDocV2 = {
   version: typeof WORKFLOW_VERSION;
+  /** Project title shown in the status bar. Missing or blank displays Untitled. */
+  name?: string;
   actors: ActorDto[];
   nodes: NodeDto[];
   edges: EdgeDto[];
@@ -155,6 +157,12 @@ export type WorkflowDocV2 = {
   assignments: Assignments;
   after: AfterOverlay;
 };
+
+/** Status-bar copy: named documents keep their title; New / unnamed boards are Untitled. */
+export function projectDisplayName(doc: Pick<WorkflowDocV2, "name">): string {
+  const name = doc.name?.trim();
+  return name ? name : "Untitled";
+}
 
 export type WorkflowDoc = WorkflowDocV2;
 

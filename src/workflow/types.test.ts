@@ -3,6 +3,7 @@ import {
   STEP_KIND_META,
   StepKind,
   nodeCaption,
+  projectDisplayName,
   stepDisplayLabel,
   titleForStepKindChange,
   typePickerKinds,
@@ -60,4 +61,11 @@ test("unnamed Other nodeCaption is Step, not Other", () => {
   expect(nodeCaption(unnamed)).toBe("Step");
   expect(nodeCaption({ ...unnamed, title: "Task" })).toBe("Task");
   expect(nodeCaption({ ...unnamed, title: "File boxes" })).toBe("File boxes");
+});
+
+test("projectDisplayName is Untitled when the document has no title", () => {
+  expect(projectDisplayName({})).toBe("Untitled");
+  expect(projectDisplayName({ name: "" })).toBe("Untitled");
+  expect(projectDisplayName({ name: "  " })).toBe("Untitled");
+  expect(projectDisplayName({ name: "Oak Park Invoice" })).toBe("Oak Park Invoice");
 });

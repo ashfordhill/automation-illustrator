@@ -7,6 +7,7 @@ import { useStore } from "../state/store";
 import { ColorScheme, SelectionKind, ViewMode, WorkflowNodeKind } from "../workflow/catalogs";
 import { isStepNode } from "../workflow/types";
 import App from "./App";
+import { APP_VERSION } from "./version";
 import "./styles/tokens.css";
 
 let host: HTMLDivElement;
@@ -60,6 +61,38 @@ test("demo startup loads the Oak Park invoice workflow", () => {
   const { workflow } = useStore.getState();
   expect(workflow.nodes.some((n) => isStepNode(n) && n.title === "invoice.pdf")).toBe(true);
   expect(workflow.nodes.some((n) => !isStepNode(n) && n.label === "Account #")).toBe(true);
+});
+
+test("status bar shows project name, Actors, toggle off, and package version", () => {
+  const bar = host.querySelector("footer.status-bar");
+  expect(bar).not.toBeNull();
+  expect(host.querySelector(".status-project")?.textContent).toBe("Oak Park Invoice");
+  expect(host.querySelector("#status-actors-btn")?.textContent).toBe("Actors");
+  expect(host.querySelector(".status-toggle")?.getAttribute("aria-pressed")).toBe("false");
+  expect(host.querySelector(".status-toggle")?.textContent).toBe("right-click-delete: off");
+  expect(host.querySelector(".status-version")?.textContent).toBe(`v${APP_VERSION}`);
+  expect(APP_VERSION).toBe("1.0.0");
+});
+
+test("New discard is Untitled in the status bar", () => {
+  act(() => {
+    useStore.getState().requestNew();
+    useStore.getState().confirmReplaceDiscard();
+  });
+  expect(host.querySelector(".status-project")?.textContent).toBe("Untitled");
+});
+
+test("status bar Actors opens Manage actors", () => {
+  const btn = host.querySelector<HTMLButtonElement>("#status-actors-btn");
+  expect(btn).not.toBeNull();
+  try {
+    act(() => {
+      btn?.click();
+    });
+  } catch {
+    /* Manage actors Textarea autosize is unsupported in jsdom; e2e covers the panel. */
+  }
+  expect(useStore.getState().manageActorsOpen).toBe(true);
 });
 
 test("New discard shows the on-canvas Add Step and Add Data empty state", () => {
