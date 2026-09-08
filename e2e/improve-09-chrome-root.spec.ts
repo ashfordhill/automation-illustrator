@@ -59,10 +59,10 @@ test.describe("Improvement 09 — tile chrome, Data root, After removal", () => 
       return { style: s.outlineStyle, width: s.outlineWidth };
     });
     expect(outline.style === "none" || outline.width === "0px").toBe(true);
-    const pickupFilter = await page
-      .locator(".tile-chrome-host.is-selected .tile-pickup")
-      .evaluate((el) => getComputedStyle(el).filter);
-    expect(pickupFilter).not.toBe("none");
+    const tileShadow = await tile.evaluate((el) => getComputedStyle(el).boxShadow);
+    expect(tileShadow).not.toBe("none");
+    const shadowLayers = tileShadow.split(/,(?![^()]*\))/).map((p) => p.trim());
+    expect(shadowLayers.length).toBeGreaterThanOrEqual(2);
     await capturePage(page, `${EVIDENCE}/selected-tabs-1440.png`);
 
     const grab = tabPeekPoint(plusBox!);

@@ -1153,3 +1153,14 @@ Corrections in the same chat before the next slice starts get their own short en
   - `npm run test:e2e` — pass (86 passed on rerun of the one flaky empty-release timing; full suite 85 passed + 1 timing flake under load, then 5/5 on the chrome specs)
 - Status: COMPLETE
 - Commit: `feat(improve-09): sit plus Path tabs on the tile`
+
+## Improvement 09 — correction 2 — 2026-09-08
+
+- Requested: Selected-tile indication is too subtle; strengthen the shadow or use a glow, without bringing back the cyan outline.
+- Changed: Gold halo on the Step/Data face (`box-shadow` rim + glow + stronger ground shadow in `tokens.css`); `is-lifted` on the tiles so drag-lift stays a separate cue; box-shadow no longer transitions (halo snaps on). GOAL CX-07 amendment. Recaptured `selected-tabs-1440.png`.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning)
+  - `npm run test:unit` — pass (31 files, 170 tests)
+  - `npm run test:e2e` — pass (86 passed, Chromium, 3 workers, 52.3s)
+- Status: COMPLETE
+- Commit: `feat(improve-09): make selected tile glow`

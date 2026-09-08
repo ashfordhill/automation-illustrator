@@ -18,7 +18,7 @@ export function DataTile({
   const text = label.trim() || "Data";
   return (
     <div
-      className={`board-node field-piece${selected ? " selected" : ""}`}
+      className={`board-node field-piece${selected ? " selected" : ""}${lifted ? " is-lifted" : ""}`}
       style={{
         width: FIELD_W,
         height: FIELD_H,
@@ -31,7 +31,6 @@ export function DataTile({
         justifyContent: "center",
         gap: 6,
         color: "var(--ink)",
-        boxShadow: lifted ? "0 10px 0 var(--btn-shadow)" : "0 5px 0 var(--btn-shadow)",
         transform: lifted ? "translateY(-3px)" : undefined,
         transition: "transform 140ms ease",
         overflow: "hidden",

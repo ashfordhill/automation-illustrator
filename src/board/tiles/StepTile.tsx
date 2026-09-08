@@ -54,7 +54,7 @@ export function StepTile({
 }) {
   return (
     <div
-      className={`board-node step-piece${selected ? " selected" : ""}`}
+      className={`board-node step-piece${selected ? " selected" : ""}${lifted ? " is-lifted" : ""}`}
       style={{
         width: STEP_W,
         height: STEP_H,
@@ -64,11 +64,8 @@ export function StepTile({
         borderRadius: 14,
         overflow: "hidden",
         background: "var(--cream)",
-        boxShadow: lifted
-          ? "0 10px 0 var(--btn-shadow), 0 18px 24px var(--btn-shadow)"
-          : "0 5px 0 var(--btn-shadow)",
         transform: lifted ? "translateY(-3px)" : undefined,
-        transition: "transform 140ms ease, box-shadow 140ms ease",
+        transition: "transform 140ms ease",
       }}
     >
       <ActorColumn actor={actor} />

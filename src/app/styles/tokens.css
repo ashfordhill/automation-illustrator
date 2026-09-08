@@ -30,6 +30,7 @@
   --minus: #c4453a;
   --minus-active: #9e3229;
   --select-ring: rgba(26, 143, 212, 0.5);
+  --select-glow: #c98910;
   --actor-empty: #cfe8f2;
   --banner: #d4f0f8;
   --mantine-color-dimmed: var(--ink-soft);
@@ -61,6 +62,7 @@
   --minus: #e06a5e;
   --minus-active: #c44d42;
   --select-ring: rgba(126, 182, 224, 0.65);
+  --select-glow: #f3cc5a;
   --actor-empty: #2a4554;
   --banner: #1e3f4e;
   --mantine-color-dimmed: var(--ink-soft);
@@ -750,9 +752,36 @@ body,
   z-index: 6;
 }
 
-.tile-chrome-host.is-selected .tile-pickup {
-  filter: drop-shadow(0 7px 0 color-mix(in srgb, var(--ink) 16%, transparent))
-    drop-shadow(0 14px 18px color-mix(in srgb, var(--ink) 20%, transparent));
+.step-piece,
+.field-piece {
+  box-shadow: 0 5px 0 var(--btn-shadow);
+}
+
+.step-piece.is-lifted {
+  box-shadow: 0 10px 0 var(--btn-shadow), 0 18px 24px var(--btn-shadow);
+}
+
+.field-piece.is-lifted {
+  box-shadow: 0 10px 0 var(--btn-shadow);
+}
+
+.step-piece.selected,
+.field-piece.selected {
+  box-shadow: 0 0 0 4px var(--select-glow),
+    0 0 16px 6px color-mix(in srgb, var(--select-glow) 75%, transparent),
+    0 9px 0 color-mix(in srgb, var(--ink) 50%, transparent);
+}
+
+.step-piece.selected.is-lifted {
+  box-shadow: 0 0 0 4px var(--select-glow),
+    0 0 16px 6px color-mix(in srgb, var(--select-glow) 75%, transparent),
+    0 10px 0 var(--btn-shadow), 0 18px 24px var(--btn-shadow);
+}
+
+.field-piece.selected.is-lifted {
+  box-shadow: 0 0 0 4px var(--select-glow),
+    0 0 16px 6px color-mix(in srgb, var(--select-glow) 75%, transparent),
+    0 10px 0 var(--btn-shadow);
 }
 
 .tile-side-tabs {
