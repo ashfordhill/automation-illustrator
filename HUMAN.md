@@ -70,7 +70,7 @@ npm run dev
 
 ```
 
-Open the URL Vite prints. The Oak Park invoice demo loads first. Use + on a tile to add a Step or Data path, or link an existing tile. Toggle Before / After / Both. New starts an empty board. Save copy from the New / Demo / Import prompt downloads the current board as JSON.
+Open the URL Vite prints. The Oak Park invoice demo loads first. Use + on a tile to add a Step or Data path, or link an existing tile. Toggle Before / After / Compare. New starts an empty board. Save copy from the New / Demo / Import prompt downloads the current board as JSON.
 
 ---
 

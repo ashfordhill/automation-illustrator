@@ -11,7 +11,7 @@ async function loadDemo(page: Page) {
   await waitForLayout(page);
 }
 
-function viewRadio(page: Page, name: "Before" | "After" | "Both") {
+function viewRadio(page: Page, name: "Before" | "After" | "Compare") {
   return page.getByRole("radio", { name, exact: true });
 }
 
@@ -78,8 +78,8 @@ test.describe("slice 8 shell, typography, and sound", () => {
     await expect(viewRadio(page, "After")).toHaveAttribute("aria-checked", "true");
     await capturePage(page, `${EVIDENCE}/after-light-1440.png`);
 
-    await viewRadio(page, "Both").click();
-    await expect(viewRadio(page, "Both")).toHaveAttribute("aria-checked", "true");
+    await viewRadio(page, "Compare").click();
+    await expect(viewRadio(page, "Compare")).toHaveAttribute("aria-checked", "true");
     await expect(page.locator('.board-lane[data-lane="before"]')).toBeVisible();
     await expect(page.locator('.board-lane[data-lane="after"]')).toBeVisible();
     await capturePage(page, `${EVIDENCE}/both-light-1440.png`);
@@ -113,7 +113,7 @@ test.describe("slice 8 shell, typography, and sound", () => {
     await capturePage(page, `${EVIDENCE}/before-dark-1440.png`);
     await viewRadio(page, "After").click();
     await capturePage(page, `${EVIDENCE}/after-dark-1440.png`);
-    await viewRadio(page, "Both").click();
+    await viewRadio(page, "Compare").click();
     await capturePage(page, `${EVIDENCE}/both-dark-1440.png`);
     await viewRadio(page, "Before").click();
 

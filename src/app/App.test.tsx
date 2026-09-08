@@ -50,7 +50,7 @@ afterEach(() => {
 test("app mounts the shell and view switcher", () => {
   expect(host.textContent).toContain("Before");
   expect(host.textContent).toContain("After");
-  expect(host.textContent).toContain("Both");
+  expect(host.textContent).toContain("Compare");
   expect(host.querySelector('[aria-label="Menu"]')).not.toBeNull();
   expect(host.querySelector("[data-unsupported-viewport]")).toBeNull();
   expect(host.textContent).not.toMatch(/will become automated/);
@@ -214,8 +214,9 @@ test("view switching has no BEFORE/AFTER corner chips", () => {
   act(() => {
     useStore.getState().setView(ViewMode.Both);
   });
-  expect(host.querySelector('[role="radio"][aria-checked="true"]')?.textContent).toBe("Both");
+  expect(host.querySelector('[role="radio"][aria-checked="true"]')?.textContent).toBe("Compare");
   expect(host.querySelectorAll(".board-lane")).toHaveLength(2);
+  expect(host.querySelectorAll(".board-lane.is-pan-target")).toHaveLength(0);
   expect(host.textContent).not.toMatch(/\bBEFORE\b/);
 });
 

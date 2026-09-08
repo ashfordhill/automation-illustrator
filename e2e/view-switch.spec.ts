@@ -4,7 +4,7 @@ import { loadOakPark, screenshotBoard } from "./ready";
 const EVIDENCE = ".docs/evidence/improve-05-chrome";
 const CYAN_LINE = "rgb(94, 200, 232)";
 
-function viewRadio(page: import("@playwright/test").Page, name: "Before" | "After" | "Both") {
+function viewRadio(page: import("@playwright/test").Page, name: "Before" | "After" | "Compare") {
   return page.getByRole("radio", { name, exact: true });
 }
 
@@ -15,7 +15,7 @@ test.describe("Improvement 05 Step stay-put and chunky view switch", () => {
     await loadOakPark(page);
     await expect(viewRadio(page, "Before")).toHaveAttribute("aria-checked", "true");
     await expect(viewRadio(page, "After")).toHaveAttribute("aria-checked", "false");
-    await expect(viewRadio(page, "Both")).toHaveAttribute("aria-checked", "false");
+    await expect(viewRadio(page, "Compare")).toHaveAttribute("aria-checked", "false");
 
     const frame = await page.locator(".view-switch").evaluate((el) => {
       const cs = getComputedStyle(el);
@@ -38,8 +38,8 @@ test.describe("Improvement 05 Step stay-put and chunky view switch", () => {
     await viewRadio(page, "After").click();
     await expect(viewRadio(page, "After")).toHaveAttribute("aria-checked", "true");
 
-    await viewRadio(page, "Both").click();
-    await expect(viewRadio(page, "Both")).toHaveAttribute("aria-checked", "true");
+    await viewRadio(page, "Compare").click();
+    await expect(viewRadio(page, "Compare")).toHaveAttribute("aria-checked", "true");
     await expect(page.locator('.board-lane[data-lane="before"]')).toBeVisible();
     await expect(page.locator('.board-lane[data-lane="after"]')).toBeVisible();
 

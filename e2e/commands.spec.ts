@@ -10,7 +10,7 @@ async function loadDemo(page: Page) {
   await waitForLayout(page);
 }
 
-function viewLabel(page: Page, name: "Before" | "After" | "Both") {
+function viewLabel(page: Page, name: "Before" | "After" | "Compare") {
   return page.locator("header").getByText(name, { exact: true });
 }
 
@@ -27,8 +27,8 @@ test.describe("slice 4 command evidence", () => {
     );
     await capturePage(page, `${EVIDENCE}/after-light-1440.png`);
 
-    await viewLabel(page, "Both").click();
-    await expect(page.getByRole("radio", { name: "Both", exact: true })).toHaveAttribute(
+    await viewLabel(page, "Compare").click();
+    await expect(page.getByRole("radio", { name: "Compare", exact: true })).toHaveAttribute(
       "aria-checked",
       "true",
     );

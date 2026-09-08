@@ -6,7 +6,7 @@ const EVIDENCE = ".docs/evidence/12-release";
 const MAIL_STEP = "Read incoming mail";
 const RECEIPT = "Email delivery receipt to sender";
 
-function viewRadio(page: Page, name: "Before" | "After" | "Both") {
+function viewRadio(page: Page, name: "Before" | "After" | "Compare") {
   return page.getByRole("radio", { name, exact: true });
 }
 
@@ -169,7 +169,7 @@ test.describe("slice 12 surfaces, dialogs, and final screenshots", () => {
     await waitForLayout(page);
     await screenshotBoard(page, `${EVIDENCE}/after-light-1440.png`);
 
-    await viewRadio(page, "Both").click();
+    await viewRadio(page, "Compare").click();
     await waitForLayout(page);
     await expect(page.getByRole("button", { name: /Add / })).toHaveCount(0);
     await expect(page.getByRole("region", { name: "Merge and Unmerge" })).toHaveCount(0);
@@ -200,7 +200,7 @@ test.describe("slice 12 surfaces, dialogs, and final screenshots", () => {
     await viewRadio(page, "After").click();
     await waitForLayout(page);
     await screenshotBoard(page, `${EVIDENCE}/after-dark-1440.png`);
-    await viewRadio(page, "Both").click();
+    await viewRadio(page, "Compare").click();
     await waitForLayout(page);
     await screenshotBoard(page, `${EVIDENCE}/both-dark-1440.png`);
   });
@@ -263,7 +263,7 @@ test.describe("slice 12 accessibility and reduced motion", () => {
     await expect(page.locator("aside").getByRole("button", { name: "Type Read" })).toBeVisible();
     await expectAxeClean(page);
 
-    await viewRadio(page, "Both").click();
+    await viewRadio(page, "Compare").click();
     await waitForLayout(page);
     await expectAxeClean(page);
 

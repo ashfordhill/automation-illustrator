@@ -1,5 +1,5 @@
 /**
- * Top bar: Undo, sound, Not saved, Before/After/Both, hamburger.
+ * Top bar: Undo, sound, Not saved, Before/After/Compare, hamburger.
  * Pointer/Hand were removed (P-08); sound toggle sits after Undo (SH-03).
  * Hamburger items are text only (no left-section icons).
  */
@@ -9,21 +9,21 @@ import { IconArrowBackUp, IconMenu2 } from "@tabler/icons-react";
 import { DEMO_CHOICES } from "../../demos/catalog";
 import { prettyKey, KeyAction } from "../../keyboard/bindings";
 import { useStore } from "../../state/store";
-import { ColorScheme, ViewMode } from "../../workflow/catalogs";
+import { ColorScheme, VIEW_SWITCH_LABEL, ViewMode } from "../../workflow/catalogs";
 import { PersistStatusChip } from "./PersistStatusChip";
 import { SoundToggle } from "./SoundToggle";
 import { hamburgerShouldClose } from "./hamburgerDismiss";
 
-const VIEW_OPTIONS: Array<{ value: (typeof ViewMode)[keyof typeof ViewMode]; label: string }> = [
-  { value: ViewMode.Before, label: "Before" },
-  { value: ViewMode.After, label: "After" },
-  { value: ViewMode.Both, label: "Both" },
+const VIEW_OPTIONS: Array<{ value: ViewMode; label: string }> = [
+  { value: ViewMode.Before, label: VIEW_SWITCH_LABEL[ViewMode.Before] },
+  { value: ViewMode.After, label: VIEW_SWITCH_LABEL[ViewMode.After] },
+  { value: ViewMode.Both, label: VIEW_SWITCH_LABEL[ViewMode.Both] },
 ];
 
 function ViewSwitch() {
   const view = useStore((s) => s.view);
   return (
-    <div className="view-switch" role="radiogroup" aria-label="Before, After, or Both">
+    <div className="view-switch" role="radiogroup" aria-label="Before, After, or Compare">
       <div className="view-switch-track">
         {VIEW_OPTIONS.map((opt) => {
           const on = view === opt.value;

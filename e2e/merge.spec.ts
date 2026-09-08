@@ -3,7 +3,7 @@ import { loadOakPark, screenshotBoard, waitForLayout, tabPeekPoint } from "./rea
 
 const EVIDENCE = ".docs/evidence/11-merge";
 
-function viewLabel(page: Page, name: "Before" | "After" | "Both") {
+function viewLabel(page: Page, name: "Before" | "After" | "Compare") {
   return page.locator("header").getByText(name, { exact: true });
 }
 

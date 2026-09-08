@@ -85,6 +85,13 @@ export const ViewMode = {
 } as const;
 export type ViewMode = (typeof ViewMode)[keyof typeof ViewMode];
 
+/** Visible names on the top-bar switch. Stored view `both` is labeled Compare. */
+export const VIEW_SWITCH_LABEL: Record<ViewMode, string> = {
+  [ViewMode.Before]: "Before",
+  [ViewMode.After]: "After",
+  [ViewMode.Both]: "Compare",
+};
+
 /** Before/After assignment maps — Both is read-only comparison (BA-05). */
 export const AssignmentLane = {
   Before: "before",

@@ -457,7 +457,7 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
   return (
     <div
       ref={hostRef}
-      className={`board-lane${panTarget ? " is-pan-target" : ""}`}
+      className="board-lane"
       data-layout={phase}
       data-layout-error={error ? "true" : undefined}
       data-insert-preview={insertHoverId ? "true" : undefined}

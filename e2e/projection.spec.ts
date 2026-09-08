@@ -5,7 +5,7 @@ const EVIDENCE = ".docs/evidence/10-projection";
 const MAIL_STEP = "Read incoming mail";
 const RECEIPT = "Email delivery receipt to sender";
 
-function viewLabel(page: Page, name: "Before" | "After" | "Both") {
+function viewLabel(page: Page, name: "Before" | "After" | "Compare") {
   return page.locator("header").getByText(name, { exact: true });
 }
 
@@ -61,11 +61,11 @@ test.describe("slice 10 After projection and comparison", () => {
     await screenshotBoard(page, `${EVIDENCE}/shared-edit-1440.png`);
   });
 
-  test("Both is read-only and pans the last focused lane (BA-05)", async ({ page }) => {
+  test("Compare is read-only and pans the last focused lane (BA-05)", async ({ page }) => {
     await loadOakPark(page);
-    await viewLabel(page, "Both").click();
+    await viewLabel(page, "Compare").click();
     await waitForLayout(page);
-    await expect(page.getByRole("radio", { name: "Both", exact: true })).toHaveAttribute(
+    await expect(page.getByRole("radio", { name: "Compare", exact: true })).toHaveAttribute(
       "aria-checked",
       "true",
     );

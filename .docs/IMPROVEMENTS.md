@@ -576,3 +576,12 @@ Approved 2026-09-08. The Data oval is **coral** (`#e8784a` light, `#f09468` dark
 
 Commit: `feat(improve-25): recolor the Data mark coral`.  
 Evidence: `.docs/evidence/improve-25-data-mark/`.
+
+---
+
+# Improvement 26 — Compare view, no pan outline
+
+Approved 2026-09-08. The stacked comparison switch is **Compare** (stored view stays `both`). The cyan pan-target outline that boxed only the focused Compare pane is removed; both panes share the camera with no extra frame. Picture: [compare outline](visual-improvements/2026-09-08-compare-blue-outline.png).
+
+Commit: `feat(improve-26): compare view without pan outline`.  
+Evidence: `.docs/evidence/improve-26-compare/`.

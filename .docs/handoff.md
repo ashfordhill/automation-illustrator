@@ -1624,3 +1624,30 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(improve-25): recolor the Data mark coral`
 
+## Improvement 26 — Compare view, no pan outline — 2026-09-08
+
+- Starting commit: `88b25f0af78cb86a39863ec371eaf32b9a1e29f2` (`feat(improve-25): recolor the Data mark coral`)
+- Working tree at start: not clean. Concurrent status-bar / tile-pie / first-tile / evidence recaptures were left unstaged and are not in this commit.
+- GOAL clauses addressed: SH-02, BA-05 (amendment dated 2026-09-08). Stored view remains `both`; the switch label is Compare. Neither Compare pane draws a pan-target outline.
+- Library research and decisions: no new runtime dependency. The cyan box was leftover `.board-lane.is-pan-target` (`--chrome-line`) from independent Both cameras. BA-05 already shares one camera, so the focused-lane outline was obsolete.
+- Files changed:
+  - Switch: `src/workflow/catalogs.ts` (`VIEW_SWITCH_LABEL`), `src/app/components/Toolbar.tsx`
+  - Outline: `src/board/Board.tsx` (no `is-pan-target` class), `src/app/styles/tokens.css` (rule removed)
+  - Tests: `src/app/App.test.tsx`; e2e view helpers Both → Compare; `e2e/improve-26-compare.spec.ts`
+  - Docs: `.docs/GOAL.md` (amendment); `.docs/IMPROVEMENTS.md` (26); `.docs/VISUAL_IMPROVEMENTS.md`; `HUMAN.md`; this handoff entry
+  - Evidence: `.docs/evidence/improve-26-compare/`
+- Behavior implemented:
+  - The top-bar third option reads **Compare**.
+  - Compare stacks Before and After with no cyan outline around one pane.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning)
+  - `npm run test:unit` — view-switch App tests pass (2). Full suite had 2 failures on concurrent status-bar Actors / Mantine Autosize WIP, not this commit.
+  - `npm run test:e2e` — `e2e/improve-26-compare.spec.ts` pass (1); `e2e/view-switch.spec.ts` pass (1). Full suite not re-run; port 4177 was in use (ran on 4195).
+- Evidence:
+  - `.docs/evidence/improve-26-compare/compare-light-1440.png` — Compare selected; no cyan box around Before (1440×900)
+  - `.docs/evidence/improve-26-compare/compare-dark-1440.png` — same in dark (1440×900)
+- Earlier-slice defects fixed: Compare (Both) pan-target outline boxed only the focused lane after cameras were shared.
+- Known limitations / follow-ups: Concurrent status-bar / tile-pie WIP remains unstaged. A cyan split line still divides the two Compare panes (`--chrome-line` border between them).
+- Status: COMPLETE
+- Commit: `feat(improve-26): compare view without pan outline`
+

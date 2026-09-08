@@ -11,7 +11,7 @@ async function loadDemo(page: Page) {
 }
 
 /** Mantine hides the radio inputs; the visible labels live in the header. */
-function viewLabel(page: Page, name: "Before" | "After" | "Both") {
+function viewLabel(page: Page, name: "Before" | "After" | "Compare") {
   return page.locator("header").getByText(name, { exact: true });
 }
 
@@ -23,7 +23,7 @@ test.describe("baseline smoke", () => {
     await capturePage(page, ".docs/evidence/01-harness/before-light-1440.png");
   });
 
-  test("Before / After / Both view switching", async ({ page }) => {
+  test("Before / After / Compare view switching", async ({ page }) => {
     await loadDemo(page);
     await viewLabel(page, "After").click();
     await expect(page.getByRole("radio", { name: "After", exact: true })).toHaveAttribute(
@@ -34,8 +34,8 @@ test.describe("baseline smoke", () => {
     await waitForLayout(page);
     await capturePage(page, ".docs/evidence/01-harness/after-light-1440.png");
 
-    await viewLabel(page, "Both").click();
-    await expect(page.getByRole("radio", { name: "Both", exact: true })).toHaveAttribute(
+    await viewLabel(page, "Compare").click();
+    await expect(page.getByRole("radio", { name: "Compare", exact: true })).toHaveAttribute(
       "aria-checked",
       "true",
     );

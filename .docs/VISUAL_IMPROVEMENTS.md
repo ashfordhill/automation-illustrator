@@ -142,3 +142,9 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 - Issue: Selected-tile `+` (Step) and Path (Data-create sibling) tabs sit too far off the right edge; a paper gap shows between the tile and the icons.
 - Resolution: Shipped in `feat(improve-22): sit create tabs closer to the tile` — 14px peek, same hang as the X.
 - Attachments: [create tabs gap](visual-improvements/2026-09-08-create-tabs-gap.gif)
+
+## 2026-09-08 — Compare cyan outline
+
+- Issue: In Both, a cyan outline boxed the Before pane and not After, so the split looked unfinished. The switch still said Both.
+- Resolution: Shipped in `feat(improve-26): compare view without pan outline` — switch says Compare; no pan-target outline on either pane.
+- Attachments: [compare blue outline](visual-improvements/2026-09-08-compare-blue-outline.png)

@@ -6,7 +6,7 @@ const MAIL_STEP = "Read incoming mail";
 const RECEIPT = "Email delivery receipt to sender";
 const SCAN = "Scan letter to PDF";
 
-function viewLabel(page: Page, name: "Before" | "After" | "Both") {
+function viewLabel(page: Page, name: "Before" | "After" | "Compare") {
   return page.locator("header").getByText(name, { exact: true });
 }
 

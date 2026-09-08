@@ -11,7 +11,7 @@ import {
 const EVIDENCE = ".docs/evidence/improve-09-chrome-root";
 const REVIEW = "Review BS&A Software";
 
-function viewLabel(page: Page, name: "Before" | "After" | "Both") {
+function viewLabel(page: Page, name: "Before" | "After" | "Compare") {
   return page.locator("header").getByText(name, { exact: true });
 }
 
