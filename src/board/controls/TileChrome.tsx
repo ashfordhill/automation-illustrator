@@ -10,7 +10,7 @@ import {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
-import { useReactFlow } from "@xyflow/react";
+import { useReactFlow, ViewportPortal } from "@xyflow/react";
 import { IconX } from "@tabler/icons-react";
 import { ViewMode, WorkflowNodeKind } from "../../workflow/catalogs";
 import { useStore } from "../../state/store";
@@ -18,6 +18,8 @@ import { findMergeGroup, findNode } from "../../workflow/selectors";
 import { nodeCaption } from "../../workflow/types";
 import { useLaneLayoutContext } from "../routing/LaneLayoutContext";
 import { hitPathId } from "../layout/pathHit";
+import { insertPreviewGeom } from "../layout/insertPreview";
+import { nodeSize } from "../layout/tileMetrics";
 import { PathKnotIcon } from "./PathKnotIcon";
 import { DataChip } from "../tiles/DataChip";
 
@@ -131,22 +133,21 @@ export function TileChrome({
     interaction.kind !== "remove-preview";
   const group = findMergeGroup(workflow, id);
   const caption = nodeCaption(findNode(workflow, id), id);
+  const tabPulling =
+    (interaction.kind === "plus-pull" && interaction.sourceId === id) ||
+    (interaction.kind === "path-pull" && interaction.sourceId === id);
   const pulling =
-    (interaction.kind === "plus-pull" ||
-      interaction.kind === "path-pull" ||
-      interaction.kind === "tile-drag") &&
-    ((interaction.kind === "plus-pull" && interaction.sourceId === id) ||
-      (interaction.kind === "path-pull" && interaction.sourceId === id) ||
-      (interaction.kind === "tile-drag" && interaction.nodeId === id));
+    tabPulling || (interaction.kind === "tile-drag" && interaction.nodeId === id);
 
   return (
     <div
       className={`tile-chrome-host${pulling ? " is-pulling" : ""}`}
       style={{ position: "relative", width: "100%", height: "100%", overflow: "visible" }}
     >
-      <TilePickup id={id} selected={!!selected && editing} disabled={!editing || !selected || pulling}>
+      <TilePickup id={id} selected={!!selected && editing} disabled={!editing || !selected || tabPulling}>
         {children}
       </TilePickup>
+      {interaction.kind === "tile-drag" && interaction.nodeId === id ? <InsertSilhouette nodeId={id} /> : null}
       {showChrome ? (
         <>
           <PlusPullTab nodeId={id} />
@@ -449,6 +450,38 @@ function PathPullTab({ nodeId }: { nodeId: string }) {
   );
 }
 
+function InsertSilhouette({ nodeId }: { nodeId: string }) {
+  const { layout } = useLaneLayoutContext();
+  const hoverEdgeId = useStore((s) =>
+    s.interaction.kind === "tile-drag" && s.interaction.nodeId === nodeId
+      ? s.interaction.hoverEdgeId
+      : null,
+  );
+  const workflow = useStore((s) => s.workflow);
+  if (!hoverEdgeId || !layout) return null;
+  const node = findNode(workflow, nodeId);
+  if (!node) return null;
+  const geom = insertPreviewGeom(layout, hoverEdgeId, nodeSize(node.type));
+  if (!geom) return null;
+  return (
+    <ViewportPortal>
+      <div
+        className="tile-insert-silhouette"
+        data-insert-silhouette="true"
+        aria-hidden
+        style={{
+          position: "absolute",
+          left: geom.gap.x,
+          top: geom.gap.y,
+          width: geom.gap.w,
+          height: geom.gap.h,
+          pointerEvents: "none",
+        }}
+      />
+    </ViewportPortal>
+  );
+}
+
 function TilePickup({
   id,
   selected,
@@ -488,6 +521,7 @@ function TilePickup({
     if ((e.target as HTMLElement).closest("button, a, input, textarea")) return;
     origin.current = { x: e.clientX, y: e.clientY };
     dragging.current = false;
+    e.stopPropagation();
     e.currentTarget.setPointerCapture(e.pointerId);
   };
 

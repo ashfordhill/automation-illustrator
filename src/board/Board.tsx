@@ -3,7 +3,7 @@
  * Projects the v2 document, derives the lane layout with ELK (Improvement 01),
  * and binds a per-lane viewport. In Both, both lanes share one camera (BA-05).
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import {
   Background,
   BackgroundVariant,
@@ -33,7 +33,9 @@ import { projectLane } from "../state/projection";
 import { useStore } from "../state/store";
 import { edgeTypes, nodeTypes, type Lane } from "./nodes/reactFlowRegistry";
 import { GRID, nodeSize } from "./layout/tileMetrics";
+import { insertPreviewGeom } from "./layout/insertPreview";
 import { mergeTileSize } from "./layout/mergeFlow";
+import { findNode } from "../workflow/selectors";
 import { measureLabelBox, type LabelBox } from "./layout/labelBox";
 import type { TileSizes } from "./layout/elkGraph";
 import { useLaneLayout } from "./layout/useLaneLayout";
@@ -71,6 +73,9 @@ function nodeClassName(
   }
   if (interaction.kind === "plus-pull" && interaction.sourceId === id) {
     parts.push("plus-pull-source");
+  }
+  if (interaction.kind === "tile-drag" && interaction.nodeId === id) {
+    parts.push("tile-drag-origin-fade");
   }
   if (interaction.kind === "merge-pick" && mergePicked) {
     parts.push("merge-candidate-on");
@@ -116,6 +121,22 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
   const display = shown?.positions;
   const lastPos = useRef<Record<string, { x: number; y: number }>>({});
   if (display) lastPos.current = { ...lastPos.current, ...display };
+
+  const insertHoverId = interaction.kind === "tile-drag" ? interaction.hoverEdgeId : null;
+  const reduceMotion =
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const insertPreview = (() => {
+    if (!insertHoverId || interaction.kind !== "tile-drag" || !shown) return null;
+    const edge = projection.edges.find((e) => e.id === insertHoverId || e.originId === insertHoverId);
+    if (!edge) return null;
+    const drag = findNode(workflow, interaction.nodeId);
+    if (!drag) return null;
+    const geom = insertPreviewGeom(shown, edge.id, tileSizes[interaction.nodeId] ?? nodeSize(drag.type));
+    if (!geom) return null;
+    return { geom, sourceId: edge.source, targetId: edge.target };
+  })();
 
   /* First layout: fit once unless this lane already has a saved viewport.
      In Both, copy the other lane's camera instead of fitting independently (BA-05). */
@@ -183,6 +204,20 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
       (interaction.memberIds.includes(n.id) ||
         (n.memberIds ?? []).some((id) => interaction.memberIds.includes(id)));
     const internals = projection.internals.find((g) => g.groupId === n.id);
+    const shift =
+      insertPreview && !reduceMotion
+        ? n.id === insertPreview.sourceId
+          ? insertPreview.geom.shiftS
+          : n.id === insertPreview.targetId
+            ? insertPreview.geom.shiftU
+            : null
+        : null;
+    const easing = Boolean(shift && (shift.x !== 0 || shift.y !== 0));
+    const nodeStyle: CSSProperties = {
+      width: size.w,
+      height: size.h,
+      ...(easing && shift ? { translate: `${shift.x}px ${shift.y}px` } : {}),
+    };
     return {
       id: n.id,
       type: n.projectedKind === "group" ? ReactFlowNodeKind.MergeGroup : reactFlowTypeFor(n.type),
@@ -199,17 +234,17 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
       draggable: false,
       selectable: editing,
       selected: selected?.type === SelectionKind.Node && selected.id === n.id,
-      className: nodeClassName(
+      className: `${nodeClassName(
         n.id,
         interaction,
         null,
         n.projectedKind === "group",
         mergePicked,
-      ),
+      )}${easing ? " is-insert-easing" : ""}`,
       width: size.w,
       height: size.h,
       measured: { width: size.w, height: size.h },
-      style: { width: size.w, height: size.h },
+      style: nodeStyle,
     };
   });
 
@@ -329,6 +364,7 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
       className={`board-lane${panTarget ? " is-pan-target" : ""}`}
       data-layout={phase}
       data-layout-error={error ? "true" : undefined}
+      data-insert-preview={insertHoverId ? "true" : undefined}
       data-lane={lane}
       data-pan-target={panTarget ? "true" : "false"}
       aria-label={lane === "after" ? "After lane" : "Before lane"}

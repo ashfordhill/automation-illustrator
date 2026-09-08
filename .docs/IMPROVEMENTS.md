@@ -279,7 +279,7 @@ When done: run `npm run build`, `npm run test:unit`, `npm run test:e2e`; save sc
 
 ---
 
-# Improvement 04 — insert-on-Path live preview
+# Improvement 04 — insert-on-Path live preview (COMPLETE)
 
 Approved 2026-09-07. Start only after Improvement 03 is COMPLETE.
 

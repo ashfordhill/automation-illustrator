@@ -912,6 +912,26 @@ body,
   background: color-mix(in srgb, var(--cream) 55%, transparent);
 }
 
+.tile-insert-silhouette {
+  box-sizing: border-box;
+  border: 3px solid var(--line);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--cream) 42%, transparent);
+  pointer-events: none;
+}
+
+.react-flow__node.tile-drag-origin-fade {
+  opacity: 0.28;
+}
+
+.react-flow__node.is-insert-easing {
+  transition: translate 180ms ease-out;
+}
+
+.path-insert-stub {
+  pointer-events: none;
+}
+
 .react-flow__node.path-drop-target {
   outline: 4px dashed var(--blue);
   outline-offset: 8px;
@@ -1203,7 +1223,7 @@ body,
     filter: none;
   }
 
-  .edge-stretch .react-flow__edge-path {
+  .react-flow__node.is-insert-easing {
     transition: none;
   }
 

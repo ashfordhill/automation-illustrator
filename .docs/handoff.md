@@ -946,3 +946,35 @@ Corrections in the same chat before the next slice starts get their own short en
 - Known limitations / follow-ups: insert-on-Path live preview — Improvement 04. Step-select jump and view-switch fill — Improvement 05. Inspector Who/trash/zoom/hamburger — Improvement 06. Merge removal — Improvement 07. Path `−` remains forbidden.
 - Status: COMPLETE
 - Commit: `feat(improve-03): polish chrome Path stroke and on-canvas label`
+
+## Improvement 04 — insert-on-Path live preview — 2026-09-07
+
+- Starting commit: `3a5800ee1cd42cbf90d682bf941b6b8e29c2b4bf` (`feat(improve-03): polish chrome Path stroke and on-canvas label`)
+- Working tree at start: tracked files clean; untracked ELK planner dumps left uncommitted
+- GOAL clauses addressed: NG-02, CX-05, CX-06, CX-07 (amendment appended 2026-09-07; clauses not edited in place)
+- Library research and decisions: no new runtime dependency. Preview is display-only (`insertPreviewGeom`); ELK is not run on pointer move; `insertNodeOnPath` still runs only on drop. Neighbor ease uses the CSS `translate` property on RF nodes (does not overwrite RF `transform` / `position`). Reduced motion skips ease and Path morph; highlight, stubs, and silhouette still snap. After insert-on-Path remains Before-only.
+- Files changed:
+  - Contract/docs: `.docs/GOAL.md` amendment; `.docs/IMPROVEMENTS.md` (04 marked COMPLETE); this handoff entry
+  - Geometry: `src/board/layout/insertPreview.ts`, `insertPreview.test.ts`
+  - Board: `Board.tsx` (S/U translate, origin fade, `data-insert-preview`), `FlowArrow.tsx` (split stubs, hover band behind), `TileChrome.tsx` (silhouette `ViewportPortal`; pickup stays live during tile-drag; pointerdown `stopPropagation` so pan does not steal the gesture)
+  - Shell: `CanvasHelper.tsx`, `tokens.css`
+  - Tests: `src/app/App.test.tsx`, `e2e/insert-preview.spec.ts`
+  - Evidence: `.docs/evidence/improve-04-insert-preview/`
+- Behavior implemented:
+  - Dragging a selected Step or Data over a Path shows split stubs, a landing silhouette in a gap, and (when there is room) S/U easing apart. The origin tile fades; the pointer ghost stays under the cursor.
+  - Hover change snaps the previous pair back. Empty drop cancels with no document write. Drop still commits `insertNodeOnPath` then one ELK pass.
+- Tests and exact results:
+  - `npm install` at start — up to date, 137 packages, 0 vulnerabilities
+  - `npm run build` at start — pass (`tsc --noEmit && vite build`; Vite 8.2.2)
+  - `npm run test:unit` at start — pass (30 files, 158 tests)
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning; client `index-CdsKIc9F.js` 874.70 kB)
+  - `npm run test:unit` — pass (31 files, 162 tests)
+  - `npm run test:e2e` — pass (80 passed, Chromium, 3 workers, 39.8s including webServer)
+- Evidence:
+  - `.docs/evidence/improve-04-insert-preview/insert-hover-gap-1440.png` — Oak Park Before; Review in-drag over `e_gt`; split stubs, silhouette, origin faded, pointer ghost (1440×900)
+  - `.docs/evidence/improve-04-insert-preview/insert-drop-after-1440.png` — after drop; Review between Read and website; condition on S→T; layout `ready` (1440×900)
+  - `.docs/evidence/improve-04-insert-preview/insert-cancel-1440.png` — empty drop; graph identical to pre-drag (1440×900)
+- Earlier-slice defects fixed: Improvement 02 `TilePickup` disabled itself when `tile-drag` began, which cleared pointer-capture state; pickup now stays enabled for that gesture. Pointerdown on a selected tile stops propagation so board pan does not steal the insert drag.
+- Known limitations / follow-ups: Step-select jump and view-switch fill — Improvement 05. Inspector Who/trash/zoom/hamburger — Improvement 06. Merge removal — Improvement 07. After-only insert-on-Path and Path `−` remain out of scope. Packed ELK gutters may clamp neighbor ease to zero (split + silhouette still show).
+- Status: COMPLETE
+- Commit: `feat(improve-04): preview tile insert on Path while dragging`

@@ -41,7 +41,7 @@ function hintsFor(): Hint[] {
   }
   if (s.interaction.kind === "tile-drag") {
     return [
-      { key: "Drop", label: "Insert onto a Path" },
+      { key: "Drop", label: "on a Path to insert. Neighbors make a gap." },
       { key: "Esc", label: "Cancel" },
     ];
   }
