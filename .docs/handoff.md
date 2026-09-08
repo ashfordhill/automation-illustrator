@@ -1428,3 +1428,15 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(improve-10): insert Tiles on unique sibling Paths`
 
+
+## Improvement 10 — correction 6 — 2026-09-08
+
+- Requested: The hand-grabbing cursor is blurry; the movement and pointer cursors are not.
+- Changed: Empty paper and `+` / Path tabs use a 32×32 white-fill, black-outline grab SVG (same language as the OS pointer). Tiles stay platform `move`; the tile X stays `pointer`. Source: `src/app/cursors/grab.svg`, applied as CSS data URIs. E2E already asserts a `url(` grab cursor on the pane and plus tab.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning)
+  - `npm run test:unit` — pass (31 files, 187 tests)
+  - `npm run test:e2e` — 107 passed, 1 flaked then passed on retry (`improve-12` plus-pull from hover; unrelated). Improvement 10 grab/move/insert tests passed (4). Chromium, 2 workers, reused Vite, 1.7m
+- Evidence: `.docs/evidence/improve-10-drag-preview/grab-os-style-1440.png` — OS-style grab glyph at 96px and native 32px (1440×900)
+- Status: COMPLETE
+- Commit: `feat(improve-10): use OS-style grab cursor`
