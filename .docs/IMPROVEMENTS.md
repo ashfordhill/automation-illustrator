@@ -495,3 +495,21 @@ Approved 2026-09-08. Tile `+` (create Step / Data) and Path-pull tabs are **44×
 
 Commit: `feat(improve-15): enlarge tile plus and Path tabs`.  
 Evidence: `.docs/evidence/improve-15-tab-size/`.
+
+---
+
+# Improvement 19 — closer Step/Data + fan
+
+Approved 2026-09-08. The Step and Data boxes that appear when you pull tile `+` sit closer to the source tile. The extra 28px outward offset (from the old wedge) is gone, and the fan radius is 104px (was 118). Drop, After Step-only, keys `1` / `2`, taffy, and scrim are unchanged. No new dependency.
+
+Commit: `feat(improve-19): pull Step Data fan closer`.  
+Evidence: `.docs/evidence/improve-19-plus-fan/`.
+
+---
+
+# Improvement 17 — Read Type is an open book
+
+Approved 2026-09-08. The Read task icon is an **open book** (blue covers, cream pages, ink spine) so it is distinct from Other’s clipboard. Stored Type `read` and the picker label Read are unchanged. No new dependency.
+
+Commit: `feat(improve-17): use an open book for Read`.  
+Evidence: `.docs/evidence/improve-17-read-book/`.

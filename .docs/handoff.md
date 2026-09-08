@@ -1440,3 +1440,27 @@ Corrections in the same chat before the next slice starts get their own short en
 - Evidence: `.docs/evidence/improve-10-drag-preview/grab-os-style-1440.png` — OS-style grab glyph at 96px and native 32px (1440×900)
 - Status: COMPLETE
 - Commit: `feat(improve-10): use OS-style grab cursor`
+
+## Improvement 17 — Read Type is an open book — 2026-09-08
+
+- Starting commit: `d656b54fe9c7e801ff12dc814fcf94c58c22eb04` (`feat(improve-10): use OS-style grab cursor`)
+- Working tree at start: not clean (concurrent evidence recaptures and other-chat WIP left unstaged)
+- GOAL clauses addressed: NA-05 (amendment dated 2026-09-08). Read stays stored `read`; Other stays the clipboard.
+- Library research and decisions: no new runtime dependency. Custom cream/blue/ink open book (same recipe as the other Type glyphs), not Tabler. Distinct from Other’s clipboard and from Review/File documents.
+- Files changed:
+  - `src/board/tiles/StepKindIcon.tsx` (Read glyph)
+  - `src/app/App.test.tsx`
+  - `e2e/improve-17-read-book.spec.ts`
+  - `.docs/GOAL.md`, `.docs/IMPROVEMENTS.md`, this handoff entry
+  - Evidence: `.docs/evidence/improve-17-read-book/read-book-1440.png`
+- Behavior implemented:
+  - Read tiles and the Type Read picker show an open book instead of a clipboard.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning)
+  - `npm run test:unit` — pass (32 files, 191 tests)
+  - `npm run test:e2e` — 108 passed, 1 failed (`e2e/improve-18-plus-fan.spec.ts` missing — concurrent WIP). `e2e/improve-17-read-book.spec.ts` pass.
+- Evidence: `.docs/evidence/improve-17-read-book/read-book-1440.png` — Oak Park Read invoice.pdf selected; open book on the tile and Type Read (1440×900)
+- Earlier-slice defects fixed: none
+- Known limitations / follow-ups: Concurrent WIP from other chats remains unstaged.
+- Status: COMPLETE
+- Commit: `feat(improve-17): use an open book for Read`

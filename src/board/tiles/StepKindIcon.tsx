@@ -22,9 +22,36 @@ export function StepKindIcon({ kind, size = 52 }: { kind: StepKindT; size?: numb
   const icons: Record<StepKindT, ReactNode> = {
     [StepKind.Read]: (
       <IconShell size={size}>
-        <rect x="12" y="8" width="28" height="36" rx="3" fill={blue} stroke={ink} strokeWidth="2" />
-        <rect x="17" y="5" width="18" height="8" rx="2" fill={blue} stroke={ink} strokeWidth="2" />
-        <path d="M18 22 H34 M18 28 H34 M18 34 H28" stroke={cream} strokeWidth="2.2" strokeLinecap="round" />
+        {/* Open book — distinct from Other’s clipboard. */}
+        <path
+          d="M6 16 L26 11 L26 44 L6 41 Z"
+          fill={blue}
+          stroke={ink}
+          strokeWidth="2"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M46 16 L26 11 L26 44 L46 41 Z"
+          fill={blue}
+          stroke={ink}
+          strokeWidth="2"
+          strokeLinejoin="round"
+        />
+        <path d="M8.5 17.2 L25 13.2 L25 42 L8.5 39.6 Z" fill={cream} />
+        <path d="M43.5 17.2 L27 13.2 L27 42 L43.5 39.6 Z" fill={cream} />
+        <path d="M26 11 L26 44" stroke={ink} strokeWidth="2.2" strokeLinecap="round" />
+        <path
+          d="M12 23 L21 21.4 M12 28 L20 26.6 M12 33 L19 31.8"
+          stroke={blue}
+          strokeWidth="2.2"
+          strokeLinecap="round"
+        />
+        <path
+          d="M31 21.4 L40 23 M32 26.6 L40 28 M33 31.8 L40 33"
+          stroke={blue}
+          strokeWidth="2.2"
+          strokeLinecap="round"
+        />
       </IconShell>
     ),
     [StepKind.Search]: (

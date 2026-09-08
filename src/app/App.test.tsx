@@ -237,3 +237,13 @@ test("Add Step names Other as Task and the tile does not print Other", () => {
   expect(otherBtn).not.toBeNull();
   expect(otherBtn?.querySelector("svg")).not.toBeNull();
 });
+
+test("Read type uses an open book, not a clipboard", () => {
+  act(() => {
+    useStore.getState().select({ type: SelectionKind.Node, id: OAK_PARK_IDS.read });
+  });
+  const readSvg = host.querySelector('[aria-label="Type Read"] svg');
+  expect(readSvg).not.toBeNull();
+  expect(readSvg?.querySelectorAll("path").length).toBeGreaterThanOrEqual(4);
+  expect(readSvg?.querySelector("rect")).toBeNull();
+});
