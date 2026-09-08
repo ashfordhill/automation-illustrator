@@ -433,6 +433,8 @@ Correction 2 (2026-09-08): empty paper and `+` / Path tabs use a chunky ink+halo
 
 Correction 3 (2026-09-08): drop the custom black SVG cursors. Tiles use the platform `move` cursor; pan and pull-tabs use platform `grab` / `grabbing`; the tile X stays `pointer`.
 
+Correction 4 (2026-09-08): pan and pull-tabs use a white/black OS-style grab hand (same look as the pointer). Platform `grab` stays blurry on Windows because Chrome only ships a 1× bitmap.
+
 ---
 
 # Improvement 11 — Path Delete menu and hit pad (COMPLETE)
@@ -465,10 +467,12 @@ X, `+`, and Path appear while an editable tile is **hovered or selected** (or th
 
 Approved 2026-09-08. Start only after Improvement 11 correction 1 is COMPLETE. Do not mix into Improvement 12 hover chrome.
 
-When a Before-origin Step is created from another Step (`+` / `1`), the child gets that parent’s Before actor on both lanes. Empty-board Add Step still defaults to last-used Human, else Alice, else the first Human. Spawning from Data uses that fallback. After-only Steps stay the default Robot (BA-07).
+When a Before-origin Step is created from another Step (`+` / `1`), the child gets that parent’s Before actor on both lanes. Empty-board Add Step still defaults to last-used Human, else Alice, else the first Human. A child spawned from Data inherits the nearest upstream Step’s Who. After-only Steps stay the default Robot (BA-07).
 
 Commit: `feat(improve-13): inherit parent actor on child Steps`.  
 Evidence: `.docs/evidence/improve-13-who-inherit/`.
+
+Correction 1 (2026-09-08): Data-parent spawn walks incoming Paths to the upstream Step so a Step created off Roy’s Data is also Roy.
 
 ---
 

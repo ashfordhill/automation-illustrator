@@ -54,7 +54,26 @@ test("spawnBranch from a Step inherits that Step’s Who, not last-used Human (N
   expect(useStore.getState().workflow.after.assignments[childOfRobot]).toBe(robot);
 
   const fromData = useStore.getState().spawnBranch(acct, WorkflowNodeKind.Step);
+  expect(useStore.getState().workflow.assignments[fromData]).toBe(alice);
+});
+
+test("New board: a child of Roy, including off Roy’s Data, is Roy (NA-03)", () => {
+  const s = useStore.getState();
+  s.requestNew();
+  s.confirmReplaceDiscard();
+  const root = useStore.getState().addStep();
+  const roy = useStore.getState().workflow.actors.find((a) => a.name === "Roy")?.id;
+  expect(root).toBeTruthy();
+  expect(roy).toBeTruthy();
+  useStore.getState().assignActor(root, roy!);
+  const child = useStore.getState().spawnBranch(root, WorkflowNodeKind.Step);
+  expect(useStore.getState().workflow.assignments[child]).toBe(roy);
+  expect(useStore.getState().workflow.after.assignments[child]).toBe(roy);
+
+  const data = useStore.getState().spawnBranch(root, WorkflowNodeKind.DataField);
+  const fromData = useStore.getState().spawnBranch(data, WorkflowNodeKind.Step);
   expect(useStore.getState().workflow.assignments[fromData]).toBe(roy);
+  expect(useStore.getState().workflow.after.assignments[fromData]).toBe(roy);
 });
 
 test("Who assigns in both lanes, including a Robot in Before (NA-03, NA-11)", () => {

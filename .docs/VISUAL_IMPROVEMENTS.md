@@ -111,3 +111,9 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 - Issue: New Other Steps show only a small circled exclamation and no Name, so the task half is blank.
 - Resolution: Shipped Name “Task” on first Other, with a larger clipboard icon instead of the exclamation.
 - Attachments: [other blank](visual-improvements/2026-09-08-other-task-blank.jpg)
+
+## 2026-09-08 — child Step defaults to Alice
+
+- Issue: Creating a Step from another Step (or from Data under that Step) assigned the default Alice instead of the parent’s actor.
+- Resolution: Child Steps inherit the parent Step’s Who; Data walks to the nearest upstream Step.
+- Attachments: [child defaults Alice](visual-improvements/2026-09-08-child-step-defaults-alice.jpg)

@@ -50,7 +50,7 @@ test("Roy’s fill is honey-apricot, not Script-robot blue", () => {
   expect(HUMAN_PRESETS[1]).toEqual({ name: "Roy", color: "#f4c07a" });
 });
 
-test("whoForChildStep inherits a Step parent’s Who and ignores last-used Human (NA-03)", () => {
+test("whoForChildStep inherits a Step parent’s Who and walks Data to the upstream Step (NA-03)", () => {
   expect(whoForChildStep(doc, "s_read", "h_priya")).toEqual({
     beforeId: "h_ada",
     afterId: "h_ada",
@@ -67,11 +67,29 @@ test("whoForChildStep inherits a Step parent’s Who and ignores last-used Human
           label: "Account",
         },
       ],
+      edges: [{ id: "e1", source: "s_read", target: "d1", label: "", dashed: false }],
     },
     "d1",
     "h_priya",
   );
-  expect(fromData).toEqual({ beforeId: "h_priya", afterId: "h_priya" });
+  expect(fromData).toEqual({ beforeId: "h_ada", afterId: "h_ada" });
+  const orphanData = whoForChildStep(
+    {
+      ...doc,
+      nodes: [
+        ...doc.nodes,
+        {
+          id: "d2",
+          type: WorkflowNodeKind.DataField,
+          position: { x: 40, y: 0 },
+          label: "Orphan",
+        },
+      ],
+    },
+    "d2",
+    "h_priya",
+  );
+  expect(orphanData).toEqual({ beforeId: "h_priya", afterId: "h_priya" });
 });
 
 test("defaultHumanId prefers last-used Human, then Alice, then the first Human (NA-03)", () => {

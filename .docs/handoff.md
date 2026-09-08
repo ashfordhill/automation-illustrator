@@ -1378,3 +1378,27 @@ Corrections in the same chat before the next slice starts get their own short en
 - Known limitations / follow-ups: Playwright evidence PNGs still needed on a machine with Chromium libs. Concurrent tab-size / taffy / cursor WIP remains unstaged.
 - Status: COMPLETE
 - Commit: `feat(improve-16): default Other Steps to Task`
+
+## Improvement 15 — larger + and Path tabs — 2026-09-08
+
+- Starting commit: `4948f4459d2369e9e8d5beab639853aacffa40ff` (`feat(improve-16): default Other Steps to Task`)
+- Working tree at start: not clean. Concurrent taffy/cursor/Other-Task/Who-inherit work and evidence recaptures were left unstaged and are not in this commit.
+- GOAL clauses addressed: CX-01 (hit targets on selected/hover Tile chrome). No amendment — tab pixel size is not in the contract.
+- Library research and decisions: no new runtime dependency. Tabs are 44×44 CSS (were 36×36) with a 24px peek past the tile edge (were 18px) so more of the control sits outside the face. `+` glyph 30px; Path glyph stays 24 inside the larger hit box. X stays 20. Ghosts match the rest tabs.
+- Files changed:
+  - `src/app/styles/tokens.css` (`.plus-tab` / `.path-tab` / ghosts)
+  - `e2e/improve-15-tab-size.spec.ts`
+  - `.docs/IMPROVEMENTS.md`, `.docs/VISUAL_IMPROVEMENTS.md`, this handoff entry
+  - Evidence and user GIF copy
+- Behavior implemented:
+  - Tile create (`+`) and Path-pull tabs are a little larger and peek farther, so they are easier to grab. Pull, X, and Present/Both hide rules are unchanged.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning)
+  - `npm run test:unit` — pass (31 files, 180 tests)
+  - `npm run test:e2e` — pass (102 passed, Chromium, 3 workers, 1.3m)
+- Evidence: `.docs/evidence/improve-15-tab-size/selected-tabs-1440.png` — selected Read tile; 44×44 `+` and Path tabs (1440×900)
+- Earlier-slice defects fixed: none
+- Known limitations / follow-ups: Concurrent WIP from other chats remains unstaged. At fitView zoom the CSS bump is modest on screen.
+- Status: COMPLETE
+- Commit: `feat(improve-15): enlarge tile plus and Path tabs`
+

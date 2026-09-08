@@ -63,8 +63,8 @@ export function aliceId(actors: ActorDto[]) {
 }
 
 /**
- * Empty-board Add Step and a child spawned from Data: last-used Human,
- * else Alice, else the first Human (NA-03).
+ * Empty-board Add Step, or a child with no upstream Step Who: last-used
+ * Human, else Alice, else the first Human (NA-03).
  */
 export function defaultHumanId(
   actors: ActorDto[],
@@ -80,23 +80,44 @@ export function defaultHumanId(
 export type ChildStepWho = { beforeId?: string; afterId?: string };
 
 /**
+ * Who on a Step, or the nearest upstream Step when `startId` is Data (NA-03).
+ */
+function whoFromSourceOrUpstream(doc: WorkflowDoc, startId: string): string | undefined {
+  const seen = new Set<string>();
+  const queue = [startId];
+  while (queue.length) {
+    const id = queue.shift()!;
+    if (seen.has(id)) continue;
+    seen.add(id);
+    const node = doc.nodes.find((n) => n.id === id);
+    if (!node) continue;
+    if (isStepNode(node)) {
+      const who = doc.assignments[id];
+      if (who && doc.actors.some((a) => a.id === who)) return who;
+      return undefined;
+    }
+    const incoming = doc.edges
+      .filter((e) => e.target === id)
+      .slice()
+      .sort((a, b) => (a.source < b.source ? -1 : a.source > b.source ? 1 : 0));
+    for (const e of incoming) queue.push(e.source);
+  }
+  return undefined;
+}
+
+/**
  * A new Before-origin Step hanging off `sourceId` (NA-03).
- * A Step parent stamps its Before Who on both lanes so the child matches
- * the parent instead of last-used Human / Alice. Data (no Who) and a
- * missing assignment fall back to `defaultHumanId`.
+ * A Step parent stamps its Before Who on both lanes. A Data parent walks
+ * incoming Paths to the nearest upstream Step. Otherwise last-used Human /
+ * Alice. After-only Steps still use the default Robot.
  */
 export function whoForChildStep(
   doc: WorkflowDoc,
   sourceId: string,
   lastHumanId?: string | null,
 ): ChildStepWho {
-  const source = doc.nodes.find((n) => n.id === sourceId);
-  if (source && isStepNode(source)) {
-    const parentId = doc.assignments[sourceId];
-    if (parentId && doc.actors.some((a) => a.id === parentId)) {
-      return { beforeId: parentId, afterId: parentId };
-    }
-  }
+  const inherited = whoFromSourceOrUpstream(doc, sourceId);
+  if (inherited) return { beforeId: inherited, afterId: inherited };
   const human = defaultHumanId(doc.actors, lastHumanId);
   return human ? { beforeId: human, afterId: human } : {};
 }

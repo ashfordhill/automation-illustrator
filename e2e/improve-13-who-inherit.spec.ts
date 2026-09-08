@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { capturePage, loadOakPark, waitForLayout } from "./ready";
+import { capturePage, loadOakPark, pullPlusPreview, waitForLayout } from "./ready";
 
 const EVIDENCE = ".docs/evidence/improve-13-who-inherit";
 
@@ -45,5 +45,67 @@ test.describe("Improvement 13 inherit parent Who", () => {
       "true",
     );
     await capturePage(page, `${EVIDENCE}/child-keeps-parent-alice-1440.png`);
+  });
+
+  test("New board: child of Roy is Roy", async ({ page }) => {
+    await loadOakPark(page);
+    await page.getByRole("button", { name: "Menu" }).click();
+    await page.getByRole("menuitem", { name: "New" }).click();
+    await page.getByRole("button", { name: "Discard" }).click();
+    await expect(page.getByRole("button", { name: "Add Step" })).toBeVisible();
+    await page.getByRole("button", { name: "Add Step" }).click();
+    await waitForLayout(page);
+    await expect(aside(page).getByRole("button", { name: "Who Alice" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await aside(page).getByRole("button", { name: "Who Roy" }).click();
+    await expect(aside(page).getByRole("button", { name: "Who Roy" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await page.keyboard.press("1");
+    await waitForLayout(page);
+    await expect(aside(page).getByRole("button", { name: "Who Roy" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await capturePage(page, `${EVIDENCE}/new-board-child-roy-1440.png`);
+  });
+
+  test("New board: Step off Data under Roy is Roy", async ({ page }) => {
+    await loadOakPark(page);
+    await page.getByRole("button", { name: "Menu" }).click();
+    await page.getByRole("menuitem", { name: "New" }).click();
+    await page.getByRole("button", { name: "Discard" }).click();
+    await page.getByRole("button", { name: "Add Step" }).click();
+    await waitForLayout(page);
+    await aside(page).getByRole("button", { name: "Who Roy" }).click();
+    await page.keyboard.press("2");
+    await waitForLayout(page);
+    await page.keyboard.press("1");
+    await waitForLayout(page);
+    await expect(aside(page).getByRole("button", { name: "Who Roy" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await capturePage(page, `${EVIDENCE}/new-board-data-child-roy-1440.png`);
+  });
+
+  test("pulling + onto Step from Roy creates Roy", async ({ page }) => {
+    await loadOakPark(page);
+    await page.getByRole("button", { name: "Menu" }).click();
+    await page.getByRole("menuitem", { name: "New" }).click();
+    await page.getByRole("button", { name: "Discard" }).click();
+    await page.getByRole("button", { name: "Add Step" }).click();
+    await waitForLayout(page);
+    await aside(page).getByRole("button", { name: "Who Roy" }).click();
+    await pullPlusPreview(page, "New Step");
+    await waitForLayout(page);
+    await expect(aside(page).getByRole("button", { name: "Who Roy" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await capturePage(page, `${EVIDENCE}/plus-pull-child-roy-1440.png`);
   });
 });
