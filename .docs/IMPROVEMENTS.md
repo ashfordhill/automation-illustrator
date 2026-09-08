@@ -522,3 +522,12 @@ Approved 2026-09-08. Tile create keeps the existing soft sine blip. Pulling a Pa
 
 Commit: `feat(improve-18): zip Path create apart from Tile blip`.  
 Evidence: `.docs/evidence/improve-18-path-zip/`.
+
+---
+
+# Improvement 22 — create tabs closer to the tile
+
+Approved 2026-09-08. Tile `+` (create Step / Data) and Path-pull tabs stay 44×44 and on top of the right edge, but peek **14px** past it (were 24px) so they sit against the tile like the X. Glyphs, pull, hover, and Present/Both hide rules are unchanged. No new dependency.
+
+Commit: `feat(improve-22): sit create tabs closer to the tile`.  
+Evidence: `.docs/evidence/improve-22-tab-peek/`.

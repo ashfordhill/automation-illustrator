@@ -136,3 +136,9 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 - Issue: The Step and Data boxes on the pulled `+` fan sit too far to the right of the tile.
 - Resolution: Shipped in `feat(improve-19): pull Step Data fan closer` — shorter arc, no extra outward offset.
 - Attachments: n/a
+
+## 2026-09-08 — create tabs too far from tile
+
+- Issue: Selected-tile `+` (Step) and Path (Data-create sibling) tabs sit too far off the right edge; a paper gap shows between the tile and the icons.
+- Resolution: Shipped in `feat(improve-22): sit create tabs closer to the tile` — 14px peek, same hang as the X.
+- Attachments: [create tabs gap](visual-improvements/2026-09-08-create-tabs-gap.gif)

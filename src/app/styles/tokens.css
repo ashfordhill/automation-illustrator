@@ -832,7 +832,8 @@ body.is-tile-dragging * {
 
 .tile-side-tabs {
   position: absolute;
-  right: -24px;
+  /* 44px tabs, 14px peek — same hang as the X, snug on the right edge. */
+  right: -14px;
   top: 50%;
   transform: translateY(-50%);
   z-index: 5;

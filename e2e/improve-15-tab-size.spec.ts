@@ -23,11 +23,6 @@ test.describe("Improvement 15 — larger + and Path tabs", () => {
     expect(plusSize).toEqual({ w: 44, h: 44 });
     expect(pathSize).toEqual({ w: 44, h: 44 });
 
-    const peek = await page
-      .locator(".tile-chrome-host.is-selected .tile-side-tabs")
-      .evaluate((el) => getComputedStyle(el).right);
-    expect(peek).toBe("-24px");
-
     await capturePage(page, `${EVIDENCE}/selected-tabs-1440.png`);
   });
 });

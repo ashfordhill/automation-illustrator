@@ -1517,3 +1517,26 @@ Corrections in the same chat before the next slice starts get their own short en
 - Known limitations / follow-ups: Zip cannot be shown in a PNG; turn sound on and Path-pull to hear it. Concurrent WIP from other chats remains unstaged.
 - Status: COMPLETE
 - Commit: `feat(improve-18): zip Path create apart from Tile blip`
+
+## Improvement 22 — create tabs closer to the tile — 2026-09-08
+
+- Starting commit: `11e059532f3189773f9d48d88fe877f0baa899f9` (`feat(improve-19): pull Step Data fan closer`)
+- Working tree at start: not clean. Concurrent inspector-fold, status-bar, tile-pie, and evidence recaptures were left unstaged and are not in this commit.
+- GOAL clauses addressed: CX-01. No amendment — peek distance is not in the contract. Tabs stay on top of the right edge; they just hang less.
+- Library research and decisions: no new runtime dependency. Improvement 15 peeked 24px of 44×44 tabs. The X hangs 14px (`top`/`left: -14px` on a 40px control). Matching that peek closes the paper gap beside the selected tile. Full 44×44 stays the hit target (tabs are stacked above the face).
+- Files changed:
+  - `src/app/styles/tokens.css` (`.tile-side-tabs` `right: -14px`)
+  - Tests: `e2e/improve-22-tab-peek.spec.ts`; `e2e/improve-15-tab-size.spec.ts` (size-only; peek moved here)
+  - Docs: `.docs/IMPROVEMENTS.md` (22); `.docs/VISUAL_IMPROVEMENTS.md`; this handoff entry
+  - Evidence and user GIF copy
+- Behavior implemented:
+  - Selected/hover `+` and Path tabs sit against the tile’s right edge (14px peek, same hang as the X). Pull, glyphs, and hide rules are unchanged.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning)
+  - `npm run test:unit` — 33 files passed, 2 failed on concurrent unstaged status-bar / pieGeometry work (206 passed / 2 failed / 208). CSS-only change; no unit coverage of tab peek.
+  - `npm run test:e2e` — `e2e/improve-22-tab-peek.spec.ts` pass (1). Full Playwright suite not run in this chat (`libnspr4` via `LD_LIBRARY_PATH`; port 4177 in use).
+- Evidence: `.docs/evidence/improve-22-tab-peek/selected-tabs-1440.png` — selected Read tile; `+` and Path tabs snug on the right edge (1440×900)
+- Earlier-slice defects fixed: none
+- Known limitations / follow-ups: Concurrent inspector-fold / status-bar / tile-pie WIP remains unstaged.
+- Status: COMPLETE
+- Commit: `feat(improve-22): sit create tabs closer to the tile`
