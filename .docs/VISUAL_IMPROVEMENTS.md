@@ -148,3 +148,9 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 - Issue: In Both, a cyan outline boxed the Before pane and not After, so the split looked unfinished. The switch still said Both.
 - Resolution: Shipped in `feat(improve-26): compare view without pan outline` — switch says Compare; no pan-target outline on either pane.
 - Attachments: [compare blue outline](visual-improvements/2026-09-08-compare-blue-outline.png)
+
+## 2026-09-08 — Data create-mode gaps
+
+- Issue: Pulling `+` from Data leaves paper gaps between the cream fill and the ink border (Step-shaped scrim hole on a rounder Data tile).
+- Resolution: Shipped in `feat(improve-29): match Data radius in plus-pull scrim` — overlay holes use the tile’s own screen-scaled radius.
+- Attachments: [data create gaps](visual-improvements/2026-09-08-data-create-gaps.gif)

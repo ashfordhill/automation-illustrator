@@ -594,3 +594,12 @@ Approved 2026-09-08. The Data oval is **grape purple** (`#7b3fe0` light, `#b07df
 
 Commit: `feat(improve-27): recolor the Data mark purple`.  
 Evidence: `.docs/evidence/improve-27-data-purple/`.
+
+---
+
+# Improvement 29 — Data plus-pull scrim matches Data radius
+
+Approved 2026-09-08. The plus-pull dim scrim punched a Step-shaped hole (`rx="14"`) over every source tile. Data uses radius 32, so paper showed between the cream fill and the ink border while creating from Data. Overlay holes now use the live tile’s screen-scaled radius (`nodeRadius` + `scaleCornerRadius`). No new dependency.
+
+Commit: `feat(improve-29): match Data radius in plus-pull scrim`.  
+Evidence: `.docs/evidence/improve-29-data-scrim/`.

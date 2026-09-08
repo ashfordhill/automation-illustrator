@@ -2,7 +2,7 @@
  * Combined Step card: actor column + task (icon, Type + Target).
  * Mounted by board/nodes/StepNode.tsx inside React Flow.
  */
-import { STEP_H, STEP_W } from "../layout/tileMetrics";
+import { STEP_H, STEP_RX, STEP_W } from "../layout/tileMetrics";
 import { StepKind, stepDisplayLabel, type ActorDto } from "../../workflow/types";
 import { ActorColumn } from "./ActorColumn";
 import { FitLabel } from "./FitLabel";
@@ -61,7 +61,7 @@ export function StepTile({
         display: "flex",
         boxSizing: "border-box",
         border: `3px solid var(--line)`,
-        borderRadius: 14,
+        borderRadius: STEP_RX,
         overflow: "hidden",
         background: "var(--cream)",
         transform: lifted ? "translateY(-3px)" : undefined,

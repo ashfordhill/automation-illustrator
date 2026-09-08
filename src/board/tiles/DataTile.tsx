@@ -2,7 +2,7 @@
  * Rounded Data-field tile (Account # and similar).
  * Mounted by board/nodes/DataFieldNode.tsx; mark is DataChip.
  */
-import { FIELD_H, FIELD_W } from "../layout/tileMetrics";
+import { FIELD_H, FIELD_RX, FIELD_W } from "../layout/tileMetrics";
 import { DataChip } from "./DataChip";
 import { FitLabel } from "./FitLabel";
 
@@ -23,7 +23,7 @@ export function DataTile({
         width: FIELD_W,
         height: FIELD_H,
         border: `3px solid var(--line)`,
-        borderRadius: 32,
+        borderRadius: FIELD_RX,
         background: "var(--cream)",
         display: "flex",
         flexDirection: "column",
@@ -33,7 +33,6 @@ export function DataTile({
         color: "var(--ink)",
         transform: lifted ? "translateY(-3px)" : undefined,
         transition: "transform 140ms ease",
-        overflow: "hidden",
         padding: "8px 10px",
         boxSizing: "border-box",
       }}

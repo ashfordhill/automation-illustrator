@@ -19,17 +19,16 @@ import { nodeCaption } from "../../workflow/types";
 import { useLaneLayoutContext } from "../routing/LaneLayoutContext";
 import { hitPathId, incidentPathIds, skipInsertHover } from "../layout/pathHit";
 import { insertPreviewGeom } from "../layout/insertPreview";
-import { nodeSize } from "../layout/tileMetrics";
+import { FIELD_RX, STEP_RX, nodeRadius, nodeSize } from "../layout/tileMetrics";
 import { PathKnotIcon } from "./PathKnotIcon";
 import { DataChip } from "../tiles/DataChip";
 import { previewCenters } from "./plusPreviewLayout";
+import { fallbackTileRect, scaleCornerRadius, type TileRect } from "./tileOverlay";
 
 const PULL_THRESHOLD = 36;
 const SPRING_MS = 200;
 /** Outside pad so ~3px of solid `--line` remains after antialiasing (matches tile/tab borders). */
 const TAFFY_BORDER = 5;
-
-type TileRect = { x: number; y: number; w: number; h: number; rx: number };
 
 type TaffyRibbon = { fill: string; outline: string };
 
@@ -74,9 +73,16 @@ function nodeScreenRect(nodeId: string): TileRect | null {
   );
   if (!(el instanceof HTMLElement)) return null;
   const b = el.getBoundingClientRect();
-  const radius = Number.parseFloat(getComputedStyle(el).borderTopLeftRadius);
-  const rx = Number.isFinite(radius) && radius > 0 ? radius : el.classList.contains("field-piece") ? 32 : 14;
+  const cssRx = Number.parseFloat(getComputedStyle(el).borderTopLeftRadius);
+  const fallback = el.classList.contains("field-piece") ? FIELD_RX : STEP_RX;
+  const layoutRx = Number.isFinite(cssRx) && cssRx > 0 ? cssRx : fallback;
+  const rx = scaleCornerRadius(layoutRx, el.offsetWidth, b.width);
   return { x: b.left, y: b.top, w: b.width, h: b.height, rx };
+}
+
+function overlayTileRect(nodeId: string, rest: { right: number; top: number }): TileRect {
+  const node = findNode(useStore.getState().workflow, nodeId);
+  return nodeScreenRect(nodeId) ?? fallbackTileRect(rest, node?.type);
 }
 
 function underTileOrigin(tile: TileRect, restY: number): { x: number; y: number } {
@@ -86,11 +92,20 @@ function underTileOrigin(tile: TileRect, restY: number): { x: number; y: number 
   };
 }
 
+/** Same hole for the plus-pull scrim and taffy/Path exit — uses this tile’s screen-space rx, never Step’s 14. */
 function TileExitMask({ id, tile }: { id: string; tile: TileRect }) {
   return (
     <mask id={id} maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse">
       <rect width="100%" height="100%" fill="white" />
-      <rect x={tile.x} y={tile.y} width={tile.w} height={tile.h} rx={tile.rx} fill="black" />
+      <rect
+        data-tile-hole="true"
+        x={tile.x}
+        y={tile.y}
+        width={tile.w}
+        height={tile.h}
+        rx={tile.rx}
+        fill="black"
+      />
     </mask>
   );
 }
@@ -232,13 +247,7 @@ function PlusPullTab({ nodeId }: { nodeId: string }) {
     if (!rest) return;
     const restX = rest.left + rest.width / 2;
     const restY = rest.top + rest.height / 2;
-    const tile = nodeScreenRect(nodeId) ?? {
-      x: rest.right - 160,
-      y: rest.top - 8,
-      w: 160,
-      h: 96,
-      rx: 14,
-    };
+    const tile = overlayTileRect(nodeId, rest);
     e.currentTarget.setPointerCapture(e.pointerId);
     useStore.getState().beginPlusPull(nodeId);
     setDrag({ x: e.clientX, y: e.clientY, restX, restY, hovering: null, live: true, tile });
@@ -284,17 +293,7 @@ function PlusPullTab({ nodeId }: { nodeId: string }) {
             {showFan ? (
               <svg className="plus-scrim-svg" width="100%" height="100%">
                 <defs>
-                  <mask id={`plus-pull-hole-${nodeId}`}>
-                    <rect width="100%" height="100%" fill="white" />
-                    <rect
-                      x={drag.tile.x}
-                      y={drag.tile.y}
-                      width={drag.tile.w}
-                      height={drag.tile.h}
-                      rx="14"
-                      fill="black"
-                    />
-                  </mask>
+                  <TileExitMask id={`plus-pull-hole-${nodeId}`} tile={drag.tile} />
                 </defs>
                 <rect
                   className="plus-pull-scrim-fill"
@@ -399,13 +398,7 @@ function PathPullTab({ nodeId }: { nodeId: string }) {
     e.stopPropagation();
     const rest = restRef.current?.getBoundingClientRect();
     if (!rest) return;
-    const tile = nodeScreenRect(nodeId) ?? {
-      x: rest.right - 160,
-      y: rest.top - 8,
-      w: 160,
-      h: 96,
-      rx: 14,
-    };
+    const tile = overlayTileRect(nodeId, rest);
     e.currentTarget.setPointerCapture(e.pointerId);
     useStore.getState().beginPathPull(nodeId);
     setDrag({
@@ -531,6 +524,7 @@ function InsertSilhouette({ nodeId }: { nodeId: string }) {
           top: geom.gap.y,
           width: geom.gap.w,
           height: geom.gap.h,
+          borderRadius: nodeRadius(node.type),
           pointerEvents: "none",
         }}
       />
@@ -557,7 +551,13 @@ function TilePickup({
   layoutRef.current = layout;
   viewRef.current = view;
   rfRef.current = rf;
-  const [ghost, setGhost] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
+  const [ghost, setGhost] = useState<{
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+    rx: number;
+  } | null>(null);
   const origin = useRef<{ x: number; y: number } | null>(null);
   const dragging = useRef(false);
   const stopGesture = useRef<(() => void) | null>(null);
@@ -599,7 +599,15 @@ function TilePickup({
         dragging.current = true;
         useStore.getState().beginTileDrag(id);
         const box = hostRef.current?.getBoundingClientRect();
-        setGhost({ x: ev.clientX, y: ev.clientY, w: box?.width ?? 160, h: box?.height ?? 96 });
+        const face = hostRef.current?.querySelector(".board-node");
+        const live = face instanceof HTMLElement ? nodeScreenRect(id) : null;
+        setGhost({
+          x: ev.clientX,
+          y: ev.clientY,
+          w: live?.w ?? box?.width ?? 160,
+          h: live?.h ?? box?.height ?? 96,
+          rx: live?.rx ?? STEP_RX,
+        });
       }
       const flow = rfRef.current.screenToFlowPosition({ x: ev.clientX, y: ev.clientY });
       const hover =
@@ -654,6 +662,7 @@ function TilePickup({
               top: ghost.y,
               width: ghost.w,
               height: ghost.h,
+              borderRadius: ghost.rx,
             }}
           />,
           document.body,

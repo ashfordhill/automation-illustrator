@@ -1714,3 +1714,34 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(improve-27): recolor the Data mark purple`
 
+
+## Improvement 29 — Data plus-pull scrim matches Data radius — 2026-09-08
+
+- Starting commit: `3710209e9d18799360733e504f25457afe4ad378` (`feat(improve-27): recolor the Data mark purple`)
+- Working tree at start: not clean. Concurrent Who-select / status-bar / tile-pie / evidence recaptures were left unstaged and are not in this commit.
+- GOAL clauses addressed: CX-07, WG-07. No amendment — overlay hole radius is not in the contract. Data remains radius 32; Step remains 14.
+- Library research and decisions: no new runtime dependency. Plus-pull scrim hardcoded `rx="14"` (Step) on a Data tile (`FIELD_RX` 32). The hole was squarer than the pill, so paper showed between cream fill and ink border. `getComputedStyle` radius is layout px; `getBoundingClientRect` is screen px (React Flow zoom) — `scaleCornerRadius` maps them. Scrim and taffy/Path exit share `TileExitMask`.
+- Files changed:
+  - `src/board/layout/tileMetrics.ts` (`STEP_RX`, `FIELD_RX`, `nodeRadius`)
+  - `src/board/controls/tileOverlay.ts`, `src/board/controls/tileOverlay.test.ts`
+  - `src/board/controls/TileChrome.tsx` (shared mask; fallbacks use `nodeRadius` / `nodeSize`)
+  - `src/board/tiles/DataTile.tsx`, `src/board/tiles/StepTile.tsx` (radii from those constants; Data no longer `overflow: hidden` on the bordered shell)
+  - Insert silhouette and drag ghost set `borderRadius` from the Node kind / live tile
+  - Tests: `e2e/improve-29-data-scrim.spec.ts`
+  - Docs: `.docs/IMPROVEMENTS.md` (29); `.docs/VISUAL_IMPROVEMENTS.md`; this handoff entry
+  - User GIF: `.docs/visual-improvements/2026-09-08-data-create-gaps.gif`
+  - Evidence: `.docs/evidence/improve-29-data-scrim/`
+- Behavior implemented:
+  - Pulling `+` from Data punches a Data-shaped hole in the dim scrim; cream fill meets the ink border.
+  - Overlay fallbacks and insert/drag silhouettes follow Data vs Step radius instead of assuming 14.
+- Tests and exact results:
+  - `npm run build` — `tsc --noEmit` blocked on concurrent untracked `src/board/tiles/pieGeometry.test.ts` (missing `./pieGeometry`). This commit’s files typecheck. `npx vite build` pass (Vite 8.2.2; existing chunk-size warning).
+  - `npm run test:unit` — `src/board/controls/tileOverlay.test.ts` pass (3). Full suite excluding concurrent pieGeometry: 37 files, 214 tests pass (includes these 3).
+  - `npm run test:e2e` — `e2e/improve-29-data-scrim.spec.ts` pass (1). Full suite not re-run. Chromium via `LD_LIBRARY_PATH` `~/.local/pw-libs/usr/lib/x86_64-linux-gnu`.
+- Evidence:
+  - `.docs/evidence/improve-29-data-scrim/data-plus-scrim-1440.png` — Account # plus-pull; scrim hole follows Data radius (1440×900)
+- Earlier-slice defects fixed: plus-pull scrim used Step’s corner radius on every source tile.
+- Known limitations / follow-ups: Concurrent Who-select / tile-pie WIP remains unstaged. Plus-preview Step/Data cards still have inner thumbs (not this leak).
+- Status: COMPLETE
+- Commit: `feat(improve-29): match Data radius in plus-pull scrim`
+

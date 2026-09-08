@@ -11,6 +11,10 @@ export const STEP_H = 160;
 export const ACTOR_W = 96;
 export const FIELD_W = 128;
 export const FIELD_H = 96;
+/** Step tile corner radius (px, unscaled). Overlay masks must use the screen-scaled value. */
+export const STEP_RX = 14;
+/** Data tile corner radius (px, unscaled). Pill-like; never reuse STEP_RX for Data. */
+export const FIELD_RX = 32;
 export const TILE_GAP = 64;
 export const BRANCH_GAP = 32;
 export const GRID = 32;
@@ -27,6 +31,11 @@ export function nodeSize(type: WorkflowNodeKindT) {
   return type === WorkflowNodeKind.Step
     ? { w: STEP_W, h: STEP_H }
     : { w: FIELD_W, h: FIELD_H };
+}
+
+/** Corner radius for a workflow node kind. Overlay holes must follow this, not Step’s 14. */
+export function nodeRadius(type: WorkflowNodeKindT) {
+  return type === WorkflowNodeKind.Step ? STEP_RX : FIELD_RX;
 }
 
 function nodeRect(n: Placed) {
