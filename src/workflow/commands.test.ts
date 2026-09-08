@@ -6,6 +6,7 @@ import {
   applyNodeRemoval,
   collapseStroke,
   connectNodes,
+  createRootNode,
   createRootStep,
   joinConditions,
   planNodeRemoval,
@@ -93,6 +94,50 @@ test("collapseStroke is dotted if any replaced Path was dotted (PC-04)", () => {
   expect(collapseStroke(true, false)).toBe(true);
   expect(collapseStroke(false, true)).toBe(true);
   expect(collapseStroke(true, true)).toBe(true);
+});
+
+test("createRootNode accepts a Data root", () => {
+  const ok = createRootNode(emptyWorkflow(), data("d_root"));
+  expect(ok.ok).toBe(true);
+  if (!ok.ok) return;
+  expect(ok.value.nodes.map((n) => n.id)).toEqual(["d_root"]);
+  expect(ok.value.assignments).toEqual({});
+  expect(validateWorkflow(ok.value)).toEqual([]);
+});
+
+test("planNodeRemoval allows deleting the sole remaining Tile", () => {
+  const board = doc([step("r")], []);
+  const plan = planNodeRemoval(board, "r");
+  expect(plan.ok).toBe(true);
+  if (!plan.ok) return;
+  expect(plan.value.mode).toBe("auto");
+  const applied = applyNodeRemoval(board, plan.value);
+  expect(applied.ok).toBe(true);
+  if (!applied.ok) return;
+  expect(applied.value.nodes).toEqual([]);
+  expect(applied.value.edges).toEqual([]);
+  expect(validateWorkflow(applied.value)).toEqual([]);
+});
+
+test("deleting the sole Tile prunes After extras", () => {
+  const board = doc([step("r")], [], {
+    after: {
+      extraNodes: [step("extra", 0, 200)],
+      extraEdges: [path("e_x", "r", "extra")],
+      groups: [],
+      assignments: {},
+    },
+  });
+  const plan = planNodeRemoval(board, "r");
+  expect(plan.ok).toBe(true);
+  if (!plan.ok) return;
+  const applied = applyNodeRemoval(board, plan.value);
+  expect(applied.ok).toBe(true);
+  if (!applied.ok) return;
+  expect(applied.value.nodes).toEqual([]);
+  expect(applied.value.after.extraNodes).toEqual([]);
+  expect(applied.value.after.extraEdges).toEqual([]);
+  expect(validateWorkflow(applied.value)).toEqual([]);
 });
 
 test("createRootStep puts the first Step on an empty board", () => {

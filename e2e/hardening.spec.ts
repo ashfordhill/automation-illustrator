@@ -223,6 +223,7 @@ test.describe("slice 12 surfaces, dialogs, and final screenshots", () => {
     await capturePage(page, `${EVIDENCE}/replace-gate-1440.png`);
     await page.getByRole("button", { name: "Discard" }).click();
     await expect(page.getByRole("button", { name: "Add Step" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Add Data" })).toBeVisible();
     await capturePage(page, `${EVIDENCE}/empty-new-1440.png`);
   });
 

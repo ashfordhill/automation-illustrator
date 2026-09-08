@@ -4,7 +4,7 @@ import { afterEach, beforeEach, expect, test } from "vitest";
 import "@mantine/core/styles.css";
 import { OAK_PARK_IDS } from "../demos/oakParkInvoice";
 import { useStore } from "../state/store";
-import { ColorScheme, SelectionKind, ViewMode } from "../workflow/catalogs";
+import { ColorScheme, SelectionKind, ViewMode, WorkflowNodeKind } from "../workflow/catalogs";
 import { isStepNode } from "../workflow/types";
 import App from "./App";
 import "./styles/tokens.css";
@@ -60,17 +60,19 @@ test("demo startup loads the Oak Park invoice workflow", () => {
   expect(workflow.nodes.some((n) => !isStepNode(n) && n.label === "Account #")).toBe(true);
 });
 
-test("New discard shows the on-canvas Add Step empty state", () => {
+test("New discard shows the on-canvas Add Step and Add Data empty state", () => {
   act(() => {
     useStore.getState().requestNew();
     useStore.getState().confirmReplaceDiscard();
   });
   expect(host.textContent).toContain("This board is empty.");
   expect(host.textContent).toContain("Add Step");
+  expect(host.textContent).toContain("Add Data");
   act(() => {
-    useStore.getState().addStep();
+    useStore.getState().addField();
   });
   expect(useStore.getState().workflow.nodes).toHaveLength(1);
+  expect(useStore.getState().workflow.nodes[0]?.type).toBe(WorkflowNodeKind.DataField);
   expect(host.textContent).not.toContain("This board is empty.");
 });
 

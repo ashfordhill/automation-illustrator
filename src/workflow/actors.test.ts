@@ -4,6 +4,7 @@ import {
   actorInUseMessage,
   actorUsages,
   defaultHumanId,
+  HUMAN_PRESETS,
   removeActor,
 } from "./actors";
 import { emptyAfterOverlay, emptyWorkflow, type WorkflowDoc } from "./types";
@@ -43,6 +44,10 @@ const doc: WorkflowDoc = {
     ],
   },
 };
+
+test("Roy’s fill is honey-apricot, not Script-robot blue", () => {
+  expect(HUMAN_PRESETS[1]).toEqual({ name: "Roy", color: "#f4c07a" });
+});
 
 test("defaultHumanId prefers last-used Human, then Alice, then the first Human (NA-03)", () => {
   const actors = doc.actors;

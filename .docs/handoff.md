@@ -1111,3 +1111,34 @@ Corrections in the same chat before the next slice starts get their own short en
 - Known limitations / follow-ups: Empty `+` release clears drag immediately (no ≤200 ms ghost snap). Tile `--select-ring` and global `--chrome-line` remain out of scope. Untracked ELK planner dumps still not committed.
 - Status: COMPLETE
 - Commit: `feat(improve-08): restore plus taffy and fix Path stroke`
+
+## Improvement 09 — tile chrome, Data root, After removal — 2026-09-08
+
+- Starting commit: `5822fe53833c261deaa0b6652af1aaf81e2263cc` (`feat(improve-08): restore plus taffy and fix Path stroke`)
+- Working tree at start: not fully clean. Untracked ELK planner dumps (`.docs/elk_layout_and_routing_*.plan.md`) left uncommitted, as prior agents did. Product tree matched Improvement 08 HEAD.
+- GOAL clauses addressed: WG-01, WG-02, WG-06, BA-03, BA-04, CX-07, CX-01, NG-02 (amendments dated 2026-09-08)
+- Library research and decisions: no new runtime dependency. Roy fill `#f4c07a` in `HUMAN_PRESETS` (Oak Park uses the preset). Mailroom Omar stays `#7eb6f5` so it does not collide with Dana `#f4a06a`. Select is drop-shadow on `.tile-pickup`, not a second outline. Tab column uses 24px gap so tucked peeks still pass WCAG 2.2 target-size. Merge stays withdrawn. After `+` Step remains After-only; `+ Data` stays hidden in After.
+- Files changed:
+  - Contract/docs: `.docs/GOAL.md` amendments; `.docs/IMPROVEMENTS.md` (09 COMPLETE); `.docs/improve-09-chrome-and-root.plan.md`; `.docs/VISUAL_IMPROVEMENTS.md` plus original pictures; this handoff entry
+  - Chrome: `TileChrome.tsx` (centered side tabs, flat taffy join); `tokens.css`; `PathKnotIcon.tsx` (24px spindle); `StepTile.tsx` / `DataTile.tsx` (no select outline)
+  - Graph: `commands.ts` (`createRootNode`, sole-Tile removal, After extras pruned when the board empties); `store.ts` (Data root, After may remove/insert Before-origin); `EmptyBoardCta.tsx`; `SelectedItemForm.tsx` (trash in After); `actors.ts` / `robotMailroom.ts`
+  - Tests: unit coverage for Data root, sole-Tile delete, demo reload, After removal; `e2e/improve-09-chrome-root.spec.ts` plus updated projection / replace / canvas / commands / improve-07
+  - Evidence: `.docs/evidence/improve-09-chrome-root/`; recaptured empty-New and `10-projection/after-origin-removed-1440.png`
+- Behavior implemented:
+  - Selected `+` and Path tabs sit in a right-edge column vertically centered on the tile (still tucked). Glyphs are slightly larger; X stays 20px. Selection is a face drop-shadow, not a cyan ring. Pulled `+` taffy joins the tile with a solid flat attach.
+  - Empty New offers Add Step and Add Data. Either may be the sole root. The last remaining Tile can be deleted back to that CTA (actors kept; After extras pruned). A root with other base Tiles still cannot be removed.
+  - After may remove a Before-origin Node; Before reflects it. After `+` Step is still After-only. Reloading a demo from the hamburger restores the fixture; live edits are not written to `src/demos/`.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning; client `index-12k-W6gm.js` 858.68 kB)
+  - `npm run test:unit` — pass (31 files, 170 tests)
+  - `npm run test:e2e` — pass (86 passed, Chromium, 3 workers, 52.9s including webServer)
+- Evidence:
+  - `.docs/evidence/improve-09-chrome-root/selected-tabs-1440.png` — selected Step; centered tucked `+`/Path; drop-shadow select, no cyan ring; Roy honey-apricot in Who (1440×900)
+  - `.docs/evidence/improve-09-chrome-root/plus-taffy-solid-1440.png` — `+` pulled; solid taffy join at the tile edge; Step/Data fan (1440×900)
+  - `.docs/evidence/improve-09-chrome-root/empty-step-and-data-1440.png` — empty New CTA with Add Step and Add Data (1440×900)
+  - `.docs/evidence/improve-09-chrome-root/data-root-1440.png` — Data as the sole root; inspector Label; trash/X (1440×900)
+  - `.docs/evidence/10-projection/after-origin-removed-1440.png` — After removed Review; Before no longer shows it (1440×900)
+- Earlier-slice defects fixed: deleting the sole base Tile left After extras that would fail empty-board validation; `applyNodeRemoval` now writes an empty overlay. Stacking `+`/Path with an 8px gap failed axe `target-size` on the tucked peeks; gap is 24px as in Improvement 08.
+- Known limitations / follow-ups: Merge redesign is later work. After `+` still creates After-only Steps; After does not add Data. Global `--chrome-line` remains out of scope. Untracked ELK planner dumps still not committed.
+- Status: COMPLETE
+- Commit: `feat(improve-09): center tabs Data root and After remove`

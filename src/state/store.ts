@@ -4,7 +4,7 @@
  * all read/write through here. persistence.ts handles localStorage JSON.
  *
  * commit / undo / redo — history.ts (500; replaceDoc is a document boundary)
- * addStep — first Step is the root (WG-01); later tiles spawn from +
+ * addStep / addField — first Tile is the root (WG-01); later tiles spawn from +
  * spawnBranch / plus-pull / path-pull — stretchy + tab and Path knot
  * removeTarget / confirmRemove — selected-tile X / Delete; M:N pairing preview
  * insertOnPath — drop a tile onto a Path
@@ -50,7 +50,7 @@ import {
   addConnectedNode,
   applyNodeRemoval,
   connectNodes,
-  createRootStep,
+  createRootNode,
   fanPairings,
   insertNodeOnPath,
   nearestPairings,
@@ -121,7 +121,6 @@ import {
   findEdge,
   findNode,
   isAfterOnlyNode,
-  isBeforeOriginNode,
 } from "../workflow/selectors";
 
 /** Right-hand inspector target, or null when nothing is selected. */
@@ -531,6 +530,7 @@ export const useStore = create<{
   },
 
   addStep: (position, kind = StepKind.Other) => {
+    if (!get().canvasEditable()) return "";
     const { workflow, lastHumanId } = get();
     if (workflow.nodes.length) {
       if (!position && workflow.nodes.some(isStepNode)) return "";
@@ -550,7 +550,7 @@ export const useStore = create<{
       detail: "",
       split: SplitKind.Exclusive,
     };
-    const result = createRootStep(
+    const result = createRootNode(
       { ...workflow, actors },
       node,
       hid ? { beforeId: hid, afterId: hid } : undefined,
@@ -568,10 +568,36 @@ export const useStore = create<{
     });
     return id;
   },
-  addField: () => {
+  addField: (position) => {
+    if (!get().canvasEditable()) return "";
     const { workflow } = get();
-    get().setNotice(workflow.nodes.length ? MSG.notEmpty : MSG.notStep);
-    return "";
+    if (workflow.nodes.length) {
+      get().setNotice(MSG.notEmpty);
+      return "";
+    }
+    const id = nid(IdPrefix.DataField);
+    const actors = workflow.actors.length ? workflow.actors : defaultActors();
+    const pos = position ?? vacantSpot(workflow.nodes, WorkflowNodeKind.DataField);
+    const result = createRootNode(
+      { ...workflow, actors },
+      {
+        id,
+        type: WorkflowNodeKind.DataField,
+        position: { x: snapToGrid(pos.x), y: snapToGrid(pos.y) },
+        label: "Data",
+      },
+    );
+    if (!result.ok) {
+      get().setNotice(result.message);
+      return "";
+    }
+    get().commit(result.value);
+    playCueWhen(get().soundEnabled, "blip");
+    set({
+      selected: { type: SelectionKind.Node, id },
+      interaction: IDLE,
+    });
+    return id;
   },
   addHuman: (name) => {
     if (get().present || get().view === ViewMode.Both) return "";
@@ -792,14 +818,7 @@ export const useStore = create<{
   },
   insertOnPath: (nodeId, edgeId) => {
     if (get().present || get().view === ViewMode.Both) return;
-    const { workflow, view } = get();
-    if (view === ViewMode.After) {
-      if (isBeforeOriginNode(workflow, nodeId) && !isAfterOnlyNode(workflow, nodeId)) {
-        get().setNotice("Switch to Before to move a Before-origin Node.");
-        set({ interaction: IDLE });
-        return;
-      }
-    }
+    const { workflow } = get();
     const result = insertNodeOnPath(workflow, nodeId, edgeId, get().activePositions());
     if (!result.ok) {
       get().setNotice(result.message);
@@ -969,10 +988,6 @@ export const useStore = create<{
   removeTarget: (nodeId) => {
     if (get().present || get().view === ViewMode.Both) return;
     const { workflow, view } = get();
-    if (view === ViewMode.After && isBeforeOriginNode(workflow, nodeId) && !isAfterOnlyNode(workflow, nodeId)) {
-      get().setNotice(MSG.afterOriginRemoval);
-      return;
-    }
     set({
       selected: { type: SelectionKind.Node, id: nodeId },
       manageActorsOpen: false,

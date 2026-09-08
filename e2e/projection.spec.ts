@@ -96,14 +96,17 @@ test.describe("slice 10 After projection and comparison", () => {
     expect(await laneZoom(page, "before")).toBeGreaterThan(beforeZoom);
   });
 
-  test("After explains that Before-origin Steps cannot be removed (BA-04)", async ({ page }) => {
+  test("After may remove a Before-origin Step; Before reflects it (BA-04)", async ({ page }) => {
     await loadOakPark(page);
     await viewLabel(page, "After").click();
     await waitForLayout(page);
-    await page.getByText(DEMO_STEP).first().click();
-    await page.getByRole("button", { name: `Remove ${DEMO_STEP}` }).click();
-    await expect(page.getByText("After cannot remove a Before-origin Step.")).toBeVisible();
-    await screenshotBoard(page, `${EVIDENCE}/after-origin-blocked-1440.png`);
+    await page.getByText("Review BS&A Software").first().click();
+    await page.getByRole("button", { name: "Remove Review BS&A Software" }).click();
+    await expect(page.getByText("Review BS&A Software")).toHaveCount(0);
+    await viewLabel(page, "Before").click();
+    await waitForLayout(page);
+    await expect(page.getByText("Review BS&A Software")).toHaveCount(0);
+    await screenshotBoard(page, `${EVIDENCE}/after-origin-removed-1440.png`);
   });
 
   test("Mailroom has no automation score copy (BA-08 withdrawn)", async ({ page }) => {

@@ -1,8 +1,7 @@
 import { afterEach, beforeEach, expect, test } from "vitest";
-import { MAILROOM_IDS } from "../demos/robotMailroom";
 import { DemoId } from "../demos/catalog";
 import { OAK_PARK_IDS } from "../demos/oakParkInvoice";
-import { MSG } from "../workflow/commands";
+import { MAILROOM_IDS } from "../demos/robotMailroom";
 import { ColorScheme, SelectionKind, ViewMode } from "../workflow/catalogs";
 import { isStepNode } from "../workflow/types";
 import { projectAfter, projectBefore } from "./projection";
@@ -42,7 +41,7 @@ test("shared base fields edited from After update Before immediately (BA-02)", (
   expect(still && isStepNode(still) && still.title).toBe("shared-from-after");
 });
 
-test("Both does not mutate; After cannot remove a Before-origin Step (BA-04, BA-05)", () => {
+test("Both does not mutate; After may remove a Before-origin Step (BA-04, BA-05)", () => {
   const s = useStore.getState();
   const title = s.workflow.nodes.find((n) => n.id === OAK_PARK_IDS.read);
   const beforeTitle = title && isStepNode(title) ? title.title : "";
@@ -53,9 +52,9 @@ test("Both does not mutate; After cannot remove a Before-origin Step (BA-04, BA-
 
   s.setView(ViewMode.After);
   s.beginRemovePick(OAK_PARK_IDS.review);
-  expect(useStore.getState().notice).toBe(MSG.afterOriginRemoval);
-  expect(useStore.getState().interaction.kind).toBe("idle");
-  expect(useStore.getState().workflow.nodes.some((n) => n.id === OAK_PARK_IDS.review)).toBe(true);
+  expect(useStore.getState().workflow.nodes.some((n) => n.id === OAK_PARK_IDS.review)).toBe(false);
+  s.setView(ViewMode.Before);
+  expect(useStore.getState().workflow.nodes.some((n) => n.id === OAK_PARK_IDS.review)).toBe(false);
 });
 
 test("Robot Mailroom After projection includes the receipt as a normal tile", () => {

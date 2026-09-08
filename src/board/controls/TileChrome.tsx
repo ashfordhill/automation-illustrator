@@ -44,33 +44,44 @@ function previewCenters(restX: number, restY: number, count: number): { x: numbe
   return out;
 }
 
-/** Green organic ribbon from the rest `+` to the pointer (Improvement 02 taffy). */
-function taffyPath(x0: number, y0: number, x1: number, y1: number): string {
-  const dx = x1 - x0;
-  const dy = y1 - y0;
+/** Green taffy from the tile’s right edge to the pointer. Flat join, rounded far cap. */
+function taffyPath(tile: TileRect, restY: number, x1: number, y1: number): string {
+  const joinX = tile.x + tile.w - 3;
+  const half = 20;
+  let yA = restY - half;
+  let yB = restY + half;
+  const minY = tile.y + 8;
+  const maxY = tile.y + tile.h - 8;
+  yA = Math.min(Math.max(yA, minY), maxY);
+  yB = Math.min(Math.max(yB, minY), maxY);
+  if (yB - yA < 24) {
+    const mid = (yA + yB) / 2;
+    yA = mid - 12;
+    yB = mid + 12;
+  }
+  const midY = (yA + yB) / 2;
+  const dx = x1 - joinX;
+  const dy = y1 - midY;
   const len = Math.max(1, Math.hypot(dx, dy));
   const ux = dx / len;
   const uy = dy / len;
   const px = -uy;
   const py = ux;
-  const r0 = 16;
   const r1 = Math.max(10, 18 - len * 0.04);
   const bulge = Math.min(22, len * 0.18);
-  const mx = (x0 + x1) / 2 + px * bulge;
-  const my = (y0 + y1) / 2 + py * bulge;
-  const a0x = x0 + px * r0;
-  const a0y = y0 + py * r0;
-  const b0x = x0 - px * r0;
-  const b0y = y0 - py * r0;
+  const mx = (joinX + x1) / 2 + px * bulge;
+  const my = (midY + y1) / 2 + py * bulge;
   const a1x = x1 + px * r1;
   const a1y = y1 + py * r1;
   const b1x = x1 - px * r1;
   const b1y = y1 - py * r1;
-  return `M ${a0x} ${a0y} Q ${mx + px * r0} ${my + py * r0} ${a1x} ${a1y} A ${r1} ${r1} 0 0 1 ${b1x} ${b1y} Q ${mx - px * r0} ${my - py * r0} ${b0x} ${b0y} A ${r0} ${r0} 0 0 1 ${a0x} ${a0y} Z`;
+  return `M ${joinX} ${yA} Q ${mx + px * 16} ${my + py * 16} ${a1x} ${a1y} A ${r1} ${r1} 0 0 1 ${b1x} ${b1y} Q ${mx - px * 16} ${my - py * 16} ${joinX} ${yB} Z`;
 }
 
 function nodeScreenRect(nodeId: string): TileRect | null {
-  const el = document.querySelector(`.react-flow__node[data-id="${CSS.escape(nodeId)}"]`);
+  const el = document.querySelector(
+    `.react-flow__node[data-id="${CSS.escape(nodeId)}"] .board-node`,
+  );
   if (!(el instanceof HTMLElement)) return null;
   const b = el.getBoundingClientRect();
   return { x: b.left, y: b.top, w: b.width, h: b.height };
@@ -143,7 +154,7 @@ export function TileChrome({
 
   return (
     <div
-      className={`tile-chrome-host${pulling ? " is-pulling" : ""}`}
+      className={`tile-chrome-host${pulling ? " is-pulling" : ""}${selected && editing ? " is-selected" : ""}`}
       style={{ position: "relative", width: "100%", height: "100%", overflow: "visible" }}
     >
       <TilePickup id={id} selected={!!selected && editing} disabled={!editing || !selected || tabPulling}>
@@ -152,8 +163,10 @@ export function TileChrome({
       {interaction.kind === "tile-drag" && interaction.nodeId === id ? <InsertSilhouette nodeId={id} /> : null}
       {showChrome ? (
         <>
-          <PlusPullTab nodeId={id} />
-          <PathPullTab nodeId={id} />
+          <div className="tile-side-tabs">
+            <PlusPullTab nodeId={id} />
+            <PathPullTab nodeId={id} />
+          </div>
           <button
             type="button"
             className="node-remove-x-btn tile-remove-x"
@@ -288,7 +301,7 @@ function PlusPullTab({ nodeId }: { nodeId: string }) {
               <svg className="plus-taffy" width="100%" height="100%">
                 <path
                   data-plus-taffy="true"
-                  d={taffyPath(drag.restX, drag.restY, tabX, tabY)}
+                  d={taffyPath(drag.tile, drag.restY, tabX, tabY)}
                   fill="var(--plus)"
                   fillOpacity={0.88}
                   stroke="var(--line)"
@@ -426,7 +439,7 @@ function PathPullTab({ nodeId }: { nodeId: string }) {
             </svg>
             {drag.live ? (
               <div className="path-tab-ghost" style={{ left: endX, top: endY }}>
-                <PathSpindleIcon size={20} />
+                <PathSpindleIcon size={24} />
               </div>
             ) : null}
           </div>,
@@ -448,7 +461,7 @@ function PathPullTab({ nodeId }: { nodeId: string }) {
         onPointerCancel={onPointerUp}
         onClick={(e) => e.stopPropagation()}
       >
-        <PathSpindleIcon size={20} />
+        <PathSpindleIcon size={24} />
       </button>
       {overlay}
     </>

@@ -224,16 +224,29 @@ test("removeTarget on the root explains WG-06 and stays idle", () => {
   expect(useStore.getState().workflow).toBe(before);
 });
 
-test("root-only board explains WG-06; leaf picker defaults to itself (WG-09)", () => {
+test("sole remaining Tile can be deleted back to the empty board (WG-06)", () => {
   const s = useStore.getState();
   s.requestNew();
   s.confirmReplaceDiscard();
   const id = useStore.getState().addStep();
   expect(id).toBeTruthy();
   useStore.getState().removeTarget(id);
-  expect(useStore.getState().notice).toBe(MSG.rootRemoval);
+  expect(useStore.getState().workflow.nodes).toHaveLength(0);
+  expect(useStore.getState().selected).toBeNull();
   expect(useStore.getState().interaction).toEqual(IDLE);
-  expect(useStore.getState().workflow.nodes).toHaveLength(1);
+});
+
+test("root-only board explains WG-06; leaf picker defaults to itself (WG-09)", () => {
+  const s = useStore.getState();
+  s.requestNew();
+  s.confirmReplaceDiscard();
+  const stepId = useStore.getState().addStep();
+  expect(stepId).toBeTruthy();
+  useStore.getState().spawnBranch(stepId, WorkflowNodeKind.Step);
+  expect(useStore.getState().workflow.nodes.length).toBeGreaterThan(1);
+  useStore.getState().removeTarget(stepId);
+  expect(useStore.getState().notice).toBe(MSG.rootRemoval);
+  expect(useStore.getState().workflow.nodes.some((n) => n.id === stepId)).toBe(true);
 
   s.resetDemo();
   const leaf = leafId(useStore.getState().workflow);

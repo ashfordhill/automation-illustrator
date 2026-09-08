@@ -406,3 +406,14 @@ Then implement Improvement 08 exactly as specified in that plan. Restore the gre
 
 When done: run `npm run build`, `npm run test:unit`, `npm run test:e2e`; save screenshots under .docs/evidence/improve-08-plus-chrome/; append one handoff entry ending in `Status: COMPLETE`; commit everything as `feat(improve-08): restore plus taffy and fix Path stroke`; confirm a clean tree; report the hash, exact test results, and evidence paths. Never push, branch, or start other work.
 ```
+
+---
+
+# Improvement 09 — tile chrome, Data root, After removal (COMPLETE)
+
+Approved 2026-09-08. Start only after Improvement 08 is COMPLETE.
+
+Full spec: [`.docs/improve-09-chrome-and-root.plan.md`](improve-09-chrome-and-root.plan.md). Pictures: [tabs and select](visual-improvements/2026-09-08-tile-tabs-select-x.png), [taffy hole](visual-improvements/2026-09-08-plus-taffy-hole.png).
+
+Commit: `feat(improve-09): center tabs Data root and After remove`.  
+Evidence: `.docs/evidence/improve-09-chrome-root/`.

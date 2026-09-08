@@ -54,7 +54,7 @@ test.describe("slice 4 command evidence", () => {
     await loadDemo(page);
     await page.getByText(DEMO_STEP).first().click();
     await page.keyboard.press("Delete");
-    await expect(page.getByText(/root Node cannot be removed/i)).toBeVisible();
+    await expect(page.getByText("The root cannot be removed while other Tiles remain.")).toBeVisible();
     await capturePage(page, `${EVIDENCE}/root-blocked-1440.png`);
 
     await page.keyboard.press("Escape");

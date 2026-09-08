@@ -32,8 +32,6 @@ export function DataTile({
         gap: 6,
         color: "var(--ink)",
         boxShadow: lifted ? "0 10px 0 var(--btn-shadow)" : "0 5px 0 var(--btn-shadow)",
-        outline: selected ? "3px solid var(--select-ring)" : "none",
-        outlineOffset: 4,
         transform: lifted ? "translateY(-3px)" : undefined,
         transition: "transform 140ms ease",
         overflow: "hidden",

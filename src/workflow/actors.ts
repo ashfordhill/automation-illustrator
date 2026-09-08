@@ -15,7 +15,7 @@ import {
 
 export const HUMAN_PRESETS = [
   { name: "Alice", color: "#ff9fbf" },
-  { name: "Roy", color: "#7eb6f5" },
+  { name: "Roy", color: "#f4c07a" },
   { name: "Jack", color: "#5ed4a4" },
   { name: "Missy", color: "#c89bf5" },
 ] as const;

@@ -56,7 +56,7 @@ export function robotMailroom(): WorkflowDoc {
         id: id.omar,
         kind: ActorKind.Human,
         name: "Omar",
-        color: HUMAN_PRESETS[1].color,
+        color: "#7eb6f5",
         role: "Records",
       },
       {

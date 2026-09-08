@@ -151,7 +151,7 @@ export function oakParkInvoice(): WorkflowDoc {
   };
 }
 
-/** Empty consulting board: default roster, zero Nodes (WG-01). Add Step creates the root. */
+/** Empty consulting board: default roster, zero Nodes (WG-01). Add Step or Add Data creates the root. */
 export function freshBoard(): WorkflowDoc {
   const actors = defaultActors();
   return {

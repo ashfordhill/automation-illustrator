@@ -11,7 +11,7 @@ import {
 } from "../../workflow/catalogs";
 import { afterGraph, edgeIsDotted } from "../../workflow/graph";
 import { laneAssignments } from "../../workflow/types";
-import { findEdge, findNode, isAfterOnlyNode } from "../../workflow/selectors";
+import { findEdge, findNode } from "../../workflow/selectors";
 import { useStore } from "../../state/store";
 import { ManageActorsPanel } from "./ManageActorsPanel";
 import { TypeButtons } from "./TypeButtons";
@@ -113,10 +113,7 @@ export function DetailsPanel() {
   if (selected.type === SelectionKind.Node) {
     const n = findNode(workflow, selected.id);
     if (!n) return null;
-    const extra = isAfterOnlyNode(workflow, n.id);
-    const showRemove =
-      !readOnly &&
-      (view === ViewMode.Before || (view === ViewMode.After && extra));
+    const showRemove = !readOnly && (view === ViewMode.Before || view === ViewMode.After);
     if (n.type === WorkflowNodeKind.DataField) {
       return (
         <Stack gap="xs" p="sm" className="chrome-hide">

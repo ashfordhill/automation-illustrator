@@ -71,6 +71,7 @@ test.describe("slice 5 replacement and demos", () => {
     await page.getByRole("button", { name: "Discard" }).click();
     await expect(page.getByText("This board is empty.")).toBeVisible();
     await expect(page.getByRole("button", { name: "Add Step" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Add Data" })).toBeVisible();
     await capturePage(page, `${EVIDENCE}/empty-new-1440.png`);
     await page.getByRole("button", { name: "Add Step" }).click();
     await expect(page.getByText("This board is empty.")).toHaveCount(0);
@@ -124,6 +125,7 @@ test.describe("recovery UI", () => {
     await page.getByRole("button", { name: "Start fresh" }).click();
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Add Step" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Add Data" })).toBeVisible();
   });
 });
 

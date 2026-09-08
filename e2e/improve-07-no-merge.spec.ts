@@ -55,13 +55,13 @@ test.describe("Improvement 07 — merge groups withdrawn", () => {
     await capturePage(page, `${EVIDENCE}/keybinds-no-merge-1440.png`);
   });
 
-  test("Before-origin X in After explains with no Unmerge offer (BA-04)", async ({ page }) => {
+  test("Before-origin X in After removes the Step with no Unmerge offer (BA-04)", async ({ page }) => {
     await loadMailroom(page);
     await viewLabel(page, "After").click();
     await waitForLayout(page);
     await page.getByText(SCAN).first().click();
     await page.getByRole("button", { name: `Remove ${SCAN}` }).click();
-    await expect(page.getByText("After cannot remove a Before-origin Step.")).toBeVisible();
+    await expect(page.getByText(SCAN)).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Unmerge" })).toHaveCount(0);
   });
 });

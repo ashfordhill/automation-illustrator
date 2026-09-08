@@ -16,6 +16,8 @@ import {
 } from "./graph";
 import { nid } from "./ids";
 import {
+  emptyAfterOverlay,
+  isDataFieldNode,
   isStepNode,
   type AfterOverlay,
   type Assignments,
@@ -56,15 +58,14 @@ export const MSG = {
   cycle: "That Path would create a cycle.",
   duplicatePath: "That Path already exists.",
   selfLoop: "A Path cannot start and end on the same Node.",
-  rootRemoval: "The root Node cannot be removed. Use New for a clean board.",
+  rootRemoval: "The root cannot be removed while other Tiles remain.",
   pathRemoval:
     "A Path cannot be removed on its own. Remove a Node and the workflow will be reconnected.",
   manyToMany:
     "This Node has multiple incoming and outgoing Paths. Confirm pairings before removing it.",
-  afterOriginRemoval:
-    "After cannot remove a Before-origin Step. Switch to Before to remove a Node.",
-  notEmpty: "The first Step is already on the board. New Nodes must connect from an existing Node.",
-  notStep: "The first Node on a board must be a Step.",
+  notEmpty: "A root is already on the board. New Nodes must connect from an existing Node.",
+  notStep: "After-only Nodes must be Steps.",
+  rootKind: "The first Node on a board must be a Step or Data.",
   missingNode: "That Node is not on the board.",
   invalidPairings: "Every successor needs at least one incoming Path after removal.",
   insertSelf: "Drop the Node onto a Path that does not already touch it.",
@@ -303,20 +304,26 @@ export function validatePairings(
   return ok(true);
 }
 
-/** WG-01 / WG-02: the first Step on an empty board is the sole root. */
-export function createRootStep(
+function isSoleBaseNode(doc: WorkflowDoc, nodeId: string): boolean {
+  return doc.nodes.length === 1 && doc.nodes[0]?.id === nodeId;
+}
+
+/** WG-01 / WG-02: the first Step or Data on an empty board is the sole root. */
+export function createRootNode(
   doc: WorkflowDoc,
-  node: StepNodeDto,
+  node: NodeDto,
   who?: { beforeId?: string; afterId?: string },
 ): CommandResult<WorkflowDoc> {
   const valid = requireValid(doc);
   if (!valid.ok) return valid;
   if (doc.nodes.length) return fail("not-empty", MSG.notEmpty);
-  if (!isStepNode(node)) return fail("not-step", MSG.notStep);
+  if (!isStepNode(node) && !isDataFieldNode(node)) return fail("not-step", MSG.rootKind);
   const assignments = { ...doc.assignments };
   const afterAssignments = { ...doc.after.assignments };
-  if (who?.beforeId) assignments[node.id] = who.beforeId;
-  if (who?.afterId) afterAssignments[node.id] = who.afterId;
+  if (isStepNode(node)) {
+    if (who?.beforeId) assignments[node.id] = who.beforeId;
+    if (who?.afterId) afterAssignments[node.id] = who.afterId;
+  }
   return succeed({
     ...doc,
     nodes: [node],
@@ -324,6 +331,16 @@ export function createRootStep(
     assignments,
     after: { ...doc.after, assignments: afterAssignments },
   });
+}
+
+/** WG-01 / WG-02: the first Step on an empty board is the sole root. */
+export function createRootStep(
+  doc: WorkflowDoc,
+  node: StepNodeDto,
+  who?: { beforeId?: string; afterId?: string },
+): CommandResult<WorkflowDoc> {
+  if (!isStepNode(node)) return fail("not-step", MSG.notStep);
+  return createRootNode(doc, node, who);
 }
 
 /** WG-04: connect two existing Nodes, or reject before mutation. */
@@ -466,7 +483,7 @@ export function planNodeRemoval(
     return fail("missing-ref", MSG.missingNode);
   }
   const root = rootNodeId(doc.nodes, doc.edges);
-  if (root === nodeId) {
+  if (root === nodeId && !isSoleBaseNode(doc, nodeId)) {
     return fail("root-removal", MSG.rootRemoval);
   }
   const incoming = incomingSorted(doc.nodes, doc.edges, nodeId, positions);
@@ -547,7 +564,7 @@ export function applyNodeRemoval(
     return fail("missing-ref", MSG.missingNode);
   }
   const root = rootNodeId(doc.nodes, doc.edges);
-  if (root === plan.nodeId) {
+  if (root === plan.nodeId && !isSoleBaseNode(doc, plan.nodeId)) {
     return fail("root-removal", MSG.rootRemoval);
   }
   const incoming = incomingSorted(doc.nodes, doc.edges, plan.nodeId, positions);
@@ -581,7 +598,7 @@ export function applyNodeRemoval(
     nodes: remainingNodes,
     edges: remainingEdges,
     assignments: dropAssign(doc.assignments, plan.nodeId),
-    after: overlayEffects.after,
+    after: remainingNodes.length === 0 ? emptyAfterOverlay() : overlayEffects.after,
   });
 }
 

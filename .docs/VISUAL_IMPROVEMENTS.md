@@ -51,3 +51,9 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 - Issue: Selected-tile `+` and Path tabs overlap the right border on top of the tile instead of hanging behind it like `.docs/menu-tab-plus.png`.
 - Resolution: Planned for Improvement 08 (tuck both tabs under the tile face).
 - Attachments: [tabs overlap](visual-improvements/2026-09-07-plus-tabs-overlap.png)
+
+## 2026-09-08 — tile tabs, select ring, taffy hole
+
+- Issue: `+` and Path tabs sit in the top-right instead of vertically centered on the right edge. Their icons should be slightly larger (X stays the same). The cyan select outline covers the X and the tabs. Pulled `+` taffy has a concave half-circle bite where it leaves the tile.
+- Resolution: Planned for Improvement 09 (center the tabs, larger `+`/Path glyphs, shadow selection instead of a ring, solid taffy join).
+- Attachments: [tabs and select](visual-improvements/2026-09-08-tile-tabs-select-x.png) · [taffy hole](visual-improvements/2026-09-08-plus-taffy-hole.png)

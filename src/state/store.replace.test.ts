@@ -2,7 +2,7 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { DemoId } from "../demos/catalog";
 import { freshBoard, isEmptyBoard, OAK_PARK_IDS } from "../demos/oakParkInvoice";
 import { MAILROOM_IDS, robotMailroom } from "../demos/robotMailroom";
-import { ColorScheme, ViewMode } from "../workflow/catalogs";
+import { ColorScheme, ViewMode, WorkflowNodeKind } from "../workflow/catalogs";
 import { UNFOLD_NOTICE } from "../workflow/types";
 import * as persist from "./persistence";
 import { useStore } from "./store";
@@ -97,6 +97,27 @@ test("addStep on an empty board creates the root (WG-01)", () => {
   expect(id).toBeTruthy();
   expect(useStore.getState().workflow.nodes).toHaveLength(1);
   expect(useStore.getState().workflow.nodes[0]?.id).toBe(id);
+});
+
+test("addField on an empty board creates a Data root (WG-01)", () => {
+  useStore.getState().loadDoc(freshBoard());
+  const id = useStore.getState().addField();
+  expect(id).toBeTruthy();
+  expect(useStore.getState().workflow.nodes).toHaveLength(1);
+  expect(useStore.getState().workflow.nodes[0]?.id).toBe(id);
+  expect(useStore.getState().workflow.nodes[0]?.type).toBe(WorkflowNodeKind.DataField);
+});
+
+test("reloading a demo restores the fixture and does not keep live edits", () => {
+  useStore.getState().updateNode(OAK_PARK_IDS.read, { title: "messed-up" });
+  expect(useStore.getState().workflow.nodes.find((n) => n.id === OAK_PARK_IDS.read)).toMatchObject({
+    title: "messed-up",
+  });
+  useStore.getState().requestDemo(DemoId.OakPark);
+  useStore.getState().confirmReplaceDiscard();
+  expect(useStore.getState().workflow.nodes.find((n) => n.id === OAK_PARK_IDS.read)).toMatchObject({
+    title: "invoice.pdf",
+  });
 });
 
 test("Start fresh discards recovery and writes an empty board (SH-10)", () => {

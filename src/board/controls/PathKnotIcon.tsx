@@ -5,7 +5,7 @@
  */
 const GLYPH = "#071c28";
 
-export function PathSpindleIcon({ size = 22 }: { size?: number }) {
+export function PathSpindleIcon({ size = 24 }: { size?: number }) {
   return (
     <svg
       width={size}
