@@ -45,12 +45,12 @@
 }
 
 .inspector-fold:hover {
-  background: var(--yellow);
-  color: var(--on-yellow);
+  background: var(--cream);
+  color: var(--ink);
 }
 
 .inspector-fold:focus-visible {
-  outline: 3px solid var(--yellow);
+  outline: 3px solid var(--blue);
   outline-offset: -3px;
 }
 

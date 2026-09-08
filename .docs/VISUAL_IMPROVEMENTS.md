@@ -160,3 +160,10 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 - Issue: Selected actor cards in Manage actors (and Who) use a mustard fill and yellow name bar that clash with pastel figures on dark chrome.
 - Resolution: Selected Who is cream with a chunky ink border, not yellow. Yellow stays on the view switch and Type / fat buttons.
 - Attachments: [manage actors yellow highlight](visual-improvements/2026-09-08-manage-actors-yellow-highlight.gif)
+
+## 2026-09-08 — inspector fold chevron hover
+
+- Issue: Hovering the inspector › / ‹ strip fills the whole drawer edge mustard yellow.
+- Resolution: Hover is cream + ink, like the other chrome buttons. Not yellow.
+- Attachments: [manage actors yellow highlight](visual-improvements/2026-09-08-manage-actors-yellow-highlight.gif)
+

@@ -1773,3 +1773,18 @@ Corrections in the same chat before the next slice starts get their own short en
 - Known limitations / follow-ups: Concurrent hamburger-Actors / tile-pie WIP remains unstaged. Type / fat selected yellow is unchanged (text pills, same family as the view switch).
 - Status: COMPLETE
 - Commit: `feat(improve-28): restyle selected Who without yellow`
+
+## Improvement 28 — correction 1 — 2026-09-08
+
+- Requested: The hideous yellow is the inspector fold › / ‹ hover, not the actor cards.
+- Changed: `.inspector-fold:hover` is cream + ink (chrome button language). `:focus-visible` outline is blue, not yellow. Who select from this improvement is unchanged.
+- Tests and exact results:
+  - `npx vite build` — pass (Vite 8.2.2)
+  - `npm run test:e2e` — `e2e/improve-28-fold-hover.spec.ts` pass (2). Port 4202. Chromium via `LD_LIBRARY_PATH` `~/.local/pw-libs`.
+- Evidence:
+  - `.docs/evidence/improve-28-fold-hover/fold-hover-open-1440.png` — Hide inspector hovered; cream strip, ink chevron (1440×900)
+  - `.docs/evidence/improve-28-fold-hover/fold-hover-collapsed-1440.png` — Show inspector hovered (1440×900)
+  - `.docs/evidence/improve-28-fold-hover/fold-hover-dark-1440.png` — same hover in dark (1440×900)
+- Status: COMPLETE
+- Commit: `feat(improve-28): quiet the inspector fold hover`
+
