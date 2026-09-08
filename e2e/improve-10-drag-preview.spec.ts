@@ -2,7 +2,6 @@ import { expect, test } from "@playwright/test";
 import { loadOakPark, screenshotBoard, waitForLayout, capturePage, pathScreenPoint } from "./ready";
 
 const EVIDENCE = ".docs/evidence/improve-10-drag-preview";
-const REVIEW = "Review BS&A Software";
 
 async function dragReviewToward(page: import("@playwright/test").Page, x: number, y: number) {
   const tile = page.locator('.react-flow__node[data-id="s_review"] .tile-pickup');
@@ -15,16 +14,15 @@ async function dragReviewToward(page: import("@playwright/test").Page, x: number
 }
 
 test.describe("Improvement 10 insert preview and move cursor", () => {
-  test("editable tiles use a move cursor", async ({ page }) => {
+  test("hovering an unselected tile uses a move cursor", async ({ page }) => {
     await loadOakPark(page);
-    const tile = page.locator('.react-flow__node[data-id="s_review"] .tile-pickup');
-    const cursor = await tile.evaluate((el) => getComputedStyle(el).cursor);
+    const face = page.locator('.react-flow__node[data-id="s_review"] .step-piece');
+    const cursor = await face.evaluate((el) => getComputedStyle(el).cursor);
     expect(cursor).toMatch(/move/);
   });
 
-  test("dragging Review over a Path shows the blue ELK band and no stubs", async ({ page }) => {
+  test("click-dragging an unselected tile inserts on a Path", async ({ page }) => {
     await loadOakPark(page);
-    await page.getByText(REVIEW, { exact: true }).first().click();
     const onto = await pathScreenPoint(page, "e_gt");
     await dragReviewToward(page, onto.x, onto.y);
     await expect(page.locator(".board-lane").first()).toHaveAttribute("data-insert-preview", "true", {

@@ -12,7 +12,7 @@ import {
 import { createPortal } from "react-dom";
 import { useReactFlow, ViewportPortal } from "@xyflow/react";
 import { IconX } from "@tabler/icons-react";
-import { SelectionKind, ViewMode, WorkflowNodeKind } from "../../workflow/catalogs";
+import { ViewMode, WorkflowNodeKind } from "../../workflow/catalogs";
 import { useStore } from "../../state/store";
 import { findNode } from "../../workflow/selectors";
 import { nodeCaption } from "../../workflow/types";
@@ -166,7 +166,7 @@ export function TileChrome({
       className={`tile-chrome-host${pulling ? " is-pulling" : ""}${selected && editing ? " is-selected" : ""}`}
       style={{ position: "relative", width: "100%", height: "100%", overflow: "visible" }}
     >
-      <TilePickup id={id} selected={!!selected && editing} disabled={!editing || tabPulling}>
+      <TilePickup id={id} disabled={!editing || tabPulling}>
         {children}
       </TilePickup>
       {interaction.kind === "tile-drag" && interaction.nodeId === id ? <InsertSilhouette nodeId={id} /> : null}
@@ -538,12 +538,10 @@ function InsertSilhouette({ nodeId }: { nodeId: string }) {
 
 function TilePickup({
   id,
-  selected,
   disabled,
   children,
 }: {
   id: string;
-  selected: boolean;
   disabled: boolean;
   children: React.ReactNode;
 }) {
@@ -551,70 +549,97 @@ function TilePickup({
   const { layout } = useLaneLayoutContext();
   const view = useStore((s) => s.view);
   const hostRef = useRef<HTMLDivElement>(null);
+  const layoutRef = useRef(layout);
+  const viewRef = useRef(view);
+  const rfRef = useRef(rf);
+  layoutRef.current = layout;
+  viewRef.current = view;
+  rfRef.current = rf;
   const [ghost, setGhost] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
   const origin = useRef<{ x: number; y: number } | null>(null);
   const dragging = useRef(false);
+  const stopGesture = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     if (disabled) {
+      const wasDragging = dragging.current;
+      stopGesture.current?.();
       dragging.current = false;
       origin.current = null;
       setGhost(null);
+      if (wasDragging) useStore.getState().closeBoardModes();
     }
   }, [disabled]);
 
+  useEffect(() => () => stopGesture.current?.(), []);
+
   const skipHover = (edgeId: string) => {
     const doc = useStore.getState().workflow;
-    if (!layout) return true;
+    const lane = layoutRef.current;
+    if (!lane) return true;
     const edges = [...doc.edges, ...doc.after.extraEdges];
-    return skipInsertHover(layout, incidentPathIds(edges, id))(edgeId);
+    return skipInsertHover(lane, incidentPathIds(edges, id))(edgeId);
   };
 
   const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
-    if (disabled || e.button !== 0) return;
+    if (disabled || e.button !== 0 || origin.current) return;
     if ((e.target as HTMLElement).closest("button, a, input, textarea")) return;
-    if (!selected) {
-      useStore.getState().select({ type: SelectionKind.Node, id });
-    }
     origin.current = { x: e.clientX, y: e.clientY };
     dragging.current = false;
     e.stopPropagation();
     e.currentTarget.setPointerCapture(e.pointerId);
-  };
 
-  const onPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
-    if (!origin.current) return;
-    const dist = Math.hypot(e.clientX - origin.current.x, e.clientY - origin.current.y);
-    if (!dragging.current && dist < 10) return;
-    if (!dragging.current) {
-      dragging.current = true;
-      useStore.getState().beginTileDrag(id);
-      const box = hostRef.current?.getBoundingClientRect();
-      setGhost({ x: e.clientX, y: e.clientY, w: box?.width ?? 160, h: box?.height ?? 96 });
-    }
-    const flow = rf.screenToFlowPosition({ x: e.clientX, y: e.clientY });
-    const hover = view === ViewMode.Both ? null : hitPathId(layout, flow, skipHover);
-    useStore.getState().setTileDragHover(hover);
-    setGhost((g) => (g ? { ...g, x: e.clientX, y: e.clientY } : g));
-  };
-
-  const onPointerUp = (e: ReactPointerEvent<HTMLDivElement>) => {
-    origin.current = null;
-    try {
-      e.currentTarget.releasePointerCapture(e.pointerId);
-    } catch {
-      /* already released */
-    }
-    if (dragging.current) {
-      const s = useStore.getState();
-      if (s.interaction.kind === "tile-drag" && s.interaction.hoverEdgeId) {
-        s.insertOnPath(id, s.interaction.hoverEdgeId);
-      } else {
-        s.closeBoardModes();
+    const onMove = (ev: PointerEvent) => {
+      if (!origin.current) return;
+      const dist = Math.hypot(ev.clientX - origin.current.x, ev.clientY - origin.current.y);
+      if (!dragging.current && dist < 10) return;
+      if (!dragging.current) {
+        dragging.current = true;
+        useStore.getState().beginTileDrag(id);
+        const box = hostRef.current?.getBoundingClientRect();
+        setGhost({ x: ev.clientX, y: ev.clientY, w: box?.width ?? 160, h: box?.height ?? 96 });
       }
-    }
-    dragging.current = false;
-    setGhost(null);
+      const flow = rfRef.current.screenToFlowPosition({ x: ev.clientX, y: ev.clientY });
+      const hover =
+        viewRef.current === ViewMode.Both
+          ? null
+          : hitPathId(layoutRef.current, flow, skipHover);
+      useStore.getState().setTileDragHover(hover);
+      setGhost((g) => (g ? { ...g, x: ev.clientX, y: ev.clientY } : g));
+    };
+
+    const onUp = (ev: PointerEvent) => {
+      stopGesture.current?.();
+      origin.current = null;
+      const host = hostRef.current;
+      if (host) {
+        try {
+          host.releasePointerCapture(ev.pointerId);
+        } catch {
+          /* already released */
+        }
+      }
+      if (dragging.current) {
+        const s = useStore.getState();
+        if (s.interaction.kind === "tile-drag" && s.interaction.hoverEdgeId) {
+          s.insertOnPath(id, s.interaction.hoverEdgeId);
+        } else {
+          s.closeBoardModes();
+        }
+      }
+      dragging.current = false;
+      setGhost(null);
+    };
+
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+    stopGesture.current = () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+      stopGesture.current = null;
+    };
   };
 
   const layer =
@@ -637,10 +662,7 @@ function TilePickup({
     <div
       ref={hostRef}
       className="tile-pickup"
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      onPointerCancel={onPointerUp}
+      onPointerDownCapture={onPointerDown}
     >
       {children}
       {layer}

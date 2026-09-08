@@ -1242,3 +1242,14 @@ Corrections in the same chat before the next slice starts get their own short en
 - Known limitations / follow-ups: Who-follow store code remains unstaged. Untracked ELK planner dumps still not committed. Shared inbound merges still need a click on a unique segment to pick one Path.
 - Status: COMPLETE
 - Commit: `feat(improve-11): delete redundant Paths from the context menu`
+
+## Improvement 10 — correction 1 — 2026-09-08
+
+- Requested: The cursor should be the four-way move symbol when hovering a Tile. Click-dragging an unselected Tile should pick it up in one gesture (no click-to-select, then click-drag again).
+- Changed: `tokens.css` — move cursor on `.react-flow__node.selectable` and the tile face (`!important` so it beats React Flow’s pointer). `TileChrome.tsx` — do not select on pointer-down (that remounts chrome and drops the drag); window-level pointer listeners start insert-on-Path after 10 px; a plain click still selects via the existing tile click handler. `e2e/improve-10-drag-preview.spec.ts` hovers the unselected face and drags Review without a prior click. Plan pickup bullet updated. GOAL P-08/CX-07 hover/drag amendment was already in HEAD from Improvement 11.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning)
+  - `npm run test:unit` — pass (31 files, 177 tests)
+  - `npm run test:e2e` — pass (91 passed, Chromium, 3 workers, 52.8s)
+- Status: COMPLETE
+- Commit: `feat(improve-10): pick up unselected tiles on drag`

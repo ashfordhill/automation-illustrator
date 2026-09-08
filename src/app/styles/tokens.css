@@ -125,8 +125,11 @@ body,
 }
 
 .board-lane[data-editable="true"] .react-flow__node,
-.board-lane[data-editable="true"] .tile-pickup {
-  cursor: var(--tile-move-cursor);
+.board-lane[data-editable="true"] .react-flow__node.selectable,
+.board-lane[data-editable="true"] .react-flow__node .tile-pickup,
+.board-lane[data-editable="true"] .react-flow__node .tile-pickup *,
+.board-lane[data-editable="true"] .react-flow__node .board-node {
+  cursor: var(--tile-move-cursor) !important;
 }
 
 body.is-tile-dragging,
@@ -136,11 +139,12 @@ body.is-tile-dragging * {
 
 .board-lane[data-editable="true"] .plus-tab,
 .board-lane[data-editable="true"] .path-tab {
-  cursor: grab;
+  cursor: grab !important;
 }
 
-.board-lane[data-editable="true"] .tile-remove-x {
-  cursor: pointer;
+.board-lane[data-editable="true"] .tile-remove-x,
+.board-lane[data-editable="true"] .node-remove-x-btn {
+  cursor: pointer !important;
 }
 
 .react-flow__handle {
@@ -1024,6 +1028,7 @@ body.is-tile-dragging * {
   width: 100%;
   height: 100%;
   pointer-events: auto;
+  touch-action: none;
 }
 
 .react-flow__edge.path-drag-incident {

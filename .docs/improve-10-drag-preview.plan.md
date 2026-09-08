@@ -23,7 +23,7 @@ A second overlay fights it: split stubs plus `ensureOrthogonal` / `orthogonalPol
 - **Incident Paths fade** with the origin (~0.28), including bundled siblings. They are not rubber-banded to the ghost.
 - **Neighbor ease and silhouette stay** (Improvement 04). Reduced motion still snaps. Pointer ghost stays under the cursor.
 - **Cursor:** editable Step/Data tiles use a four-way **move** cursor (chunky SVG, Excalidraw-style), not the pointer hand. Empty paper stays grab-to-pan. `+` / Path tabs stay grab. During `tile-drag` the move cursor follows the pointer (including over the pane). Present and Both do not show the move cursor.
-- **Pickup:** pointer-down on an editable tile selects it; dragging still starts after the existing 10 px slop. Root still cannot insert. After may insert on a base Path (Improvement 09). Both stays read-only.
+- **Pickup:** click-dragging an editable tile picks it up even if it was not selected (10 px slop). Do not select on pointer-down — that remounts chrome and cancels the gesture. A plain click still selects. Root still cannot insert. After may insert on a base Path (Improvement 09). Both stays read-only.
 - **Do not** reopen Path-tab glyph, Who-copy, merge, or After `+ Data`.
 
 ## 3. GOAL amendments (2026-09-08, approved by user)
@@ -34,7 +34,7 @@ A second overlay fights it: split stubs plus `ensureOrthogonal` / `orthogonalPol
 ## 4. Work
 
 - `src/board/layout/pathHit.ts` — `incidentPathIds`, `routesShareBundle`, `skipInsertHover`. Unit tests: Oak Park / synthetic fan-out (dragging one child skips both bundled Paths; a disjoint Path remains hittable).
-- `src/board/controls/TileChrome.tsx` — use `skipInsertHover`; hit-test Before **and** After; pickup allowed when unselected (select on pointer-down); `disabled` only when not editable or a tab is pulling.
+- `src/board/controls/TileChrome.tsx` — use `skipInsertHover`; hit-test Before **and** After; pickup from an unselected tile in one gesture (window pointer listeners; select when `beginTileDrag` runs); `disabled` only when not editable or a tab is pulling.
 - `src/board/routing/FlowArrow.tsx` — insert hover draws only the blue ELK band; delete stub rendering from this component.
 - `src/board/Board.tsx` — `data-tile-drag`, `data-editable`; fade class on incident/bundled Paths; body class `is-tile-dragging` while dragging.
 - `src/app/styles/tokens.css` — `--tile-move-cursor` (24×24 SVG, hotspot 12,12, ink with white halo); apply on editable tiles and while `is-tile-dragging`.
