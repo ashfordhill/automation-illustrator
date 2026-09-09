@@ -2173,3 +2173,29 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(improve-41): center Who keys in the inspector`
 
+## Improvement 42 — hide Other on the Type keypad — 2026-09-09
+
+- Starting commit: `325e92e27fe9ae3f372d32897fc193237530dfea` (`feat(improve-41): center Who keys in the inspector`)
+- Working tree at start: clean tracked tree; untracked elk plans, chrome GIFs, and `e2e/improve-23-tile-edit.spec.ts` remained outside the commit.
+- GOAL clauses addressed: NA-05, NA-10 (amendment dated 2026-09-09). Document version unchanged.
+- Library research and decisions: no new runtime dependency. Other keeps a hidden name row (`visibility: hidden` + nbsp) so the 22px clipboard stays aligned with Search / Write instead of dropping in the key.
+- Files changed:
+  - Inspector: `src/app/inspector/TypeButtons.tsx`, `TypeButtons.css`
+  - Tests: `src/app/App.test.tsx`, `e2e/improve-42-other-type-blank.spec.ts`, `e2e/improve-39-type-compact.spec.ts`, `e2e/replace.spec.ts` (root-created check uses Type Other pressed, not printed “Other”)
+  - Docs: `.docs/GOAL.md`, `.docs/IMPROVEMENTS.md`, `.docs/VISUAL_IMPROVEMENTS.md`, `.docs/visual-improvements/2026-09-09-other-type-key-label.png`, this handoff entry
+  - Evidence: `.docs/evidence/improve-42-other-type-blank/`
+- Behavior implemented:
+  - Inspector Type Other is clipboard-only. Accessible name stays Type Other.
+  - Key size and icon spacing match Write. Tile copy is unchanged (no printed Other; empty Name until typed).
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning). Node 24.
+  - `npm run test:unit` — 41 files, 284 tests pass.
+  - `npm run test:e2e` — 181 passed (1.8m). Chromium via `LD_LIBRARY_PATH` `/home/ash/.local/pw-libs/usr/lib/x86_64-linux-gnu`. Untracked `e2e/improve-23-tile-edit.spec.ts` was asided for this run.
+- Evidence:
+  - `.docs/evidence/improve-42-other-type-blank/other-type-blank-1440.png` — Other selected, clipboard only, same key size as Write (1440×900)
+  - `.docs/evidence/improve-42-other-type-blank/other-type-blank-1024.png` — same at 1024×768
+- Earlier-slice defects fixed: `e2e/replace.spec.ts` treated visible “Other” as proof a root Step existed.
+- Known limitations / follow-ups: Concurrent insert-on-bundle WIP was not in this commit. Path-end wobble is still a later improvement.
+- Status: COMPLETE
+- Commit: `feat(improve-42): hide Other on the Type keypad`
+

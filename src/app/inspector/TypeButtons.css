@@ -59,4 +59,10 @@
   text-overflow: clip;
   white-space: nowrap;
   line-height: 1.1;
+  min-height: 1.1em;
+}
+
+/* Other keeps the name row so the clipboard lines up with Search / Write. */
+.inspector-type-grid .inspector-type-name.is-blank {
+  visibility: hidden;
 }

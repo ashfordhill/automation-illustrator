@@ -314,6 +314,10 @@ test("Add Step leaves Other Name empty and the tile does not print Other", () =>
   expect(otherBtn).not.toBeNull();
   expect(otherBtn?.querySelector("svg")).not.toBeNull();
   expect(otherBtn?.querySelector("path")).toBeNull();
+  expect(otherBtn?.querySelector(".inspector-type-name")?.textContent?.trim()).toBe("");
+  expect(host.querySelector('[aria-label="Type Call"] .inspector-type-name')?.textContent).toBe(
+    "Call",
+  );
 });
 
 test("Read type uses an open book, not a clipboard", () => {

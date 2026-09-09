@@ -832,3 +832,23 @@ Append to `## Amendments` in `.docs/GOAL.md`: NA-05, NA-06 as dated 2026-09-09.
 Commit: `feat(improve-41): center Who keys in the inspector`.  
 Evidence: `.docs/evidence/improve-41-who-center/`.
 
+---
+
+# Improvement 42 — hide Other on the Type keypad
+
+Approved 2026-09-09. The inspector Type Other key still printed “Other” under the clipboard.
+
+## Locked decisions
+
+- Other is clipboard-only on the Type keypad. Accessible name stays `Type Other`.
+- The name row is reserved (hidden, not removed) so icon size and spacing match Search / Write. The clipboard does not enlarge to fill the key.
+- Tile copy is unchanged: Other still never prints the word Other; Name stays empty until typed.
+- No new runtime dependency.
+
+## Contract
+
+Append to `## Amendments` in `.docs/GOAL.md`: NA-05, NA-10 as dated 2026-09-09.
+
+Commit: `feat(improve-42): hide Other on the Type keypad`.  
+Evidence: `.docs/evidence/improve-42-other-type-blank/`.
+

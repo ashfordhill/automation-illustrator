@@ -1,7 +1,7 @@
 /**
- * Alphabetical Step Type fat buttons; Other last (NA-05).
+ * Alphabetical Step Type fat buttons; Other last, clipboard with no printed word (NA-05).
  */
-import { STEP_KIND_META, typePickerKinds, type StepKind } from "../../workflow/types";
+import { STEP_KIND_META, StepKind, typePickerKinds } from "../../workflow/types";
 import { StepKindIcon } from "../../board/tiles/StepKindIcon";
 import "./TypeButtons.css";
 
@@ -32,7 +32,12 @@ export function TypeButtons({
             <span className="inspector-type-icon">
               <StepKindIcon kind={kind} size={22} />
             </span>
-            <span className="inspector-type-name">{label}</span>
+            <span
+              className={`inspector-type-name${kind === StepKind.Other ? " is-blank" : ""}`}
+              aria-hidden={kind === StepKind.Other}
+            >
+              {kind === StepKind.Other ? "\u00a0" : label}
+            </span>
           </button>
         );
       })}

@@ -238,3 +238,10 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 - Attachments:
   ![who actors off center](.docs/visual-improvements/2026-09-09-who-actors-off-center.png)
 
+## 2026-09-09 — Other Type key still says Other
+
+- Issue: Inspector Type Other is a yellow key with a clipboard and the word Other.
+- Resolution: Shipped in `feat(improve-42): hide Other on the Type keypad` — clipboard only; name row kept empty so spacing matches the other keys.
+- Attachments:
+  ![other type key label](.docs/visual-improvements/2026-09-09-other-type-key-label.png)
+

@@ -75,7 +75,10 @@ test.describe("slice 5 replacement and demos", () => {
     await capturePage(page, `${EVIDENCE}/empty-new-1440.png`);
     await page.getByRole("button", { name: "Add Step" }).click();
     await expect(page.getByText("This board is empty.")).toHaveCount(0);
-    await expect(page.getByText("Other").first()).toBeVisible();
+    await expect(page.locator("aside").getByRole("button", { name: "Type Other" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
   });
 
   test("Save copy downloads YAML then loads Robot Mailroom", async ({ page }) => {

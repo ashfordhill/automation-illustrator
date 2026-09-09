@@ -47,6 +47,7 @@ test.describe("Improvement 39 — packed Type keypad and empty Other Name", () =
     const other = aside(page).getByRole("button", { name: "Type Other" });
     await expect(other).toHaveAttribute("aria-pressed", "true");
     await expect(other.locator("path")).toHaveCount(0);
+    await expect(other.locator(".inspector-type-name")).not.toHaveText("Other");
     await expect(aside(page).locator("#step-name-field")).toHaveValue("");
     await expect(page.getByText("Task", { exact: true })).toHaveCount(0);
     await capturePage(page, `${EVIDENCE}/other-empty-1440.png`);
