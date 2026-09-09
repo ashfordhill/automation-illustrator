@@ -12,6 +12,7 @@ import {
   planNodeRemoval,
   pruneAfterOverlay,
   insertNodeOnPath,
+  insertNodeOnBundle,
   nextTileAfterRemoval,
   removePath,
   canRemovePath,
@@ -819,6 +820,87 @@ test("insertNodeOnPath can move a source onto a downstream Path; rejects self-dr
   const missing = insertNodeOnPath(board, "a", "nope");
   expect(missing.ok).toBe(false);
   if (!missing.ok) expect(missing.message).toBe(MSG.missingPath);
+});
+
+test("insertNodeOnBundle merge: restitch T then every incoming → T and T → U", () => {
+  const board = doc(
+    [step("a"), step("b", 40), step("u", 20, 80), step("t", 20, 160), step("z", 20, 240)],
+    [
+      path("e1", "a", "u", "top"),
+      path("e2", "b", "u", "bot"),
+      path("e3", "u", "t"),
+      path("e4", "t", "z"),
+    ],
+  );
+  const result = insertNodeOnBundle(board, "t", { role: "merge", hostId: "u" });
+  expect(result.ok).toBe(true);
+  if (!result.ok) return;
+  expect(validateWorkflow(result.value)).toEqual([]);
+  expect(result.value.edges.some((e) => e.source === "a" && e.target === "t" && e.label === "top")).toBe(true);
+  expect(result.value.edges.some((e) => e.source === "b" && e.target === "t" && e.label === "bot")).toBe(true);
+  expect(result.value.edges.some((e) => e.source === "t" && e.target === "u" && e.label === "")).toBe(true);
+  expect(result.value.edges.some((e) => e.source === "u" && e.target === "z")).toBe(true);
+  expect(result.value.edges.some((e) => e.source === "u" && e.target === "t")).toBe(false);
+  expect(result.value.edges.some((e) => e.target === "u" && (e.source === "a" || e.source === "b"))).toBe(false);
+
+  const onBundle = insertNodeOnBundle(board, "a", { role: "merge", hostId: "u" });
+  expect(onBundle.ok).toBe(false);
+  if (!onBundle.ok) expect(onBundle.message).toBe(MSG.insertSelf);
+
+  const hostSelf = insertNodeOnBundle(board, "u", { role: "merge", hostId: "u" });
+  expect(hostSelf.ok).toBe(false);
+});
+
+test("insertNodeOnBundle split: S → T then T inherits the outgoing Paths", () => {
+  const board = doc(
+    [step("r"), step("s", 0, 80), step("a", 0, 160), step("b", 40, 160), step("t", 40, 80)],
+    [
+      path("e0", "r", "s"),
+      path("e1", "s", "a", "left"),
+      path("e2", "s", "b", "right"),
+      path("e3", "r", "t"),
+    ],
+  );
+  const result = insertNodeOnBundle(board, "t", { role: "split", hostId: "s" });
+  expect(result.ok).toBe(true);
+  if (!result.ok) return;
+  expect(validateWorkflow(result.value)).toEqual([]);
+  expect(result.value.edges.some((e) => e.source === "s" && e.target === "t")).toBe(true);
+  expect(result.value.edges.some((e) => e.source === "t" && e.target === "a" && e.label === "left")).toBe(true);
+  expect(result.value.edges.some((e) => e.source === "t" && e.target === "b" && e.label === "right")).toBe(true);
+  expect(result.value.edges.some((e) => e.source === "s" && e.target === "a")).toBe(false);
+  expect(result.value.edges.some((e) => e.source === "r" && e.target === "t")).toBe(false);
+
+  const childOnBundle = insertNodeOnBundle(board, "a", { role: "split", hostId: "s" });
+  expect(childOnBundle.ok).toBe(false);
+  if (!childOnBundle.ok) expect(childOnBundle.message).toBe(MSG.insertSelf);
+});
+
+test("insertNodeOnBundle merge on Oak Park Write onto Account # inbound", () => {
+  const oak = oakParkInvoice();
+  const { enter, acct, web, fs, review } = OAK_PARK_IDS;
+  const result = insertNodeOnBundle(oak, enter, { role: "merge", hostId: acct });
+  expect(result.ok).toBe(true);
+  if (!result.ok) return;
+  expect(validateWorkflow(result.value)).toEqual([]);
+  expect(result.value.edges.some((e) => e.source === web && e.target === enter)).toBe(true);
+  expect(result.value.edges.some((e) => e.source === fs && e.target === enter)).toBe(true);
+  expect(result.value.edges.some((e) => e.source === enter && e.target === acct)).toBe(true);
+  expect(result.value.edges.some((e) => e.source === acct && e.target === review)).toBe(true);
+});
+
+test("insertNodeOnBundle split on Oak Park Account # onto Read trunk", () => {
+  const oak = oakParkInvoice();
+  const { read, acct, web, fs, enter } = OAK_PARK_IDS;
+  const result = insertNodeOnBundle(oak, acct, { role: "split", hostId: read });
+  expect(result.ok).toBe(true);
+  if (!result.ok) return;
+  expect(validateWorkflow(result.value)).toEqual([]);
+  expect(result.value.edges.some((e) => e.source === read && e.target === acct)).toBe(true);
+  expect(result.value.edges.some((e) => e.source === acct && e.target === web)).toBe(true);
+  expect(result.value.edges.some((e) => e.source === acct && e.target === fs)).toBe(true);
+  expect(result.value.edges.some((e) => e.source === web && e.target === enter)).toBe(true);
+  expect(result.value.edges.some((e) => e.source === fs && e.target === enter)).toBe(true);
 });
 
 test("nextTileAfterRemoval prefers the parent, then a remaining child, else none", () => {

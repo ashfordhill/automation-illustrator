@@ -1256,6 +1256,21 @@ body.is-tile-dragging * {
   opacity: 0.7;
 }
 
+.insert-bundle-band {
+  position: absolute;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.insert-bundle-band .path-insert-band {
+  fill: none;
+  stroke: var(--blue);
+  stroke-width: 8px;
+  stroke-dasharray: 14 8;
+  stroke-linecap: butt;
+  opacity: 0.55;
+}
+
 .tile-pickup {
   position: relative;
   z-index: 3;

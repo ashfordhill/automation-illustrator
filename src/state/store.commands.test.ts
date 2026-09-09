@@ -287,6 +287,34 @@ test("insertOnPath relocates a leaf onto an existing Path", () => {
   expect(validateWorkflow(next)).toEqual([]);
 });
 
+test("insertOnBundle merge restitches then retargets every incoming Path", () => {
+  const board: WorkflowDoc = {
+    version: 2,
+    actors: [{ id: "h1", kind: "human", name: "Ada", color: "#f4c6d4", role: "worker" }],
+    nodes: [
+      { id: "a", type: "step", position: { x: 0, y: 0 }, stepKind: "other", title: "a", detail: "", split: "exclusive" },
+      { id: "b", type: "step", position: { x: 0, y: 80 }, stepKind: "other", title: "b", detail: "", split: "exclusive" },
+      { id: "u", type: "step", position: { x: 80, y: 40 }, stepKind: "other", title: "u", detail: "", split: "exclusive" },
+      { id: "t", type: "step", position: { x: 160, y: 40 }, stepKind: "other", title: "t", detail: "", split: "exclusive" },
+    ],
+    edges: [
+      { id: "e1", source: "a", target: "u", label: "top" },
+      { id: "e2", source: "b", target: "u", label: "bot" },
+      { id: "e3", source: "u", target: "t", label: "" },
+    ],
+    assignments: { a: "h1", b: "h1", u: "h1", t: "h1" },
+    after: emptyAfterOverlay(),
+  };
+  useStore.getState().replaceDoc(board);
+  useStore.getState().insertOnBundle("t", { role: "merge", hostId: "u" });
+  const next = useStore.getState().workflow;
+  expect(next.edges.some((e) => e.source === "a" && e.target === "t" && e.label === "top")).toBe(true);
+  expect(next.edges.some((e) => e.source === "b" && e.target === "t" && e.label === "bot")).toBe(true);
+  expect(next.edges.some((e) => e.source === "t" && e.target === "u")).toBe(true);
+  expect(next.edges.some((e) => e.source === "u" && e.target === "t")).toBe(false);
+  expect(validateWorkflow(next)).toEqual([]);
+});
+
 test("spawnBranch inbound inserts a parent and inherits the successor’s Who", () => {
   const s = useStore.getState();
   s.requestNew();

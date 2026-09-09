@@ -7,7 +7,7 @@
  * addStep / addField — first Tile on an empty board (WG-01); later tiles spawn from +
  * spawnBranch / plus-pull / path-pull — stretchy + tab (left or right) and Path pull
  * removeTarget / confirmRemove — selected-tile X / Delete; M:N pairing preview
- * insertOnPath — drop a tile onto a Path
+ * insertOnPath / insertOnBundle — drop a tile onto a Path or a merge/split trunk
  * toggleSelectedDash — selected Path solid / dotted
  * removePath / openPathMenu — redundant Path Delete (reachability)
  * requestNew / requestDemo / importRaw / exportWorkflow — replacement gate and YAML Export
@@ -56,6 +56,7 @@ import {
   connectNodes,
   createRootNode,
   fanPairings,
+  insertNodeOnBundle,
   insertNodeOnPath,
   nearestPairings,
   neighborhoodOf,
@@ -115,7 +116,9 @@ import {
 } from "./history";
 import {
   IDLE,
+  insertHoversEqual,
   type DepartingTile,
+  type InsertHover,
   type Interaction,
   type TilePieKind,
   type TileTextField,
@@ -302,8 +305,9 @@ export const useStore = create<{
   setPathPullHover: (targetId: string | null) => void;
   completePathPull: (targetId: string) => void;
   beginTileDrag: (nodeId: string) => void;
-  setTileDragHover: (edgeId: string | null) => void;
+  setTileDragHover: (hover: InsertHover | null) => void;
   insertOnPath: (nodeId: string, edgeId: string) => void;
+  insertOnBundle: (nodeId: string, spec: { role: "merge" | "split"; hostId: string }) => void;
   beginLinkFrom: (sourceId: string) => void;
   completeLinkTo: (targetId: string) => void;
   toggleSelectedDash: () => void;
@@ -932,20 +936,37 @@ export const useStore = create<{
   beginTileDrag: (nodeId) => {
     if (get().present || get().view === ViewMode.Both) return;
     set({
-      interaction: { kind: "tile-drag", nodeId, hoverEdgeId: null },
+      interaction: { kind: "tile-drag", nodeId, hover: null },
       selected: { type: SelectionKind.Node, id: nodeId },
     });
   },
-  setTileDragHover: (edgeId) => {
+  setTileDragHover: (hover) => {
     const { interaction } = get();
     if (interaction.kind !== "tile-drag") return;
-    if (interaction.hoverEdgeId === edgeId) return;
-    set({ interaction: { ...interaction, hoverEdgeId: edgeId } });
+    if (insertHoversEqual(interaction.hover, hover)) return;
+    set({ interaction: { ...interaction, hover } });
   },
   insertOnPath: (nodeId, edgeId) => {
     if (get().present || get().view === ViewMode.Both) return;
     const { workflow } = get();
     const result = insertNodeOnPath(workflow, nodeId, edgeId, get().activePositions());
+    if (!result.ok) {
+      get().setNotice(result.message);
+      set({ interaction: IDLE });
+      return;
+    }
+    get().commit(result.value);
+    playCueWhen(get().soundEnabled, "blip");
+    set({
+      interaction: IDLE,
+      selected: { type: SelectionKind.Node, id: nodeId },
+    });
+    get().requestFocus(nodeId);
+  },
+  insertOnBundle: (nodeId, spec) => {
+    if (get().present || get().view === ViewMode.Both) return;
+    const { workflow } = get();
+    const result = insertNodeOnBundle(workflow, nodeId, spec, get().activePositions());
     if (!result.ok) {
       get().setNotice(result.message);
       set({ interaction: IDLE });

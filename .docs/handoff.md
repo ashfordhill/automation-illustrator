@@ -2378,3 +2378,37 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(improve-48): present icon menu left and Z remove`
 
+## Improvement 47 — insert on merge and split trunks — 2026-09-09
+
+- Starting commit: `710e543f52a162e9591936596d6e1cac896ab6ba` (`feat(improve-48): present icon menu left and Z remove`)
+- Working tree at start: HEAD was `30ee401` (`feat(improve-43): uniform hint keys and longer tick`) with Improvement 48 WIP in the tree. 48 landed as `710e543` during this chat. Untracked elk plans and chrome GIFs stayed outside the commit.
+- GOAL clauses addressed: NG-02, CX-05 (amendment dated 2026-09-09). Document version unchanged.
+- Library research and decisions: no new runtime dependency. Option 1 from the insert-into-fork review. `screenToFlowPosition` must pass `{ snapToGrid: false }` so the 32px grid does not pull the pointer off a short shared trunk onto a unique spine.
+- Files changed:
+  - Graph/commands: `src/workflow/graph.ts` (`retargetOutgoing`), `src/workflow/commands.ts` (`insertNodeOnBundle`)
+  - Hit-test/preview: `src/board/layout/pathHit.ts`, `insertPreview.ts`
+  - Interaction: `src/state/interaction.ts`, `src/state/store.ts`, `src/board/Board.tsx`, `src/board/controls/TileChrome.tsx`, `src/board/routing/FlowArrow.tsx`
+  - Hint/CSS: `src/app/components/CanvasHelper.tsx`, `src/app/styles/tokens.css`
+  - Tests: `graph.test.ts`, `commands.test.ts`, `store.commands.test.ts`, `pathHit.test.ts`, `insertPreview.test.ts`, `App.test.tsx`, `e2e/improve-47-insert-bundle.spec.ts`
+  - Docs: `.docs/GOAL.md`, `.docs/IMPROVEMENTS.md`, `.docs/VISUAL_IMPROVEMENTS.md`, `.docs/visual-improvements/2026-09-09-insert-into-fork.gif`, this handoff entry
+  - Evidence: `.docs/evidence/improve-47-insert-bundle/`
+- Behavior implemented:
+  - Unique Path segments stay single-Path insert.
+  - Drop on a shared merge trunk: restitch T, retarget every incoming Path onto T, then Path `T → U`.
+  - Drop on a shared split trunk: restitch T, Path `S → T`, then T inherits every outgoing Path from S.
+  - If the dragged Tile already sits on a bundled Path, the shared trunk stays a dead zone. No ELK on pointer move.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning). Node 24.
+  - `npm run test:unit` — 41 files, 307 tests pass.
+  - `npm run test:e2e` — `e2e/improve-47-insert-bundle.spec.ts` (4), `e2e/improve-10-drag-preview.spec.ts` (4), `e2e/insert-preview.spec.ts` (2) all pass (10). Chromium via `LD_LIBRARY_PATH` `/home/ash/.local/pw-libs/usr/lib/x86_64-linux-gnu`.
+- Evidence:
+  - `.docs/evidence/improve-47-insert-bundle/merge-hover-1440.png` — Write over the Account # merge; blue bundle band and silhouette (1440×900)
+  - `.docs/evidence/improve-47-insert-bundle/merge-drop-1440.png` — Write sits on the merge trunk before Account # (1440×900)
+  - `.docs/evidence/improve-47-insert-bundle/split-hover-1440.png` — Account # over the Read split trunk (1440×900)
+  - `.docs/evidence/improve-47-insert-bundle/split-drop-1440.png` — Account # between Read and the amount split (1440×900)
+  - `.docs/evidence/improve-47-insert-bundle/merge-hover-1024.png` — merge bundle hover at 1024×768
+- Earlier-slice defects fixed: insert hit-testing used React Flow’s grid snap, so a 32px merge/split trunk scored as a unique Path. Disabled snap for that pointer conversion.
+- Known limitations / follow-ups: Oak Park’s shared trunks are one ELK gutter (~32px). Unique sibling branches stay single-Path insert (Improvement 10). Path-end wobble is still a later improvement.
+- Status: COMPLETE
+- Commit: `feat(improve-47): insert on merge and split trunks`
+

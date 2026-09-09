@@ -303,3 +303,10 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
   ![presenter](.docs/visual-improvements/2026-09-09-presenter.svg)
   ![presenter button mock](.docs/visual-improvements/2026-09-09-presenter-edited.svg)
 
+## 2026-09-09 — insert into a merge fork (shipped)
+
+- Issue: Dropping a Tile on the shared merge T did not make it the new merge target; unique segments still insert only one Path.
+- Resolution: Shipped in `feat(improve-47): insert on merge and split trunks` — bundle drop on the shared trunk; unique segments stay single-Path insert; incident trunks stay a dead zone.
+- Attachments:
+  ![insert into fork](.docs/visual-improvements/2026-09-09-insert-into-fork.gif)
+

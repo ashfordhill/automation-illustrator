@@ -290,7 +290,7 @@ test("tile-drag hover sets insert preview on the lane without mutating the docum
   const edges = useStore.getState().workflow.edges.map((e) => e.id).sort();
   act(() => {
     useStore.getState().beginTileDrag(OAK_PARK_IDS.review);
-    useStore.getState().setTileDragHover(OAK_PARK_IDS.gt);
+    useStore.getState().setTileDragHover({ kind: "path", edgeId: OAK_PARK_IDS.gt });
   });
   expect(host.querySelector('[data-insert-preview="true"]')).not.toBeNull();
   expect(host.querySelector('[data-tile-drag="true"]')).not.toBeNull();

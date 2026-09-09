@@ -147,6 +147,19 @@ export function retargetIncoming(
   return edges.map((e) => (e.target === hostId ? { ...e, target: parentId } : e));
 }
 
+/**
+ * Point every Path that currently leaves `hostId` so it leaves `childId` instead.
+ * No-op when `hostId` has no outgoing Paths.
+ */
+export function retargetOutgoing(
+  edges: EdgeDto[],
+  hostId: string,
+  childId: string,
+): EdgeDto[] {
+  if (!edges.some((e) => e.source === hostId)) return edges;
+  return edges.map((e) => (e.source === hostId ? { ...e, source: childId } : e));
+}
+
 /** Incoming Paths of a tile, top-to-bottom (then left-to-right) by displayed source position. */
 export function incomingSorted(
   nodes: NodeDto[],

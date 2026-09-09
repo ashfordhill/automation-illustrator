@@ -17,9 +17,11 @@ import { useStore } from "../../state/store";
 import { findNode } from "../../workflow/selectors";
 import { nodeCaption } from "../../workflow/types";
 import { useLaneLayoutContext } from "../routing/LaneLayoutContext";
-import { hitPathId, incidentPathIds, skipInsertHover } from "../layout/pathHit";
-import { insertPreviewGeom } from "../layout/insertPreview";
+import type { InsertHover } from "../../state/interaction";
+import { bundleInsertPreviewGeom, insertPreviewGeom } from "../layout/insertPreview";
+import { bundleTrunkPolyline, hitInsertTarget, incidentPathIds } from "../layout/pathHit";
 import { FIELD_RX, STEP_RX, nodeRadius, nodeSize } from "../layout/tileMetrics";
+import { polylineToSvg } from "../routing/polyline";
 import { PathKnotIcon } from "./PathKnotIcon";
 import { DataChip } from "../tiles/DataChip";
 import { previewCenters } from "./plusPreviewLayout";
@@ -525,21 +527,66 @@ function PathPullTab({ nodeId, inbound }: { nodeId: string; inbound: boolean }) 
   );
 }
 
+function previewGeom(
+  layout: NonNullable<ReturnType<typeof useLaneLayoutContext>["layout"]>,
+  hover: InsertHover,
+  tile: { w: number; h: number },
+) {
+  return hover.kind === "path"
+    ? insertPreviewGeom(layout, hover.edgeId, tile)
+    : bundleInsertPreviewGeom(layout, hover.edgeIds, tile);
+}
+
 function InsertSilhouette({ nodeId }: { nodeId: string }) {
   const { layout } = useLaneLayoutContext();
-  const hoverEdgeId = useStore((s) =>
+  const hover = useStore((s) =>
     s.interaction.kind === "tile-drag" && s.interaction.nodeId === nodeId
-      ? s.interaction.hoverEdgeId
+      ? s.interaction.hover
       : null,
   );
   const workflow = useStore((s) => s.workflow);
-  if (!hoverEdgeId || !layout) return null;
+  if (!hover || !layout) return null;
   const node = findNode(workflow, nodeId);
   if (!node) return null;
-  const geom = insertPreviewGeom(layout, hoverEdgeId, nodeSize(node.type));
+  const geom = previewGeom(layout, hover, nodeSize(node.type));
   if (!geom) return null;
+  const bundleRoutes =
+    hover.kind === "bundle"
+      ? hover.edgeIds
+          .map((id) => layout.routes[id])
+          .filter((r): r is NonNullable<(typeof layout.routes)[string]> => Boolean(r && r.length >= 2))
+      : [];
+  const band = hover.kind === "bundle" ? bundleTrunkPolyline(bundleRoutes) : null;
+  const bandBox = band
+    ? {
+        x: Math.min(...band.map((p) => p.x)) - 8,
+        y: Math.min(...band.map((p) => p.y)) - 8,
+        w: Math.max(...band.map((p) => p.x)) - Math.min(...band.map((p) => p.x)) + 16,
+        h: Math.max(...band.map((p) => p.y)) - Math.min(...band.map((p) => p.y)) + 16,
+      }
+    : null;
+  const bandLocal = band && bandBox
+    ? band.map((p) => ({ x: p.x - bandBox.x, y: p.y - bandBox.y }))
+    : null;
   return (
     <ViewportPortal>
+      {bandLocal && bandBox ? (
+        <svg
+          className="insert-bundle-band"
+          aria-hidden
+          width={Math.max(bandBox.w, 16)}
+          height={Math.max(bandBox.h, 16)}
+          style={{
+            position: "absolute",
+            overflow: "visible",
+            left: bandBox.x,
+            top: bandBox.y,
+            pointerEvents: "none",
+          }}
+        >
+          <path className="path-insert-band" d={polylineToSvg(bandLocal)} />
+        </svg>
+      ) : null}
       <div
         className="tile-insert-silhouette"
         data-insert-silhouette="true"
@@ -601,14 +648,6 @@ function TilePickup({
 
   useEffect(() => () => stopGesture.current?.(), []);
 
-  const skipHover = (edgeId: string) => {
-    const doc = useStore.getState().workflow;
-    const lane = layoutRef.current;
-    if (!lane) return true;
-    const edges = [...doc.edges, ...doc.after.extraEdges];
-    return skipInsertHover(lane, incidentPathIds(edges, id))(edgeId);
-  };
-
   const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
     if (disabled || e.button !== 0 || origin.current) return;
     if ((e.target as HTMLElement).closest("button, a, input, textarea")) return;
@@ -635,11 +674,17 @@ function TilePickup({
           rx: live?.rx ?? STEP_RX,
         });
       }
-      const flow = rfRef.current.screenToFlowPosition({ x: ev.clientX, y: ev.clientY });
+      /* Grid snap would pull the pointer off a short merge/split trunk onto a unique spine. */
+      const flow = rfRef.current.screenToFlowPosition(
+        { x: ev.clientX, y: ev.clientY },
+        { snapToGrid: false },
+      );
+      const doc = useStore.getState().workflow;
+      const edges = [...doc.edges, ...doc.after.extraEdges];
       const hover =
         viewRef.current === ViewMode.Both
           ? null
-          : hitPathId(layoutRef.current, flow, skipHover);
+          : hitInsertTarget(layoutRef.current, flow, edges, incidentPathIds(edges, id));
       useStore.getState().setTileDragHover(hover);
       setGhost((g) => (g ? { ...g, x: ev.clientX, y: ev.clientY } : g));
     };
@@ -657,8 +702,10 @@ function TilePickup({
       }
       if (dragging.current) {
         const s = useStore.getState();
-        if (s.interaction.kind === "tile-drag" && s.interaction.hoverEdgeId) {
-          s.insertOnPath(id, s.interaction.hoverEdgeId);
+        if (s.interaction.kind === "tile-drag" && s.interaction.hover) {
+          const hover = s.interaction.hover;
+          if (hover.kind === "path") s.insertOnPath(id, hover.edgeId);
+          else s.insertOnBundle(id, { role: hover.role, hostId: hover.hostId });
         } else {
           s.closeBoardModes();
         }

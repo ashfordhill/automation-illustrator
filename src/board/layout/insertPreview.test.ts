@@ -7,7 +7,7 @@ import { buildElkGraph, laneGraphKey } from "./elkGraph";
 import { toLaneLayout } from "./elkLayout";
 import { measureLabelBox, type LabelBox } from "./labelBox";
 import type { LaneLayout, Rect } from "./laneLayout";
-import { insertPreviewGeom, stubsWithNeighborShift } from "./insertPreview";
+import { bundleInsertPreviewGeom, insertPreviewGeom, stubsWithNeighborShift } from "./insertPreview";
 import { nodeSize, STEP_H, STEP_W, TILE_GAP } from "./tileMetrics";
 
 const elk = new ELK();
@@ -101,4 +101,39 @@ test("Oak Park Enter→Review: stubs stay orthogonal and S shifts left of U", as
   const shiftedEnter = { ...enterRect, x: enterRect.x + geom.shiftS.x, y: enterRect.y + geom.shiftS.y };
   const shiftedReview = { ...reviewRect, x: reviewRect.x + geom.shiftU.x, y: reviewRect.y + geom.shiftU.y };
   expect(intersects(shiftedEnter, shiftedReview)).toBe(false);
+});
+
+test("bundleInsertPreviewGeom sits on the shared inbound merge, not a unique branch", () => {
+  const layout: LaneLayout = {
+    key: "merge",
+    positions: {
+      a: { x: 0, y: 0 },
+      b: { x: 0, y: 200 },
+      c: { x: 400, y: 80 },
+    },
+    routes: {
+      e1: [
+        { x: STEP_W, y: STEP_H / 2 },
+        { x: 200, y: STEP_H / 2 },
+        { x: 200, y: 80 + STEP_H / 2 },
+        { x: 400, y: 80 + STEP_H / 2 },
+      ],
+      e2: [
+        { x: STEP_W, y: 200 + STEP_H / 2 },
+        { x: 200, y: 200 + STEP_H / 2 },
+        { x: 200, y: 80 + STEP_H / 2 },
+        { x: 400, y: 80 + STEP_H / 2 },
+      ],
+    },
+    labels: {},
+    bounds: { x: 0, y: 0, w: 400 + STEP_W, h: 200 + STEP_H },
+  };
+  const geom = bundleInsertPreviewGeom(layout, ["e1", "e2"], { w: STEP_W, h: STEP_H });
+  expect(geom).not.toBeNull();
+  if (!geom) return;
+  const midX = geom.gap.x + geom.gap.w / 2;
+  expect(midX).toBeGreaterThan(200);
+  expect(midX).toBeLessThan(400);
+  expect(orthogonal(geom.leftStub)).toBe(true);
+  expect(orthogonal(geom.rightStub)).toBe(true);
 });

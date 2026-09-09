@@ -961,6 +961,27 @@ Evidence: `.docs/evidence/improve-46-inspector-cluster/`.
 
 ---
 
+# Improvement 47 — insert on merge and split trunks
+
+Approved 2026-09-09. Option 1 from the insert-into-fork review. GIF: [insert into fork](visual-improvements/2026-09-09-insert-into-fork.gif).
+
+## Locked decisions
+
+- Unique Path segments stay single-Path insert (`insertNodeOnPath`).
+- Hovering a shared merge or split trunk is a bundle drop. Merge: restitch T, retarget every incoming Path onto T, then Path `T → U`. Split: restitch T, Path `S → T`, then T inherits every outgoing Path from S.
+- If the dragged Tile already sits on a bundled Path, the shared trunk stays a dead zone (Improvement 10). Unique sibling segments remain droppable.
+- Preview is display-only. No ELK on pointer move. Drop commits, then one derived ELK pass.
+- No new runtime dependency.
+
+## Contract
+
+Append to `## Amendments` in `.docs/GOAL.md`: NG-02, CX-05 as dated 2026-09-09.
+
+Commit: `feat(improve-47): insert on merge and split trunks`.  
+Evidence: `.docs/evidence/improve-47-insert-bundle/`.
+
+---
+
 # Improvement 48 — Present icon, menu left, Z remove, drop Dark and Actors
 
 Approved 2026-09-09. User request with presenter.svg / presenter-edited.svg.

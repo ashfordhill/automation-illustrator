@@ -11,6 +11,7 @@ import {
   outgoingSorted,
   positionOf,
   retargetIncoming,
+  retargetOutgoing,
   validateWorkflow,
   wouldCreateCycle,
 } from "./graph";
@@ -69,8 +70,15 @@ export const MSG = {
   invalidPairings: "Every successor needs at least one incoming Path after removal.",
   insertSelf: "Drop the Node onto a Path that does not already touch it.",
   insertHostGone: "That Path is gone after reconnecting the Node’s old neighborhood.",
+  insertBundleGone: "That merge or split is gone after reconnecting the Node’s old neighborhood.",
   missingPath: "That Path is not on the board.",
 } as const;
+
+/** Shared merge (fan-in) or split (fan-out) trunk used as one insert target. */
+export type BundleInsert = {
+  role: "merge" | "split";
+  hostId: string;
+};
 
 /** Spawn direction: out = child to the right; in = predecessor to the left. */
 export type BranchSide = "out" | "in";
@@ -727,5 +735,104 @@ export function insertNodeOnPath(
   nodes = maybeExclusiveSplit(nodes, rawEdges, nodeId);
   let edges = applyConnectStroke(nodes, rawEdges, liveHost.source, inId, previousOutgoing);
   edges = applyConnectStroke(nodes, edges, nodeId, outId, 0);
+  return succeed({ ...doc, nodes, edges });
+}
+
+/**
+ * Relocate T onto a shared merge or split trunk. Restitch T’s old neighborhood
+ * first, then retarget the bundle: merge = every incoming Path onto T, then
+ * T→U; split = S→T, then T inherits every outgoing Path from S.
+ */
+export function insertNodeOnBundle(
+  doc: WorkflowDoc,
+  nodeId: string,
+  spec: BundleInsert,
+  positions?: PositionMap,
+): CommandResult<WorkflowDoc> {
+  const valid = requireValid(doc);
+  if (!valid.ok) return valid;
+  if (!doc.nodes.some((n) => n.id === nodeId)) {
+    return fail("missing-ref", MSG.missingNode);
+  }
+  if (!doc.nodes.some((n) => n.id === spec.hostId)) {
+    return fail("missing-ref", MSG.missingNode);
+  }
+  if (nodeId === spec.hostId) {
+    return fail("insert-self", MSG.insertSelf);
+  }
+
+  const bundleEdges =
+    spec.role === "merge"
+      ? doc.edges.filter((e) => e.target === spec.hostId)
+      : doc.edges.filter((e) => e.source === spec.hostId);
+  if (bundleEdges.length < 2) {
+    return fail("insert-bundle-gone", MSG.insertBundleGone);
+  }
+  if (bundleEdges.some((e) => e.source === nodeId || e.target === nodeId)) {
+    return fail("insert-self", MSG.insertSelf);
+  }
+
+  const planned = planNodeRemoval(doc, nodeId, positions);
+  if (!planned.ok) return planned;
+
+  const withoutIncident = doc.edges.filter((e) => e.source !== nodeId && e.target !== nodeId);
+  const restitched = applyPairings(doc.nodes, withoutIncident, planned.value.pairings);
+  const liveBundle =
+    spec.role === "merge"
+      ? restitched.filter((e) => e.target === spec.hostId)
+      : restitched.filter((e) => e.source === spec.hostId);
+  if (liveBundle.length < 2) {
+    return fail("insert-bundle-gone", MSG.insertBundleGone);
+  }
+
+  if (spec.role === "merge") {
+    for (const e of liveBundle) {
+      if (wouldCreateCycle(restitched, e.source, nodeId)) {
+        return fail("cycle", MSG.cycle);
+      }
+    }
+    const retargeted = retargetIncoming(restitched, spec.hostId, nodeId);
+    if (retargeted.some((e) => e.source === nodeId && e.target === spec.hostId)) {
+      return fail("duplicate-path", MSG.duplicatePath);
+    }
+    if (wouldCreateCycle(retargeted, nodeId, spec.hostId)) {
+      return fail("cycle", MSG.cycle);
+    }
+    const outId = nid(IdPrefix.Edge);
+    const rawEdges: EdgeDto[] = [
+      ...retargeted,
+      { id: outId, source: nodeId, target: spec.hostId, label: "", dashed: false },
+    ];
+    const nodes = maybeExclusiveSplit(doc.nodes, rawEdges, nodeId);
+    const edges = applyConnectStroke(nodes, rawEdges, nodeId, outId, 0);
+    return succeed({ ...doc, nodes, edges });
+  }
+
+  const retargeted = retargetOutgoing(restitched, spec.hostId, nodeId);
+  const inId = nid(IdPrefix.Edge);
+  if (retargeted.some((e) => e.source === spec.hostId && e.target === nodeId)) {
+    return fail("duplicate-path", MSG.duplicatePath);
+  }
+  if (wouldCreateCycle(restitched, spec.hostId, nodeId)) {
+    return fail("cycle", MSG.cycle);
+  }
+  for (const e of liveBundle) {
+    if (
+      wouldCreateCycle(
+        [...restitched, { id: inId, source: spec.hostId, target: nodeId, label: "" }],
+        nodeId,
+        e.target,
+      )
+    ) {
+      return fail("cycle", MSG.cycle);
+    }
+  }
+  const rawEdges: EdgeDto[] = [
+    ...retargeted,
+    { id: inId, source: spec.hostId, target: nodeId, label: "", dashed: false },
+  ];
+  let nodes = maybeExclusiveSplit(doc.nodes, rawEdges, spec.hostId);
+  nodes = maybeExclusiveSplit(nodes, rawEdges, nodeId);
+  const edges = applyConnectStroke(nodes, rawEdges, spec.hostId, inId, 0);
   return succeed({ ...doc, nodes, edges });
 }

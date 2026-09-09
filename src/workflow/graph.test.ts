@@ -9,6 +9,7 @@ import {
   outgoingSorted,
   removalCandidateIds,
   retargetIncoming,
+  retargetOutgoing,
   rootNodeId,
   sourceNodeIds,
   splitDefaultDashed,
@@ -38,6 +39,20 @@ test("retargetIncoming rewrites Paths into the host onto the parent", () => {
     { id: "e2", source: "m", target: "z", label: "" },
   ]);
   expect(retargetIncoming(edges, "none", "p")).toBe(edges);
+});
+
+test("retargetOutgoing rewrites Paths leaving the host onto the child", () => {
+  const edges: EdgeDto[] = [
+    { id: "e1", source: "s", target: "a", label: "one" },
+    { id: "e2", source: "s", target: "b", label: "two" },
+    { id: "e3", source: "a", target: "z", label: "" },
+  ];
+  expect(retargetOutgoing(edges, "s", "t")).toEqual([
+    { id: "e1", source: "t", target: "a", label: "one" },
+    { id: "e2", source: "t", target: "b", label: "two" },
+    { id: "e3", source: "a", target: "z", label: "" },
+  ]);
+  expect(retargetOutgoing(edges, "none", "t")).toBe(edges);
 });
 
 test("outgoingSorted orders by target y then x", () => {

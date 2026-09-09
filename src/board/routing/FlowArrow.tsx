@@ -174,7 +174,10 @@ export function FlowArrow({
   );
 
   const insertHover = useStore(
-    (s) => s.interaction.kind === "tile-drag" && s.interaction.hoverEdgeId === originId,
+    (s) =>
+      s.interaction.kind === "tile-drag" &&
+      s.interaction.hover?.kind === "path" &&
+      s.interaction.hover.edgeId === originId,
   );
   const hideFullStroke = insertHover && !restitch;
 

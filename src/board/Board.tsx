@@ -32,7 +32,7 @@ import { projectLane } from "../state/projection";
 import { useStore } from "../state/store";
 import { edgeTypes, nodeTypes, type Lane } from "./nodes/reactFlowRegistry";
 import { GRID, nodeSize } from "./layout/tileMetrics";
-import { insertPreviewGeom } from "./layout/insertPreview";
+import { bundleInsertPreviewGeom, insertPreviewGeom } from "./layout/insertPreview";
 import { incidentPathIds } from "./layout/pathHit";
 import { findNode } from "../workflow/selectors";
 import { measureLabelBox, type LabelBox } from "./layout/labelBox";
@@ -129,7 +129,7 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
   const shownRef = useRef(shown);
   shownRef.current = shown;
 
-  const insertHoverId = interaction.kind === "tile-drag" ? interaction.hoverEdgeId : null;
+  const insertHover = interaction.kind === "tile-drag" ? interaction.hover : null;
   const dragNodeId = interaction.kind === "tile-drag" ? interaction.nodeId : null;
   const fadeInsertPath = useMemo(() => {
     if (!dragNodeId) return (_id: string) => false;
@@ -142,14 +142,24 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
     typeof window.matchMedia === "function" &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const insertPreview = (() => {
-    if (!insertHoverId || interaction.kind !== "tile-drag" || !shown) return null;
-    const edge = projection.edges.find((e) => e.id === insertHoverId || e.originId === insertHoverId);
-    if (!edge) return null;
+    if (!insertHover || interaction.kind !== "tile-drag" || !shown) return null;
     const drag = findNode(workflow, interaction.nodeId);
     if (!drag) return null;
-    const geom = insertPreviewGeom(shown, edge.id, tileSizes[interaction.nodeId] ?? nodeSize(drag.type));
+    const tile = tileSizes[interaction.nodeId] ?? nodeSize(drag.type);
+    if (insertHover.kind === "path") {
+      const edge = projection.edges.find(
+        (e) => e.id === insertHover.edgeId || e.originId === insertHover.edgeId,
+      );
+      if (!edge) return null;
+      const geom = insertPreviewGeom(shown, edge.id, tile);
+      if (!geom) return null;
+      return { geom, sourceId: edge.source, targetId: edge.target };
+    }
+    const geom = bundleInsertPreviewGeom(shown, insertHover.edgeIds, tile);
     if (!geom) return null;
-    return { geom, sourceId: edge.source, targetId: edge.target };
+    return insertHover.role === "split"
+      ? { geom, sourceId: insertHover.hostId, targetId: null as string | null }
+      : { geom, sourceId: null as string | null, targetId: insertHover.hostId };
   })();
 
   /* First nonempty layout: fit once unless this lane already has a saved viewport.
@@ -386,8 +396,10 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
     const stretching = stretchIds.has(e.id);
     const isSelected = selected?.type === SelectionKind.Edge && selected.id === e.originId;
     const dotted = pathIsDotted(workflow, e.originId);
-    const insertHover =
-      interaction.kind === "tile-drag" && interaction.hoverEdgeId === e.originId;
+    const insertHoverPath =
+      interaction.kind === "tile-drag" &&
+      interaction.hover?.kind === "path" &&
+      interaction.hover.edgeId === e.originId;
     const fadeIncident = Boolean(dragNodeId) && fadeInsertPath(e.id);
     const rfEdge: Edge<FlowPathData> = {
       id: e.id,
@@ -397,7 +409,7 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
       selectable: editing && interaction.kind !== "remove-preview" && interaction.kind !== "tile-drag",
       selected: isSelected,
       className: [
-        insertHover ? "path-insert-hover" : undefined,
+        insertHoverPath ? "path-insert-hover" : undefined,
         fadeIncident ? "path-drag-incident" : undefined,
         dotted ? "is-path-dotted" : "is-path-solid",
       ]
@@ -460,7 +472,9 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
       className="board-lane"
       data-layout={phase}
       data-layout-error={error ? "true" : undefined}
-      data-insert-preview={insertHoverId ? "true" : undefined}
+      data-insert-preview={insertHover ? "true" : undefined}
+      data-insert-kind={insertHover?.kind}
+      data-insert-bundle={insertHover?.kind === "bundle" ? insertHover.role : undefined}
       data-tile-drag={dragNodeId ? "true" : undefined}
       data-editable={editing && view !== ViewMode.Both ? "true" : undefined}
       data-lane={lane}

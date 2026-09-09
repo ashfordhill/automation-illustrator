@@ -12,11 +12,15 @@ export type TileTextField = "actor-name" | "actor-role" | "title" | "detail";
 /** Pie around a Step icon: Type, Who, or Robot Type (LLM / Agent / Script). */
 export type TilePieKind = "type" | "who" | "robot-kind";
 
+export type InsertHover =
+  | { kind: "path"; edgeId: string }
+  | { kind: "bundle"; role: "merge" | "split"; hostId: string; edgeIds: string[] };
+
 export type Interaction =
   | { kind: "idle" }
   | { kind: "plus-pull"; sourceId: string }
   | { kind: "path-pull"; sourceId: string; hoverTargetId: string | null; inbound: boolean }
-  | { kind: "tile-drag"; nodeId: string; hoverEdgeId: string | null }
+  | { kind: "tile-drag"; nodeId: string; hover: InsertHover | null }
   | { kind: "connect-existing"; sourceId: string }
   | { kind: "remove-preview"; plan: RemovalPlan }
   | { kind: "path-label-edit"; edgeId: string }
@@ -25,6 +29,18 @@ export type Interaction =
   | { kind: "tile-pie"; nodeId: string; pie: TilePieKind; x: number; y: number };
 
 export const IDLE: Interaction = { kind: "idle" };
+
+export function insertHoversEqual(a: InsertHover | null, b: InsertHover | null): boolean {
+  if (a === b) return true;
+  if (!a || !b || a.kind !== b.kind) return false;
+  if (a.kind === "path" && b.kind === "path") return a.edgeId === b.edgeId;
+  return a.kind === "bundle" && b.kind === "bundle" && a.role === b.role && a.hostId === b.hostId;
+}
+
+export function insertHoverEdgeIds(hover: InsertHover | null): string[] {
+  if (!hover) return [];
+  return hover.kind === "path" ? [hover.edgeId] : hover.edgeIds;
+}
 
 export type DepartingTile = {
   node: NodeDto;

@@ -4,7 +4,7 @@
  */
 import type { Point } from "../../workflow/types";
 import type { LaneLayout, Rect } from "./laneLayout";
-import { longestMidSegment } from "./pathHit";
+import { bundleTrunkPolyline, longestMidSegment } from "./pathHit";
 import { FIELD_H, FIELD_W, STEP_H, STEP_W, TILE_GAP } from "./tileMetrics";
 
 export type InsertPreviewGeom = {
@@ -174,14 +174,13 @@ function gapFaces(
   return b.y >= a.y ? { entry: top, exit: bottom } : { entry: bottom, exit: top };
 }
 
-export function insertPreviewGeom(
+export function insertPreviewOnRoute(
   layout: LaneLayout,
-  edgeId: string,
+  route: Point[],
   tile: { w: number; h: number },
   tileGap: number = TILE_GAP,
 ): InsertPreviewGeom | null {
-  const route = layout.routes[edgeId];
-  if (!route || route.length < 2) return null;
+  if (route.length < 2) return null;
   const mid = longestMidSegment(route);
   if (!mid) return null;
   const i = segmentIndex(route, mid.a, mid.b);
@@ -221,9 +220,39 @@ export function insertPreviewGeom(
       shiftS = maxShift(sId, { x: 0, y: sAbove ? -mag : mag }, rects);
       shiftU = maxShift(uId, { x: 0, y: sAbove ? mag : -mag }, rects);
     }
+  } else if (sId && rects[sId]) {
+    shiftS = maxShift(sId, { x: -mag, y: 0 }, rects);
+  } else if (uId && rects[uId]) {
+    shiftU = maxShift(uId, { x: mag, y: 0 }, rects);
   }
 
   return { gap, leftStub, rightStub, shiftS, shiftU };
+}
+
+export function insertPreviewGeom(
+  layout: LaneLayout,
+  edgeId: string,
+  tile: { w: number; h: number },
+  tileGap: number = TILE_GAP,
+): InsertPreviewGeom | null {
+  const route = layout.routes[edgeId];
+  if (!route || route.length < 2) return null;
+  return insertPreviewOnRoute(layout, route, tile, tileGap);
+}
+
+/** Landing gap on the shared merge/split run. Unique branches stay attached. */
+export function bundleInsertPreviewGeom(
+  layout: LaneLayout,
+  edgeIds: string[],
+  tile: { w: number; h: number },
+  tileGap: number = TILE_GAP,
+): InsertPreviewGeom | null {
+  const routes = edgeIds
+    .map((id) => layout.routes[id])
+    .filter((r): r is Point[] => Boolean(r && r.length >= 2));
+  const shared = bundleTrunkPolyline(routes);
+  if (!shared) return null;
+  return insertPreviewOnRoute(layout, shared, tile, tileGap);
 }
 
 /** Add S/U visual shift to stub endpoints so handles stay glued to the Path. */
