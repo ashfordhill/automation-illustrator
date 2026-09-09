@@ -25,13 +25,14 @@ function InspectorHeader({
   removeLabel,
   onRemove,
 }: {
-  title: string;
+  title?: string;
   removeLabel?: string;
   onRemove?: () => void;
 }) {
+  if (!title && !(removeLabel && onRemove)) return null;
   return (
-    <div className="inspector-header">
-      <Text fw={800}>{title}</Text>
+    <div className={`inspector-header${title ? "" : " is-tools"}`}>
+      {title ? <Text fw={800}>{title}</Text> : null}
       {removeLabel && onRemove ? (
         <Tooltip label={removeLabel}>
           <ActionIcon
@@ -139,13 +140,9 @@ export function DetailsPanel() {
     return (
       <Stack gap="xs" p="sm" className="chrome-hide">
         <InspectorHeader
-          title="Step"
           removeLabel={showRemove ? "Remove Step" : undefined}
           onRemove={showRemove ? () => useStore.getState().removeTarget(n.id) : undefined}
         />
-        <Text size="sm" fw={700}>
-          Type
-        </Text>
         <TypeButtons
           value={n.stepKind}
           disabled={readOnly}
@@ -169,9 +166,6 @@ export function DetailsPanel() {
             onChange={(detail) => useStore.getState().updateNode(n.id, { detail })}
           />
         </div>
-        <Text size="sm" fw={700}>
-          Who
-        </Text>
         <WhoButtons
           actors={workflow.actors}
           value={actorId}

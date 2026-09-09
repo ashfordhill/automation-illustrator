@@ -2254,3 +2254,19 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(improve-44): compact inspector Name and default Human`
 
+## Improvement 44 — correction 1 — 2026-09-09
+
+- Requested: Drop the Step, Type, and Who captions so the inspector is self-explanatory and shorter.
+- Changed:
+  - `src/app/inspector/SelectedItemForm.tsx` — Step inspector has no Step heading (trash stays top-right); no Type or Who captions. Data still shows Data. Type keypad and Who keys keep accessible names Type and Who.
+  - `src/app/styles/tokens.css` — `.inspector-header.is-tools` right-aligns the trash.
+  - Tests: `src/app/App.test.tsx`, `e2e/improve-44-inspector-compact.spec.ts`
+  - Docs: `.docs/GOAL.md` (NA-07), `.docs/IMPROVEMENTS.md`, `.docs/VISUAL_IMPROVEMENTS.md`, `.docs/visual-improvements/2026-09-09-inspector-step-type-who-labels.png`, this handoff entry
+  - Evidence: `.docs/evidence/improve-44-inspector-labels/`
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning). Node 24.
+  - `npm run test:unit` — 41 files, 287 tests pass.
+  - `npm run test:e2e` — 14 passed (`improve-44-inspector-compact`, `inspector`, `improve-41-who-center`, `improve-33-compare-readonly`) on port 4191. Chromium via `LD_LIBRARY_PATH` `/home/ash/.local/pw-libs/usr/lib/x86_64-linux-gnu`. Untracked delete-parent spec was asided.
+- Status: COMPLETE
+- Commit: `feat(improve-44): drop Step Type Who captions`
+

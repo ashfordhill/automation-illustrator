@@ -28,9 +28,13 @@ test.describe("Improvement 44 — Human name and compact Name/Details", () => {
     await expect(aside(page).locator(".inspector-field-prefix")).toHaveText("Read");
     await expect(aside(page).getByText("Name", { exact: true })).toHaveCount(0);
     await expect(aside(page).getByText("Details", { exact: true })).toHaveCount(0);
+    await expect(aside(page).getByText("Step", { exact: true })).toHaveCount(0);
+    await expect(aside(page).getByText("Type", { exact: true })).toHaveCount(0);
+    await expect(aside(page).getByText("Who", { exact: true })).toHaveCount(0);
     await expect(details).toHaveValue("");
 
     await capturePage(page, `${EVIDENCE}/step-fields-1440.png`);
+    await capturePage(page, ".docs/evidence/improve-44-inspector-labels/step-no-captions-1440.png");
   });
 
   test("Add human is named Human with no number", async ({ page }) => {
@@ -55,5 +59,6 @@ test.describe("Improvement 44 min-width", () => {
     await expect(aside(page).locator(".inspector-field-prefix")).toHaveText("Read");
     await expect(aside(page).getByLabel("Name")).toHaveValue("invoice.pdf");
     await capturePage(page, `${EVIDENCE}/step-fields-1024.png`);
+    await capturePage(page, ".docs/evidence/improve-44-inspector-labels/step-no-captions-1024.png");
   });
 });

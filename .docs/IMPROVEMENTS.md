@@ -893,3 +893,23 @@ Append to `## Amendments` in `.docs/GOAL.md`: NA-01, NA-07 as dated 2026-09-09.
 Commit: `feat(improve-44): compact inspector Name and default Human`.  
 Evidence: `.docs/evidence/improve-44-inspector-compact/`.
 
+---
+
+# Improvement 44 correction 1 — drop Step / Type / Who captions
+
+Approved 2026-09-09. Step inspector still printed Step, Type, and Who above the keypad and actor keys.
+
+## Locked decisions
+
+- No visible Step, Type, or Who captions. The Type keypad and Who keys stay. Trash stays top-right.
+- Accessible names remain Type (group), Who (group), and Remove Step.
+- Data still shows a Data heading. Path is unchanged.
+- No new runtime dependency.
+
+## Contract
+
+Append to `## Amendments` in `.docs/GOAL.md`: NA-07 as dated 2026-09-09.
+
+Commit: `feat(improve-44): drop Step Type Who captions`.  
+Evidence: `.docs/evidence/improve-44-inspector-labels/`.
+

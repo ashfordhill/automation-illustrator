@@ -1349,6 +1349,11 @@ body.is-tile-dragging * {
   gap: 8px;
 }
 
+.inspector-header.is-tools {
+  justify-content: flex-end;
+  min-height: 0;
+}
+
 .inspector-header .mantine-Text-root {
   margin: 0;
 }

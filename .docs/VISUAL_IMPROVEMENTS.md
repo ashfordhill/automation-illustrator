@@ -259,3 +259,10 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 - Attachments:
   ![inspector name details compact](.docs/visual-improvements/2026-09-09-inspector-name-details-compact.png)
 
+## 2026-09-09 — inspector Step Type Who labels
+
+- Issue: Step, Type, and Who captions still sit above the keypad and actor keys.
+- Resolution: Shipped in `feat(improve-44): drop Step Type Who captions` — those words are gone; the keypad, fields, Who keys, and trash remain.
+- Attachments:
+  ![inspector step type who labels](.docs/visual-improvements/2026-09-09-inspector-step-type-who-labels.png)
+

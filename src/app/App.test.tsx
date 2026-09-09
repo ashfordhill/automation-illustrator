@@ -191,7 +191,7 @@ test("sound toggle is off by default and Present restores the inspector", () => 
   act(() => {
     useStore.getState().select({ type: SelectionKind.Node, id: OAK_PARK_IDS.read });
   });
-  expect(host.textContent).toContain("Type");
+  expect(host.querySelector('[aria-label="Type"]')).not.toBeNull();
   act(() => {
     useStore.getState().setPresent(true);
   });
@@ -347,4 +347,11 @@ test("Step Name uses a Type prefix and drops Name/Details captions", () => {
   );
   expect(captions).not.toContain("Name");
   expect(captions).not.toContain("Details");
+  expect(rail?.querySelector(".inspector-header .mantine-Text-root")).toBeNull();
+  expect([... (rail?.querySelectorAll(".mantine-Text-root") ?? [])].map((el) => el.textContent?.trim())).not.toContain(
+    "Type",
+  );
+  expect([... (rail?.querySelectorAll(".mantine-Text-root") ?? [])].map((el) => el.textContent?.trim())).not.toContain(
+    "Who",
+  );
 });
