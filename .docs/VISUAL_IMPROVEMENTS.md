@@ -266,3 +266,10 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 - Attachments:
   ![inspector step type who labels](.docs/visual-improvements/2026-09-09-inspector-step-type-who-labels.png)
 
+## 2026-09-09 — Delete should keep a parent selected
+
+- Issue: Deleting a Tile clears selection, so Delete cannot walk a row.
+- Resolution: Shipped in `feat(improve-45): select parent after deleting a Tile` — after remove, the parent stays selected (last Tile still clears).
+- Attachments:
+  ![delete selects parent](.docs/visual-improvements/2026-09-09-delete-selects-parent.gif)
+

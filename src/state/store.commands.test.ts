@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import * as cues from "../app/sound/cues";
+import { DemoId } from "../demos/catalog";
 import { OAK_PARK_IDS } from "../demos/oakParkInvoice";
+import { MAILROOM_IDS } from "../demos/robotMailroom";
 import { ColorScheme, SelectionKind, ViewMode, WorkflowNodeKind } from "../workflow/catalogs";
 import { MSG } from "../workflow/commands";
 import { validateWorkflow } from "../workflow/graph";
@@ -160,6 +162,7 @@ test("1:N / N:1 auto removal restitches after confirm; M:N opens pairing preview
   expect(useStore.getState().interaction.kind).toBe("remove-preview");
   useStore.getState().confirmRemove();
   expect(useStore.getState().workflow.nodes.some((n) => n.id === "n")).toBe(false);
+  expect(useStore.getState().selected).toEqual({ type: SelectionKind.Node, id: "a" });
   expect(validateWorkflow(useStore.getState().workflow)).toEqual([]);
 });
 
@@ -253,6 +256,7 @@ test("a source with one child can be removed; the child remains", () => {
   useStore.getState().removeTarget(stepId);
   expect(useStore.getState().workflow.nodes.some((n) => n.id === stepId)).toBe(false);
   expect(useStore.getState().workflow.nodes.some((n) => n.id === child)).toBe(true);
+  expect(useStore.getState().selected).toEqual({ type: SelectionKind.Node, id: child });
   expect(validateWorkflow(useStore.getState().workflow)).toEqual([]);
 });
 
@@ -347,4 +351,30 @@ test("Path connect plays zip; Tile spawn keeps the blip (SH-04)", () => {
   expect(spy).toHaveBeenCalledWith(true, "blip");
   expect(spy).not.toHaveBeenCalledWith(true, "zip");
   spy.mockRestore();
+});
+
+test("deleting a Tile selects its parent so Delete can walk the chain", () => {
+  const s = useStore.getState();
+  s.select({ type: SelectionKind.Node, id: OAK_PARK_IDS.review3 });
+  s.deleteSelection();
+  expect(useStore.getState().workflow.nodes.some((n) => n.id === OAK_PARK_IDS.review3)).toBe(false);
+  expect(useStore.getState().selected).toEqual({ type: SelectionKind.Node, id: OAK_PARK_IDS.review2 });
+  useStore.getState().deleteSelection();
+  expect(useStore.getState().selected).toEqual({ type: SelectionKind.Node, id: OAK_PARK_IDS.review });
+  useStore.getState().select({ type: SelectionKind.Node, id: OAK_PARK_IDS.acct });
+  useStore.getState().deleteSelection();
+  expect(useStore.getState().selected).toEqual({ type: SelectionKind.Node, id: OAK_PARK_IDS.web });
+});
+
+test("deleting an After-only Tile selects its parent on the After graph", () => {
+  const s = useStore.getState();
+  s.requestDemo(DemoId.RobotMailroom);
+  s.confirmReplaceDiscard();
+  s.setView(ViewMode.After);
+  s.select({ type: SelectionKind.Node, id: MAILROOM_IDS.receipt });
+  s.deleteSelection();
+  expect(useStore.getState().workflow.after.extraNodes.some((n) => n.id === MAILROOM_IDS.receipt)).toBe(
+    false,
+  );
+  expect(useStore.getState().selected).toEqual({ type: SelectionKind.Node, id: MAILROOM_IDS.route });
 });

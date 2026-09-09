@@ -58,6 +58,8 @@ import {
   fanPairings,
   insertNodeOnPath,
   nearestPairings,
+  neighborhoodOf,
+  nextTileAfterRemoval,
   pairingBetween,
   planNodeRemoval,
   removalNeighborhood,
@@ -1353,19 +1355,14 @@ export const useStore = create<{
 function applyPlannedRemoval(
   get: () => {
     workflow: WorkflowDoc;
+    past: WorkflowDoc[];
+    recovery: RecoveryState | null;
     actorFor: (stepId: string) => ActorDto | undefined;
-    commit: (next: WorkflowDoc) => void;
     setNotice: (message: string | null) => void;
     soundEnabled: boolean;
     activePositions: () => PositionMap | undefined;
   },
-  set: (partial: {
-    interaction: Interaction;
-    selected: Selection;
-    departing: DepartingTile | null;
-    notice: string | null;
-    noticeId?: number;
-  }) => void,
+  set: (partial: Record<string, unknown>) => void,
   plan: RemovalPlan,
   pairings: RemovalPairing[],
 ) {
@@ -1386,55 +1383,77 @@ function applyPlannedRemoval(
     get().setNotice(applied.message);
     return;
   }
-  const before = get().workflow;
-  get().commit(applied.value);
-  if (get().workflow === before) return;
-  playCueWhen(get().soundEnabled, "pop");
-  const overlay = plan.overlayEffects.notices[0] ?? null;
-  const reduced = prefersReducedMotion();
-  set({
-    interaction: IDLE,
-    selected: null,
-    departing: reduced || !node ? null : { node, actor },
-    notice: overlay,
+  commitRemovalKeepingNeighbor(get, set, applied.value, predecessorIds, successorIds, {
+    node,
+    actor,
+    notice: plan.overlayEffects.notices[0] ?? null,
   });
 }
 
 function applyAfterOnlyPlanned(
   get: () => {
     workflow: WorkflowDoc;
+    past: WorkflowDoc[];
+    recovery: RecoveryState | null;
     actorFor: (stepId: string) => ActorDto | undefined;
-    commit: (next: WorkflowDoc) => void;
     setNotice: (message: string | null) => void;
     soundEnabled: boolean;
     activePositions: () => PositionMap | undefined;
   },
-  set: (partial: {
-    interaction: Interaction;
-    selected: Selection;
-    departing: DepartingTile | null;
-    notice: string | null;
-  }) => void,
+  set: (partial: Record<string, unknown>) => void,
   plan: RemovalPlan,
   pairings: RemovalPairing[],
 ) {
   const { workflow } = get();
   const node = findNode(workflow, plan.nodeId);
   const actor = node && isStepNode(node) ? get().actorFor(node.id) : undefined;
-  const applied = applyAfterOnlyRemoval(workflow, plan, pairings, get().activePositions());
+  const positions = get().activePositions();
+  const graph = afterGraph(workflow);
+  const { predecessorIds, successorIds } = neighborhoodOf(
+    graph.nodes,
+    graph.edges,
+    plan.nodeId,
+    positions,
+  );
+  const applied = applyAfterOnlyRemoval(workflow, plan, pairings, positions);
   if (!applied.ok) {
     get().setNotice(applied.message);
     return;
   }
-  const before = get().workflow;
-  get().commit(applied.value);
-  if (get().workflow === before) return;
+  commitRemovalKeepingNeighbor(get, set, applied.value, predecessorIds, successorIds, {
+    node,
+    actor,
+    notice: null,
+  });
+}
+
+/** History + parent selection in one set() so RF cannot clear the board between commit and select. */
+function commitRemovalKeepingNeighbor(
+  get: () => {
+    workflow: WorkflowDoc;
+    past: WorkflowDoc[];
+    recovery: RecoveryState | null;
+    soundEnabled: boolean;
+  },
+  set: (partial: Record<string, unknown>) => void,
+  next: WorkflowDoc,
+  predecessorIds: string[],
+  successorIds: string[],
+  departing: { node?: NodeDto; actor: ActorDto | undefined; notice: string | null },
+) {
+  const { workflow, past, recovery } = get();
+  const persistStatus = persistIfAllowed(next, recovery);
+  const stacks = commitStructural(workflow, past, next);
+  const nextId = nextTileAfterRemoval(next, predecessorIds, successorIds);
   playCueWhen(get().soundEnabled, "pop");
   const reduced = prefersReducedMotion();
   set({
+    ...stacks,
+    persistStatus,
     interaction: IDLE,
-    selected: null,
-    departing: reduced || !node ? null : { node, actor },
-    notice: null,
+    selected: nextId ? { type: SelectionKind.Node, id: nextId } : null,
+    departing: reduced || !departing.node ? null : { node: departing.node, actor: departing.actor },
+    notice: departing.notice,
+    focusId: nextId,
   });
 }

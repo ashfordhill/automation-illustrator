@@ -15,6 +15,7 @@ import {
   wouldCreateCycle,
 } from "./graph";
 import { nid } from "./ids";
+import { findNode } from "./selectors";
 import {
   emptyAfterOverlay,
   isDataFieldNode,
@@ -205,16 +206,39 @@ function collapsedPairing(
   };
 }
 
-/** Incident Paths and unique neighbor ids for a Node (WG-10 / WG-11). */
-export function removalNeighborhood(doc: WorkflowDoc, nodeId: string, positions?: PositionMap) {
-  const incoming = incomingSorted(doc.nodes, doc.edges, nodeId, positions);
-  const outgoing = outgoingSorted(doc.nodes, doc.edges, nodeId, positions);
+/** Incident Paths and unique neighbor ids on any Node/Path lists (base or After graph). */
+export function neighborhoodOf(
+  nodes: NodeDto[],
+  edges: EdgeDto[],
+  nodeId: string,
+  positions?: PositionMap,
+) {
+  const incoming = incomingSorted(nodes, edges, nodeId, positions);
+  const outgoing = outgoingSorted(nodes, edges, nodeId, positions);
   return {
     incoming,
     outgoing,
     predecessorIds: uniqueIds(incoming, "source"),
     successorIds: uniqueIds(outgoing, "target"),
   };
+}
+
+/** Incident Paths and unique neighbor ids for a Node (WG-10 / WG-11). */
+export function removalNeighborhood(doc: WorkflowDoc, nodeId: string, positions?: PositionMap) {
+  return neighborhoodOf(doc.nodes, doc.edges, nodeId, positions);
+}
+
+/**
+ * Tile to keep selected after a remove: parent first (incoming order), else a remaining
+ * successor so a source delete does not clear the board, else none (empty board).
+ */
+export function nextTileAfterRemoval(
+  remaining: WorkflowDoc,
+  predecessorIds: string[],
+  successorIds: string[],
+): string | null {
+  const alive = (id: string) => Boolean(findNode(remaining, id));
+  return predecessorIds.find(alive) ?? successorIds.find(alive) ?? null;
 }
 
 /** WG-12 / PC-04 pairing for one predecessor → successor through a removed Node. */

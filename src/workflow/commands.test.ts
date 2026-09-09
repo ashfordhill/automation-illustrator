@@ -12,6 +12,7 @@ import {
   planNodeRemoval,
   pruneAfterOverlay,
   insertNodeOnPath,
+  nextTileAfterRemoval,
   removePath,
   canRemovePath,
   validatePairings,
@@ -818,4 +819,27 @@ test("insertNodeOnPath can move a source onto a downstream Path; rejects self-dr
   const missing = insertNodeOnPath(board, "a", "nope");
   expect(missing.ok).toBe(false);
   if (!missing.ok) expect(missing.message).toBe(MSG.missingPath);
+});
+
+test("nextTileAfterRemoval prefers the parent, then a remaining child, else none", () => {
+  const chain = doc(
+    [step("r"), step("a", 0, 40), step("leaf", 0, 80)],
+    [path("e1", "r", "a"), path("e2", "a", "leaf")],
+  );
+  const withoutLeaf = {
+    ...chain,
+    nodes: chain.nodes.filter((n) => n.id !== "leaf"),
+    edges: chain.edges.filter((e) => e.target !== "leaf"),
+  };
+  expect(nextTileAfterRemoval(withoutLeaf, ["a"], [])).toBe("a");
+
+  const withoutRoot = {
+    ...chain,
+    nodes: chain.nodes.filter((n) => n.id !== "r"),
+    edges: chain.edges.filter((e) => e.source !== "r"),
+  };
+  expect(nextTileAfterRemoval(withoutRoot, [], ["a"])).toBe("a");
+
+  const empty = doc([], []);
+  expect(nextTileAfterRemoval(empty, ["r"], ["a"])).toBeNull();
 });

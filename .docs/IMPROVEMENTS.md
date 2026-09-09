@@ -913,3 +913,27 @@ Append to `## Amendments` in `.docs/GOAL.md`: NA-07 as dated 2026-09-09.
 Commit: `feat(improve-44): drop Step Type Who captions`.  
 Evidence: `.docs/evidence/improve-44-inspector-labels/`.
 
+---
+
+# Improvement 45 — Delete a Tile selects its parent
+
+Approved 2026-09-09. After removing a Tile, selection used to clear, so Delete could not walk a chain.
+
+## Locked decisions
+
+- A successful Tile remove (X / Delete / inspector trash / right-click Delete) selects the **parent**: the first remaining predecessor by displayed incoming order.
+- Repeated Delete therefore peels a row from the leaf toward the source.
+- Several parents (fan-in): the top incoming Tile wins.
+- A source with remaining successors selects the first remaining successor so selection does not vanish on a leftover chain.
+- Removing the last Tile still clears selection (empty board).
+- Blocked removes keep the current Tile selected. After-only removes use the After graph. M:N confirm uses the same parent rule.
+- Document and RF selection update in the same store set so the board cannot flash empty.
+- No new runtime dependency.
+
+## Contract
+
+Append to `## Amendments` in `.docs/GOAL.md`: CX-07, AQ-03 as dated 2026-09-09.
+
+Commit: `feat(improve-45): select parent after deleting a Tile`.  
+Evidence: `.docs/evidence/improve-45-delete-parent/`.
+

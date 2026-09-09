@@ -2270,3 +2270,30 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(improve-44): drop Step Type Who captions`
 
+## Improvement 45 — Delete a Tile selects its parent — 2026-09-09
+
+- Starting commit: `9f3ac7df598ec0f510ed9db4a34f3be8e6d7cf0e` (`feat(improve-44): drop Step Type Who captions`)
+- Working tree at start: not clean vs improve-44. Concurrent inspector-caption work landed as 44 correction 1 while this delete-parent change was in progress; source was re-applied on that HEAD.
+- GOAL clauses addressed: CX-07, AQ-03 (amendment dated 2026-09-09). Document version unchanged.
+- Library research and decisions: no new runtime dependency. Parent is the first remaining predecessor from `incomingSorted` (displayed y, then x, then id). History commit and the new selection share one Zustand `set` so React Flow cannot treat the removed Tile as a deselect.
+- Files changed:
+  - Commands: `src/workflow/commands.ts` (`neighborhoodOf`, `nextTileAfterRemoval`)
+  - Store: `src/state/store.ts` (`commitRemovalKeepingNeighbor` for base and After-only)
+  - Tests: `src/workflow/commands.test.ts`, `src/state/store.commands.test.ts`, `e2e/improve-45-delete-parent.spec.ts`
+  - Docs: `.docs/GOAL.md`, `.docs/IMPROVEMENTS.md`, `.docs/VISUAL_IMPROVEMENTS.md`, `.docs/visual-improvements/2026-09-09-delete-selects-parent.gif`, this handoff entry
+  - Evidence: `.docs/evidence/improve-45-delete-parent/`
+- Behavior implemented:
+  - After a successful Tile remove, the parent stays selected so Delete can walk a row.
+  - Fan-in picks the top incoming Tile. A source with leftover children selects the first remaining successor. The last Tile still clears selection.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning). Node 24.
+  - `npm run test:unit` — 41 files, 290 tests pass.
+  - `npm run test:e2e` — `e2e/improve-45-delete-parent.spec.ts` (2) and `e2e/commands.spec.ts` (4) all pass (6). Chromium via `LD_LIBRARY_PATH` `/home/ash/.local/pw-libs/usr/lib/x86_64-linux-gnu`.
+- Evidence:
+  - `.docs/evidence/improve-45-delete-parent/parent-selected-1440.png` — Delete on the leaf Review manager; Jack / supervisor remains selected (1440×900)
+  - `.docs/evidence/improve-45-delete-parent/parent-selected-1024.png` — same at 1024×768
+- Earlier-slice defects fixed: none. A two-step commit-then-select left a frame where the removed Tile was still the selection target, which could clear the board under load.
+- Known limitations / follow-ups: Full e2e suite was not re-run in this chat after concurrent 43/44 landings to avoid capturePage overwriting other evidence. Path-end wobble is still a later improvement.
+- Status: COMPLETE
+- Commit: `feat(improve-45): select parent after deleting a Tile`
+
