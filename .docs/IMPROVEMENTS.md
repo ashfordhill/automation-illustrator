@@ -872,3 +872,24 @@ No GOAL amendment. P-01 / P-06 already cover the quiet chunky hint strip.
 Commit: `feat(improve-43): restyle spawn hint compass`.  
 Evidence: `.docs/evidence/improve-43-spawn-compass/`.
 
+---
+
+# Improvement 44 — Human default name and compact Name/Details
+
+Approved 2026-09-09. Add human was `Person` plus a random number. Step inspector Name and Details each had a caption above the field.
+
+## Locked decisions
+
+- New Humans are named **Human** (no number). The name stays editable. Duplicate names are allowed; color distinguishes them.
+- Step Name has no “Name” caption. The box shows the Type word on the left (Search, Read, …) and an underline for the title. Other has no prefix.
+- Step Details has no “Details” caption: empty rounded box.
+- Accessible names stay Name and Details. Manage actors Name uses the same compact box (no Type prefix).
+- No new runtime dependency.
+
+## Contract
+
+Append to `## Amendments` in `.docs/GOAL.md`: NA-01, NA-07 as dated 2026-09-09.
+
+Commit: `feat(improve-44): compact inspector Name and default Human`.  
+Evidence: `.docs/evidence/improve-44-inspector-compact/`.
+

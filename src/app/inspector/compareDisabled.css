@@ -10,3 +10,7 @@
   opacity: 0.55;
   cursor: default;
 }
+
+.details-rail-body .inspector-field.is-off :is(input, textarea):disabled {
+  opacity: 1;
+}

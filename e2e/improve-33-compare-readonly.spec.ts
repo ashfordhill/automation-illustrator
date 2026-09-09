@@ -30,8 +30,8 @@ test.describe("Improvement 33 — Compare greys Who and fields", () => {
     await expect(details).toBeDisabled();
     await expect(typeOn).toHaveCSS("opacity", "0.55");
     await expect(whoOn).toHaveCSS("opacity", "0.55");
-    await expect(name).toHaveCSS("opacity", "0.55");
-    await expect(details).toHaveCSS("opacity", "0.55");
+    await expect(aside(page).locator(".inspector-field").first()).toHaveCSS("opacity", "0.55");
+    await expect(aside(page).locator(".inspector-field").nth(1)).toHaveCSS("opacity", "0.55");
     await expect(aside(page).getByRole("button", { name: "Manage actors" })).toHaveCount(0);
 
     await capturePage(page, `${EVIDENCE}/compare-step-1440.png`);

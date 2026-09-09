@@ -27,7 +27,7 @@ test.describe("Improvement 40 — Humans then Robots on their own row", () => {
     const options = aside(page).getByRole("option");
     await expect(options).toHaveCount(8);
     await expect(options.nth(0)).toHaveAttribute("aria-label", "Alice");
-    await expect(options.nth(4)).toHaveAttribute("aria-label", /Person /);
+    await expect(options.nth(4)).toHaveAttribute("aria-label", "Human");
     await expect(options.nth(5)).toHaveAttribute("aria-label", "LLM");
     await expect(options.nth(7)).toHaveAttribute("aria-label", "Agent");
 
@@ -53,7 +53,7 @@ test.describe("Improvement 40 — Humans then Robots on their own row", () => {
     await aside(page).getByRole("button", { name: "Add human" }).click();
     await aside(page).getByRole("button", { name: "Back" }).click();
 
-    const person = aside(page).getByRole("button", { name: /Who Person / });
+    const person = aside(page).getByRole("button", { name: "Who Human" });
     const llm = aside(page).getByRole("button", { name: "Who LLM" });
     await expect(person).toBeVisible();
     const personBox = await person.boundingBox();

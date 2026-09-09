@@ -252,3 +252,10 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 - Attachments:
   ![spawn hint arrows](.docs/visual-improvements/2026-09-09-spawn-hint-arrows.png)
 
+## 2026-09-09 — compact Name/Details and Human
+
+- Issue: New Humans spawn as Person plus a random number. Inspector Name and Details each have a caption above the field, which wastes rail space.
+- Resolution: Shipped in `feat(improve-44): compact inspector Name and default Human`. Name is Type plus an underline in one box; Details is an empty box; no captions. New Humans are named Human.
+- Attachments:
+  ![inspector name details compact](.docs/visual-improvements/2026-09-09-inspector-name-details-compact.png)
+

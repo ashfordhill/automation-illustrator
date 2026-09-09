@@ -6,13 +6,15 @@ import { ActionIcon, Button, Stack, Text, TextInput, Tooltip } from "@mantine/co
 import { IconTrash } from "@tabler/icons-react";
 import {
   SelectionKind,
+  StepKind,
   ViewMode,
   WorkflowNodeKind,
 } from "../../workflow/catalogs";
 import { afterGraph, edgeIsDotted } from "../../workflow/graph";
-import { laneAssignments } from "../../workflow/types";
+import { laneAssignments, STEP_KIND_META } from "../../workflow/types";
 import { findEdge, findNode } from "../../workflow/selectors";
 import { useStore } from "../../state/store";
+import { InspectorField } from "./InspectorField";
 import { ManageActorsPanel } from "./ManageActorsPanel";
 import { TypeButtons } from "./TypeButtons";
 import { WhoButtons } from "./WhoButtons";
@@ -149,20 +151,24 @@ export function DetailsPanel() {
           disabled={readOnly}
           onChange={(stepKind) => useStore.getState().updateNode(n.id, { stepKind })}
         />
-        <TextInput
-          id="step-name-field"
-          label="Name"
-          value={n.title}
-          disabled={readOnly}
-          onChange={(e) => useStore.getState().updateNode(n.id, { title: e.target.value })}
-        />
-        <TextInput
-          id="step-details-field"
-          label="Details"
-          value={n.detail}
-          disabled={readOnly}
-          onChange={(e) => useStore.getState().updateNode(n.id, { detail: e.target.value })}
-        />
+        <div className="inspector-fields">
+          <InspectorField
+            id="step-name-field"
+            ariaLabel="Name"
+            prefix={n.stepKind === StepKind.Other ? undefined : STEP_KIND_META[n.stepKind].label}
+            value={n.title}
+            disabled={readOnly}
+            onChange={(title) => useStore.getState().updateNode(n.id, { title })}
+          />
+          <InspectorField
+            id="step-details-field"
+            ariaLabel="Details"
+            value={n.detail}
+            disabled={readOnly}
+            lined={false}
+            onChange={(detail) => useStore.getState().updateNode(n.id, { detail })}
+          />
+        </div>
         <Text size="sm" fw={700}>
           Who
         </Text>

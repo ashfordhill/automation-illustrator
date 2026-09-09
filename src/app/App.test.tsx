@@ -309,6 +309,7 @@ test("Add Step leaves Other Name empty and the tile does not print Other", () =>
   });
   const name = host.querySelector<HTMLInputElement>("#step-name-field");
   expect(name?.value).toBe("");
+  expect(host.querySelector(".inspector-field-prefix")).toBeNull();
   expect(host.textContent).not.toContain("Other Task");
   const otherBtn = host.querySelector('[aria-label="Type Other"]');
   expect(otherBtn).not.toBeNull();
@@ -328,4 +329,22 @@ test("Read type uses an open book, not a clipboard", () => {
   expect(readSvg).not.toBeNull();
   expect(readSvg?.querySelectorAll("path").length).toBeGreaterThanOrEqual(4);
   expect(readSvg?.querySelector("rect")).toBeNull();
+});
+
+test("Step Name uses a Type prefix and drops Name/Details captions", () => {
+  act(() => {
+    useStore.getState().select({ type: SelectionKind.Node, id: OAK_PARK_IDS.read });
+  });
+  const rail = host.querySelector(".details-rail-body");
+  expect(rail?.querySelector(".inspector-field-prefix")?.textContent).toBe("Read");
+  const name = rail?.querySelector<HTMLInputElement>("#step-name-field");
+  const details = rail?.querySelector<HTMLInputElement>("#step-details-field");
+  expect(name?.getAttribute("aria-label")).toBe("Name");
+  expect(details?.getAttribute("aria-label")).toBe("Details");
+  expect(name?.value).toBe("invoice.pdf");
+  const captions = [...(rail?.querySelectorAll(".mantine-InputWrapper-label") ?? [])].map(
+    (el) => el.textContent?.trim(),
+  );
+  expect(captions).not.toContain("Name");
+  expect(captions).not.toContain("Details");
 });

@@ -77,6 +77,15 @@ test("default roster is Alice, Roy, Jack, Missy, then LLM, Script, Agent (WG-01,
 });
 
 
+test("makeHuman defaults to Human with no number", () => {
+  const a = makeHuman();
+  const b = makeHuman();
+  expect(a.name).toBe("Human");
+  expect(b.name).toBe("Human");
+  expect(a.id).not.toBe(b.id);
+  expect(a.kind).toBe(ActorKind.Human);
+});
+
 test("insertActor appends a Human after the last Human and a Robot after the last Robot", () => {
   const ada = makeHuman("Ada", "#f4c6d4");
   const llm = makeRobot("LLM", RobotKind.Llm);

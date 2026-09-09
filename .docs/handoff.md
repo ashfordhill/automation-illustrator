@@ -2224,3 +2224,33 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(improve-43): restyle spawn hint compass`
 
+## Improvement 44 — Human default name and compact Name/Details — 2026-09-09
+
+- Starting commit: `5d22a7ef2f20f278cf8c3f29d345a379f305a3d8` (`feat(improve-43): restyle spawn hint compass`)
+- Working tree at start: tracked tree matched improve-43; untracked elk plans, chrome GIFs, and `e2e/improve-23-tile-edit.spec.ts.aside` remained outside the commit. Concurrent delete-parent WIP in `store.ts` / `commands.ts` was left unstaged.
+- GOAL clauses addressed: NA-01, NA-07 (amendment dated 2026-09-09). Document version unchanged.
+- Library research and decisions: no new runtime dependency. Compact fields are native inputs inside the existing cream/ink inspector chrome (Mantine TextInput captions were the wasted space). Type prefix is aria-hidden; accessible names stay Name and Details.
+- Files changed:
+  - Actors: `src/workflow/actors.ts`
+  - Inspector: `src/app/inspector/InspectorField.tsx`, `SelectedItemForm.tsx`, `ManageActorsPanel.tsx`, `compareDisabled.css`, `src/app/styles/tokens.css`
+  - Tests: `src/workflow/actors.test.ts`, `src/state/store.actors.test.ts`, `src/app/App.test.tsx`, `e2e/improve-44-inspector-compact.spec.ts`, `e2e/improve-40-actor-groups.spec.ts`, `e2e/improve-33-compare-readonly.spec.ts`, `e2e/improve-41-who-center.spec.ts`
+  - Docs: `.docs/GOAL.md`, `.docs/IMPROVEMENTS.md`, `.docs/VISUAL_IMPROVEMENTS.md`, `.docs/visual-improvements/2026-09-09-inspector-name-details-compact.png`, this handoff entry
+  - Evidence: `.docs/evidence/improve-44-inspector-compact/`
+- Behavior implemented:
+  - Add human names the actor Human (no number). Duplicate names are allowed.
+  - Step Name has no caption: Type word on the left (Other has none) and an underline for the title.
+  - Step Details has no caption: empty rounded box.
+  - Manage actors Name uses the same compact box.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning). Node 24.
+  - `npm run test:unit` — 41 files, 287 tests pass.
+  - `npm run test:e2e` — 186 tests: 184 passed in the full run; `e2e/commands.spec.ts` source-split and `e2e/improve-07-no-merge.spec.ts` After X timed out under load, then passed on re-run (8/8). Chromium via `LD_LIBRARY_PATH` `/home/ash/.local/pw-libs/usr/lib/x86_64-linux-gnu` on port 4191 (4177 was in use). Untracked `e2e/improve-23-tile-edit.spec.ts` and delete-parent spec were asided for this run.
+- Evidence:
+  - `.docs/evidence/improve-44-inspector-compact/step-fields-1440.png` — Read prefix + underlined Name, empty Details box, no captions (1440×900)
+  - `.docs/evidence/improve-44-inspector-compact/new-human-1440.png` — Add human selected as Human, Name field value Human (1440×900)
+  - `.docs/evidence/improve-44-inspector-compact/step-fields-1024.png` — same compact fields at 1024×768
+- Earlier-slice defects fixed: none
+- Known limitations / follow-ups: Concurrent delete-parent WIP was not in this commit. Path-end wobble is still a later improvement.
+- Status: COMPLETE
+- Commit: `feat(improve-44): compact inspector Name and default Human`
+

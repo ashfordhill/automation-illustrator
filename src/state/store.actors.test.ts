@@ -213,6 +213,16 @@ test("beginTileTextEdit and beginTilePie open on-canvas Step edit (NA-08, NA-11)
 });
 
 
+test("addHuman without a name is Human, not Person N", () => {
+  const s = useStore.getState();
+  s.requestNew();
+  s.confirmReplaceDiscard();
+  const hid = useStore.getState().addHuman();
+  const actor = useStore.getState().workflow.actors.find((a) => a.id === hid);
+  expect(actor?.name).toBe("Human");
+  expect(actor?.name).not.toMatch(/Person/);
+});
+
 test("addHuman inserts before robots; addRobot appends after robots", () => {
   const s = useStore.getState();
   s.requestNew();

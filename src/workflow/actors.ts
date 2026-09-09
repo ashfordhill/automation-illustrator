@@ -247,9 +247,9 @@ export function insertActor(actors: ActorDto[], actor: ActorDto): ActorDto[] {
   return next;
 }
 
-/** Inspector “Add human”. */
+/** Inspector “Add human”. Unnamed Humans are “Human” (no number). */
 export function makeHuman(name?: string, color?: string): ActorDto {
-  const n = name?.trim() || `Person ${Math.floor(Math.random() * 90) + 2}`;
+  const n = name?.trim() || "Human";
   const preset = HUMAN_PRESETS.find((p) => p.name === n);
   const c = color ?? preset?.color ?? randomPastel();
   return {

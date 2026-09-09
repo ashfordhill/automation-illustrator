@@ -2,7 +2,8 @@
  * Add / edit / delete humans and robots in the right inspector (NA-01, NA-02, NA-06).
  */
 import { useEffect, useRef } from "react";
-import { Button, ColorInput, Stack, Text, Textarea, TextInput } from "@mantine/core";
+import { Button, ColorInput, Stack, Text, Textarea } from "@mantine/core";
+import { InspectorField } from "./InspectorField";
 import { HUMAN_PRESETS, ROBOT_COLORS } from "../../workflow/actors";
 import { ActorKind, RobotKind } from "../../workflow/catalogs";
 import {
@@ -63,12 +64,11 @@ export function ManageActorsPanel() {
       </div>
       {actor ? (
         <>
-          <TextInput
-            label="Name"
+          <InspectorField
+            id="actor-name-field"
+            ariaLabel="Name"
             value={actor.name}
-            onChange={(e) =>
-              useStore.getState().updateActor(actor.id, { name: e.target.value })
-            }
+            onChange={(name) => useStore.getState().updateActor(actor.id, { name })}
           />
           <ColorInput
             label="Color"

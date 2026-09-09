@@ -1446,6 +1446,76 @@ body.is-tile-dragging * {
   text-align: center;
 }
 
+.inspector-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.inspector-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 6px 10px;
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  background: var(--cream);
+  color: var(--ink);
+  box-sizing: border-box;
+  cursor: text;
+  box-shadow: var(--chip-shadow);
+}
+
+.inspector-field.is-off {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.inspector-field:focus-within {
+  outline: 3px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.inspector-field-prefix {
+  flex: 0 0 auto;
+  font-weight: 800;
+  font-size: 13px;
+  line-height: 1.2;
+  color: var(--ink);
+}
+
+.chrome-bar .inspector-field :is(input, textarea),
+.inspector-field input {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  padding: 1px 0 2px;
+  border: none;
+  border-radius: 0;
+  background: transparent !important;
+  background-color: transparent !important;
+  --input-bg: transparent;
+  color: var(--ink);
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 1.2;
+  box-shadow: none;
+}
+
+.inspector-field.is-lined input {
+  border-bottom: 2px solid var(--ink);
+}
+
+.inspector-field input:focus {
+  outline: none;
+}
+
+.inspector-field input:disabled {
+  cursor: default;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .node-squash-inner {
     animation: none;
