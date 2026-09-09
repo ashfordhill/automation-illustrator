@@ -9,6 +9,11 @@ npm install
 npm run dev
 ```
 
+```bash
+docker pull ghcr.io/ashfordhill/automation-pitch:latest
+docker run --rm -p 8080:80 ghcr.io/ashfordhill/automation-pitch:latest
+```
+
 Open the URL Vite prints. First visit loads the **Oak Park Invoice** demo. **Robot Mailroom** is the compact merge / After-only showcase.
 
 ```bash
