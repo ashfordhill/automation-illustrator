@@ -134,6 +134,19 @@ export function applyConnectStroke(
   return edges.map((e) => (e.id === newEdgeId ? { ...e, dashed } : e));
 }
 
+/**
+ * Point every Path that currently enters `hostId` at `parentId` instead.
+ * No-op when `hostId` has no incoming Paths (the new Tile is a source).
+ */
+export function retargetIncoming(
+  edges: EdgeDto[],
+  hostId: string,
+  parentId: string,
+): EdgeDto[] {
+  if (!edges.some((e) => e.target === hostId)) return edges;
+  return edges.map((e) => (e.target === hostId ? { ...e, target: parentId } : e));
+}
+
 /** Incoming Paths of a tile, top-to-bottom (then left-to-right) by displayed source position. */
 export function incomingSorted(
   nodes: NodeDto[],

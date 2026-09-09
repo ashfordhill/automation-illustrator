@@ -726,3 +726,24 @@ Append to `## Amendments` in `.docs/GOAL.md`: CX-05 as dated 2026-09-09.
 Commit: `feat(improve-36): keep branch rows when forking`.  
 Evidence: `.docs/evidence/improve-36-branch-rows/`.
 
+---
+
+# Improvement 37 — left spawn is a parent, not a fork
+
+Approved 2026-09-09. Left `+` / `Q` / `A` always inserts a **new parent** of the selected Tile (e.g. Read → New → Roy), not a fan-in fork. The new Step inherits Who from that Tile (Roy when spawned off Roy). Forks stay **right-only** (`E` / right `+` / `D`). Drag-onto-Path and left Path-pull (connect existing) stay as they are.
+
+## Locked decisions
+
+- Before inbound `addConnectedNode`: retarget every Path into the host onto the new Tile, then add `new → this`. Incoming conditions and strokes stay on those Paths. With no incoming Path, Path `new → this` (new source).
+- Right `+` still appends an outgoing Path (fork when the host already has children).
+- Who: `whoForPredecessorStep` uses the same inherit-from-host walk as a child (`whoForChildStep`).
+- After-only left `+` retargets After-only extra incoming Paths the same way. It does not rewrite Before Paths (an After-only parent of a Before-origin Tile cannot steal `Read → Roy`).
+- Improvement 36 row-stability and same-row dock stay. No new runtime dependency.
+
+## Contract
+
+Append to `## Amendments` in `.docs/GOAL.md`: WG-07, NA-03, CX-05 as dated 2026-09-09.
+
+Commit: `feat(improve-37): insert left spawn as parent`.  
+Evidence: `.docs/evidence/improve-37-left-parent/`.
+

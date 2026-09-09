@@ -10,6 +10,7 @@ import {
   maybeExclusiveSplit,
   outgoingSorted,
   positionOf,
+  retargetIncoming,
   validateWorkflow,
   wouldCreateCycle,
 } from "./graph";
@@ -403,7 +404,12 @@ export function canRemovePath(doc: WorkflowDoc, edgeId: string): boolean {
   return removePath(doc, edgeId).ok;
 }
 
-/** Add a connected Node and its Path in one validated step (create + connect). */
+/**
+ * Add a connected Node and its Path in one validated step (create + connect).
+ * Outbound (`inbound` omitted): extra child Path `source → new` (a fork when
+ * `source` already has outgoing Paths). Inbound: insert a parent — retarget
+ * every Path into `sourceId` onto the new Tile, then add `new → source`.
+ */
 export function addConnectedNode(
   doc: WorkflowDoc,
   sourceId: string,
@@ -424,13 +430,15 @@ export function addConnectedNode(
   if (doc.nodes.some((n) => n.id === node.id)) {
     return fail("duplicate-id", `Duplicate id "${node.id}".`);
   }
-  const pathSource = options?.inbound ? node.id : sourceId;
-  const pathTarget = options?.inbound ? sourceId : node.id;
+  const inbound = Boolean(options?.inbound);
+  const pathSource = inbound ? node.id : sourceId;
+  const pathTarget = inbound ? sourceId : node.id;
   const previousOutgoing = doc.edges.filter((e) => e.source === pathSource).length;
   const edgeId = options?.edgeId ?? nid(IdPrefix.Edge);
   const nodes = [...doc.nodes, node];
+  const existing = inbound ? retargetIncoming(doc.edges, sourceId, node.id) : doc.edges;
   const rawEdges: EdgeDto[] = [
-    ...doc.edges,
+    ...existing,
     {
       id: edgeId,
       source: pathSource,

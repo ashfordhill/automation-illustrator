@@ -1,5 +1,5 @@
 /**
- * Branch-row stability when forking (Improvement 36).
+ * Branch-row stability when inserting a left parent (Improvement 36 / 37).
  */
 import ELK from "elkjs/lib/elk.bundled.js";
 import { expect, test } from "vitest";
@@ -29,7 +29,7 @@ async function layoutOf(projection: LaneProjection, previous?: PositionMap): Pro
   return toLaneLayout(key, laidOut);
 }
 
-function forkPredecessor(doc: WorkflowDoc, ontoId: string, previous: PositionMap): WorkflowDoc {
+function insertParent(doc: WorkflowDoc, ontoId: string, previous: PositionMap): WorkflowDoc {
   const host = previous[ontoId] ?? { x: 0, y: 0 };
   const result = addConnectedNode(
     doc,
@@ -56,12 +56,15 @@ test("stability options are known to ELK", async () => {
   for (const id of usedOptionIds()) expect(known.has(id), id).toBe(true);
 });
 
-test("left fork on Search website keeps that row above filesystem", async () => {
+test("left parent on Search website keeps that row above filesystem", async () => {
   const doc = oakParkInvoice();
   const before = await layoutOf(projectBefore(doc));
   expect(before.positions[OAK_PARK_IDS.web]!.y).toBeLessThan(before.positions[OAK_PARK_IDS.fs]!.y);
 
-  const nextDoc = forkPredecessor(doc, OAK_PARK_IDS.web, before.positions);
+  const nextDoc = insertParent(doc, OAK_PARK_IDS.web, before.positions);
+  expect(nextDoc.edges.some((e) => e.source === OAK_PARK_IDS.read && e.target === OAK_PARK_IDS.web)).toBe(false);
+  expect(nextDoc.edges.some((e) => e.source === OAK_PARK_IDS.read && e.target === "s_new")).toBe(true);
+  expect(nextDoc.edges.some((e) => e.source === "s_new" && e.target === OAK_PARK_IDS.web)).toBe(true);
   const after = await layoutOf(projectBefore(nextDoc), before.positions);
 
   expect(after.positions[OAK_PARK_IDS.web]!.y).toBeLessThan(after.positions[OAK_PARK_IDS.fs]!.y);
@@ -70,10 +73,10 @@ test("left fork on Search website keeps that row above filesystem", async () => 
   expect(Math.abs(after.positions.s_new!.y - after.positions[OAK_PARK_IDS.web]!.y)).toBeLessThanOrEqual(32);
 });
 
-test("left fork on Search filesystem keeps website above filesystem", async () => {
+test("left parent on Search filesystem keeps website above filesystem", async () => {
   const doc = oakParkInvoice();
   const before = await layoutOf(projectBefore(doc));
-  const nextDoc = forkPredecessor(doc, OAK_PARK_IDS.fs, before.positions);
+  const nextDoc = insertParent(doc, OAK_PARK_IDS.fs, before.positions);
   const after = await layoutOf(projectBefore(nextDoc), before.positions);
 
   expect(after.positions[OAK_PARK_IDS.web]!.y).toBeLessThan(after.positions[OAK_PARK_IDS.fs]!.y);

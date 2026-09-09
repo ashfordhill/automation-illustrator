@@ -283,7 +283,7 @@ test("insertOnPath relocates a leaf onto an existing Path", () => {
   expect(validateWorkflow(next)).toEqual([]);
 });
 
-test("spawnBranch inbound fans in; predecessor Who does not copy the successor", () => {
+test("spawnBranch inbound inserts a parent and inherits the successor’s Who", () => {
   const s = useStore.getState();
   s.requestNew();
   s.confirmReplaceDiscard();
@@ -299,17 +299,19 @@ test("spawnBranch inbound fans in; predecessor Who does not copy the successor",
   const next = useStore.getState().workflow;
   expect(next.edges.some((e) => e.source === left && e.target === host)).toBe(true);
   expect(next.assignments[host]).toBe(roy!.id);
-  expect(next.assignments[left]).toBe(alice!.id);
+  expect(next.assignments[left]).toBe(roy!.id);
   expect(validateWorkflow(next)).toEqual([]);
 
   const data = useStore.getState().spawnBranch(host, WorkflowNodeKind.DataField, "out");
   expect(data).toBeTruthy();
   const other = useStore.getState().spawnBranch(data, WorkflowNodeKind.Step, "in");
   expect(other).toBeTruthy();
-  const fan = useStore.getState().workflow;
-  expect(fan.edges.some((e) => e.source === host && e.target === data)).toBe(true);
-  expect(fan.edges.some((e) => e.source === other && e.target === data)).toBe(true);
-  expect(validateWorkflow(fan)).toEqual([]);
+  const chain = useStore.getState().workflow;
+  expect(chain.edges.some((e) => e.source === host && e.target === data)).toBe(false);
+  expect(chain.edges.some((e) => e.source === host && e.target === other)).toBe(true);
+  expect(chain.edges.some((e) => e.source === other && e.target === data)).toBe(true);
+  expect(chain.assignments[other]).toBe(roy!.id);
+  expect(validateWorkflow(chain)).toEqual([]);
 });
 
 test("completePathPull inbound connects the hovered Tile into this one", () => {

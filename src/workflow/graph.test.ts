@@ -8,6 +8,7 @@ import {
   isWeaklyConnected,
   outgoingSorted,
   removalCandidateIds,
+  retargetIncoming,
   rootNodeId,
   sourceNodeIds,
   splitDefaultDashed,
@@ -26,6 +27,18 @@ function step(id: string, y: number): NodeDto {
     split: SplitKind.Exclusive,
   };
 }
+
+test("retargetIncoming rewrites Paths into the host onto the parent", () => {
+  const edges: EdgeDto[] = [
+    { id: "e1", source: "a", target: "m", label: "one" },
+    { id: "e2", source: "m", target: "z", label: "" },
+  ];
+  expect(retargetIncoming(edges, "m", "p")).toEqual([
+    { id: "e1", source: "a", target: "p", label: "one" },
+    { id: "e2", source: "m", target: "z", label: "" },
+  ]);
+  expect(retargetIncoming(edges, "none", "p")).toBe(edges);
+});
 
 test("outgoingSorted orders by target y then x", () => {
   const nodes = [step("a", 0), step("b", 40), step("c", 10)];

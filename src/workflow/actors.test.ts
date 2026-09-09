@@ -127,15 +127,29 @@ test("whoForChildStep inherits a Step parent’s Who and walks Data to the upstr
   expect(orphanData).toEqual({ beforeId: "h_priya", afterId: "h_priya" });
 });
 
-test("whoForPredecessorStep uses last-used Human and does not copy the successor (NA-03)", () => {
-  expect(whoForPredecessorStep(doc, "h_priya")).toEqual({
-    beforeId: "h_priya",
-    afterId: "h_priya",
-  });
-  expect(whoForPredecessorStep(doc, null)).toEqual({
+test("whoForPredecessorStep inherits the successor’s Who (NA-03)", () => {
+  expect(whoForPredecessorStep(doc, "s_read", "h_priya")).toEqual({
     beforeId: "h_ada",
     afterId: "h_ada",
   });
+  const fromData = whoForPredecessorStep(
+    {
+      ...doc,
+      nodes: [
+        ...doc.nodes,
+        {
+          id: "d1",
+          type: WorkflowNodeKind.DataField,
+          position: { x: 40, y: 0 },
+          label: "Account",
+        },
+      ],
+      edges: [{ id: "e1", source: "s_read", target: "d1", label: "", dashed: false }],
+    },
+    "d1",
+    "h_priya",
+  );
+  expect(fromData).toEqual({ beforeId: "h_ada", afterId: "h_ada" });
 });
 
 test("defaultHumanId prefers last-used Human, then Alice, then the first Human (NA-03)", () => {

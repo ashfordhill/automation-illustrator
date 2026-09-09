@@ -26,6 +26,7 @@ import {
   maybeExclusiveSplit,
   outgoingSorted,
   removalCandidateIds,
+  retargetIncoming,
   splitDefaultDashed,
   wouldCreateCycle,
 } from "./graph";
@@ -102,7 +103,11 @@ export function connectAfter(
   });
 }
 
-/** After-only Step with default Robot, connected from (or into) a visible After Node (BA-06, BA-07, NA-04). */
+/**
+ * After-only Step with default Robot, connected from (or into) a visible After
+ * Node (BA-06, BA-07, NA-04). Inbound retargets After-only extra incoming Paths
+ * onto the new Step (does not rewrite Before Paths).
+ */
 export function addAfterStep(
   doc: WorkflowDoc,
   sourceVisible: string,
@@ -123,8 +128,9 @@ export function addAfterStep(
     return fail("duplicate-id", `Duplicate id "${node.id}".`);
   }
   const withRobot = ensureDefaultRobot(doc);
-  const pathSource = options?.inbound ? node.id : source;
-  const pathTarget = options?.inbound ? source : node.id;
+  const inbound = Boolean(options?.inbound);
+  const pathSource = inbound ? node.id : source;
+  const pathTarget = inbound ? source : node.id;
   const previousOutgoing = afterGraph(withRobot.doc).edges.filter((e) => e.source === pathSource).length;
   const edgeId = options?.edgeId ?? nid(IdPrefix.Edge);
   const extraEdge: EdgeDto = {
@@ -135,7 +141,10 @@ export function addAfterStep(
     dashed: extraDashed(withRobot.doc, pathSource, previousOutgoing),
   };
   let extraNodes = [...withRobot.doc.after.extraNodes, node];
-  let extraEdges = [...withRobot.doc.after.extraEdges, extraEdge];
+  const extraExisting = inbound
+    ? retargetIncoming(withRobot.doc.after.extraEdges, source, node.id)
+    : withRobot.doc.after.extraEdges;
+  let extraEdges = [...extraExisting, extraEdge];
   if (isAfterOnlyNode(withRobot.doc, pathSource) || pathSource === node.id) {
     extraNodes = maybeExclusiveSplit(extraNodes, extraEdges, pathSource) as StepNodeDto[];
     extraEdges = applyConnectStroke(extraNodes, extraEdges, pathSource, edgeId, previousOutgoing);

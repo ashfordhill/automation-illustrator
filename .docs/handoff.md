@@ -2023,4 +2023,33 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(improve-36): keep branch rows when forking`
 
+## Improvement 37 — insert left spawn as parent — 2026-09-09
+
+- Starting commit: `857605d` (`feat(improve-36): keep branch rows when forking`)
+- Working tree at start: not clean. Concurrent inspector / type-picker / visual-rule WIP left unstaged. Untracked `CanvasHelper.test.tsx` moved aside for `tsc`, then restored.
+- GOAL clauses addressed: WG-07, NA-03, CX-05 (amendments dated 2026-09-09). Right `+` still forks; drag-onto-Path still inserts (NG-02); left Path-pull still connects existing Tiles.
+- Library research and decisions: no new runtime dependency. Left spawn is insert-before (retarget incoming Paths onto the new Tile, then Path `new → this`), not fan-in. After-only left `+` retargets extra incoming only so Before Paths stay put. Who uses the same inherit-from-host walk as a child Step.
+- Files changed:
+  - Commands: `src/workflow/graph.ts` (`retargetIncoming`), `src/workflow/commands.ts`, `src/workflow/after.ts`, `src/workflow/actors.ts`, `src/state/store.ts`
+  - Tests: `src/workflow/commands.test.ts`, `graph.test.ts`, `actors.test.ts`, `after.test.ts`, `src/state/store.commands.test.ts`, `src/board/layout/layoutStability.test.ts`
+  - E2E: `e2e/improve-37-left-parent.spec.ts`
+  - Docs: `.docs/GOAL.md`, `.docs/IMPROVEMENTS.md`, `.docs/VISUAL_IMPROVEMENTS.md`, `.docs/visual-improvements/2026-09-09-left-plus-should-be-parent.gif`, this handoff entry
+  - Evidence: `.docs/evidence/improve-37-left-parent/`
+- Behavior implemented:
+  - Left `+` / `Q` / `A` on Search website (Read → website) becomes Read → new Task → website. The new Task is Roy when website is Roy.
+  - Right `+` / `E` still adds a child Path (fork when outgoing Paths already exist).
+  - After-only left `+` still does not rewrite Before Paths.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning). Node 24.
+  - `npm run test:unit` — 40 files, 274 tests pass (`CanvasHelper.test.tsx` asided for this run).
+  - `npm run test:e2e` — `e2e/improve-37-left-parent.spec.ts` (3), `e2e/improve-36-branch-rows.spec.ts` (3), `e2e/improve-34-reverse-add.spec.ts` (7), `e2e/improve-13-who-inherit.spec.ts` (5) all pass (18). Chromium via `LD_LIBRARY_PATH` `~/.local/pw-libs`.
+- Evidence:
+  - `.docs/evidence/improve-37-left-parent/left-parent-roy-1440.png` — Q on Roy’s Search website; Task sits on that branch as parent, Who Roy (1440×900)
+  - `.docs/evidence/improve-37-left-parent/right-fork-website-1440.png` — E still forks a child to the right of Search website (1440×900)
+  - `.docs/evidence/improve-37-left-parent/left-parent-roy-1024.png` — left parent + Roy Who at 1024×768
+- Earlier-slice defects fixed: Improvement 36 treated left `+` as a fork; that was the wrong graph. Who inherit from the successor was locked the other way in the 2026-09-08 NA-03 amendment.
+- Known limitations / follow-ups: Concurrent inspector / type-picker WIP remains unstaged. After-only left `+` on a Before-origin Tile cannot insert into the Before chain; it adds an After-only Path `new → this` (or inserts among extra incoming only). Path-end wobble is still a later improvement.
+- Status: COMPLETE
+- Commit: `feat(improve-37): insert left spawn as parent`
+
 

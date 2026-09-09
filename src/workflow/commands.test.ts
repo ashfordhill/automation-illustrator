@@ -319,6 +319,78 @@ test("addConnectedNode inbound creates a predecessor Path", () => {
   ]);
 });
 
+test("addConnectedNode inbound inserts a parent in front of incoming Paths", () => {
+  const oak = oakParkInvoice();
+  const added = addConnectedNode(oak, OAK_PARK_IDS.web, step("s_new"), {
+    beforeId: OAK_PARK_IDS.alice,
+    afterId: OAK_PARK_IDS.alice,
+    inbound: true,
+  });
+  expect(added.ok).toBe(true);
+  if (!added.ok) return;
+  expect(validateWorkflow(added.value)).toEqual([]);
+  expect(added.value.edges.find((e) => e.id === OAK_PARK_IDS.gt)).toEqual(
+    expect.objectContaining({
+      source: OAK_PARK_IDS.read,
+      target: "s_new",
+      label: "invoice > $50,000",
+      dashed: true,
+    }),
+  );
+  expect(added.value.edges.some((e) => e.source === "s_new" && e.target === OAK_PARK_IDS.web && e.label === "")).toBe(
+    true,
+  );
+  expect(added.value.edges.some((e) => e.source === OAK_PARK_IDS.read && e.target === OAK_PARK_IDS.web)).toBe(false);
+  expect(added.value.edges.find((e) => e.id === OAK_PARK_IDS.lt)).toEqual(
+    expect.objectContaining({ source: OAK_PARK_IDS.read, target: OAK_PARK_IDS.fs }),
+  );
+});
+
+test("addConnectedNode inbound with two incoming Paths makes the new Tile the merge", () => {
+  const board = doc(
+    [step("a"), step("b", 80), step("m", 40, 80)],
+    [path("e1", "a", "m", "one", true), path("e2", "b", "m", "two", true)],
+    { assignments: { a: "h1", b: "h1", m: "h1" } },
+  );
+  const added = addConnectedNode(board, "m", step("p", 40, 40), {
+    beforeId: "h1",
+    afterId: "h1",
+    inbound: true,
+  });
+  expect(added.ok).toBe(true);
+  if (!added.ok) return;
+  expect(validateWorkflow(added.value)).toEqual([]);
+  expect(added.value.edges).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ source: "a", target: "p", label: "one", dashed: true }),
+      expect.objectContaining({ source: "b", target: "p", label: "two", dashed: true }),
+      expect.objectContaining({ source: "p", target: "m", label: "" }),
+    ]),
+  );
+  expect(added.value.edges.some((e) => e.target === "m" && e.source !== "p")).toBe(false);
+});
+
+test("addConnectedNode outbound still forks an extra child Path", () => {
+  const board = doc(
+    [step("r"), step("a", 0, 80)],
+    [path("e1", "r", "a")],
+    { assignments: { r: "h1", a: "h1" } },
+  );
+  const added = addConnectedNode(board, "r", step("s_fork", 80, 80), {
+    beforeId: "h1",
+    afterId: "h1",
+  });
+  expect(added.ok).toBe(true);
+  if (!added.ok) return;
+  expect(validateWorkflow(added.value)).toEqual([]);
+  expect(added.value.edges).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ source: "r", target: "a" }),
+      expect.objectContaining({ source: "r", target: "s_fork" }),
+    ]),
+  );
+});
+
 test("planNodeRemoval allows a source with one child; splitting a fan is blocked", () => {
   const chain = doc([step("r"), step("a", 0, 40)], [path("e1", "r", "a")]);
   const plan = planNodeRemoval(chain, "r");

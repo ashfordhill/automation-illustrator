@@ -192,3 +192,10 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 - Resolution: Shipped in `feat(improve-36): keep branch rows when forking`. Left/right `+` still forks; displayed rows stay put.
 - Attachments:
   ![branch row flip](.docs/visual-improvements/2026-09-09-branch-row-flip.gif)
+
+## 2026-09-09 — left plus should be a parent
+
+- Issue: Left `+` / `Q` on Roy still forked a second inbound Path (`new → Roy` plus `Read → Roy`) and assigned Alice instead of Roy.
+- Resolution: Shipped in `feat(improve-37): insert left spawn as parent`. Left always inserts a parent in the chain and inherits Who from the successor. Forks are right-only.
+- Attachments:
+  ![left plus should be parent](.docs/visual-improvements/2026-09-09-left-plus-should-be-parent.gif)

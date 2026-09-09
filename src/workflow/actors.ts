@@ -129,13 +129,16 @@ export function whoForChildStep(
   return human ? { beforeId: human, afterId: human } : {};
 }
 
-/** A new predecessor Step (left + / Q). Does not copy Who from the Tile it feeds. */
+/**
+ * A new predecessor Step (left + / Q). Inherits Who from the successor Tile
+ * the same way a child inherits from its parent (NA-03).
+ */
 export function whoForPredecessorStep(
   doc: WorkflowDoc,
+  successorId: string,
   lastHumanId?: string | null,
 ): ChildStepWho {
-  const human = defaultHumanId(doc.actors, lastHumanId);
-  return human ? { beforeId: human, afterId: human } : {};
+  return whoForChildStep(doc, successorId, lastHumanId);
 }
 
 /** First robot on the roster (NA-04). */

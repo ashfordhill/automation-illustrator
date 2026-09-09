@@ -1052,7 +1052,7 @@ export const useStore = create<{
     }
     const id = nid(IdPrefix.Step);
     const who = inbound
-      ? whoForPredecessorStep(workflow, lastHumanId)
+      ? whoForPredecessorStep(workflow, sourceId, lastHumanId)
       : whoForChildStep(workflow, sourceId, lastHumanId);
     const result = addConnectedNode(
       workflow,

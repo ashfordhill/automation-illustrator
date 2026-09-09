@@ -82,7 +82,31 @@ test("addAfterStep inbound creates an After-only Path into the host", () => {
   expect(extra.value.after.extraEdges).toEqual([
     expect.objectContaining({ source: "x", target: "b" }),
   ]);
+  expect(extra.value.edges).toEqual([expect.objectContaining({ source: "a", target: "b" })]);
   expect(extra.value.nodes.map((n) => n.id)).toEqual(["a", "b"]);
+});
+
+test("addAfterStep inbound inserts a parent on After-only incoming only", () => {
+  const d = doc([step("a"), step("b", 0, 200)], [path("e1", "a", "b")], {
+    after: {
+      ...emptyAfterOverlay(),
+      extraNodes: [step("y", 0, 300)],
+      extraEdges: [path("ex", "y", "b")],
+      assignments: { a: "h1", b: "h1", y: "r1" },
+    },
+  });
+  const extra = addAfterStep(d, "b", step("x", 0, 400), { inbound: true });
+  expect(extra.ok).toBe(true);
+  if (!extra.ok) return;
+  expect(extra.value.edges).toEqual([expect.objectContaining({ source: "a", target: "b" })]);
+  expect(extra.value.after.extraEdges).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ source: "y", target: "x" }),
+      expect.objectContaining({ source: "x", target: "b" }),
+    ]),
+  );
+  expect(extra.value.after.extraEdges.some((e) => e.source === "y" && e.target === "b")).toBe(false);
+  expect(validateWorkflow(extra.value)).toEqual([]);
 });
 
 test("After-only removal restitches extra Paths and omits the Step (BA-07)", () => {
