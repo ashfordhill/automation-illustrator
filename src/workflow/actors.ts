@@ -155,7 +155,7 @@ export function ensureDefaultRobot(doc: WorkflowDoc): { doc: WorkflowDoc; robotI
   const existing = defaultRobotId(doc.actors);
   if (existing) return { doc, robotId: existing };
   const robot = makeRobot("LLM", RobotKind.Llm);
-  return { doc: { ...doc, actors: [...doc.actors, robot] }, robotId: robot.id };
+  return { doc: { ...doc, actors: insertActor(doc.actors, robot) }, robotId: robot.id };
 }
 
 export type ActorUse = {
@@ -218,6 +218,33 @@ export function removeActor(
     return { ok: false, code: "actor-in-use", message: actorInUseMessage(actor.name, uses) };
   }
   return { ok: true, value: { ...doc, actors: doc.actors.filter((a) => a.id !== actorId) } };
+}
+
+
+/** Humans in document order (display and insert helpers). */
+export function humansOf(actors: ActorDto[]): ActorDto[] {
+  return actors.filter((a) => a.kind === ActorKind.Human);
+}
+
+/** Robots in document order (display and insert helpers). */
+export function robotsOf(actors: ActorDto[]): ActorDto[] {
+  return actors.filter((a) => a.kind === ActorKind.Robot);
+}
+
+/**
+ * Add a Human after the last Human, or a Robot after the last Robot.
+ * A Human with none yet goes at the front; a Robot with none yet goes at the end.
+ */
+export function insertActor(actors: ActorDto[], actor: ActorDto): ActorDto[] {
+  const kind = actor.kind;
+  let last = -1;
+  for (let i = 0; i < actors.length; i++) {
+    if (actors[i].kind === kind) last = i;
+  }
+  if (kind === ActorKind.Robot && last === -1) return [...actors, actor];
+  const next = actors.slice();
+  next.splice(last + 1, 0, actor);
+  return next;
 }
 
 /** Inspector “Add human”. */

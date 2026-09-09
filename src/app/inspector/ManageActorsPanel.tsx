@@ -3,18 +3,16 @@
  */
 import { useEffect, useRef } from "react";
 import { Button, ColorInput, Stack, Text, Textarea, TextInput } from "@mantine/core";
-import { FIGURE_INK_ON_PASTEL, HUMAN_PRESETS, ROBOT_COLORS } from "../../workflow/actors";
+import { HUMAN_PRESETS, ROBOT_COLORS } from "../../workflow/actors";
 import { ActorKind, RobotKind } from "../../workflow/catalogs";
 import {
   DEFAULT_HUMAN_ROLE,
   ROBOT_KIND_LABEL,
-  isHuman,
   isRobot,
   type RobotKind as RobotKindT,
 } from "../../workflow/types";
 import { useStore } from "../../state/store";
-import { HumanFigure } from "../../board/tiles/HumanFigure";
-import { RobotFigure } from "../../board/tiles/RobotFigure";
+import { ActorWhoGrid } from "./ActorWhoGrid";
 
 const ROBOT_KINDS: RobotKindT[] = [RobotKind.Llm, RobotKind.Agent, RobotKind.Script];
 
@@ -40,32 +38,13 @@ export function ManageActorsPanel() {
       >
         Back
       </Button>
-      <div className="inspector-who-grid" role="listbox" aria-label="Actors">
-        {workflow.actors.map((a) => {
-          const on = a.id === actorId;
-          const human = isHuman(a);
-          return (
-            <button
-              key={a.id}
-              type="button"
-              role="option"
-              aria-selected={on}
-              className={`inspector-who${on ? " is-on" : ""}`}
-              aria-label={a.name}
-              onClick={() => useStore.getState().setManageActorId(a.id)}
-            >
-              <span className="inspector-who-fig" style={{ background: a.color }}>
-                {human ? (
-                  <HumanFigure size={26} color={FIGURE_INK_ON_PASTEL} />
-                ) : (
-                  <RobotFigure size={26} color={FIGURE_INK_ON_PASTEL} />
-                )}
-              </span>
-              <span className="inspector-who-name">{a.name}</span>
-            </button>
-          );
-        })}
-      </div>
+      <ActorWhoGrid
+        actors={workflow.actors}
+        selectedId={actorId}
+        listbox
+        ariaLabel="Actors"
+        onPick={(id) => useStore.getState().setManageActorId(id)}
+      />
       <div className="inspector-fat-row">
         <Button
           size="xs"

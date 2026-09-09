@@ -237,3 +237,4 @@ Append only, newest last. Format: `- YYYY-MM-DD — <clause IDs> — <decision a
 - 2026-09-09 — P-06, WG-05 — The Right-click Delete hint is shown only while the Right Click Delete toggle is on. Path right-click menu and Delete-key Path remove are unchanged. — approved by user
 - 2026-09-09 — NA-06 — Manage actors opens with the selected Step’s Who already selected when that Tile has an Actor. — approved by user
 - 2026-09-09 — NA-05, CX-07 — Selected Who (inspector and Manage actors) uses the same yellow fill as Type, without an extra ink outline. Unselected Who keeps the 2px `--line` border. — approved by user
+- 2026-09-09 — NA-05, NA-06 — Who and Manage actors show Humans first (document order among Humans), then Robots on a new row. Add human inserts after the last Human; Add robot inserts after the last Robot. — approved by user

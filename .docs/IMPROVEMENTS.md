@@ -772,3 +772,23 @@ Append to `## Amendments` in `.docs/GOAL.md`: P-06, WG-05, NA-06, NA-05, CX-07 a
 Commit: `feat(improve-38): polish tile chrome hints and Type`.  
 Evidence: `.docs/evidence/improve-38-chrome-hints/`.
 
+
+---
+
+# Improvement 40 — Humans then Robots on their own row
+
+Approved 2026-09-09. Manage actors / Who listed actors in document order, so a new Human landed after the Robots and shared their row.
+
+## Locked decisions
+
+- Display: Humans first (document order among Humans), then Robots (document order among Robots). Robots always start on a new row, even when the last Human row has a gap. Slight extra space between the two groups.
+- Add human inserts after the last Human. Add robot inserts after the last Robot (end of the roster on a new board).
+- Same grouping in the Step inspector Who picker and Manage actors. No document version bump; existing mixed rosters are grouped on display only until the next add.
+- No new runtime dependency.
+
+## Contract
+
+Append to `## Amendments` in `.docs/GOAL.md`: NA-05, NA-06 as dated 2026-09-09.
+
+Commit: `feat(improve-40): group Humans then Robots on their own row`.  
+Evidence: `.docs/evidence/improve-40-actor-groups/`.

@@ -7,8 +7,13 @@ import {
   defaultHumanId,
   defaultRobotId,
   ensureDefaultRobot,
+  humansOf,
   HUMAN_PRESETS,
+  insertActor,
+  makeHuman,
+  makeRobot,
   ROBOT_PRESETS,
+  robotsOf,
   removeActor,
   whoForChildStep,
   whoForPredecessorStep,
@@ -69,6 +74,29 @@ test("default roster is Alice, Roy, Jack, Missy, then LLM, Script, Agent (WG-01,
     ROBOT_PRESETS.map((p) => p.robotKind),
   );
   expect(defaultRobotId(actors)).toBe(robots[0]?.id);
+});
+
+
+test("insertActor appends a Human after the last Human and a Robot after the last Robot", () => {
+  const ada = makeHuman("Ada", "#f4c6d4");
+  const llm = makeRobot("LLM", RobotKind.Llm);
+  const bea = makeHuman("Bea", "#d5c6e6");
+  const mixed = [ada, llm, bea];
+
+  const plusHuman = insertActor(mixed, makeHuman("Cara", "#ff9fbf"));
+  expect(humansOf(plusHuman).map((a) => a.name)).toEqual(["Ada", "Bea", "Cara"]);
+  expect(plusHuman.map((a) => a.name)).toEqual(["Ada", "LLM", "Bea", "Cara"]);
+
+  const plusRobot = insertActor(mixed, makeRobot("Bot", RobotKind.Script));
+  expect(robotsOf(plusRobot).map((a) => a.name)).toEqual(["LLM", "Bot"]);
+  expect(plusRobot.map((a) => a.name)).toEqual(["Ada", "LLM", "Bot", "Bea"]);
+});
+
+test("insertActor puts the first Human at the front and the first Robot at the end", () => {
+  const llm = makeRobot("LLM", RobotKind.Llm);
+  const ada = makeHuman("Ada", "#f4c6d4");
+  expect(insertActor([llm], ada).map((a) => a.kind)).toEqual([ActorKind.Human, ActorKind.Robot]);
+  expect(insertActor([ada], llm).map((a) => a.kind)).toEqual([ActorKind.Human, ActorKind.Robot]);
 });
 
 test("ensureDefaultRobot keeps the first Robot and otherwise creates LLM (NA-04)", () => {

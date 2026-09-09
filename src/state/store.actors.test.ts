@@ -212,6 +212,31 @@ test("beginTileTextEdit and beginTilePie open on-canvas Step edit (NA-08, NA-11)
   expect(useStore.getState().interaction).toEqual({ kind: "idle" });
 });
 
+
+test("addHuman inserts before robots; addRobot appends after robots", () => {
+  const s = useStore.getState();
+  s.requestNew();
+  s.confirmReplaceDiscard();
+  const hid = useStore.getState().addHuman("Pat");
+  expect(useStore.getState().workflow.actors.map((a) => a.name)).toEqual([
+    "Alice",
+    "Roy",
+    "Jack",
+    "Missy",
+    "Pat",
+    "LLM",
+    "Script",
+    "Agent",
+  ]);
+  expect(useStore.getState().workflow.actors.find((a) => a.id === hid)?.name).toBe("Pat");
+
+  const rid = useStore.getState().addRobot();
+  const names = useStore.getState().workflow.actors.map((a) => a.name);
+  expect(names.at(-1)).toBe("Robot");
+  expect(names.indexOf("Pat")).toBe(4);
+  expect(useStore.getState().workflow.actors.find((a) => a.id === rid)?.name).toBe("Robot");
+});
+
 test("Manage actors opens on the selected Step’s Who", () => {
   const { fs, review, roy, alice } = OAK_PARK_IDS;
   const s = useStore.getState();

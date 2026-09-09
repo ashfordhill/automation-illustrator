@@ -5,7 +5,7 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, expect, test } from "vitest";
-import { ActorKind } from "../../workflow/catalogs";
+import { ActorKind, RobotKind } from "../../workflow/catalogs";
 import type { ActorDto } from "../../workflow/types";
 import { WhoButtons } from "./WhoButtons";
 import "../styles/tokens.css";
@@ -54,6 +54,28 @@ test("selected Who is marked is-on without a dashed ring", () => {
   expect(on?.textContent).toContain("Alice");
   expect(off?.textContent).toContain("Roy");
   expect(getComputedStyle(on!).outlineStyle === "dashed").toBe(false);
+});
+
+
+test("Who lists Humans then Robots even when document order is mixed", () => {
+  const mixed: ActorDto[] = [
+    ACTORS[0],
+    {
+      id: "r_llm",
+      kind: ActorKind.Robot,
+      name: "LLM",
+      color: "#5ec4d8",
+      robotKind: RobotKind.Llm,
+    },
+    ACTORS[1],
+  ];
+  act(() => {
+    root.render(<WhoButtons actors={mixed} value="h_alice" onChange={() => {}} />);
+  });
+  const names = [...host.querySelectorAll(".inspector-who-name")].map((el) => el.textContent);
+  expect(names).toEqual(["Alice", "Roy", "LLM"]);
+  expect(host.querySelector('[aria-label="Humans"]')).toBeTruthy();
+  expect(host.querySelector('[aria-label="Robots"]')).toBeTruthy();
 });
 
 test("disabled Who keys cannot be clicked", () => {

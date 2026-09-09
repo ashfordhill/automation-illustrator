@@ -2087,3 +2087,34 @@ Corrections in the same chat before the next slice starts get their own short en
 - Commit: `feat(improve-38): polish tile chrome hints and Type`
 
 
+
+## Improvement 40 — Humans then Robots on their own row — 2026-09-09
+
+- Starting commit: `6a78def5b6d8d57305bf88d8636114c3aaf40f49` (`feat(improve-38): polish tile chrome hints and Type`)
+- Working tree at start: not clean. Concurrent Type keypad / insert-on-bundle / Other-Name WIP was stashed as `concurrent-wip-aside-for-improve-39`, `concurrent-wip-aside-for-improve-40-remaining`, `concurrent-wip-aside-for-improve-40-more`, and `concurrent-wip-aside-for-improve-40-wave3`.
+- GOAL clauses addressed: NA-05, NA-06 (amendment dated 2026-09-09). Document version unchanged.
+- Library research and decisions: no new runtime dependency. Display uses two wrapping rows (Humans, then Robots) so Robots cannot share the last Human row. `insertActor` places a new Human after the last Human and a new Robot after the last Robot.
+- Files changed:
+  - Actors: `src/workflow/actors.ts` (`humansOf`, `robotsOf`, `insertActor`; `ensureDefaultRobot` uses insert)
+  - Store: `src/state/store.ts` (`addHuman` / `addRobot`)
+  - Inspector: `src/app/inspector/ActorWhoGrid.tsx`, `WhoButtons.tsx`, `ManageActorsPanel.tsx`, `src/app/styles/tokens.css`
+  - Tests: `src/workflow/actors.test.ts`, `src/state/store.actors.test.ts`, `src/app/inspector/whoSelect.test.tsx`, `e2e/improve-40-actor-groups.spec.ts`
+  - Docs: `.docs/GOAL.md`, `.docs/IMPROVEMENTS.md`, `.docs/VISUAL_IMPROVEMENTS.md`, `.docs/visual-improvements/2026-09-09-manage-actors-human-after-robots.png`, this handoff entry
+  - Evidence: `.docs/evidence/improve-40-actor-groups/`
+- Behavior implemented:
+  - Manage actors and Who show Humans first, wrapping among themselves. Robots always start on the next row with a slight gap.
+  - Add human inserts after Missy (before LLM on a new board). Add robot appends after Agent.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning). Node 24.
+  - `npm run test:unit` — 41 files, 284 tests pass.
+  - `npm run test:e2e` — `e2e/improve-40-actor-groups.spec.ts` (3), `e2e/improve-28-who-select.spec.ts` (3), `e2e/improve-35-default-robots.spec.ts` (3), `e2e/inspector.spec.ts` (6) all pass (15). Chromium via `LD_LIBRARY_PATH` `~/.local/pw-libs`. Port 4192 (4177 in use). Untracked `e2e/improve-23-tile-edit.spec.ts` and `e2e/improve-39-type-compact.spec.ts` asided for this run.
+- Evidence:
+  - `.docs/evidence/improve-40-actor-groups/manage-human-row-1440.png` — Person on its own Human row; LLM/Script/Agent on the next row (1440×900)
+  - `.docs/evidence/improve-40-actor-groups/manage-robot-end-1440.png` — Add robot appends Robot after Agent (1440×900)
+  - `.docs/evidence/improve-40-actor-groups/who-human-row-1440.png` — Step Who picker uses the same Human/Robot row split (1440×900)
+  - `.docs/evidence/improve-40-actor-groups/manage-human-row-1024.png` — same Manage actors split at 1024×768
+- Earlier-slice defects fixed: none
+- Known limitations / follow-ups: Concurrent Type keypad / Other-Name / insert-bundle WIP remains in stash. Path-end wobble is still a later improvement.
+- Status: COMPLETE
+- Commit: `feat(improve-40): group Humans then Robots on their own row`
+

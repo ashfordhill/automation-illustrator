@@ -1,10 +1,8 @@
 /**
  * Who assignment: every Human and Robot in both lanes (NA-03, NA-05, NA-11).
  */
-import { FIGURE_INK_ON_PASTEL } from "../../workflow/actors";
-import { isHuman, type ActorDto } from "../../workflow/types";
-import { HumanFigure } from "../../board/tiles/HumanFigure";
-import { RobotFigure } from "../../board/tiles/RobotFigure";
+import type { ActorDto } from "../../workflow/types";
+import { ActorWhoGrid } from "./ActorWhoGrid";
 
 export function WhoButtons({
   actors,
@@ -18,31 +16,12 @@ export function WhoButtons({
   disabled?: boolean;
 }) {
   return (
-    <div className="inspector-who-grid" role="group" aria-label="Who">
-      {actors.map((actor) => {
-        const on = value === actor.id;
-        const human = isHuman(actor);
-        return (
-          <button
-            key={actor.id}
-            type="button"
-            className={`inspector-who${on ? " is-on" : ""}`}
-            aria-pressed={on}
-            aria-label={`Who ${actor.name}`}
-            disabled={disabled}
-            onClick={() => onChange(actor.id)}
-          >
-            <span className="inspector-who-fig" style={{ background: actor.color }}>
-              {human ? (
-                <HumanFigure size={26} color={FIGURE_INK_ON_PASTEL} />
-              ) : (
-                <RobotFigure size={26} color={FIGURE_INK_ON_PASTEL} />
-              )}
-            </span>
-            <span className="inspector-who-name">{actor.name}</span>
-          </button>
-        );
-      })}
-    </div>
+    <ActorWhoGrid
+      actors={actors}
+      selectedId={value}
+      onPick={onChange}
+      disabled={disabled}
+      ariaLabel="Who"
+    />
   );
 }

@@ -31,6 +31,7 @@ import {
 import {
   defaultActors,
   defaultHumanId,
+  insertActor,
   makeHuman,
   makeRobot,
   removeActor as removeActorFromDoc,
@@ -667,7 +668,7 @@ export const useStore = create<{
     if (get().present || get().view === ViewMode.Both) return "";
     const actor = makeHuman(name);
     const { workflow, commit, manageActorsOpen } = get();
-    commit({ ...workflow, actors: [...workflow.actors, actor] });
+    commit({ ...workflow, actors: insertActor(workflow.actors, actor) });
     if (manageActorsOpen) set({ manageActorId: actor.id });
     return actor.id;
   },
@@ -675,7 +676,7 @@ export const useStore = create<{
     if (get().present || get().view === ViewMode.Both) return "";
     const actor = makeRobot("Robot", kind);
     const { workflow, commit, manageActorsOpen } = get();
-    commit({ ...workflow, actors: [...workflow.actors, actor] });
+    commit({ ...workflow, actors: insertActor(workflow.actors, actor) });
     if (manageActorsOpen) set({ manageActorId: actor.id });
     return actor.id;
   },

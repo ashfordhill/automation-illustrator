@@ -216,3 +216,10 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
   ![hints and status](.docs/visual-improvements/2026-09-09-hints-and-status.png)
   ![type picker squished](.docs/visual-improvements/2026-09-09-type-picker-squished.png)
 
+
+## 2026-09-09 — Humans and Robots split in Manage actors
+
+- Issue: A new Human (Person…) sat after LLM / Script / Agent and shared the Robots’ row.
+- Resolution: Shipped in `feat(improve-40): group Humans then Robots on their own row` — Humans wrap first; Robots always start on the next row. Add human / Add robot append to their own kind.
+- Attachments:
+  ![manage actors human after robots](.docs/visual-improvements/2026-09-09-manage-actors-human-after-robots.png)

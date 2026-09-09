@@ -1417,6 +1417,12 @@ body.is-tile-dragging * {
   height: 26px;
 }
 
+.inspector-who-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 .inspector-who-grid {
   display: flex;
   flex-wrap: wrap;
