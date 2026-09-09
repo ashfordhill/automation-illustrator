@@ -10,7 +10,7 @@ function aside(page: import("@playwright/test").Page) {
 test.describe("Improvement 13 inherit parent Who", () => {
   test("a child Step created from Roy’s Step is also Roy", async ({ page }) => {
     await loadOakPark(page);
-    await page.getByText("Review BS&A Software").first().click();
+    await page.getByText("Write BS&A Software").first().click();
     await expect(aside(page).getByRole("button", { name: "Who Alice" })).toHaveAttribute(
       "aria-pressed",
       "true",
@@ -20,7 +20,7 @@ test.describe("Improvement 13 inherit parent Who", () => {
       "aria-pressed",
       "true",
     );
-    await page.keyboard.press("1");
+    await page.keyboard.press("e");
     await waitForLayout(page);
     await expect(aside(page).getByRole("button", { name: "Who Roy" })).toHaveAttribute(
       "aria-pressed",
@@ -33,12 +33,12 @@ test.describe("Improvement 13 inherit parent Who", () => {
     await loadOakPark(page);
     await page.getByText("Read invoice.pdf").first().click();
     await aside(page).getByRole("button", { name: "Who Roy" }).click();
-    await page.getByText("Review BS&A Software").first().click();
+    await page.getByText("Write BS&A Software").first().click();
     await expect(aside(page).getByRole("button", { name: "Who Alice" })).toHaveAttribute(
       "aria-pressed",
       "true",
     );
-    await page.keyboard.press("1");
+    await page.keyboard.press("e");
     await waitForLayout(page);
     await expect(aside(page).getByRole("button", { name: "Who Alice" })).toHaveAttribute(
       "aria-pressed",
@@ -64,7 +64,7 @@ test.describe("Improvement 13 inherit parent Who", () => {
       "aria-pressed",
       "true",
     );
-    await page.keyboard.press("1");
+    await page.keyboard.press("e");
     await waitForLayout(page);
     await expect(aside(page).getByRole("button", { name: "Who Roy" })).toHaveAttribute(
       "aria-pressed",
@@ -81,9 +81,9 @@ test.describe("Improvement 13 inherit parent Who", () => {
     await page.getByRole("button", { name: "Add Step" }).click();
     await waitForLayout(page);
     await aside(page).getByRole("button", { name: "Who Roy" }).click();
-    await page.keyboard.press("2");
+    await page.keyboard.press("d");
     await waitForLayout(page);
-    await page.keyboard.press("1");
+    await page.keyboard.press("e");
     await waitForLayout(page);
     await expect(aside(page).getByRole("button", { name: "Who Roy" })).toHaveAttribute(
       "aria-pressed",

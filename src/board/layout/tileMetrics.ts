@@ -76,12 +76,17 @@ export function dockPosition(
   source: Placed,
   targetType: WorkflowNodeKindT,
   portIndex: number,
+  side: "out" | "in" = "out",
 ): Point {
   const src = nodeSize(source.type);
   const tgt = nodeSize(targetType);
   const stride = dockStride(source.type, targetType);
+  const x =
+    side === "in"
+      ? snapToGrid(source.position.x - TILE_GAP - tgt.w)
+      : snapToGrid(source.position.x + src.w + TILE_GAP);
   return {
-    x: snapToGrid(source.position.x + src.w + TILE_GAP),
+    x,
     y: snapToGrid(source.position.y + src.h / 2 + portIndex * stride - tgt.h / 2),
   };
 }
@@ -95,12 +100,13 @@ export function clearDockPosition(
   targetType: WorkflowNodeKindT,
   portIndex: number,
   others: Placed[],
+  side: "out" | "in" = "out",
 ): Point {
   for (let i = portIndex; i < portIndex + 40; i++) {
-    const pos = dockPosition(source, targetType, i);
+    const pos = dockPosition(source, targetType, i, side);
     if (!overlapsAny(pos, targetType, others)) return pos;
   }
-  const x = dockPosition(source, targetType, 0).x;
+  const x = dockPosition(source, targetType, 0, side).x;
   const maxY = Math.max(0, ...others.map((n) => n.position.y + nodeSize(n.type).h));
   return { x, y: snapToGrid(maxY + TILE_GAP) };
 }

@@ -15,7 +15,7 @@ export type TilePieKind = "type" | "who" | "robot-kind";
 export type Interaction =
   | { kind: "idle" }
   | { kind: "plus-pull"; sourceId: string }
-  | { kind: "path-pull"; sourceId: string; hoverTargetId: string | null }
+  | { kind: "path-pull"; sourceId: string; hoverTargetId: string | null; inbound: boolean }
   | { kind: "tile-drag"; nodeId: string; hoverEdgeId: string | null }
   | { kind: "connect-existing"; sourceId: string }
   | { kind: "remove-preview"; plan: RemovalPlan }

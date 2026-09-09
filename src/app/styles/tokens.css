@@ -878,8 +878,9 @@ body.is-tile-dragging * {
 .tile-remove-x {
   position: absolute;
   top: -14px;
-  left: -14px;
+  left: 50%;
   right: auto;
+  transform: translateX(-50%);
   z-index: 6;
 }
 
@@ -917,8 +918,7 @@ body.is-tile-dragging * {
 
 .tile-side-tabs {
   position: absolute;
-  /* 44px tabs, 14px peek — same hang as the X, snug on the right edge. */
-  right: -14px;
+  /* 44px tabs, 14px peek — same hang as the X, snug on the edge. */
   top: 50%;
   transform: translateY(-50%);
   z-index: 5;
@@ -926,6 +926,15 @@ body.is-tile-dragging * {
   flex-direction: column;
   gap: 24px;
   pointer-events: none;
+}
+
+.tile-side-tabs.is-out {
+  right: -14px;
+}
+
+.tile-side-tabs.is-in {
+  right: auto;
+  left: -14px;
 }
 
 .plus-tab,

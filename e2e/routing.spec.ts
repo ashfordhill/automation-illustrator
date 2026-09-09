@@ -81,17 +81,17 @@ test.describe("ELK layout and bundled Path routing (Improvement 01)", () => {
 
   test("+ Step lands in the column right of its source and the lane returns to ready", async ({ page }) => {
     await loadOakPark(page);
-    const review = page.getByText("Review BS&A Software").first();
+    const review = page.getByText("manager").first();
     await review.click();
     const reviewBox = await review.boundingBox();
-    await page.keyboard.press("1");
+    await page.keyboard.press("e");
     const started = Date.now();
     await expect(page.locator(".board-lane")).toHaveAttribute("data-layout", "ready", { timeout: 2_000 });
     expect(Date.now() - started).toBeLessThan(2_000);
     const fresh = page.locator(".react-flow__node.selected").first();
     await expect(fresh).toBeVisible();
     const freshBox = await fresh.boundingBox();
-    const reviewAfter = await page.getByText("Review BS&A Software").first().boundingBox();
+    const reviewAfter = await page.getByText("manager").first().boundingBox();
     expect(freshBox!.x).toBeGreaterThan(reviewAfter!.x + reviewBox!.width * 0.5);
     await screenshotBoard(page, `${EVIDENCE}/add-step-1440.png`);
   });

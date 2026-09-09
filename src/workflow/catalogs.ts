@@ -130,12 +130,6 @@ export const IdPrefix = {
 } as const;
 export type IdPrefix = (typeof IdPrefix)[keyof typeof IdPrefix];
 
-export const KeyPreset = {
-  Arrows: "arrows",
-  Wasd: "wasd",
-} as const;
-export type KeyPreset = (typeof KeyPreset)[keyof typeof KeyPreset];
-
 /** Actions in keyboard/bindings.ts — the Keybinds modal rebinds these (SH-14). */
 export const KeyAction = {
   Undo: "undo",
@@ -150,8 +144,10 @@ export const KeyAction = {
   AddPath: "addPath",
   RemoveNode: "removeNode",
   ToggleDash: "toggleDash",
-  AddBranchStep: "addBranchStep",
-  AddBranchData: "addBranchData",
+  AddStepIn: "addStepIn",
+  AddStepOut: "addStepOut",
+  AddDataIn: "addDataIn",
+  AddDataOut: "addDataOut",
   LinkExisting: "linkExisting",
 } as const;
 export type KeyAction = (typeof KeyAction)[keyof typeof KeyAction];

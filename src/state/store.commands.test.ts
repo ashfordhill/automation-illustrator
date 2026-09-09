@@ -3,7 +3,7 @@ import * as cues from "../app/sound/cues";
 import { OAK_PARK_IDS } from "../demos/oakParkInvoice";
 import { ColorScheme, SelectionKind, ViewMode, WorkflowNodeKind } from "../workflow/catalogs";
 import { MSG } from "../workflow/commands";
-import { defaultRemovalCandidateId, validateWorkflow } from "../workflow/graph";
+import { validateWorkflow } from "../workflow/graph";
 import { emptyAfterOverlay, type WorkflowDoc } from "../workflow/types";
 import { IDLE } from "./interaction";
 import { useStore } from "./store";
@@ -50,19 +50,10 @@ function dataId(doc: WorkflowDoc) {
 test("store actions keep a valid workflow (WG-02..WG-04)", () => {
   const s = useStore.getState();
   expect(validateWorkflow(s.workflow)).toEqual([]);
-  const root = rootId(s.workflow);
   const leaf = leafId(s.workflow);
+  const leafEdge = s.workflow.edges.find((e) => e.target === leaf)!;
 
-  s.select({ type: SelectionKind.Node, id: root });
-  s.deleteSelection();
-  expect(useStore.getState().workflow.nodes.some((n) => n.id === root)).toBe(true);
-  expect(useStore.getState().interaction.kind).toBe("idle");
-  expect(useStore.getState().notice).toBe(MSG.rootRemoval);
-  expect(validateWorkflow(useStore.getState().workflow)).toEqual([]);
-  s.setNotice(null);
-
-  const edge = useStore.getState().workflow.edges[0]!;
-  s.select({ type: SelectionKind.Edge, id: edge.id });
+  s.select({ type: SelectionKind.Edge, id: leafEdge.id });
   const edgeCount = useStore.getState().workflow.edges.length;
   s.deleteSelection();
   expect(useStore.getState().workflow.edges).toHaveLength(edgeCount);
@@ -179,7 +170,7 @@ test("connect rejects a cycle without mutating; spawnBranch stays valid", () => 
   const edgesBefore = s.workflow.edges.length;
   s.connect(leaf, root);
   expect(useStore.getState().workflow.edges).toHaveLength(edgesBefore);
-  expect(useStore.getState().notice).toBe(MSG.rootIncoming);
+  expect(useStore.getState().notice).toBe(MSG.cycle);
 
   const id = useStore.getState().spawnBranch(leaf, WorkflowNodeKind.Step);
   expect(id).toBeTruthy();
@@ -224,14 +215,19 @@ test("addStep on a nonempty board does not create a second root", () => {
   expect(validateWorkflow(useStore.getState().workflow)).toEqual([]);
 });
 
-test("removeTarget on the root explains WG-06 and stays idle", () => {
+test("removeTarget on a source that would split the board is blocked", () => {
   const s = useStore.getState();
-  const root = rootId(s.workflow);
-  const before = s.workflow;
-  s.removeTarget(root);
-  expect(useStore.getState().notice).toBe(MSG.rootRemoval);
+  s.requestNew();
+  s.confirmReplaceDiscard();
+  const host = useStore.getState().addStep();
+  useStore.getState().spawnBranch(host, WorkflowNodeKind.Step, "out");
+  useStore.getState().spawnBranch(host, WorkflowNodeKind.Step, "out");
+  const before = useStore.getState().workflow;
+  expect(before.nodes).toHaveLength(3);
+  useStore.getState().removeTarget(host);
+  expect(useStore.getState().notice).toBe(MSG.boardSplit);
   expect(useStore.getState().interaction).toEqual(IDLE);
-  expect(useStore.getState().workflow).toBe(before);
+  expect(useStore.getState().workflow.nodes).toHaveLength(3);
 });
 
 test("sole remaining Tile can be deleted back to the empty board (WG-06)", () => {
@@ -246,26 +242,18 @@ test("sole remaining Tile can be deleted back to the empty board (WG-06)", () =>
   expect(useStore.getState().interaction).toEqual(IDLE);
 });
 
-test("root-only board explains WG-06; leaf picker defaults to itself (WG-09)", () => {
+test("a source with one child can be removed; the child remains", () => {
   const s = useStore.getState();
   s.requestNew();
   s.confirmReplaceDiscard();
   const stepId = useStore.getState().addStep();
   expect(stepId).toBeTruthy();
-  useStore.getState().spawnBranch(stepId, WorkflowNodeKind.Step);
+  const child = useStore.getState().spawnBranch(stepId, WorkflowNodeKind.Step);
   expect(useStore.getState().workflow.nodes.length).toBeGreaterThan(1);
   useStore.getState().removeTarget(stepId);
-  expect(useStore.getState().notice).toBe(MSG.rootRemoval);
-  expect(useStore.getState().workflow.nodes.some((n) => n.id === stepId)).toBe(true);
-
-  s.resetDemo();
-  const leaf = leafId(useStore.getState().workflow);
-  const def = defaultRemovalCandidateId(
-    useStore.getState().workflow.nodes,
-    useStore.getState().workflow.edges,
-    leaf,
-  );
-  expect(def).toBe(leaf);
+  expect(useStore.getState().workflow.nodes.some((n) => n.id === stepId)).toBe(false);
+  expect(useStore.getState().workflow.nodes.some((n) => n.id === child)).toBe(true);
+  expect(validateWorkflow(useStore.getState().workflow)).toEqual([]);
 });
 
 test("insertOnPath relocates a leaf onto an existing Path", () => {
@@ -292,6 +280,48 @@ test("insertOnPath relocates a leaf onto an existing Path", () => {
   expect(next.edges.some((e) => e.source === "a" && e.target === "c" && e.label === "keep")).toBe(true);
   expect(next.edges.some((e) => e.source === "c" && e.target === "b" && e.label === "")).toBe(true);
   expect(next.edges.some((e) => e.source === "r" && e.target === "c")).toBe(false);
+  expect(validateWorkflow(next)).toEqual([]);
+});
+
+test("spawnBranch inbound fans in; predecessor Who does not copy the successor", () => {
+  const s = useStore.getState();
+  s.requestNew();
+  s.confirmReplaceDiscard();
+  const host = useStore.getState().addStep();
+  const child = useStore.getState().spawnBranch(host, WorkflowNodeKind.Step, "out");
+  const roy = useStore.getState().workflow.actors.find((a) => a.name === "Roy");
+  const alice = useStore.getState().workflow.actors.find((a) => a.name === "Alice");
+  expect(roy && alice).toBeTruthy();
+  useStore.getState().assignActor(host, roy!.id);
+  useStore.getState().assignActor(child, alice!.id);
+  const left = useStore.getState().spawnBranch(host, WorkflowNodeKind.Step, "in");
+  expect(left).toBeTruthy();
+  const next = useStore.getState().workflow;
+  expect(next.edges.some((e) => e.source === left && e.target === host)).toBe(true);
+  expect(next.assignments[host]).toBe(roy!.id);
+  expect(next.assignments[left]).toBe(alice!.id);
+  expect(validateWorkflow(next)).toEqual([]);
+
+  const data = useStore.getState().spawnBranch(host, WorkflowNodeKind.DataField, "out");
+  expect(data).toBeTruthy();
+  const other = useStore.getState().spawnBranch(data, WorkflowNodeKind.Step, "in");
+  expect(other).toBeTruthy();
+  const fan = useStore.getState().workflow;
+  expect(fan.edges.some((e) => e.source === host && e.target === data)).toBe(true);
+  expect(fan.edges.some((e) => e.source === other && e.target === data)).toBe(true);
+  expect(validateWorkflow(fan)).toEqual([]);
+});
+
+test("completePathPull inbound connects the hovered Tile into this one", () => {
+  useStore.getState().requestNew();
+  useStore.getState().confirmReplaceDiscard();
+  const host = useStore.getState().addStep();
+  const data = useStore.getState().spawnBranch(host, WorkflowNodeKind.DataField, "out");
+  const other = useStore.getState().spawnBranch(host, WorkflowNodeKind.Step, "out");
+  useStore.getState().beginPathPull(data, true);
+  useStore.getState().completePathPull(other);
+  const next = useStore.getState().workflow;
+  expect(next.edges.some((e) => e.source === other && e.target === data)).toBe(true);
   expect(validateWorkflow(next)).toEqual([]);
 });
 

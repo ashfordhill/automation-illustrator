@@ -74,6 +74,17 @@ test("connectAfter and addAfterStep stay off the Before graph (BA-06, BA-07)", (
   expect(cycled.ok).toBe(false);
 });
 
+test("addAfterStep inbound creates an After-only Path into the host", () => {
+  const d = doc([step("a"), step("b", 0, 200)], [path("e1", "a", "b")]);
+  const extra = addAfterStep(d, "b", step("x", 0, 400), { inbound: true });
+  expect(extra.ok).toBe(true);
+  if (!extra.ok) return;
+  expect(extra.value.after.extraEdges).toEqual([
+    expect.objectContaining({ source: "x", target: "b" }),
+  ]);
+  expect(extra.value.nodes.map((n) => n.id)).toEqual(["a", "b"]);
+});
+
 test("After-only removal restitches extra Paths and omits the Step (BA-07)", () => {
   const d = doc([step("a"), step("b", 0, 200)], [path("e1", "a", "b")], {
     after: {

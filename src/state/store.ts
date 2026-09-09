@@ -4,8 +4,8 @@
  * all read/write through here. persistence.ts handles localStorage JSON.
  *
  * commit / undo / redo — history.ts (500; replaceDoc is a document boundary)
- * addStep / addField — first Tile is the root (WG-01); later tiles spawn from +
- * spawnBranch / plus-pull / path-pull — stretchy + tab and Path knot
+ * addStep / addField — first Tile on an empty board (WG-01); later tiles spawn from +
+ * spawnBranch / plus-pull / path-pull — stretchy + tab (left or right) and Path pull
  * removeTarget / confirmRemove — selected-tile X / Delete; M:N pairing preview
  * insertOnPath — drop a tile onto a Path
  * toggleSelectedDash — selected Path solid / dotted
@@ -22,8 +22,7 @@ import { clearDockPosition, snapToGrid, vacantSpot } from "../board/layout/tileM
 import { type DemoId, workflowForDemo } from "../demos/catalog";
 import { freshBoard, isEmptyBoard, oakParkInvoice } from "../demos/oakParkInvoice";
 import {
-  ARROW_PRESET,
-  WASD_PRESET,
+  DEFAULT_KEYMAP,
   loadKeymap,
   saveKeymap,
   type KeyAction,
@@ -36,12 +35,12 @@ import {
   makeRobot,
   removeActor as removeActorFromDoc,
   whoForChildStep,
+  whoForPredecessorStep,
 } from "../workflow/actors";
 import {
   AssignmentLane,
   ColorScheme,
   IdPrefix,
-  KeyPreset,
   RobotKind,
   SelectionKind,
   SplitKind,
@@ -63,6 +62,7 @@ import {
   removalNeighborhood,
   removePath as removePathFromDoc,
   validatePairings,
+  type BranchSide,
   type RemovalPairing,
   type RemovalPlan,
 } from "../workflow/commands";
@@ -77,6 +77,7 @@ import {
   afterGraph,
   applyDashForSplit,
   edgeIsDotted,
+  nextIncomingIndex,
   nextPortIndex,
   validateWorkflow,
 } from "../workflow/graph";
@@ -264,7 +265,7 @@ export const useStore = create<{
   setHelp: (v: boolean) => void;
   setCapturing: (a: KeyAction | null) => void;
   setKey: (action: KeyAction, key: string) => void;
-  applyPreset: (which: KeyPreset) => void;
+  resetKeymap: () => void;
   setColorScheme: (c: ColorSchemeT) => void;
   toggleColorScheme: () => void;
   setNotice: (message: string | null) => void;
@@ -288,9 +289,13 @@ export const useStore = create<{
   openPathMenu: (edgeId: string, x: number, y: number) => void;
   removePath: (edgeId: string) => void;
   closeBoardModes: () => void;
-  spawnBranch: (sourceId: string, type: typeof WorkflowNodeKind.Step | typeof WorkflowNodeKind.DataField) => string;
+  spawnBranch: (
+    sourceId: string,
+    type: typeof WorkflowNodeKind.Step | typeof WorkflowNodeKind.DataField,
+    side?: BranchSide,
+  ) => string;
   beginPlusPull: (sourceId: string) => void;
-  beginPathPull: (sourceId: string) => void;
+  beginPathPull: (sourceId: string, inbound?: boolean) => void;
   setPathPullHover: (targetId: string | null) => void;
   completePathPull: (targetId: string) => void;
   beginTileDrag: (nodeId: string) => void;
@@ -540,12 +545,18 @@ export const useStore = create<{
   },
   setCapturing: (capturing) => set({ capturing }),
   setKey: (action, key) => {
-    const keymap = { ...get().keymap, [action]: key };
+    const keymap = { ...get().keymap };
+    if (key) {
+      for (const other of Object.keys(keymap) as KeyAction[]) {
+        if (other !== action && keymap[other] === key) keymap[other] = "";
+      }
+    }
+    keymap[action] = key;
     saveKeymap(keymap);
     set({ keymap, capturing: null });
   },
-  applyPreset: (which) => {
-    const keymap = which === KeyPreset.Wasd ? { ...WASD_PRESET } : { ...ARROW_PRESET };
+  resetKeymap: () => {
+    const keymap = { ...DEFAULT_KEYMAP };
     saveKeymap(keymap);
     set({ keymap });
   },
@@ -872,10 +883,10 @@ export const useStore = create<{
       selected: { type: SelectionKind.Node, id: sourceId },
     });
   },
-  beginPathPull: (sourceId) => {
+  beginPathPull: (sourceId, inbound = false) => {
     if (get().present || get().view === ViewMode.Both) return;
     set({
-      interaction: { kind: "path-pull", sourceId, hoverTargetId: null },
+      interaction: { kind: "path-pull", sourceId, hoverTargetId: null, inbound },
       selected: { type: SelectionKind.Node, id: sourceId },
     });
   },
@@ -893,7 +904,8 @@ export const useStore = create<{
       return;
     }
     const before = get().workflow;
-    get().connect(interaction.sourceId, targetId);
+    if (interaction.inbound) get().connect(targetId, interaction.sourceId);
+    else get().connect(interaction.sourceId, targetId);
     if (get().workflow === before) {
       set({ interaction: IDLE });
       return;
@@ -934,12 +946,14 @@ export const useStore = create<{
     });
     get().requestFocus(nodeId);
   },
-  spawnBranch: (sourceId, type) => {
+  spawnBranch: (sourceId, type, side = "out") => {
     if (get().present || get().view === ViewMode.Both) return "";
+    const inbound = side === "in";
+    const dock: "out" | "in" = inbound ? "in" : "out";
     const { workflow, lastHumanId, view } = get();
     if (view === ViewMode.After) {
       if (type === WorkflowNodeKind.DataField) {
-        get().setNotice("After does not add Data. Pull + onto Step, or press 1.");
+        get().setNotice("After does not add Data. Pull + onto Step, or press Q or E.");
         return "";
       }
       if (!findNode(workflow, sourceId)) {
@@ -954,21 +968,31 @@ export const useStore = create<{
         set({ interaction: IDLE });
         return "";
       }
-      const port = nextPortIndex(graph.edges, sourceId);
-      const pos = clearDockPosition(srcNode, WorkflowNodeKind.Step, port, [
-        ...graph.nodes,
-        ...projectAfter(workflow).nodes,
-      ]);
+      const port = inbound
+        ? nextIncomingIndex(graph.edges, sourceId)
+        : nextPortIndex(graph.edges, sourceId);
+      const pos = clearDockPosition(
+        srcNode,
+        WorkflowNodeKind.Step,
+        port,
+        [...graph.nodes, ...projectAfter(workflow).nodes],
+        dock,
+      );
       const id = nid(IdPrefix.Step);
-      const result = addAfterStep(workflow, sourceId, {
-        id,
-        type: WorkflowNodeKind.Step,
-        position: pos,
-        stepKind: StepKind.Other,
-        title: STEP_KIND_META[StepKind.Other].defaultTitle,
-        detail: "",
-        split: SplitKind.Exclusive,
-      });
+      const result = addAfterStep(
+        workflow,
+        sourceId,
+        {
+          id,
+          type: WorkflowNodeKind.Step,
+          position: pos,
+          stepKind: StepKind.Other,
+          title: STEP_KIND_META[StepKind.Other].defaultTitle,
+          detail: "",
+          split: SplitKind.Exclusive,
+        },
+        { inbound },
+      );
       if (!result.ok) {
         get().setNotice(result.message);
         return "";
@@ -987,16 +1011,23 @@ export const useStore = create<{
       set({ interaction: IDLE });
       return "";
     }
-    const port = nextPortIndex(workflow.edges, sourceId);
-    const pos = clearDockPosition(src, type, port, workflow.nodes);
+    const port = inbound
+      ? nextIncomingIndex(workflow.edges, sourceId)
+      : nextPortIndex(workflow.edges, sourceId);
+    const pos = clearDockPosition(src, type, port, workflow.nodes, dock);
     if (type === WorkflowNodeKind.DataField) {
       const id = nid(IdPrefix.DataField);
-      const result = addConnectedNode(workflow, sourceId, {
-        id,
-        type: WorkflowNodeKind.DataField,
-        position: pos,
-        label: "Data",
-      });
+      const result = addConnectedNode(
+        workflow,
+        sourceId,
+        {
+          id,
+          type: WorkflowNodeKind.DataField,
+          position: pos,
+          label: "Data",
+        },
+        { inbound },
+      );
       if (!result.ok) {
         get().setNotice(result.message);
         return "";
@@ -1011,7 +1042,9 @@ export const useStore = create<{
       return id;
     }
     const id = nid(IdPrefix.Step);
-    const who = whoForChildStep(workflow, sourceId, lastHumanId);
+    const who = inbound
+      ? whoForPredecessorStep(workflow, lastHumanId)
+      : whoForChildStep(workflow, sourceId, lastHumanId);
     const result = addConnectedNode(
       workflow,
       sourceId,
@@ -1024,7 +1057,7 @@ export const useStore = create<{
         detail: "",
         split: SplitKind.Exclusive,
       },
-      who.beforeId || who.afterId ? who : undefined,
+      { ...who, inbound },
     );
     if (!result.ok) {
       get().setNotice(result.message);
@@ -1321,7 +1354,7 @@ function applyPlannedRemoval(
   const actor = node && isStepNode(node) ? get().actorFor(node.id) : undefined;
   const positions = get().activePositions();
   const { predecessorIds, successorIds } = removalNeighborhood(workflow, plan.nodeId, positions);
-  if (successorIds.length) {
+  if (successorIds.length && predecessorIds.length) {
     const checked = validatePairings(pairings, predecessorIds, successorIds);
     if (!checked.ok) {
       get().setNotice(checked.message);

@@ -44,7 +44,7 @@ export function PathContextMenu() {
           color="red"
           disabled={!allowed}
           title={allowed ? "Delete Path" : MSG.pathRemoval}
-          aria-label={allowed ? "Delete Path" : "Delete Path (would leave a Tile unreachable)"}
+          aria-label={allowed ? "Delete Path" : "Delete Path (would split the board)"}
           data-testid="path-menu-delete"
           leftSection={<IconTrash size={16} stroke={2.2} aria-hidden />}
           onClick={() => useStore.getState().removePath(interaction.edgeId)}

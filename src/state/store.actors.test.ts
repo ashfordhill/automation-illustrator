@@ -33,12 +33,12 @@ afterEach(() => {
 });
 
 test("spawnBranch from a Step inherits that Step’s Who, not last-used Human (NA-03)", () => {
-  const { read, review, acct, roy, alice, robot } = OAK_PARK_IDS;
+  const { read, enter, review, acct, roy, alice, robot } = OAK_PARK_IDS;
   const s = useStore.getState();
   s.assignActor(read, roy);
   expect(useStore.getState().lastHumanId).toBe(roy);
 
-  const childOfAlice = useStore.getState().spawnBranch(review, WorkflowNodeKind.Step);
+  const childOfAlice = useStore.getState().spawnBranch(enter, WorkflowNodeKind.Step);
   expect(childOfAlice).toBeTruthy();
   expect(useStore.getState().workflow.assignments[childOfAlice]).toBe(alice);
   expect(useStore.getState().workflow.after.assignments[childOfAlice]).toBe(alice);
@@ -91,7 +91,7 @@ test("Who assigns in both lanes, including a Robot in Before (NA-03, NA-11)", ()
   s.setView(ViewMode.After);
   useStore.getState().assignActor(review, robot);
   expect(useStore.getState().workflow.after.assignments[review]).toBe(robot);
-  expect(useStore.getState().workflow.assignments[review]).toBe(OAK_PARK_IDS.alice);
+  expect(useStore.getState().workflow.assignments[review]).toBe(OAK_PARK_IDS.roy);
 });
 
 test("changing Split re-applies default strokes (PC-02, PC-03)", () => {

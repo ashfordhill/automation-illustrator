@@ -117,6 +117,11 @@ test.describe("slice 12 persistence, keymap, and reload", () => {
     await expect(dialog).toBeVisible();
     await expect(dialog.getByRole("button", { name: "Undo last (Z)" })).toBeVisible();
     await expect(dialog.getByRole("button", { name: /Pointer/ })).toHaveCount(0);
+    await expect(dialog.getByRole("button", { name: "Reset to defaults" })).toBeVisible();
+    await expect(dialog.getByRole("button", { name: "Pan left (None)" })).toBeVisible();
+    await expect(dialog.getByRole("button", { name: /Arrow keys/ })).toHaveCount(0);
+    await expect(dialog.getByRole("button", { name: /WASD/ })).toHaveCount(0);
+    await expect(dialog.getByRole("button", { name: "New Step to the right (E)" })).toBeVisible();
     await capturePage(page, `${EVIDENCE}/keybinds-1440.png`);
     await page.keyboard.press("Escape");
     await expect(dialog).toHaveCount(0);

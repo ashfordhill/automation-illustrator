@@ -32,7 +32,7 @@ test.describe("After-only Steps (merge withdrawn)", () => {
     await viewLabel(page, "After").click();
     await waitForLayout(page);
     await page.getByText("Read invoice.pdf").first().click();
-    await page.keyboard.press("1");
+    await page.keyboard.press("e");
     await waitForLayout(page);
     await expect(page.locator("aside").getByRole("button", { name: "Type Other" })).toBeVisible();
     await page.locator("aside").getByRole("button", { name: "Remove Step" }).click();

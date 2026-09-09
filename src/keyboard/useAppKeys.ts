@@ -1,6 +1,6 @@
 /**
  * Global keydown handler for undo, pan, help, Present Space/Escape,
- * selected-tile 1/2 spawn, and Delete/Remove. Mounted once from app/App.tsx.
+ * selected-tile Q/E Step and A/D Data spawn, and Delete/Remove. Mounted once from app/App.tsx.
  */
 import { useEffect } from "react";
 import { panBy } from "../board/reactFlowBridge";
@@ -38,6 +38,14 @@ export function useAppKeys() {
 
       if (s.capturing) {
         e.preventDefault();
+        if (e.key === "Escape") {
+          s.setCapturing(null);
+          return;
+        }
+        if (e.key === "Backspace" || e.key === "Delete") {
+          s.setKey(s.capturing, "");
+          return;
+        }
         s.setKey(s.capturing, eventKey(e));
         return;
       }
@@ -156,15 +164,26 @@ export function useAppKeys() {
           s.focusDataLabel();
           return;
         }
-        if (keyIs(map, KeyAction.AddBranchStep, e)) {
+        if (keyIs(map, KeyAction.AddStepOut, e)) {
           e.preventDefault();
-          s.spawnBranch(s.selected.id, WorkflowNodeKind.Step);
+          s.spawnBranch(s.selected.id, WorkflowNodeKind.Step, "out");
           return;
         }
-        if (keyIs(map, KeyAction.AddBranchData, e)) {
+        if (keyIs(map, KeyAction.AddStepIn, e)) {
+          e.preventDefault();
+          s.spawnBranch(s.selected.id, WorkflowNodeKind.Step, "in");
+          return;
+        }
+        if (keyIs(map, KeyAction.AddDataOut, e)) {
           e.preventDefault();
           if (s.view === ViewMode.After) return;
-          s.spawnBranch(s.selected.id, WorkflowNodeKind.DataField);
+          s.spawnBranch(s.selected.id, WorkflowNodeKind.DataField, "out");
+          return;
+        }
+        if (keyIs(map, KeyAction.AddDataIn, e)) {
+          e.preventDefault();
+          if (s.view === ViewMode.After) return;
+          s.spawnBranch(s.selected.id, WorkflowNodeKind.DataField, "in");
           return;
         }
         if (keyIs(map, KeyAction.AddPath, e) || keyIs(map, KeyAction.LinkExisting, e)) {

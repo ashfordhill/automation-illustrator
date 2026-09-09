@@ -10,7 +10,6 @@ import {
   maybeExclusiveSplit,
   outgoingSorted,
   positionOf,
-  rootNodeId,
   validateWorkflow,
   wouldCreateCycle,
 } from "./graph";
@@ -54,25 +53,25 @@ export type RemovalPlan = {
 };
 
 export const MSG = {
-  rootIncoming: "The root has no incoming Paths. A connection into the root is rejected.",
   cycle: "That Path would create a cycle.",
   duplicatePath: "That Path already exists.",
   selfLoop: "A Path cannot start and end on the same Node.",
-  rootRemoval: "The root cannot be removed while other Tiles remain.",
-  pathRemoval:
-    "Removing this Path would leave a Tile the root cannot reach.",
+  boardSplit: "Removing this Tile would split the board into separate workflows.",
+  pathRemoval: "Removing this Path would split the board into separate workflows.",
   manyToMany:
     "This Node has multiple incoming and outgoing Paths. Confirm pairings before removing it.",
-  notEmpty: "A root is already on the board. New Nodes must connect from an existing Node.",
+  notEmpty: "A Tile is already on the board. New Nodes must connect from an existing Node.",
   notStep: "After-only Nodes must be Steps.",
   rootKind: "The first Node on a board must be a Step or Data.",
   missingNode: "That Node is not on the board.",
   invalidPairings: "Every successor needs at least one incoming Path after removal.",
   insertSelf: "Drop the Node onto a Path that does not already touch it.",
-  rootInsert: "The root cannot be moved onto a Path.",
   insertHostGone: "That Path is gone after reconnecting the Node’s old neighborhood.",
   missingPath: "That Path is not on the board.",
 } as const;
+
+/** Spawn direction: out = child to the right; in = predecessor to the left. */
+export type BranchSide = "out" | "in";
 
 export function fail<T>(code: string, message: string): CommandResult<T> {
   return { ok: false, code, message };
@@ -304,11 +303,7 @@ export function validatePairings(
   return ok(true);
 }
 
-function isSoleBaseNode(doc: WorkflowDoc, nodeId: string): boolean {
-  return doc.nodes.length === 1 && doc.nodes[0]?.id === nodeId;
-}
-
-/** WG-01 / WG-02: the first Step or Data on an empty board is the sole root. */
+/** WG-01 / WG-02: the first Step or Data on an empty board. */
 export function createRootNode(
   doc: WorkflowDoc,
   node: NodeDto,
@@ -360,10 +355,6 @@ export function connectNodes(
   if (doc.edges.some((e) => e.source === source && e.target === target)) {
     return fail("duplicate-path", MSG.duplicatePath);
   }
-  const root = rootNodeId(doc.nodes, doc.edges);
-  if (root && target === root) {
-    return fail("root-incoming", MSG.rootIncoming);
-  }
   if (wouldCreateCycle(doc.edges, source, target)) {
     return fail("cycle", MSG.cycle);
   }
@@ -412,12 +403,18 @@ export function canRemovePath(doc: WorkflowDoc, edgeId: string): boolean {
   return removePath(doc, edgeId).ok;
 }
 
-/** Add a child Node and its Path in one validated step (create + connect). */
+/** Add a connected Node and its Path in one validated step (create + connect). */
 export function addConnectedNode(
   doc: WorkflowDoc,
   sourceId: string,
   node: NodeDto,
-  options?: { edgeId?: string; label?: string; beforeId?: string; afterId?: string },
+  options?: {
+    edgeId?: string;
+    label?: string;
+    beforeId?: string;
+    afterId?: string;
+    inbound?: boolean;
+  },
 ): CommandResult<WorkflowDoc> {
   const valid = requireValid(doc);
   if (!valid.ok) return valid;
@@ -427,21 +424,23 @@ export function addConnectedNode(
   if (doc.nodes.some((n) => n.id === node.id)) {
     return fail("duplicate-id", `Duplicate id "${node.id}".`);
   }
-  const previousOutgoing = doc.edges.filter((e) => e.source === sourceId).length;
+  const pathSource = options?.inbound ? node.id : sourceId;
+  const pathTarget = options?.inbound ? sourceId : node.id;
+  const previousOutgoing = doc.edges.filter((e) => e.source === pathSource).length;
   const edgeId = options?.edgeId ?? nid(IdPrefix.Edge);
   const nodes = [...doc.nodes, node];
   const rawEdges: EdgeDto[] = [
     ...doc.edges,
     {
       id: edgeId,
-      source: sourceId,
-      target: node.id,
+      source: pathSource,
+      target: pathTarget,
       label: options?.label ?? "",
       dashed: false,
     },
   ];
-  const splitNodes = maybeExclusiveSplit(nodes, rawEdges, sourceId);
-  const edges = applyConnectStroke(splitNodes, rawEdges, sourceId, edgeId, previousOutgoing);
+  const splitNodes = maybeExclusiveSplit(nodes, rawEdges, pathSource);
+  const edges = applyConnectStroke(splitNodes, rawEdges, pathSource, edgeId, previousOutgoing);
   let assignments = doc.assignments;
   let afterAssignments = doc.after.assignments;
   if (node.type === WorkflowNodeKind.Step) {
@@ -468,13 +467,15 @@ function planFromNeighborhood(
   mode: RemovalPlan["mode"],
   positions?: PositionMap,
 ): CommandResult<RemovalPlan> {
-  if (outgoing.length) {
+  if (outgoing.length && incoming.length) {
     const checked = validatePairings(
       pairings,
       uniqueIds(incoming, "source"),
       uniqueIds(outgoing, "target"),
     );
     if (!checked.ok) return checked;
+  } else if (pairings.length && !incoming.length) {
+    return fail("invalid-pairings", MSG.invalidPairings);
   }
   const remainingNodes = doc.nodes.filter((n) => n.id !== nodeId);
   const remainingEdges = applyPairings(
@@ -509,10 +510,6 @@ export function planNodeRemoval(
   if (!valid.ok) return valid;
   if (!doc.nodes.some((n) => n.id === nodeId)) {
     return fail("missing-ref", MSG.missingNode);
-  }
-  const root = rootNodeId(doc.nodes, doc.edges);
-  if (root === nodeId && !isSoleBaseNode(doc, nodeId)) {
-    return fail("root-removal", MSG.rootRemoval);
   }
   const incoming = incomingSorted(doc.nodes, doc.edges, nodeId, positions);
   const outgoing = outgoingSorted(doc.nodes, doc.edges, nodeId, positions);
@@ -591,13 +588,9 @@ export function applyNodeRemoval(
   if (!doc.nodes.some((n) => n.id === plan.nodeId)) {
     return fail("missing-ref", MSG.missingNode);
   }
-  const root = rootNodeId(doc.nodes, doc.edges);
-  if (root === plan.nodeId && !isSoleBaseNode(doc, plan.nodeId)) {
-    return fail("root-removal", MSG.rootRemoval);
-  }
   const incoming = incomingSorted(doc.nodes, doc.edges, plan.nodeId, positions);
   const outgoing = outgoingSorted(doc.nodes, doc.edges, plan.nodeId, positions);
-  if (outgoing.length) {
+  if (outgoing.length && incoming.length) {
     const checked = validatePairings(
       pairings,
       uniqueIds(incoming, "source"),
@@ -621,19 +614,26 @@ export function applyNodeRemoval(
     { nodes: doc.nodes, edges: doc.edges },
     positions,
   );
-  return succeed({
+  const next: WorkflowDoc = {
     ...doc,
     nodes: remainingNodes,
     edges: remainingEdges,
     assignments: dropAssign(doc.assignments, plan.nodeId),
     after: remainingNodes.length === 0 ? emptyAfterOverlay() : overlayEffects.after,
-  });
+  };
+  const checked = succeed(next);
+  if (!checked.ok) {
+    const split = validateWorkflow(next).some((v) => v.code === "disconnected");
+    if (split) return fail("board-split", MSG.boardSplit);
+    return checked;
+  }
+  return checked;
 }
 
 /**
  * Relocate an existing Node onto Path S→U: restitch the old neighborhood
  * (WG-10..12, nearest pairings if M:N) then connect S→T and T→U in one step.
- * The original condition stays on S→T (closer to the root).
+ * The original condition stays on S→T (closer to the Path’s source).
  */
 export function insertNodeOnPath(
   doc: WorkflowDoc,
@@ -651,8 +651,6 @@ export function insertNodeOnPath(
   if (!doc.nodes.some((n) => n.id === nodeId)) {
     return fail("missing-ref", MSG.missingNode);
   }
-  const root = rootNodeId(doc.nodes, doc.edges);
-  if (root === nodeId) return fail("root-insert", MSG.rootInsert);
 
   const planned = planNodeRemoval(doc, nodeId, positions);
   if (!planned.ok) return planned;

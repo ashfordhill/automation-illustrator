@@ -1926,4 +1926,39 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(improve-33): grey Compare Who and text fields`
 
+## Improvement 34 — Add Tiles and Paths to the left — 2026-09-08
+
+- Starting commit: `e451ac7b8f3fd4aa00f89ab6536cf6d8b8881a43` (`feat(improve-33): grey Compare Who and text fields`)
+- Working tree at start: not clean. Concurrent Type keypad / Who-select / tile-pie WIP was left unstaged. Untracked `pieGeometry.test.ts` and `CanvasHelper.test.tsx` were moved aside for `tsc`.
+- GOAL clauses addressed: WG-02, WG-03, WG-04, WG-05, WG-06, WG-07, NG-02, SH-09, SH-14, AQ-01, NA-03 (amendments dated 2026-09-08)
+- Library research and decisions: no new runtime dependency. Keybinds stay in localStorage only (no YAML/Compose seed). Pan keys default unbound. Unique-root special cases dropped in favor of a weakly connected DAG (fan-in allowed; islands and cycles rejected). Oak Park Read can be removed because its children reconverge; a source is blocked only when removal would split the board.
+- Files changed:
+  - Graph/commands: `src/workflow/graph.ts`, `commands.ts`, `after.ts`, `actors.ts`, `catalogs.ts`
+  - Store/keys: `src/state/store.ts`, `interaction.ts`, `src/keyboard/bindings.ts`, `useAppKeys.ts`, `KeybindsModal.tsx`
+  - UI: `src/board/controls/TileChrome.tsx`, `plusPreviewLayout.ts`, `PathContextMenu.tsx`, `src/board/layout/tileMetrics.ts`, `src/app/components/CanvasHelper.tsx`, `src/app/styles/tokens.css` (left tabs; X moved to top-center so left `+` meets target-size)
+  - Tests: `src/workflow/{graph,commands,schema,after,actors}.test.ts`, `src/state/store.commands.test.ts`, `src/keyboard/bindings.test.ts`, `src/board/controls/plusPreviewLayout.test.ts`, `src/app/App.test.tsx`, `src/state/store.actors.test.ts` (Oak Park Review Who matches YAML)
+  - E2E: `e2e/improve-34-reverse-add.spec.ts`, `ready.ts`, `canvas.spec.ts`, `commands.spec.ts`, `improve-11-path-delete.spec.ts`, `improve-13-who-inherit.spec.ts`, `improve-16-other-task.spec.ts`, `merge.spec.ts`, `routing.spec.ts`, `hardening.spec.ts`
+  - Docs: `.docs/GOAL.md` (amendments), `.docs/IMPROVEMENTS.md` (34), this handoff entry
+  - Evidence: `.docs/evidence/improve-34-reverse-add/`
+- Behavior implemented:
+  - Selected Tiles have mirrored left and right `+` / Path-pull tabs. Left `+` creates a predecessor (Path new → this). Left Path-pull drop on X creates X → this.
+  - Spawn keys: Q/E Step left/right, A/D Data left/right. After: Q/E After-only Step; A/D ignored.
+  - Fan-in is allowed. Deleting the last Tile empties the board. Deleting a Tile or Path that would split the board buzzes.
+  - Predecessor Step Who uses last-used Human / Alice / first Human (does not inherit the successor). Child Step still inherits.
+  - Keybinds: Reset to defaults; pan unbound; Esc cancels capture; Backspace/Delete clears; colliding rebind clears the other action.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning). Node 24. `pieGeometry.test.ts` asided.
+  - `npm run test:unit` — 38 files, 258 tests pass.
+  - `npm run test:e2e` — `e2e/improve-34-reverse-add.spec.ts` (7), plus affected `canvas`, `commands`, `improve-11-path-delete`, `improve-13-who-inherit`, `improve-16-other-task`, `merge`, `routing`, `hardening`, `improve-19-plus-fan`. Chromium via `LD_LIBRARY_PATH` `~/.local/pw-libs`.
+- Evidence:
+  - `.docs/evidence/improve-34-reverse-add/left-plus-fan-1440.png` — left `+` fan Step/Data to the left (1440×900)
+  - `.docs/evidence/improve-34-reverse-add/q-predecessor-1440.png` — Q predecessor; helper chips Q/E/A/D (1440×900)
+  - `.docs/evidence/improve-34-reverse-add/fan-in-1440.png` — two Steps feeding one Data (1440×900)
+  - `.docs/evidence/improve-34-reverse-add/after-left-step-1440.png` — After-only Step to the left of Read (1440×900)
+  - `.docs/evidence/improve-34-reverse-add/left-tabs-1024.png` — left and right `+` at 1024×768
+- Earlier-slice defects fixed: Oak Park unique source is not blocked when children reconverge (weak connectivity). `store.actors.test.ts` inherit fixture uses Write (Alice) because Review is Roy in the YAML. Path-delete / spawn-key e2e updated from `1`/`2` to E/D. Tile X moved off the left edge so left `+` passes WCAG 2.2 target-size.
+- Known limitations / follow-ups: Concurrent Type keypad / Who-select / tile-pie WIP remains unstaged. Untracked `pieGeometry.test.ts` still breaks `tsc` until `pieGeometry.ts` exists.
+- Status: COMPLETE
+- Commit: `feat(improve-34): add Tiles and Paths to the left`
+
 

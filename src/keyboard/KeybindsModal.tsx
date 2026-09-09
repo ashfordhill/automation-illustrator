@@ -4,7 +4,6 @@
  */
 import { Button, Group, Kbd, Modal, Stack, Text } from "@mantine/core";
 import { ACTION_LABELS, prettyKey, type KeyAction } from "./bindings";
-import { KeyPreset } from "../workflow/catalogs";
 import { useStore } from "../state/store";
 
 const ACTIONS = Object.keys(ACTION_LABELS) as KeyAction[];
@@ -24,22 +23,12 @@ export function KeybindsModal() {
       returnFocus={false}
     >
       <Text size="sm" className="hint-copy" mb="sm">
-      Click a key to rebind it. Contextual hints on the canvas use these mappings.
-      During Node removal, Up/Down choose a candidate and Enter or the red X removes it.
+        Click a key to rebind it. Esc cancels capture. Backspace or Delete while capturing
+        clears it. Contextual hints on the canvas use these mappings.
       </Text>
       <Group mb="sm">
-        <Button
-          size="xs"
-          onClick={() => useStore.getState().applyPreset(KeyPreset.Arrows)}
-        >
-          Arrow keys
-        </Button>
-        <Button
-          size="xs"
-          variant="light"
-          onClick={() => useStore.getState().applyPreset(KeyPreset.Wasd)}
-        >
-          WASD
+        <Button size="xs" onClick={() => useStore.getState().resetKeymap()}>
+          Reset to defaults
         </Button>
       </Group>
       <Stack gap={6}>

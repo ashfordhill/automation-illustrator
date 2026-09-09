@@ -122,6 +122,15 @@ export function whoForChildStep(
   return human ? { beforeId: human, afterId: human } : {};
 }
 
+/** A new predecessor Step (left + / Q). Does not copy Who from the Tile it feeds. */
+export function whoForPredecessorStep(
+  doc: WorkflowDoc,
+  lastHumanId?: string | null,
+): ChildStepWho {
+  const human = defaultHumanId(doc.actors, lastHumanId);
+  return human ? { beforeId: human, afterId: human } : {};
+}
+
 /** First robot on the roster (NA-04). */
 export function defaultRobotId(actors: ActorDto[]) {
   return actors.find((a) => a.kind === ActorKind.Robot)?.id;

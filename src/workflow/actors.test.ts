@@ -7,6 +7,7 @@ import {
   HUMAN_PRESETS,
   removeActor,
   whoForChildStep,
+  whoForPredecessorStep,
 } from "./actors";
 import { emptyAfterOverlay, emptyWorkflow, type WorkflowDoc } from "./types";
 
@@ -90,6 +91,17 @@ test("whoForChildStep inherits a Step parent’s Who and walks Data to the upstr
     "h_priya",
   );
   expect(orphanData).toEqual({ beforeId: "h_priya", afterId: "h_priya" });
+});
+
+test("whoForPredecessorStep uses last-used Human and does not copy the successor (NA-03)", () => {
+  expect(whoForPredecessorStep(doc, "h_priya")).toEqual({
+    beforeId: "h_priya",
+    afterId: "h_priya",
+  });
+  expect(whoForPredecessorStep(doc, null)).toEqual({
+    beforeId: "h_ada",
+    afterId: "h_ada",
+  });
 });
 
 test("defaultHumanId prefers last-used Human, then Alice, then the first Human (NA-03)", () => {

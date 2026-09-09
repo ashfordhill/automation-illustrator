@@ -31,9 +31,8 @@ export type GraphViolationCode =
   | "invalid-assignment"
   | "invalid-group"
   | "duplicate-path"
-  | "multiple-roots"
   | "no-root"
-  | "unreachable"
+  | "disconnected"
   | "cycle";
 
 /** Look up a tile by id — used when sorting outgoing Paths by target position. */
@@ -159,7 +158,7 @@ export function incomingSorted(
 }
 
 /**
- * WG-08: the host plus Nodes on incident Paths, excluding the root (WG-06).
+ * WG-08: the host plus Nodes on incident Paths.
  * Order is outgoing children, then the host, then predecessors.
  */
 export function removalCandidateIds(
@@ -168,11 +167,10 @@ export function removalCandidateIds(
   hostId: string,
   positions?: PositionMap,
 ): string[] {
-  const root = rootNodeId(nodes, edges);
   const seen = new Set<string>();
   const ids: string[] = [];
   const add = (id: string) => {
-    if (!id || seen.has(id) || id === root) return;
+    if (!id || seen.has(id)) return;
     if (!nodes.some((n) => n.id === id)) return;
     seen.add(id);
     ids.push(id);
@@ -203,12 +201,50 @@ export function nextPortIndex(edges: EdgeDto[], sourceId: string) {
   return edges.filter((e) => e.source === sourceId).length;
 }
 
-/** The unique Node with no incoming Path, or null when empty / not unique (WG-02). */
-export function rootNodeId(nodes: NodeDto[], edges: EdgeDto[]): string | null {
-  if (!nodes.length) return null;
+/** Next stacked port index when adding another incoming Path into a tile. */
+export function nextIncomingIndex(edges: EdgeDto[], targetId: string) {
+  return edges.filter((e) => e.target === targetId).length;
+}
+
+/** Nodes with no incoming Path (fan-in sources). Empty when the graph is empty. */
+export function sourceNodeIds(nodes: NodeDto[], edges: EdgeDto[]): string[] {
+  if (!nodes.length) return [];
   const incoming = new Set(edges.map((e) => e.target));
-  const roots = nodes.map((n) => n.id).filter((id) => !incoming.has(id));
-  return roots.length === 1 ? roots[0]! : null;
+  return nodes.map((n) => n.id).filter((id) => !incoming.has(id));
+}
+
+/**
+ * The unique source, or null when empty or when two or more Tiles have no
+ * incoming Path. Prefer sourceNodeIds when fan-in is allowed.
+ */
+export function rootNodeId(nodes: NodeDto[], edges: EdgeDto[]): string | null {
+  const sources = sourceNodeIds(nodes, edges);
+  return sources.length === 1 ? sources[0]! : null;
+}
+
+/** True when every Node is in one undirected piece (no islands). */
+export function isWeaklyConnected(nodes: NodeDto[], edges: EdgeDto[]): boolean {
+  if (nodes.length <= 1) return true;
+  const ids = new Set(nodes.map((n) => n.id));
+  const adj = new Map<string, string[]>();
+  for (const n of nodes) adj.set(n.id, []);
+  for (const e of edges) {
+    if (!ids.has(e.source) || !ids.has(e.target)) continue;
+    adj.get(e.source)!.push(e.target);
+    adj.get(e.target)!.push(e.source);
+  }
+  const start = nodes[0]!.id;
+  const seen = new Set<string>([start]);
+  const queue = [start];
+  while (queue.length) {
+    const id = queue.shift()!;
+    for (const next of adj.get(id) ?? []) {
+      if (seen.has(next)) continue;
+      seen.add(next);
+      queue.push(next);
+    }
+  }
+  return seen.size === nodes.length;
 }
 
 /** Nodes reachable by following Paths forward from `start` (includes `start`). */
@@ -349,8 +385,8 @@ function groupRefs(
 }
 
 /**
- * WG-02..WG-04 on one Node/Path set: single root, reachability, acyclicity, no duplicate Paths.
- * Empty graphs are valid (WG-01).
+ * WG-02..WG-04 on one Node/Path set: connected DAG (fan-in sources allowed),
+ * acyclicity, no duplicate Paths. Empty graphs are valid (WG-01).
  */
 export function validateGraphInvariants(nodes: NodeDto[], edges: EdgeDto[]): GraphViolation[] {
   if (!nodes.length) {
@@ -385,38 +421,17 @@ export function validateGraphInvariants(nodes: NodeDto[], edges: EdgeDto[]): Gra
     outgoing.get(e.source)!.push(e.target);
   }
 
-  const roots = nodes.map((n) => n.id).filter((id) => !incoming.has(id));
-  if (roots.length === 0) {
-    out.push(v("no-root", "This workflow has no root (every Node has an incoming Path)."));
-  } else if (roots.length > 1) {
+  const sources = nodes.map((n) => n.id).filter((id) => !incoming.has(id));
+  if (nodes.length && sources.length === 0) {
+    out.push(v("no-root", "This workflow has no source (every Node has an incoming Path)."));
+  }
+  if (nodes.length > 1 && !isWeaklyConnected(nodes, usable)) {
     out.push(
       v(
-        "multiple-roots",
-        `Multiple roots: ${roots.slice().sort().join(", ")}. Every nonempty workflow needs exactly one root.`,
+        "disconnected",
+        "This workflow has Tiles that are not connected by Paths. Separate islands are not allowed.",
       ),
     );
-  } else {
-    const root = roots[0]!;
-    const seen = new Set<string>();
-    const queue = [root];
-    seen.add(root);
-    while (queue.length) {
-      const id = queue.shift()!;
-      for (const next of outgoing.get(id) ?? []) {
-        if (seen.has(next)) continue;
-        seen.add(next);
-        queue.push(next);
-      }
-    }
-    const unreachable = nodes.map((n) => n.id).filter((id) => !seen.has(id));
-    if (unreachable.length) {
-      out.push(
-        v(
-          "unreachable",
-          `Node${unreachable.length === 1 ? "" : "s"} ${unreachable.sort().join(", ")} cannot be reached from the root.`,
-        ),
-      );
-    }
   }
 
   const color = new Map<string, 0 | 1 | 2>();

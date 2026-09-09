@@ -153,7 +153,7 @@ test("selected Path hints include Right-click Delete with the other hotkeys", ()
   expect(helper).toMatch(/Delete/);
   expect(helper).toMatch(/Remove Path/);
   act(() => {
-    useStore.getState().select({ type: SelectionKind.Edge, id: OAK_PARK_IDS.gt });
+    useStore.getState().select({ type: SelectionKind.Edge, id: OAK_PARK_IDS.reviewTo3 });
   });
   const bridge = host.querySelector(".canvas-helper")?.textContent ?? "";
   expect(bridge).toMatch(/Right-click/);

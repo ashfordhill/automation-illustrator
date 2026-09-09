@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { waitForLayout, capturePage } from "./ready";
+import { waitForLayout, capturePage, pathScreenPoint } from "./ready";
 
 const DEMO_STEP = "Read invoice.pdf";
 const EVIDENCE = ".docs/evidence/04-commands";
@@ -46,21 +46,48 @@ test.describe("slice 4 command evidence", () => {
     await expect(page.locator("aside").getByRole("button", { name: "Delete" })).toHaveCount(0);
     await capturePage(page, `${EVIDENCE}/path-no-delete-1440.png`);
 
+    const leafPath = await pathScreenPoint(page, "e_review_3", 0.5);
+    await page.mouse.click(leafPath.x, leafPath.y);
     await page.keyboard.press("Delete");
-    await expect(page.getByText(/would leave a Tile the root cannot reach/i)).toBeVisible();
+    await expect(page.getByText(/would split the board into separate workflows/i)).toBeVisible();
   });
 
-  test("root removal is blocked with a hint; leaf removal restitches", async ({ page }) => {
-    await loadDemo(page);
-    await page.getByText(DEMO_STEP).first().click();
+  test("a source that would split the board is blocked; a leaf can be removed", async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("button", { name: "Menu" }).click();
+    await page.getByRole("menuitem", { name: "New" }).click();
+    await page.getByRole("button", { name: "Discard" }).click();
+    await page.getByRole("button", { name: "Add Step" }).click();
+    await waitForLayout(page);
+    await page.keyboard.press("e");
+    await waitForLayout(page);
+    await page.locator(".react-flow__node:not(.selected)").first().click();
+    await page.keyboard.press("e");
+    await waitForLayout(page);
+    const nodes = page.locator(".react-flow__node");
+    const n = await nodes.count();
+    let left = 0;
+    let leftX = Infinity;
+    for (let i = 0; i < n; i++) {
+      const box = await nodes.nth(i).boundingBox();
+      if (box && box.x < leftX) {
+        leftX = box.x;
+        left = i;
+      }
+    }
+    await nodes.nth(left).click();
     await page.keyboard.press("Delete");
-    await expect(page.getByText("The root cannot be removed while other Tiles remain.")).toBeVisible();
+    await expect(page.getByText("Removing this Tile would split the board into separate workflows.")).toBeVisible();
     await capturePage(page, `${EVIDENCE}/root-blocked-1440.png`);
 
-    await page.keyboard.press("Escape");
-    await page.getByText("Review BS&A Software").first().click();
+    await page.getByRole("button", { name: "Menu" }).click();
+    await page.getByRole("menuitem", { name: "Oak Park Invoice" }).click();
+    await page.getByRole("button", { name: "Discard" }).click();
+    await expect(page.getByText(DEMO_STEP).first()).toBeVisible({ timeout: 15_000 });
+    await waitForLayout(page);
+    await page.getByText("manager").first().click();
     await page.keyboard.press("Delete");
-    await expect(page.getByText("Review BS&A Software")).toHaveCount(0);
+    await expect(page.getByText("manager")).toHaveCount(0);
     await expect(page.getByText(DEMO_STEP).first()).toBeVisible();
   });
 });

@@ -24,7 +24,7 @@ test.describe("Improvement 16 Other Task name and clipboard", () => {
   test("a child Step is Task; Type Other keeps a Name that was already typed", async ({ page }) => {
     await loadOakPark(page);
     await page.getByText("Review BS&A Software").first().click();
-    await page.keyboard.press("1");
+    await page.keyboard.press("e");
     await waitForLayout(page);
     await expect(aside(page).locator("#step-name-field")).toHaveValue("Task");
     await expect(page.getByText("Task").first()).toBeVisible();

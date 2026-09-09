@@ -22,3 +22,13 @@ test("After’s single Step preview sits on the +’s horizontal", () => {
   const [step] = previewCenters(40, 10, 1);
   expect(step).toEqual({ x: 40 + PREVIEW_RADIUS, y: 10 });
 });
+
+test("inbound fan mirrors Step and Data to the left of the rest +", () => {
+  const [step, data] = previewCenters(100, 200, 2, true);
+  expect(step).toBeTruthy();
+  expect(data).toBeTruthy();
+  expect(step!.x).toBeLessThan(100);
+  expect(step!.x).toBe(data!.x);
+  expect(100 - step!.x).toBeGreaterThan(80);
+  expect(100 - step!.x).toBeLessThan(100);
+});

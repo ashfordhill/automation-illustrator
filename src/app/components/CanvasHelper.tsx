@@ -77,7 +77,12 @@ function hintsFor(): Hint[] {
     const items: Hint[] = [];
     if (s.view === ViewMode.Both) return [];
     if (s.view === ViewMode.After) {
-      items.push({ key: pk(KeyAction.AddBranchStep), label: "After-only Step" });
+      if (k[KeyAction.AddStepIn]) {
+        items.push({ key: pk(KeyAction.AddStepIn), label: "After-only Step left" });
+      }
+      if (k[KeyAction.AddStepOut]) {
+        items.push({ key: pk(KeyAction.AddStepOut), label: "After-only Step right" });
+      }
       if (s.workflow.after.extraNodes.some((x) => x.id === s.selected!.id)) {
         items.push({ key: pk(KeyAction.RemoveNode), label: "Remove Step" });
       }
@@ -86,8 +91,10 @@ function hintsFor(): Hint[] {
       }
       return items;
     }
-    items.push({ key: pk(KeyAction.AddBranchStep), label: "New Step" });
-    items.push({ key: pk(KeyAction.AddBranchData), label: "New Data" });
+    if (k[KeyAction.AddStepIn]) items.push({ key: pk(KeyAction.AddStepIn), label: "New Step left" });
+    if (k[KeyAction.AddStepOut]) items.push({ key: pk(KeyAction.AddStepOut), label: "New Step right" });
+    if (k[KeyAction.AddDataIn]) items.push({ key: pk(KeyAction.AddDataIn), label: "New Data left" });
+    if (k[KeyAction.AddDataOut]) items.push({ key: pk(KeyAction.AddDataOut), label: "New Data right" });
     items.push({
       key: pk(KeyAction.RemoveNode),
       label: n?.type === WorkflowNodeKind.DataField ? "Remove Data" : "Remove Step",

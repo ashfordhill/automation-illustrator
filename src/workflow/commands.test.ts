@@ -171,7 +171,7 @@ test("createRootStep rejects a second root", () => {
   expect(blocked.code).toBe("not-empty");
 });
 
-test("connectNodes rejects self-loop, duplicate, root incoming, and cycle", () => {
+test("connectNodes rejects self-loop, duplicate, and cycle; allows fan-in", () => {
   const board = doc(
     [step("r"), step("a", 40), step("b", 80)],
     [path("e1", "r", "a"), path("e2", "a", "b")],
@@ -189,15 +189,27 @@ test("connectNodes rejects self-loop, duplicate, root incoming, and cycle", () =
     expect(dup.message).toBe(MSG.duplicatePath);
   }
 
-  const intoRoot = connectNodes(board, "b", "r");
-  expect(intoRoot.ok).toBe(false);
-  if (!intoRoot.ok) expect(intoRoot.code).toBe("root-incoming");
+  const intoSource = connectNodes(board, "b", "r");
+  expect(intoSource.ok).toBe(false);
+  if (!intoSource.ok) expect(intoSource.code).toBe("cycle");
 
   const cycle = connectNodes(board, "b", "a");
   expect(cycle.ok).toBe(false);
   if (!cycle.ok) expect(cycle.code).toBe("cycle");
 
   expect(board.edges).toHaveLength(2);
+});
+
+test("connectNodes accepts a fan-in Path between existing Tiles", () => {
+  const board = doc(
+    [step("a"), step("data", 0, 200), step("b", 80, 0)],
+    [path("e1", "a", "data"), path("e2", "a", "b")],
+  );
+  const fan = connectNodes(board, "b", "data");
+  expect(fan.ok).toBe(true);
+  if (!fan.ok) return;
+  expect(validateWorkflow(fan.value)).toEqual([]);
+  expect(fan.value.edges.some((e) => e.source === "b" && e.target === "data")).toBe(true);
 });
 
 test("addConnectedNode applies One of stroke to every outgoing Path (PC-02)", () => {
@@ -223,24 +235,28 @@ test("connectNodes accepts a legal reconvergence Path", () => {
   expect(validateWorkflow(result.value)).toEqual([]);
 });
 
-test("removePath drops a reconverge Path and rejects a bridge Path", () => {
+test("removePath drops a redundant Path and rejects one that would split the board", () => {
   const diamond = doc(
     [step("r"), step("a", 0, 40), step("b", 80, 40), step("c", 40, 80)],
     [path("e1", "r", "a"), path("e2", "r", "b"), path("e3", "a", "c"), path("e4", "b", "c")],
   );
   expect(canRemovePath(diamond, "e3")).toBe(true);
+  expect(canRemovePath(diamond, "e1")).toBe(true);
   const dropped = removePath(diamond, "e3");
   expect(dropped.ok).toBe(true);
   if (!dropped.ok) return;
   expect(dropped.value.edges.map((e) => e.id)).toEqual(["e1", "e2", "e4"]);
   expect(validateWorkflow(dropped.value)).toEqual([]);
 
-  expect(canRemovePath(diamond, "e1")).toBe(false);
-  const bridge = removePath(diamond, "e1");
+  const chain = doc(
+    [step("r"), step("a", 0, 40), step("b", 0, 80)],
+    [path("e1", "r", "a"), path("e2", "a", "b")],
+  );
+  expect(canRemovePath(chain, "e1")).toBe(false);
+  const bridge = removePath(chain, "e1");
   expect(bridge.ok).toBe(false);
   if (bridge.ok) return;
   expect(bridge.message).toBe(MSG.pathRemoval);
-  expect(diamond.edges).toHaveLength(4);
 });
 
 test("removePath rejects the only Path into an After-only Step", () => {
@@ -261,7 +277,8 @@ test("removePath rejects the only Path into an After-only Step", () => {
 test("removePath on Oak Park / Mailroom reconverge Paths", () => {
   const oak = oakParkInvoice();
   expect(canRemovePath(oak, OAK_PARK_IDS.webAcct)).toBe(true);
-  expect(canRemovePath(oak, OAK_PARK_IDS.gt)).toBe(false);
+  expect(canRemovePath(oak, OAK_PARK_IDS.gt)).toBe(true);
+  expect(canRemovePath(oak, OAK_PARK_IDS.reviewTo3)).toBe(false);
   const dropped = removePath(oak, OAK_PARK_IDS.webAcct);
   expect(dropped.ok).toBe(true);
   if (!dropped.ok) return;
@@ -283,15 +300,47 @@ test("addConnectedNode creates a reachable child in one step", () => {
   if (!added.ok) return;
   expect(validateWorkflow(added.value)).toEqual([]);
   expect(added.value.edges).toHaveLength(1);
+  expect(added.value.edges[0]).toEqual(expect.objectContaining({ source: "r", target: "s_child" }));
 });
 
-test("planNodeRemoval blocks the root", () => {
-  const board = doc([step("r"), step("a", 0, 40)], [path("e1", "r", "a")]);
-  const plan = planNodeRemoval(board, "r");
-  expect(plan.ok).toBe(false);
-  if (!plan.ok) {
-    expect(plan.code).toBe("root-removal");
-    expect(plan.message).toBe(MSG.rootRemoval);
+test("addConnectedNode inbound creates a predecessor Path", () => {
+  const board = doc([step("r")], []);
+  const added = addConnectedNode(
+    board,
+    "r",
+    step("s_left", 0, -40),
+    { beforeId: "h1", afterId: "h1", inbound: true },
+  );
+  expect(added.ok).toBe(true);
+  if (!added.ok) return;
+  expect(validateWorkflow(added.value)).toEqual([]);
+  expect(added.value.edges).toEqual([
+    expect.objectContaining({ source: "s_left", target: "r" }),
+  ]);
+});
+
+test("planNodeRemoval allows a source with one child; splitting a fan is blocked", () => {
+  const chain = doc([step("r"), step("a", 0, 40)], [path("e1", "r", "a")]);
+  const plan = planNodeRemoval(chain, "r");
+  expect(plan.ok).toBe(true);
+  if (!plan.ok) return;
+  const applied = applyNodeRemoval(chain, plan.value);
+  expect(applied.ok).toBe(true);
+  if (!applied.ok) return;
+  expect(applied.value.nodes.map((n) => n.id)).toEqual(["a"]);
+
+  const fan = doc(
+    [step("r"), step("a", 0, 40), step("b", 80, 40)],
+    [path("e1", "r", "a"), path("e2", "r", "b")],
+  );
+  const fanPlan = planNodeRemoval(fan, "r");
+  expect(fanPlan.ok).toBe(true);
+  if (!fanPlan.ok) return;
+  const split = applyNodeRemoval(fan, fanPlan.value);
+  expect(split.ok).toBe(false);
+  if (!split.ok) {
+    expect(split.code).toBe("board-split");
+    expect(split.message).toBe(MSG.boardSplit);
   }
 });
 
@@ -678,14 +727,17 @@ test("insertNodeOnPath can drop a fan-out child onto the sibling Path", () => {
   expect(inPath?.label).toBe("invoice < $50,000");
 });
 
-test("insertNodeOnPath rejects the root, a self-drop, and a missing Path", () => {
+test("insertNodeOnPath can move a source onto a downstream Path; rejects self-drop", () => {
   const board = doc(
     [step("r"), step("a", 0, 40), step("b", 0, 80)],
     [path("e1", "r", "a"), path("e2", "a", "b")],
   );
-  const root = insertNodeOnPath(board, "r", "e2");
-  expect(root.ok).toBe(false);
-  if (!root.ok) expect(root.message).toBe(MSG.rootInsert);
+  const moved = insertNodeOnPath(board, "r", "e2");
+  expect(moved.ok).toBe(true);
+  if (!moved.ok) return;
+  expect(validateWorkflow(moved.value)).toEqual([]);
+  expect(moved.value.edges.some((e) => e.source === "a" && e.target === "r")).toBe(true);
+  expect(moved.value.edges.some((e) => e.source === "r" && e.target === "b")).toBe(true);
 
   const self = insertNodeOnPath(board, "a", "e1");
   expect(self.ok).toBe(false);

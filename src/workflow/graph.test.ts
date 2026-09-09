@@ -5,9 +5,11 @@ import {
   applyDashForSplit,
   defaultRemovalCandidateId,
   edgeIsDotted,
+  isWeaklyConnected,
   outgoingSorted,
   removalCandidateIds,
   rootNodeId,
+  sourceNodeIds,
   splitDefaultDashed,
   wouldCreateCycle,
 } from "./graph";
@@ -42,7 +44,7 @@ test("a PositionMap reorders siblings and the WG-09 default follows it", () => {
   ];
   const displayed = { a: { x: 0, y: 0 }, b: { x: 300, y: 0 }, c: { x: 300, y: 200 } };
   expect(outgoingSorted(nodes, edges, "a", displayed).map((e) => e.id)).toEqual(["e2", "e1"]);
-  expect(removalCandidateIds(nodes, edges, "a", displayed)).toEqual(["b", "c"]);
+  expect(removalCandidateIds(nodes, edges, "a", displayed)).toEqual(["b", "c", "a"]);
   expect(defaultRemovalCandidateId(nodes, edges, "a")).toBe("c");
   expect(defaultRemovalCandidateId(nodes, edges, "a", displayed)).toBe("b");
   /* Ids missing from the map fall back to saved positions. */
@@ -146,17 +148,20 @@ test("wouldCreateCycle detects self-loops and paths back to the source", () => {
   expect(wouldCreateCycle(edges, "a", "c")).toBe(false);
 });
 
-test("removal candidates skip the root; leaf defaults to itself (WG-08, WG-09)", () => {
+test("removal candidates include a source; a sole Tile defaults to itself (WG-08, WG-09)", () => {
   const nodes = [step("r", 0), step("a", 10), step("b", 40)];
   const edges: EdgeDto[] = [
     { id: "e1", source: "r", target: "a", label: "" },
     { id: "e2", source: "a", target: "b", label: "" },
   ];
-  expect(removalCandidateIds(nodes, edges, "r")).toEqual(["a"]);
+  expect(removalCandidateIds(nodes, edges, "r")).toEqual(["a", "r"]);
   expect(defaultRemovalCandidateId(nodes, edges, "r")).toBe("a");
   expect(removalCandidateIds(nodes, edges, "b")).toEqual(["b", "a"]);
   expect(defaultRemovalCandidateId(nodes, edges, "b")).toBe("b");
-  expect(removalCandidateIds(nodes, edges, "a")).toEqual(["b", "a"]);
+  expect(removalCandidateIds(nodes, edges, "a")).toEqual(["b", "a", "r"]);
   expect(defaultRemovalCandidateId(nodes, edges, "a")).toBe("b");
-  expect(defaultRemovalCandidateId([step("r", 0)], [], "r")).toBeNull();
+  expect(defaultRemovalCandidateId([step("r", 0)], [], "r")).toBe("r");
+  expect(sourceNodeIds(nodes, edges)).toEqual(["r"]);
+  expect(isWeaklyConnected(nodes, edges)).toBe(true);
+  expect(isWeaklyConnected(nodes, [])).toBe(false);
 });

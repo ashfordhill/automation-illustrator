@@ -159,9 +159,9 @@ test.describe("slice 6 canvas create / connect / remove", () => {
   test("1:N auto restitch after confirm", async ({ page }) => {
     await loadDemo(page);
     await page.getByText("Review BS&A Software").first().click();
-    await page.keyboard.press("1");
+    await page.keyboard.press("e");
     await page.getByText("Review BS&A Software").first().click();
-    await page.keyboard.press("1");
+    await page.keyboard.press("e");
 
     await page.getByText("Review BS&A Software").first().click();
     await page.keyboard.press("Delete");
@@ -194,21 +194,36 @@ test.describe("slice 6 canvas create / connect / remove", () => {
     await expect(page.getByText("out-a").first()).toBeVisible();
   });
 
-  test("blocked root, Path-delete explanation, empty-canvas does not create a Step", async ({
+  test("source that would split, Path-delete explanation, empty-canvas does not create a Step", async ({
     page,
   }) => {
-    await loadDemo(page);
-    await page.getByText(DEMO_STEP).first().click();
+    await page.goto("/");
+    await page.getByRole("button", { name: "Menu" }).click();
+    await page.getByRole("menuitem", { name: "New" }).click();
+    await page.getByRole("button", { name: "Discard" }).click();
+    await page.getByRole("button", { name: "Add Step" }).click();
+    await waitForLayout(page);
+    await page.keyboard.press("e");
+    await waitForLayout(page);
+    await page.locator(".react-flow__node:not(.selected)").first().click();
+    await page.keyboard.press("e");
+    await waitForLayout(page);
+    const nodes = page.locator(".react-flow__node");
+    const n = await nodes.count();
+    let left = 0;
+    let leftX = Infinity;
+    for (let i = 0; i < n; i++) {
+      const box = await nodes.nth(i).boundingBox();
+      if (box && box.x < leftX) {
+        leftX = box.x;
+        left = i;
+      }
+    }
+    await nodes.nth(left).click();
     await page.keyboard.press("Delete");
-    await expect(page.getByText("The root cannot be removed while other Tiles remain.")).toBeVisible();
+    await expect(page.getByText("Removing this Tile would split the board into separate workflows.")).toBeVisible();
     await capturePage(page, `${EVIDENCE}/root-blocked-1440.png`);
     await page.keyboard.press("Escape");
-    await expect(page.getByText(DEMO_STEP).first()).toBeVisible();
-
-    await page.getByText("invoice > $50,000").first().click();
-    await page.keyboard.press("Delete");
-    await expect(page.getByText(/would leave a Tile the root cannot reach/i)).toBeVisible();
-    await capturePage(page, `${EVIDENCE}/path-no-delete-1440.png`);
 
     await page.getByRole("button", { name: "Menu" }).click();
     await page.getByRole("menuitem", { name: "New" }).click();
@@ -231,7 +246,7 @@ test.describe("slice 6 canvas create / connect / remove", () => {
   test("Data tile is a centered oval; Mailroom Dana Who card hugs the role", async ({ page }) => {
     await loadDemo(page);
     await page.getByText(DEMO_STEP).first().click();
-    await page.keyboard.press("2");
+    await page.keyboard.press("d");
     await waitForLayout(page);
     await expect(page.getByText("Data", { exact: true }).first()).toBeVisible();
     await page.getByText("Data", { exact: true }).first().click();

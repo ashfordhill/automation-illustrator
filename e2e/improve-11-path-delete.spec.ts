@@ -38,14 +38,15 @@ test.describe("Improvement 11 Path Delete menu", () => {
 
   test("Delete on a bridge Path stays disabled and the Delete key explains", async ({ page }) => {
     await loadOakPark(page);
-    await rightClickPath(page, "e_gt", 0.65);
+    await rightClickPath(page, "e_review_3", 0.5);
     const del = page.getByTestId("path-menu-delete");
     await expect(del).toBeVisible();
     await expect(del).toBeDisabled();
     await capturePage(page, `${EVIDENCE}/path-menu-blocked-1440.png`);
     await page.keyboard.press("Escape");
-    await page.getByText("invoice > $50,000").first().click();
+    const pt = await pathScreenPoint(page, "e_review_3", 0.5);
+    await page.mouse.click(pt.x, pt.y);
     await page.keyboard.press("Delete");
-    await expect(page.getByText(/would leave a Tile the root cannot reach/i)).toBeVisible();
+    await expect(page.getByText(/would split the board into separate workflows/i)).toBeVisible();
   });
 });

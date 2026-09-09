@@ -154,10 +154,10 @@ test("invalid assignments and merge group members are rejected", () => {
   expect(group.codes).toContain("invalid-group");
 });
 
-test("each graph violation kind: multiple-roots, no-root, unreachable, cycle, duplicate-path", () => {
+test("each graph violation kind: disconnected, no-root, cycle, duplicate-path", () => {
   expect(
     parseCodes(doc({ nodes: [step("a"), step("b")], edges: [] })).codes,
-  ).toEqual(["multiple-roots"]);
+  ).toEqual(["disconnected"]);
 
   const noRoot = parseCodes(
     doc({
@@ -174,7 +174,7 @@ test("each graph violation kind: multiple-roots, no-root, unreachable, cycle, du
       edges: [path("e1", "a", "b"), path("e2", "c", "c")],
     }),
   );
-  expect(unreachable.codes).toContain("unreachable");
+  expect(unreachable.codes).toContain("disconnected");
   expect(unreachable.codes).toContain("cycle");
 
   expect(
@@ -185,6 +185,15 @@ test("each graph violation kind: multiple-roots, no-root, unreachable, cycle, du
       }),
     ).codes,
   ).toContain("duplicate-path");
+});
+
+test("fan-in from two sources into one sink is a valid connected DAG", () => {
+  const fan = doc({
+    nodes: [step("a"), step("b", 40), step("sink", 20)],
+    edges: [path("e1", "a", "sink"), path("e2", "b", "sink")],
+  });
+  expect(validateWorkflow(fan)).toEqual([]);
+  expect(workflowDocV2Schema.safeParse(fan).success).toBe(true);
 });
 
 test("reconvergence is valid; v2 schema refinements reject a cycle", () => {

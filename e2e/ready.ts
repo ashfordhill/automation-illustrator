@@ -74,15 +74,27 @@ export function tabPeekPoint(box: { x: number; y: number; width: number; height:
 }
 
 /** Drag the selected-tile + tab onto a Step / Data preview (36px pull, then drop). */
-export async function pullPlusPreview(page: Page, preview: string) {
-  const plus = page.getByRole("button", { name: /Add Step or Data|Add After-only Step/ }).first();
+export async function pullPlusPreview(
+  page: Page,
+  preview: string,
+  side: "out" | "in" = "out",
+) {
+  const plus = page
+    .getByRole("button", {
+      name:
+        side === "in"
+          ? /Add left Step or Data|Add left After-only Step/
+          : /Add Step or Data|Add After-only Step/,
+    })
+    .first();
   await expect(plus).toBeVisible();
   const box = await plus.boundingBox();
   if (!box) throw new Error("plus tab has no box");
   const grab = tabPeekPoint(box);
+  const dx = side === "in" ? -140 : 140;
   await page.mouse.move(grab.x, grab.y);
   await page.mouse.down();
-  await page.mouse.move(grab.x + 140, grab.y, { steps: 12 });
+  await page.mouse.move(grab.x + dx, grab.y, { steps: 12 });
   const previewBtn = page.getByRole("button", { name: preview });
   await expect(previewBtn).toBeVisible();
   const pb = await previewBtn.boundingBox();

@@ -673,3 +673,18 @@ Who keys use that same disabled fade. Inspector text fields are `disabled` in Co
 Commit: `feat(improve-33): grey Compare Who and text fields`.  
 Evidence: `.docs/evidence/improve-33-compare-readonly/`.
 
+---
+
+# Improvement 34 — Add Tiles and Paths to the left
+
+Approved 2026-09-08. Selected Tiles grow in both directions. The left `+` and Path-pull tabs are a mirror of the right: left creates a predecessor (Path new → this); left Path-pull drop on X creates X → this. Fan-in is allowed. The nonempty board is a weakly connected DAG (no islands, no unique-root special cases). Spawn keys are Q/E Step and A/D Data. Pan keys default unbound. Keybinds live in localStorage only (Reset to defaults; no Arrow/WASD presets).
+
+No new runtime dependency.
+
+## Contract
+
+Append to `## Amendments` in `.docs/GOAL.md`: WG-02, WG-03, WG-04, WG-05, WG-06, WG-07, NG-02, SH-09, SH-14, AQ-01, NA-03 as dated 2026-09-08.
+
+Commit: `feat(improve-34): add Tiles and Paths to the left`.  
+Evidence: `.docs/evidence/improve-34-reverse-add/`.
+

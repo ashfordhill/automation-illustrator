@@ -85,9 +85,9 @@ function overlayTileRect(nodeId: string, rest: { right: number; top: number }): 
   return nodeScreenRect(nodeId) ?? fallbackTileRect(rest, node?.type);
 }
 
-function underTileOrigin(tile: TileRect, restY: number): { x: number; y: number } {
+function underTileOrigin(tile: TileRect, restY: number, inbound: boolean): { x: number; y: number } {
   return {
-    x: tile.x + tile.w - 22,
+    x: inbound ? tile.x + 22 : tile.x + tile.w - 22,
     y: Math.min(Math.max(restY, tile.y + tile.rx + 8), tile.y + tile.h - tile.rx - 8),
   };
 }
@@ -183,9 +183,13 @@ export function TileChrome({
       {interaction.kind === "tile-drag" && interaction.nodeId === id ? <InsertSilhouette nodeId={id} /> : null}
       {showChrome ? (
         <div className="tile-chrome-actions">
-          <div className="tile-side-tabs">
-            <PlusPullTab nodeId={id} />
-            <PathPullTab nodeId={id} />
+          <div className="tile-side-tabs is-out">
+            <PlusPullTab nodeId={id} inbound={false} />
+            <PathPullTab nodeId={id} inbound={false} />
+          </div>
+          <div className="tile-side-tabs is-in">
+            <PlusPullTab nodeId={id} inbound />
+            <PathPullTab nodeId={id} inbound />
           </div>
           <button
             type="button"
@@ -206,7 +210,7 @@ export function TileChrome({
   );
 }
 
-function PlusPullTab({ nodeId }: { nodeId: string }) {
+function PlusPullTab({ nodeId, inbound }: { nodeId: string; inbound: boolean }) {
   const view = useStore((s) => s.view);
   const interaction = useStore((s) => s.interaction);
   const restRef = useRef<HTMLButtonElement>(null);
@@ -231,9 +235,9 @@ function PlusPullTab({ nodeId }: { nodeId: string }) {
 
   const finish = (spawn: "step" | "data" | null) => {
     if (spawn === "step") {
-      useStore.getState().spawnBranch(nodeId, WorkflowNodeKind.Step);
+      useStore.getState().spawnBranch(nodeId, WorkflowNodeKind.Step, inbound ? "in" : "out");
     } else if (spawn === "data") {
-      useStore.getState().spawnBranch(nodeId, WorkflowNodeKind.DataField);
+      useStore.getState().spawnBranch(nodeId, WorkflowNodeKind.DataField, inbound ? "in" : "out");
     }
     useStore.getState().closeBoardModes();
     setDrag(null);
@@ -283,8 +287,8 @@ function PlusPullTab({ nodeId }: { nodeId: string }) {
 
   const tabX = drag?.live ? drag.x : drag ? drag.restX : 0;
   const tabY = drag?.live ? drag.y : drag ? drag.restY : 0;
-  const centers = drag ? previewCenters(drag.restX, drag.restY, items.length) : [];
-  const plusOrigin = drag ? underTileOrigin(drag.tile, drag.restY) : { x: 0, y: 0 };
+  const centers = drag ? previewCenters(drag.restX, drag.restY, items.length, inbound) : [];
+  const plusOrigin = drag ? underTileOrigin(drag.tile, drag.restY, inbound) : { x: 0, y: 0 };
   const ribbon = drag ? taffyRibbon(plusOrigin.x, plusOrigin.y, tabX, tabY) : null;
   const overlay =
     drag && typeof document !== "undefined"
@@ -353,8 +357,24 @@ function PlusPullTab({ nodeId }: { nodeId: string }) {
         ref={restRef}
         type="button"
         className={`plus-tab${drag?.live ? " is-hidden-rest" : ""}`}
-        aria-label={view === ViewMode.After ? "Add After-only Step" : "Add Step or Data"}
-        title={view === ViewMode.After ? "Pull to add an After-only Step" : "Pull onto Step or Data"}
+        aria-label={
+          inbound
+            ? view === ViewMode.After
+              ? "Add left After-only Step"
+              : "Add left Step or Data"
+            : view === ViewMode.After
+              ? "Add After-only Step"
+              : "Add Step or Data"
+        }
+        title={
+          inbound
+            ? view === ViewMode.After
+              ? "Pull left to add an After-only Step"
+              : "Pull left onto Step or Data"
+            : view === ViewMode.After
+              ? "Pull to add an After-only Step"
+              : "Pull onto Step or Data"
+        }
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
@@ -368,7 +388,7 @@ function PlusPullTab({ nodeId }: { nodeId: string }) {
   );
 }
 
-function PathPullTab({ nodeId }: { nodeId: string }) {
+function PathPullTab({ nodeId, inbound }: { nodeId: string; inbound: boolean }) {
   const restRef = useRef<HTMLButtonElement>(null);
   const interaction = useStore((s) => s.interaction);
   const [drag, setDrag] = useState<{
@@ -400,7 +420,7 @@ function PathPullTab({ nodeId }: { nodeId: string }) {
     if (!rest) return;
     const tile = overlayTileRect(nodeId, rest);
     e.currentTarget.setPointerCapture(e.pointerId);
-    useStore.getState().beginPathPull(nodeId);
+    useStore.getState().beginPathPull(nodeId, inbound);
     setDrag({
       x: e.clientX,
       y: e.clientY,
@@ -440,7 +460,7 @@ function PathPullTab({ nodeId }: { nodeId: string }) {
 
   const endX = drag?.live ? drag.x : drag?.restX ?? 0;
   const endY = drag?.live ? drag.y : drag?.restY ?? 0;
-  const pathOrigin = drag ? underTileOrigin(drag.tile, drag.restY) : { x: 0, y: 0 };
+  const pathOrigin = drag ? underTileOrigin(drag.tile, drag.restY, inbound) : { x: 0, y: 0 };
   const pathMid = (() => {
     const dx = endX - pathOrigin.x;
     const dy = endY - pathOrigin.y;
@@ -484,8 +504,14 @@ function PathPullTab({ nodeId }: { nodeId: string }) {
         ref={restRef}
         type="button"
         className={`path-tab${drag?.live ? " is-hidden-rest" : ""}`}
-        aria-label="Pull a Path to an existing Node"
-        title="Pull a Path onto another Step or Data"
+        aria-label={
+          inbound ? "Pull a Path from an existing Node" : "Pull a Path to an existing Node"
+        }
+        title={
+          inbound
+            ? "Pull a Path from another Step or Data"
+            : "Pull a Path onto another Step or Data"
+        }
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
