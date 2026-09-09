@@ -861,7 +861,8 @@ Approved 2026-09-09. Visual-only restyle of the selected-tile Q/E · A/D diagram
 ## Locked decisions
 
 - Keep the two-line Q/E Step and A/D Data map and the quiet keycaps.
-- Replace the CAD shaft, CSS triangles, and `|` pipes with one inline SVG: chunky filled heads, a slightly bowed round-cap shaft, and one tilted center tick.
+- Replace the CAD shaft, CSS triangles, and `|` pipes with one inline SVG: **straight** chunky filled heads, a level round-cap shaft, and a vertical center tick. No bow, no tilted stroke.
+
 - Same muted ink as the hint strip. After still shows Q/E only.
 - No new runtime dependency.
 

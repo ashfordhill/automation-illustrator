@@ -12,6 +12,21 @@ test.describe("Improvement 43 — spawn hint compass", () => {
     await expect(spawn).toContainText("+ Data");
     await expect(spawn.locator("[data-spawn-compass]")).toBeVisible();
     await expect(spawn).not.toContainText("|");
+    const geom = await spawn.locator("[data-spawn-compass]").evaluate((el) => {
+      const svg = el as SVGSVGElement;
+      const shaft = svg.querySelector("line");
+      const tick = svg.querySelectorAll("line")[1];
+      if (!shaft || !tick) return null;
+      return {
+        shaftY1: shaft.getAttribute("y1"),
+        shaftY2: shaft.getAttribute("y2"),
+        tickX1: tick.getAttribute("x1"),
+        tickX2: tick.getAttribute("x2"),
+      };
+    });
+    expect(geom).toBeTruthy();
+    expect(geom!.shaftY1).toBe(geom!.shaftY2);
+    expect(geom!.tickX1).toBe(geom!.tickX2);
     await capturePage(page, `${EVIDENCE}/spawn-compass-1440.png`);
   });
 });

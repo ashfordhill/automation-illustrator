@@ -2297,3 +2297,14 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(improve-45): select parent after deleting a Tile`
 
+## Improvement 43 — correction 1 — 2026-09-09
+
+- Requested: The spawn compass looked terrible — wiggly shaft, tick not straight.
+- Changed: Straight level shaft, vertical center tick, symmetric filled heads. Same quiet ink; `|` pipes stay gone. Tests assert the shaft Ys match and the tick Xs match.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning). Node 24.
+  - `npm run test:unit` — CanvasHelper 3 tests pass (full suite not re-run; concurrent inspector WIP in the tree).
+  - `npm run test:e2e` — `e2e/improve-43-spawn-compass.spec.ts` (2), `e2e/canvas-helper-hints.spec.ts` (1) all pass (3).
+- Status: COMPLETE
+- Commit: `feat(improve-43): straighten spawn compass`
+

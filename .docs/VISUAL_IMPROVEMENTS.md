@@ -273,3 +273,10 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 - Attachments:
   ![delete selects parent](.docs/visual-improvements/2026-09-09-delete-selects-parent.gif)
 
+## 2026-09-09 — spawn compass was wiggly
+
+- Issue: The Q/E · A/D compass shaft bowed and the center tick leaned, so it read as a shaky sketch.
+- Resolution: Correction — straight shaft, vertical tick, symmetric heads. Same quiet ink.
+- Attachments:
+  ![spawn compass wobbly](.docs/visual-improvements/2026-09-09-spawn-compass-wobbly.png)
+

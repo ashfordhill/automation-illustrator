@@ -51,6 +51,11 @@ test("selected Tile spawn hints are Q/E Step and A/D Data with direction arrows"
   expect(text).toMatch(/D/);
   expect(text).toMatch(/\+ Data/);
   expect(host.querySelector("[data-spawn-compass]")).not.toBeNull();
+  const svg = host.querySelector("[data-spawn-compass]");
+  const shaft = svg?.querySelector("line");
+  const tick = svg?.querySelectorAll("line")[1];
+  expect(shaft?.getAttribute("y1")).toBe(shaft?.getAttribute("y2"));
+  expect(tick?.getAttribute("x1")).toBe(tick?.getAttribute("x2"));
   expect(text).not.toMatch(/\|/);
   expect(host.textContent ?? "").toMatch(/Remove Step/);
   expect(host.textContent ?? "").not.toMatch(/Right-click/);

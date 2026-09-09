@@ -23,7 +23,7 @@ function Chip({ item }: { item: Hint }) {
   );
 }
 
-/** Chunky double-headed compass: left/right spawn, not a CAD axis (P-01, P-06). */
+/** Straight chunky double-headed compass: left/right spawn (P-01, P-06). */
 function SpawnArrows() {
   return (
     <svg
@@ -34,22 +34,10 @@ function SpawnArrows() {
       height="18"
       aria-hidden
     >
-      <path
-        d="M 20 9.1 C 72 7.2, 108 10.8, 134 9 C 160 7.2, 198 10.6, 248 8.9"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.55"
-        strokeLinecap="round"
-      />
-      <path d="M 21.5 3.4 L 7 9.05 L 21.2 14.9 Q 18.6 9.1 21.5 3.4 Z" fill="currentColor" />
-      <path d="M 246.5 3.2 L 261 8.95 L 247 15.1 Q 249.4 9 246.5 3.2 Z" fill="currentColor" />
-      <path
-        d="M 131.6 2.4 L 136.2 15.8"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.45"
-        strokeLinecap="round"
-      />
+      <line x1="16" y1="9" x2="252" y2="9" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round" />
+      <path d="M 22 3.2 L 6 9 L 22 14.8 Z" fill="currentColor" />
+      <path d="M 246 3.2 L 262 9 L 246 14.8 Z" fill="currentColor" />
+      <line x1="134" y1="2.4" x2="134" y2="15.6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
     </svg>
   );
 }
