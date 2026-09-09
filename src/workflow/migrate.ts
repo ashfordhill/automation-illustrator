@@ -131,8 +131,15 @@ function parseUnknown(data: unknown): ParseResult {
   );
 }
 
+function emptyFile(): ParseFailure {
+  return fail("invalid-json", "This file is empty.", [
+    { code: "invalid-shape", message: "This file is empty." },
+  ]);
+}
+
 /** YAML (or JSON) parse, then validate/migrate. Never throws; never mutates the caller. */
 export function parseDocument(raw: string): ParseResult {
+  if (raw.trim() === "") return emptyFile();
   let data: unknown;
   try {
     data = parseWorkflowText(raw);
@@ -141,5 +148,6 @@ export function parseDocument(raw: string): ParseResult {
       { code: "invalid-shape", message: "This file is not valid YAML or JSON." },
     ]);
   }
+  if (data == null) return emptyFile();
   return parseUnknown(data);
 }

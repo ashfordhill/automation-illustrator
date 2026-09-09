@@ -1887,4 +1887,15 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(improve-32): import and export workflows as YAML`
 
+## Improvement 32 — correction 1 — 2026-09-08
+
+- Requested: Test import/export thoroughly for edge cases and add tests.
+- Changed: Empty / `null` YAML is rejected as “This file is empty.” Export filenames are ASCII-slugged, path-safe, and clipped to 80 characters. Import of YAML that still contains merge groups keeps the unfold notice (parse unfolds before `loadDoc`). Unit coverage for BOM/CRLF, trailing-comma JSON, quoted `version`, YAML 1.2 `yes`/`NO`, cycles, extras stripped, unicode/multiline round-trip, grouped unfold, filename edge cases, store Import/Export/Cancel/recovery, YAML stuffed into localStorage rewritten as JSON. E2E: Export→Import round-trip, JSON/`.yml`, v1 migrate, Cancel, empty, cyclic, untitled Export.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning). Untracked `pieGeometry.test.ts` moved aside for tsc (not in this commit).
+  - `npm run test:unit` — 39 files, 250 tests pass.
+  - `npm run test:e2e` — `e2e/improve-32-import-export.spec.ts` (10), `e2e/replace.spec.ts` (7), `e2e/hardening.spec.ts` (13) all pass (30). Chromium via `LD_LIBRARY_PATH` `~/.local/pw-libs`.
+- Status: COMPLETE
+- Commit: `feat(improve-32): cover import export edge cases`
+
 

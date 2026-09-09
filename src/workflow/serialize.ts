@@ -7,6 +7,7 @@ import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
 import { projectDisplayName, type WorkflowDoc } from "./types";
 
 const YAML_STRINGIFY = { indent: 2, lineWidth: 0 } as const;
+const MAX_EXPORT_SLUG = 80;
 
 /** Pretty YAML 1.2 for files. Trailing newline so diffs stay tidy. */
 export function workflowToYaml(doc: WorkflowDoc): string {
@@ -18,14 +19,16 @@ export function parseWorkflowText(raw: string): unknown {
   return parseYaml(raw);
 }
 
-/** Download name: "Oak Park Invoice" → oak-park-invoice.yaml. */
+/** Download name: "Oak Park Invoice" → oak-park-invoice.yaml. Safe for a file, not a path. */
 export function workflowExportFilename(doc: Pick<WorkflowDoc, "name">): string {
   const slug = projectDisplayName(doc)
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+    .replace(/^-+|-+$/g, "")
+    .slice(0, MAX_EXPORT_SLUG)
+    .replace(/-+$/g, "");
   return `${slug || "untitled"}.yaml`;
 }
 

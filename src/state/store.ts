@@ -154,12 +154,17 @@ export type LaneViewport = { x: number; y: number; zoom: number };
 export type PendingReplace =
   | { kind: "new" }
   | { kind: "demo"; demoId: DemoId }
-  | { kind: "import"; doc: WorkflowDoc };
+  | { kind: "import"; doc: WorkflowDoc; unfolded?: boolean };
 
 function documentForPending(pending: PendingReplace): WorkflowDoc {
   if (pending.kind === "new") return freshBoard();
   if (pending.kind === "demo") return workflowForDemo(pending.demoId);
   return pending.doc;
+}
+
+function importUnfoldOpts(pending: PendingReplace): { unfoldedNotice?: boolean } | undefined {
+  if (pending.kind === "import" && pending.unfolded) return { unfoldedNotice: true };
+  return undefined;
 }
 
 /** Demo or last saved board. Label spacing is derived per lane (CX-05), not saved. */
@@ -239,7 +244,7 @@ export const useStore = create<{
   notice: string | null;
   noticeId: number;
   commit: (next: WorkflowDoc, kind?: HistoryKind) => void;
-  replaceDoc: (next: WorkflowDoc) => void;
+  replaceDoc: (next: WorkflowDoc, opts?: { unfoldedNotice?: boolean }) => void;
   undo: () => void;
   redo: () => void;
   setView: (v: ViewModeT) => void;
@@ -309,7 +314,7 @@ export const useStore = create<{
   cancelReplace: () => void;
   confirmReplaceDiscard: () => void;
   confirmReplaceSaveCopy: () => void;
-  loadDoc: (doc: WorkflowDoc) => void;
+  loadDoc: (doc: WorkflowDoc, opts?: { unfoldedNotice?: boolean }) => void;
   exportWorkflow: () => void;
   importRaw: (raw: string) => ParseResult;
   clearImportError: () => void;
@@ -365,7 +370,7 @@ export const useStore = create<{
         : commitStructural(workflow, past, next);
     set({ ...stacks, persistStatus });
   },
-  replaceDoc: (next) => {
+  replaceDoc: (next, opts) => {
     const unfolded = unfoldMergeGroups(next);
     const doc = unfolded.doc;
     const violations = validateWorkflow(doc);
@@ -374,13 +379,14 @@ export const useStore = create<{
       return;
     }
     const persistStatus = persistIfAllowed(doc, get().recovery);
+    const showUnfold = unfolded.unfolded || opts?.unfoldedNotice;
     set({
       ...replaceHistory(doc),
       persistStatus,
       selected: null,
       interaction: IDLE,
       departing: null,
-      notice: unfolded.unfolded ? UNFOLD_NOTICE : null,
+      notice: showUnfold ? UNFOLD_NOTICE : null,
       pendingReplace: null,
       importError: null,
       lastHumanId: null,
@@ -392,7 +398,7 @@ export const useStore = create<{
       laneLayoutPositions: {},
       canvasEpoch: get().canvasEpoch + 1,
     });
-    if (unfolded.unfolded) {
+    if (showUnfold) {
       set({ noticeId: get().noticeId + 1 });
     }
   },
@@ -1223,16 +1229,16 @@ export const useStore = create<{
   confirmReplaceDiscard: () => {
     const pending = get().pendingReplace;
     if (!pending) return;
-    get().loadDoc(documentForPending(pending));
+    get().loadDoc(documentForPending(pending), importUnfoldOpts(pending));
   },
   confirmReplaceSaveCopy: () => {
     const pending = get().pendingReplace;
     if (!pending) return;
     downloadWorkflowCopy(get().workflow);
-    get().loadDoc(documentForPending(pending));
+    get().loadDoc(documentForPending(pending), importUnfoldOpts(pending));
   },
-  loadDoc: (doc) => {
-    get().replaceDoc(doc);
+  loadDoc: (doc, opts) => {
+    get().replaceDoc(doc, opts);
   },
   exportWorkflow: () => {
     downloadWorkflowCopy(get().workflow);
@@ -1244,7 +1250,10 @@ export const useStore = create<{
       return parsed;
     }
     if (get().recovery) return parsed;
-    set({ pendingReplace: { kind: "import", doc: parsed.doc }, importError: null });
+    set({
+      pendingReplace: { kind: "import", doc: parsed.doc, unfolded: parsed.unfolded },
+      importError: null,
+    });
     return parsed;
   },
   clearImportError: () => set({ importError: null }),

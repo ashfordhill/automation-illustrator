@@ -23,6 +23,7 @@ import {
 import { robotMailroom, MAILROOM_IDS } from "../demos/robotMailroom";
 import { ColorScheme, SplitKind, StepKind, WorkflowNodeKind } from "../workflow/catalogs";
 import { emptyAfterOverlay, emptyWorkflow, type WorkflowDoc } from "../workflow/types";
+import { workflowToYaml } from "../workflow/serialize";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -135,6 +136,17 @@ test("grouped v2 storage unfolds groups and keeps After Who", () => {
   expect(JSON.parse(storage.getItem(LS_WORKFLOW)!).after.groups).toEqual([]);
 });
 
+test("YAML stuffed into localStorage still hydrates and is rewritten as JSON", () => {
+  const storage = new MemoryStorage();
+  storage.setItem(LS_WORKFLOW, workflowToYaml(robotMailroom()));
+  const result = hydratePersistedWorkflow(fallback, storage);
+  expect(result.recovery).toBeNull();
+  expect(result.workflow.nodes[0]?.id).toBe(MAILROOM_IDS.open);
+  const saved = storage.getItem(LS_WORKFLOW)!;
+  expect(saved.trimStart().startsWith("{")).toBe(true);
+  expect(JSON.parse(saved).version).toBe(2);
+});
+
 test("invalid graph keeps the raw key and returns recovery (SH-09, SH-10)", () => {
   const storage = new MemoryStorage();
   const raw = JSON.stringify({
@@ -215,11 +227,13 @@ test("downloadWorkflowCopy writes a YAML attachment named from the project", () 
   vi.spyOn(document.body, "appendChild").mockImplementation((node) => node);
   downloadWorkflowCopy(emptyWorkflow());
   expect(anchor.download).toBe("untitled.yaml");
+  downloadWorkflowCopy(robotMailroom());
+  expect(anchor.download).toBe("robot-mailroom.yaml");
   expect(createObjectURL).toHaveBeenCalled();
-  expect(click).toHaveBeenCalled();
+  expect(click).toHaveBeenCalledTimes(2);
   expect(revoke).toHaveBeenCalled();
   downloadTextFile(SAVE_COPY_FILENAME, "{}");
-  expect(click).toHaveBeenCalledTimes(2);
+  expect(click).toHaveBeenCalledTimes(3);
 });
 
 test("sound preference defaults off and only 'on' enables it (SH-03)", () => {
