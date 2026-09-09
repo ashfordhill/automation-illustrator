@@ -1002,3 +1002,23 @@ Append to `## Amendments` in `.docs/GOAL.md`: P-05, P-07, P-08, P-09, P-10, NA-0
 Commit: `feat(improve-48): present icon menu left and Z remove`.  
 Evidence: `.docs/evidence/improve-48-chrome/`.
 
+---
+
+# Improvement 49 — hide the tile-drag hint strip
+
+Approved 2026-09-09. User request with drag GIF: no Drop keycap, no Esc Cancel, no copy at all while dragging a Tile.
+
+## Locked decisions
+
+- `tile-drag` returns no chips and no spawn compass, so the helper unmounts. Selected-tile Q/E A/D hints come back when the drag ends.
+- Drop still inserts on a Path or bundle. Escape still cancels (CX-08). Empty-canvas drop still cancels.
+- Do not fall through to the selected-Node hints during the drag.
+- No new runtime dependency.
+
+## Contract
+
+Append to `## Amendments` in `.docs/GOAL.md`: P-06 as dated 2026-09-09.
+
+Commit: `feat(improve-49): hide the tile-drag hint strip`.  
+Evidence: `.docs/evidence/improve-49-drag-hint/`.
+

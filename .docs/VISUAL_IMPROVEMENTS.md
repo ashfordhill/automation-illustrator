@@ -310,3 +310,10 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 - Attachments:
   ![insert into fork](.docs/visual-improvements/2026-09-09-insert-into-fork.gif)
 
+## 2026-09-09 — drag-and-drop hotkey tip
+
+- Issue: Dragging a Tile shows a Drop keycap plus Esc Cancel, which reads as a hotkey row for a mouse gesture.
+- Resolution: Shipped in `feat(improve-49): hide the tile-drag hint strip` — no chips and no copy while dragging.
+- Attachments:
+  ![drag drop hotkey tip](.docs/visual-improvements/2026-09-09-drag-drop-hotkey-tip.gif)
+

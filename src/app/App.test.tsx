@@ -294,7 +294,8 @@ test("tile-drag hover sets insert preview on the lane without mutating the docum
   });
   expect(host.querySelector('[data-insert-preview="true"]')).not.toBeNull();
   expect(host.querySelector('[data-tile-drag="true"]')).not.toBeNull();
-  expect(host.textContent).toMatch(/Neighbors make a gap/);
+  expect(host.querySelector(".canvas-helper")).toBeNull();
+  expect(host.textContent).not.toMatch(/Neighbors make a gap/);
   expect(useStore.getState().workflow.edges.map((e) => e.id).sort()).toEqual(edges);
   act(() => {
     useStore.getState().closeBoardModes();

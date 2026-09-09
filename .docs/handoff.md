@@ -2412,3 +2412,29 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(improve-47): insert on merge and split trunks`
 
+## Improvement 49 — hide the tile-drag hint strip — 2026-09-09
+
+- Starting commit: `9fe456aef8ea06a34625bafc91dd359dd6337765` (`feat(improve-47): insert on merge and split trunks`)
+- Working tree at start: tracked tree matched improve-47. Untracked elk plans, chrome GIFs, and playwright port configs stayed outside the commit.
+- GOAL clauses addressed: P-06 (amendment dated 2026-09-09). Document version unchanged.
+- Library research and decisions: no new runtime dependency. `tile-drag` must still return empty chips (not fall through) so selected-Node spawn/remove hints stay hidden during the gesture.
+- Files changed:
+  - Shell: `src/app/components/CanvasHelper.tsx`
+  - Tests: `src/app/components/CanvasHelper.test.tsx`, `src/app/App.test.tsx`, `e2e/improve-49-drag-hint.spec.ts`
+  - Docs: `.docs/GOAL.md`, `.docs/IMPROVEMENTS.md`, `.docs/VISUAL_IMPROVEMENTS.md`, this handoff entry
+  - Visual log: `.docs/visual-improvements/2026-09-09-drag-drop-hotkey-tip.gif`
+  - Evidence: `.docs/evidence/improve-49-drag-hint/`
+- Behavior implemented:
+  - Dragging a Tile hides the contextual hint strip. No Drop keycap, no Esc Cancel chip, no copy.
+  - Drop still inserts on a Path or bundle. Escape still cancels. Spawn hints return when the drag ends.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning). Node 24.
+  - `npm run test:unit` — 41 files, 308 tests pass.
+  - `npm run test:e2e` — `improve-49-drag-hint` (1), `canvas-helper-hints` (1), `insert-preview` (2), `improve-10-drag-preview` (4), `improve-38-chrome-hints` (5) all pass (13). Chromium via `LD_LIBRARY_PATH` `/home/ash/.local/pw-libs/usr/lib/x86_64-linux-gnu`.
+- Evidence:
+  - `.docs/evidence/improve-49-drag-hint/drag-no-hint-1440.png` — Review dragged; insert silhouette; no Drop/Esc chips (1440×900)
+- Earlier-slice defects fixed: none
+- Known limitations / follow-ups: Path-pull still shows Release / Esc Cancel. Path-end wobble is still a later improvement.
+- Status: COMPLETE
+- Commit: `feat(improve-49): hide the tile-drag hint strip`
+

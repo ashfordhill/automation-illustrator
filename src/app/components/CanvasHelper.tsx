@@ -96,10 +96,7 @@ function hintsFor(): { chips: Hint[]; spawnAfter: boolean | null } {
     };
   }
   if (s.interaction.kind === "tile-drag") {
-    return {
-      chips: [{ key: "Drop", label: "on a Path or fork to insert. Neighbors make a gap." }, { key: "Esc", label: "Cancel" }],
-      spawnAfter: null,
-    };
+    return { chips: [], spawnAfter: null };
   }
   if (s.interaction.kind === "remove-preview") {
     return {

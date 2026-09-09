@@ -75,6 +75,20 @@ test("Right-click Delete hint is hidden until the toggle is on", () => {
   expect(host.textContent ?? "").toMatch(/Delete/);
 });
 
+test("tile-drag hides the hint strip", () => {
+  act(() => {
+    useStore.getState().select({ type: SelectionKind.Node, id: OAK_PARK_IDS.review });
+  });
+  expect(host.querySelector(".canvas-helper")).not.toBeNull();
+  act(() => {
+    useStore.getState().beginTileDrag(OAK_PARK_IDS.review);
+  });
+  expect(host.querySelector(".canvas-helper")).toBeNull();
+  expect(host.textContent ?? "").not.toMatch(/Drop/);
+  expect(host.textContent ?? "").not.toMatch(/Esc/);
+  expect(host.textContent ?? "").not.toMatch(/Neighbors make a gap/);
+});
+
 test("After spawn hints omit Data", () => {
   act(() => {
     useStore.getState().setView(ViewMode.After);
