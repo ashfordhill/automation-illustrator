@@ -324,3 +324,10 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 - Attachments:
   ![present icon clip](.docs/visual-improvements/2026-09-09-present-icon-clip.png)
 
+## 2026-09-09 — Present icon lost its legs
+
+- Issue: Clipping the plump hem removed the legs and left a stray stick under the slide.
+- Resolution: Restored the full Streamline figure (plump body + stick leg), no torso clip and no knockout. Figure sits left of the right edge so the trailing side is not cut, with feet overlapping the slide.
+- Attachments:
+  ![present icon no legs](.docs/visual-improvements/2026-09-09-present-icon-no-legs.png)
+

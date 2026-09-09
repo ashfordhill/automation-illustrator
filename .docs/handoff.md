@@ -2449,4 +2449,16 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(improve-48): unclip present figure and drop foot blob`
 
+## Improvement 48 — correction 2 — 2026-09-09
+
+- Requested: Legs were gone and a stray line hung under the slide after correction 1.
+- Changed: Restored the full Streamline figure (no torso clip, no extra arm, no knockout). Shorter/narrower slide so the person stands in front with feet below the box. The stick is the original second leg, not a leftover stroke.
+- Tests and exact results:
+  - `npm run build` — pass (already green before the last e2e pass; PresentButton-only SVG tweak after).
+  - `npm run test:unit` — App.test 20 tests pass.
+  - `npm run test:e2e` — `e2e/improve-48-chrome.spec.ts` (3) pass.
+- Status: COMPLETE
+- Commit: `feat(improve-48): restore presenter legs in front of slide`
+
+
 
