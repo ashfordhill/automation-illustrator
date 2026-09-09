@@ -257,7 +257,7 @@ body.is-tile-dragging * {
   background: transparent;
   cursor: pointer;
   border-radius: 12px;
-  filter: drop-shadow(0 3px 0 var(--btn-shadow));
+  overflow: visible;
 }
 
 .present-btn:focus-visible {
@@ -269,6 +269,7 @@ body.is-tile-dragging * {
   fill: var(--present-box);
   stroke: var(--ink);
   stroke-width: 2.75;
+  filter: drop-shadow(0 3px 0 var(--btn-shadow));
 }
 
 .present-btn:hover .present-box,
@@ -282,13 +283,6 @@ body.is-tile-dragging * {
   stroke-width: 3;
   stroke-linecap: round;
   stroke-linejoin: round;
-}
-
-.present-leg-knockout {
-  fill: none;
-  stroke: var(--present-figure);
-  stroke-width: 8;
-  stroke-linecap: round;
 }
 
 .present-leg {

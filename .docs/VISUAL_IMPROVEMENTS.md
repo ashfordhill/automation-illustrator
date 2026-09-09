@@ -317,3 +317,10 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 - Attachments:
   ![drag drop hotkey tip](.docs/visual-improvements/2026-09-09-drag-drop-hotkey-tip.gif)
 
+## 2026-09-09 — Present icon clip and foot blob
+
+- Issue: The presenter was flush right, so the trailing arm was sliced off, and a white half-circle sat under the feet (knockout cap).
+- Resolution: Shifted the figure left onto a slightly narrower slide, clipped the plump hem (the white half-circle under the feet), and added a hanging arm so the trailing side is not a flat cut.
+- Attachments:
+  ![present icon clip](.docs/visual-improvements/2026-09-09-present-icon-clip.png)
+

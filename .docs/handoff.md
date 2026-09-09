@@ -2438,3 +2438,15 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(improve-49): hide the tile-drag hint strip`
 
+## Improvement 48 — correction 1 — 2026-09-09
+
+- Requested: Present icon lost the trailing arm, sat too far right, and had a white half-circle under the feet. Move the person left, unclip the arm, slightly narrow the blue slide, remove the foot blob.
+- Changed: `PresentButton.tsx` (figure shifted left, slide 44px wide, plump hem clipped, hanging arm added, knockout stroke removed). `tokens.css` (no knockout; drop-shadow on the slide so the filter does not clip the figure). Visual log + close-up evidence.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning). Node 24.
+  - `npm run test:unit` — App.test 20 tests pass.
+  - `npm run test:e2e` — `e2e/improve-48-chrome.spec.ts` (3) pass.
+- Status: COMPLETE
+- Commit: `feat(improve-48): unclip present figure and drop foot blob`
+
+

@@ -21,6 +21,8 @@ test.describe("Improvement 48 — chrome Present Z and menu", () => {
     expect(presentBox!.x).toBeGreaterThan(undoBox!.x + undoBox!.width);
     await expect(present.locator("svg .present-box")).toBeVisible();
     await expect(present.locator("svg .present-figure")).toBeVisible();
+    await expect(present.locator("svg .present-leg-knockout")).toHaveCount(0);
+    await present.screenshot({ path: `${EVIDENCE}/present-icon-1440.png`, animations: "disabled" });
 
     await menu.click();
     await expect(page.getByRole("menuitem", { name: "New" })).toBeVisible();
