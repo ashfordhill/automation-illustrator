@@ -129,9 +129,11 @@ test("inspector Type buttons are alphabetical with Other last; Who offers every 
     "Type Print",
     "Type Read",
     "Type Review",
+    "Type Scan",
     "Type Search",
     "Type Write",
   ]);
+  expect(host.querySelector('[aria-label="Type Other"]')?.classList.contains("is-other")).toBe(true);
   expect(host.querySelector('[aria-label="Who Alice"]')).not.toBeNull();
   expect(host.querySelector('[aria-label="Who LLM"]')).not.toBeNull();
   expect(host.querySelector('[aria-label="Who Script"]')).not.toBeNull();
@@ -309,13 +311,13 @@ test("Add Step leaves Other Name empty and the tile does not print Other", () =>
   });
   const name = host.querySelector<HTMLInputElement>("#step-name-field");
   expect(name?.value).toBe("");
-  expect(host.querySelector(".inspector-field-prefix")).toBeNull();
+  expect(host.querySelector(".inspector-field-prefix-label")?.textContent).toBe("");
   expect(host.textContent).not.toContain("Other Task");
   const otherBtn = host.querySelector('[aria-label="Type Other"]');
   expect(otherBtn).not.toBeNull();
   expect(otherBtn?.querySelector("svg")).not.toBeNull();
   expect(otherBtn?.querySelector("path")).toBeNull();
-  expect(otherBtn?.querySelector(".inspector-type-name")?.textContent?.trim()).toBe("");
+  expect(otherBtn?.querySelector(".inspector-type-name")).toBeNull();
   expect(host.querySelector('[aria-label="Type Call"] .inspector-type-name')?.textContent).toBe(
     "Call",
   );
@@ -336,12 +338,15 @@ test("Step Name uses a Type prefix and drops Name/Details captions", () => {
     useStore.getState().select({ type: SelectionKind.Node, id: OAK_PARK_IDS.read });
   });
   const rail = host.querySelector(".details-rail-body");
-  expect(rail?.querySelector(".inspector-field-prefix")?.textContent).toBe("Read");
+  expect(rail?.querySelector(".inspector-field-prefix-label")?.textContent).toBe("Read");
   const name = rail?.querySelector<HTMLInputElement>("#step-name-field");
   const details = rail?.querySelector<HTMLInputElement>("#step-details-field");
   expect(name?.getAttribute("aria-label")).toBe("Name");
   expect(details?.getAttribute("aria-label")).toBe("Details");
   expect(name?.value).toBe("invoice.pdf");
+  expect(getComputedStyle(name!).borderBottomStyle === "none" || getComputedStyle(name!).borderBottomWidth === "0px").toBe(
+    true,
+  );
   const captions = [...(rail?.querySelectorAll(".mantine-InputWrapper-label") ?? [])].map(
     (el) => el.textContent?.trim(),
   );

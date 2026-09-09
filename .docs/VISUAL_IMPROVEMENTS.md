@@ -273,6 +273,14 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 - Attachments:
   ![delete selects parent](.docs/visual-improvements/2026-09-09-delete-selects-parent.gif)
 
+## 2026-09-09 — inspector cluster, Scan, tall Other
+
+- Issue: Name/Details were wider than Type and Who, the Name underline felt busy, and Other sat in a ninth small key instead of filling the right.
+- Resolution: Shipped in `feat(improve-46): cluster Type Who and Scan` — Scan in the 3×3, tall Other on the right, Name/Details in a rounded well matching Who width, reserved Type prefix, no underline.
+- Attachments:
+  ![inspector field balance](.docs/visual-improvements/2026-09-09-inspector-field-balance.png)
+  ![type other tall](.docs/visual-improvements/2026-09-09-type-other-tall.png)
+
 ## 2026-09-09 — spawn compass was wiggly
 
 - Issue: The Q/E · A/D compass shaft bowed and the center tick leaned, so it read as a shaky sketch.

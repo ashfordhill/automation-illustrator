@@ -34,6 +34,9 @@
   --actor-empty: #cfe8f2;
   --banner: #d4f0f8;
   --status-bar-height: 36px;
+  --inspector-who-key: 56px;
+  --inspector-who-gap: 6px;
+  --inspector-cluster: calc(4 * var(--inspector-who-key) + 3 * var(--inspector-who-gap));
   --tile-tab-size: 40px;
   --tile-tab-peek: 18px;
   --mantine-color-dimmed: var(--ink-soft);
@@ -1295,15 +1298,12 @@ body.is-tile-dragging * {
 
 .inspector-type-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, var(--inspector-who-key));
   justify-content: center;
-  width: min(12.75rem, 100%);
+  width: var(--inspector-cluster);
+  max-width: 100%;
   margin-inline: auto;
-  gap: 4px;
-}
-
-.inspector-type-grid > :last-child {
-  grid-column: auto;
+  gap: var(--inspector-who-gap);
 }
 
 .inspector-type,
@@ -1408,12 +1408,12 @@ body.is-tile-dragging * {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-start;
-  gap: 6px;
+  gap: var(--inspector-who-gap);
 }
 
 .inspector-who {
   flex-direction: column;
-  width: 56px;
+  width: var(--inspector-who-key);
   padding: 8px 4px 5px;
   gap: 4px;
   overflow: visible;
@@ -1455,14 +1455,39 @@ body.is-tile-dragging * {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  width: var(--inspector-cluster);
+  max-width: 100%;
+  margin-inline: auto;
+  padding: 8px;
+  box-sizing: border-box;
+  border: 2px solid var(--chrome-line);
+  border-radius: 14px;
+  background: var(--chrome-well);
 }
 
 .inspector-field {
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
+  background: none;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  cursor: default;
+}
+
+.inspector-field.is-off {
+  opacity: 0.55;
+}
+
+.inspector-field-box {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  min-width: 0;
   min-height: 36px;
-  padding: 6px 10px;
+  padding: 6px 8px;
   border: 2px solid var(--line);
   border-radius: 10px;
   background: var(--cream);
@@ -1472,32 +1497,49 @@ body.is-tile-dragging * {
   box-shadow: var(--chip-shadow);
 }
 
-.inspector-field.is-off {
-  opacity: 0.55;
-  cursor: default;
-}
-
-.inspector-field:focus-within {
+.inspector-field-box:focus-within {
   outline: 3px solid var(--blue);
   outline-offset: 2px;
 }
 
 .inspector-field-prefix {
+  position: relative;
   flex: 0 0 auto;
   font-weight: 800;
   font-size: 13px;
   line-height: 1.2;
-  color: var(--ink);
+  color: var(--chrome-ink);
+}
+
+.inspector-field-prefix-sizer {
+  visibility: hidden;
+  display: block;
+  white-space: nowrap;
+  font-weight: 800;
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.inspector-field-prefix-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  font-weight: 800;
+  font-size: 13px;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
 .chrome-bar .inspector-field :is(input, textarea),
 .inspector-field input {
   flex: 1 1 auto;
   min-width: 0;
+  width: 100%;
   margin: 0;
   padding: 1px 0 2px;
   border: none;
-  border-radius: 0;
+  border-radius: 8px;
   background: transparent !important;
   background-color: transparent !important;
   --input-bg: transparent;
@@ -1509,16 +1551,19 @@ body.is-tile-dragging * {
   box-shadow: none;
 }
 
-.inspector-field.is-lined input {
-  border-bottom: 2px solid var(--ink);
-}
-
 .inspector-field input:focus {
   outline: none;
 }
 
 .inspector-field input:disabled {
   cursor: default;
+}
+
+.inspector-manage > .inspector-field {
+  width: var(--inspector-cluster);
+  max-width: 100%;
+  align-self: center;
+  margin-inline: auto;
 }
 
 @media (prefers-reduced-motion: reduce) {

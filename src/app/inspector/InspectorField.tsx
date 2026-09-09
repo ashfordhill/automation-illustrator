@@ -1,44 +1,50 @@
 /**
- * Compact inspector text: Type prefix + underline for Name, empty box for Details.
+ * Compact inspector text: reserved Type prefix + Name/Details in a rounded sub-box.
  */
+import { LONGEST_STEP_KIND_LABEL } from "../../workflow/types";
+
 export function InspectorField({
   id,
   ariaLabel,
   prefix,
+  prefixSlot,
   value,
   disabled,
   onChange,
-  lined = true,
 }: {
   id: string;
   ariaLabel: string;
   prefix?: string;
+  /** Keep a Type-width column so Name/Details stay the same length. */
+  prefixSlot?: boolean;
   value: string;
   disabled?: boolean;
   onChange: (value: string) => void;
-  lined?: boolean;
 }) {
   return (
-    <div
-      className={`inspector-field${lined ? " is-lined" : " is-plain"}${disabled ? " is-off" : ""}`}
-      onClick={(e) => {
-        if (disabled) return;
-        if (e.target instanceof HTMLInputElement) return;
-        e.currentTarget.querySelector("input")?.focus();
-      }}
-    >
-      {prefix ? (
+    <div className={`inspector-field${disabled ? " is-off" : ""}`}>
+      {prefixSlot ? (
         <span className="inspector-field-prefix" aria-hidden="true">
-          {prefix}
+          <span className="inspector-field-prefix-sizer">{LONGEST_STEP_KIND_LABEL}</span>
+          <span className="inspector-field-prefix-label">{prefix ?? ""}</span>
         </span>
       ) : null}
-      <input
-        id={id}
-        aria-label={ariaLabel}
-        value={value}
-        disabled={disabled}
-        onChange={(e) => onChange(e.target.value)}
-      />
+      <div
+        className="inspector-field-box"
+        onClick={(e) => {
+          if (disabled) return;
+          if (e.target instanceof HTMLInputElement) return;
+          e.currentTarget.querySelector("input")?.focus();
+        }}
+      >
+        <input
+          id={id}
+          aria-label={ariaLabel}
+          value={value}
+          disabled={disabled}
+          onChange={(e) => onChange(e.target.value)}
+        />
+      </div>
     </div>
   );
 }

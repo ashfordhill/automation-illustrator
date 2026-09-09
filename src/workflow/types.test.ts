@@ -2,6 +2,7 @@ import { expect, test } from "vitest";
 import {
   STEP_KIND_META,
   StepKind,
+  LONGEST_STEP_KIND_LABEL,
   nodeCaption,
   projectDisplayName,
   stepDisplayLabel,
@@ -10,7 +11,7 @@ import {
 } from "./types";
 import type { StepNodeDto } from "./types";
 
-test("Type picker omits Scan, Drag, Approve, and File", () => {
+test("Type picker includes Scan; Other is last", () => {
   expect(typePickerKinds(StepKind.Read)).toEqual([
     StepKind.Call,
     StepKind.Copy,
@@ -18,6 +19,7 @@ test("Type picker omits Scan, Drag, Approve, and File", () => {
     StepKind.Print,
     StepKind.Read,
     StepKind.Review,
+    StepKind.Scan,
     StepKind.Search,
     StepKind.Write,
     StepKind.Other,
@@ -25,10 +27,14 @@ test("Type picker omits Scan, Drag, Approve, and File", () => {
 });
 
 test("a retired Type still appears when the selected Step already has it", () => {
-  const kinds = typePickerKinds(StepKind.Scan);
-  expect(kinds).toContain(StepKind.Scan);
+  const kinds = typePickerKinds(StepKind.File);
+  expect(kinds).toContain(StepKind.File);
   expect(kinds.at(-1)).toBe(StepKind.Other);
-  expect(kinds.indexOf(StepKind.Scan)).toBeLessThan(kinds.indexOf(StepKind.Search));
+  expect(kinds.indexOf(StepKind.File)).toBeLessThan(kinds.indexOf(StepKind.Print));
+});
+
+test("longest Type word is Approve so the Name prefix column can reserve it", () => {
+  expect(LONGEST_STEP_KIND_LABEL).toBe("Approve");
 });
 
 test("Other on-tile copy is the Name only", () => {

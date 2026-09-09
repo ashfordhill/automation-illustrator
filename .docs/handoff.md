@@ -2308,3 +2308,31 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(improve-43): straighten spawn compass`
 
+## Improvement 46 — Scan, tall Other, clustered Name/Details — 2026-09-09
+
+- Starting commit: `424156c8d8be7bfc6aa21f0ac450d34971782cdb` (`feat(improve-43): straighten spawn compass`)
+- Working tree at start: tracked tree matched improve-43 correction 1 after improve-45. Untracked elk plans, chrome GIFs, and asides remained outside the commit.
+- GOAL clauses addressed: NA-05, NA-10, NA-07 (amendment dated 2026-09-09). Document version unchanged (Scan already existed in the schema).
+- Library research and decisions: no new runtime dependency. Type keypad, Name/Details well, and Who keys share `--inspector-cluster` (four Who keys). Other is grid-column 4 / row span 3.
+- Files changed:
+  - Catalog: `src/workflow/types.ts` (Scan in `PICKER_STEP_KINDS`, `LONGEST_STEP_KIND_LABEL`)
+  - Inspector: `TypeButtons.tsx`, `TypeButtons.css`, `InspectorField.tsx`, `SelectedItemForm.tsx`, `compareDisabled.css`, `src/app/styles/tokens.css`
+  - Tests: `src/workflow/types.test.ts`, `src/app/App.test.tsx`, `e2e/improve-46-inspector-cluster.spec.ts`, plus 39/41/42/44 locator updates
+  - Docs: `.docs/GOAL.md`, `.docs/IMPROVEMENTS.md`, `.docs/VISUAL_IMPROVEMENTS.md`, sketches, this handoff entry
+  - Evidence: `.docs/evidence/improve-46-inspector-cluster/`
+- Behavior implemented:
+  - Scan is a first-class Type key. Other is a tall unlabeled clipboard on the right of the 3×3.
+  - Type, Name/Details well, and Who share one cluster width.
+  - Name/Details sit in a rounded well. Type word is a reserved column; the text field is its own cream sub-box with no underline. Switching Type does not change the field length.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning). Node 24.
+  - `npm run test:unit` — 41 files, 291 tests pass.
+  - `npm run test:e2e` — 46 (2), 44 (3), 42 (2), 41 (3), 33 (2) pass on port 4191; earlier inspector/38/39/16 also passed (24/28 then the four failures fixed). Chromium via `LD_LIBRARY_PATH` `/home/ash/.local/pw-libs/usr/lib/x86_64-linux-gnu`.
+- Evidence:
+  - `.docs/evidence/improve-46-inspector-cluster/cluster-1440.png` — Scan in the 3×3, tall Other, Name/Details well aligned with Who (1440×900)
+  - `.docs/evidence/improve-46-inspector-cluster/cluster-1024.png` — same at 1024×768
+- Earlier-slice defects fixed: none
+- Known limitations / follow-ups: Drag, Approve, and File stay schema-only unless already stored. Path-end wobble is still a later improvement.
+- Status: COMPLETE
+- Commit: `feat(improve-46): cluster Type Who and Scan`
+

@@ -1,18 +1,16 @@
 /**
- * Packed 3×3 Type keypad: icon + name with almost no pad, centered in the inspector.
+ * 3×3 Type keys plus a tall Other. Total width matches the Who cluster.
  */
 .inspector-type-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, var(--inspector-who-key));
+  grid-template-rows: repeat(3, auto);
   justify-content: center;
   justify-items: stretch;
-  width: min(12.75rem, 100%);
+  width: var(--inspector-cluster);
+  max-width: 100%;
   margin-inline: auto;
-  gap: 4px;
-}
-
-.inspector-type-grid > .inspector-type:last-child {
-  grid-column: auto;
+  gap: var(--inspector-who-gap);
 }
 
 .inspector-type-grid .inspector-type {
@@ -62,7 +60,20 @@
   min-height: 1.1em;
 }
 
-/* Other keeps the name row so the clipboard lines up with Search / Write. */
-.inspector-type-grid .inspector-type-name.is-blank {
-  visibility: hidden;
+.inspector-type-grid .inspector-type.is-other {
+  grid-column: 4;
+  grid-row: 1 / span 3;
+  padding: 8px 4px;
+  gap: 0;
+}
+
+.inspector-type-grid .inspector-type.is-other .inspector-type-icon {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+}
+
+.inspector-type-grid .inspector-type.is-other .inspector-type-icon svg {
+  width: 34px;
+  height: 34px;
 }

@@ -18,14 +18,14 @@ async function newBoardWithStep(page: import("@playwright/test").Page) {
 }
 
 test.describe("Improvement 44 — Human name and compact Name/Details", () => {
-  test("Step Name is Type plus underline; Details has no caption", async ({ page }) => {
+  test("Step Name is Type plus title; Details has no caption", async ({ page }) => {
     await loadOakPark(page);
     await page.getByText(DEMO_STEP).first().click();
 
     const name = aside(page).getByLabel("Name");
     const details = aside(page).getByLabel("Details");
     await expect(name).toHaveValue("invoice.pdf");
-    await expect(aside(page).locator(".inspector-field-prefix")).toHaveText("Read");
+    await expect(aside(page).locator(".inspector-fields .inspector-field").first().locator(".inspector-field-prefix-label")).toHaveText("Read");
     await expect(aside(page).getByText("Name", { exact: true })).toHaveCount(0);
     await expect(aside(page).getByText("Details", { exact: true })).toHaveCount(0);
     await expect(aside(page).getByText("Step", { exact: true })).toHaveCount(0);
@@ -56,7 +56,7 @@ test.describe("Improvement 44 min-width", () => {
   test("compact Name/Details still fit at 1024", async ({ page }) => {
     await loadOakPark(page);
     await page.getByText(DEMO_STEP).first().click();
-    await expect(aside(page).locator(".inspector-field-prefix")).toHaveText("Read");
+    await expect(aside(page).locator(".inspector-fields .inspector-field").first().locator(".inspector-field-prefix-label")).toHaveText("Read");
     await expect(aside(page).getByLabel("Name")).toHaveValue("invoice.pdf");
     await capturePage(page, `${EVIDENCE}/step-fields-1024.png`);
     await capturePage(page, ".docs/evidence/improve-44-inspector-labels/step-no-captions-1024.png");

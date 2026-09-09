@@ -152,6 +152,7 @@ export function DetailsPanel() {
           <InspectorField
             id="step-name-field"
             ariaLabel="Name"
+            prefixSlot
             prefix={n.stepKind === StepKind.Other ? undefined : STEP_KIND_META[n.stepKind].label}
             value={n.title}
             disabled={readOnly}
@@ -160,9 +161,9 @@ export function DetailsPanel() {
           <InspectorField
             id="step-details-field"
             ariaLabel="Details"
+            prefixSlot
             value={n.detail}
             disabled={readOnly}
-            lined={false}
             onChange={(detail) => useStore.getState().updateNode(n.id, { detail })}
           />
         </div>

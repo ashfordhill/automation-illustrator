@@ -51,7 +51,7 @@ test.describe("Improvement 41 — center Who keys", () => {
     await aside(page).getByRole("button", { name: "Manage actors" }).click();
     const cluster = aside(page).locator(".inspector-who-groups");
     await expect(cluster).toBeVisible();
-    await assertKeysCenteredOn(cluster, aside(page).locator(".inspector-field").first());
+    await assertKeysCenteredOn(cluster, aside(page).locator(".inspector-manage"));
     await assertColumnsLineUp(cluster);
     await capturePage(page, `${EVIDENCE}/manage-center-1440.png`);
   });

@@ -938,3 +938,24 @@ Append to `## Amendments` in `.docs/GOAL.md`: CX-07, AQ-03 as dated 2026-09-09.
 Commit: `feat(improve-45): select parent after deleting a Tile`.  
 Evidence: `.docs/evidence/improve-45-delete-parent/`.
 
+---
+
+# Improvement 46 — Scan, tall Other, clustered Name/Details
+
+Approved 2026-09-09. The Type keypad was a 3×3 with Other as a ninth small key. Name/Details were full-rail underlined boxes, so they did not line up with Who.
+
+## Locked decisions
+
+- Scan is a first-class Type key (alphabetical). Drag, Approve, and File stay schema-only unless already stored.
+- Other is a tall clipboard on the right of a 3×3, unlabeled, icon sized to the tall key.
+- Type keypad, Name/Details well, and Who keys share one cluster width (four Who keys).
+- Name/Details sit in a rounded sub-box. No underline. The Type prefix column is reserved for the longest Type word so the Name field does not change length.
+- No new runtime dependency. Document version unchanged (Scan already existed in the schema).
+
+## Contract
+
+Append to `## Amendments` in `.docs/GOAL.md`: NA-05, NA-10, NA-07 as dated 2026-09-09.
+
+Commit: `feat(improve-46): cluster Type Who and Scan`.  
+Evidence: `.docs/evidence/improve-46-inspector-cluster/`.
+

@@ -45,7 +45,7 @@ export const STEP_KINDS = [
   StepKind.Other,
 ] as const;
 
-/** Types offered in the inspector picker. Scan, Drag, Approve, and File stay in the schema for existing boards. */
+/** Types offered in the inspector picker. Drag, Approve, and File stay in the schema for existing boards. */
 export const PICKER_STEP_KINDS: ReadonlySet<StepKind> = new Set([
   StepKind.Call,
   StepKind.Copy,
@@ -53,6 +53,7 @@ export const PICKER_STEP_KINDS: ReadonlySet<StepKind> = new Set([
   StepKind.Print,
   StepKind.Read,
   StepKind.Review,
+  StepKind.Scan,
   StepKind.Search,
   StepKind.Write,
   StepKind.Other,
@@ -267,6 +268,12 @@ export const STEP_KIND_META: Record<
   [StepKind.File]: { label: "File", defaultTitle: "" },
   [StepKind.Other]: { label: "Other", defaultTitle: "" },
 };
+
+/** Longest Type word; inspector Name reserves this width so the field does not jump. */
+export const LONGEST_STEP_KIND_LABEL = Object.values(STEP_KIND_META)
+  .map((meta) => meta.label)
+  .filter((label) => label !== "Other")
+  .reduce((a, b) => (a.length >= b.length ? a : b));
 
 /**
  * Switching Type never rewrites Name. Other stays empty until the user types it.

@@ -14,3 +14,7 @@
 .details-rail-body .inspector-field.is-off :is(input, textarea):disabled {
   opacity: 1;
 }
+
+.details-rail-body .inspector-field.is-off .inspector-field-box :is(input, textarea):disabled {
+  opacity: 1;
+}

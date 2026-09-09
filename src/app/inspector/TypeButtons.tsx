@@ -1,5 +1,5 @@
 /**
- * Alphabetical Step Type fat buttons; Other last, clipboard with no printed word (NA-05).
+ * Alphabetical Step Type keys in a 3×3 plus a tall Other on the right (NA-05).
  */
 import { STEP_KIND_META, StepKind, typePickerKinds } from "../../workflow/types";
 import { StepKindIcon } from "../../board/tiles/StepKindIcon";
@@ -19,25 +19,21 @@ export function TypeButtons({
       {typePickerKinds(value).map((kind) => {
         const label = STEP_KIND_META[kind].label;
         const on = value === kind;
+        const other = kind === StepKind.Other;
         return (
           <button
             key={kind}
             type="button"
-            className={`inspector-type${on ? " is-on" : ""}`}
+            className={`inspector-type${on ? " is-on" : ""}${other ? " is-other" : ""}`}
             aria-pressed={on}
             aria-label={`Type ${label}`}
             disabled={disabled}
             onClick={() => onChange(kind)}
           >
             <span className="inspector-type-icon">
-              <StepKindIcon kind={kind} size={22} />
+              <StepKindIcon kind={kind} size={other ? 34 : 22} />
             </span>
-            <span
-              className={`inspector-type-name${kind === StepKind.Other ? " is-blank" : ""}`}
-              aria-hidden={kind === StepKind.Other}
-            >
-              {kind === StepKind.Other ? "\u00a0" : label}
-            </span>
+            {other ? null : <span className="inspector-type-name">{label}</span>}
           </button>
         );
       })}
