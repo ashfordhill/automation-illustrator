@@ -31,7 +31,7 @@ Chromium must be installed once: `npx playwright install chromium`.
 - **−**, Delete, and inspector **Remove** open the same Node-removal picker. Paths are not deleted; the workflow reconnects when a Node is removed. **Backspace** is Undo.
 - **Before / After / Both** sits in the top bar. Shared Step/Data/Path fields edit the same base document from either lane. Who is per-lane. Both is read-only comparison.
 - In **After**, the merge dock merges connected Before-origin Steps into one giant Step (default Robot) and Unmerge restores the whole group. After-only Steps exist only in After and are omitted from the automation score.
-- **Menu**: Present, New, Import, Keybinds, Light/Dark, then Demo (Oak Park Invoice, Robot Mailroom). New / Demo / Import share Save copy / Discard / Cancel. There is no Export item; Save copy downloads the current JSON.
+- **Menu**: Present, New, Import, Export, Actors, Keybinds, Light/Dark, then Demo (Oak Park Invoice, Robot Mailroom). New / Demo / Import share Save copy / Discard / Cancel. Export and Save copy download the current board as YAML. Import accepts YAML or JSON.
 - **Sound** starts off. The toggle after Undo plays original Web Audio cues (create, remove, reject, merge, tick). Preference persists in this browser.
 - Invalid saved JSON is not overwritten. Download recovery copy or Start fresh. If the browser cannot write storage, editing continues in memory with a **Not saved** chip.
 
@@ -39,7 +39,7 @@ Vocabulary used in the UI: Node, Step, Data, Path, condition, stroke (solid = al
 
 ## Architecture
 
-The document is **version 2**: one shared base workflow plus a sparse After overlay (assignments, merge groups, After-only Steps and Paths). Valid version 1 JSON migrates; invalid graphs are rejected, not repaired.
+The document is **version 2**: one shared base workflow plus a sparse After overlay (assignments, merge groups, After-only Steps and Paths). Files are YAML 1.2 (JSON still imports). Valid version 1 JSON migrates; invalid graphs are rejected, not repaired.
 
 ```text
 src/
@@ -48,9 +48,9 @@ src/
   workflow/   document meaning, Zod schemas, graph commands, merge, score
   state/      Zustand store, history, persistence, projection
   keyboard/   rebindable key catalog
-  demos/      Oak Park Invoice, Robot Mailroom
+  demos/      Oak Park Invoice and Robot Mailroom YAML fixtures
 ```
 
-`workflow/` is framework-free. Lane layout and Path routing are derived at render time and are not stored in undo history. Stack: Mantine 9, Tabler icons, `@xyflow/react` 12, Zustand 5, Zod 4, Vitest 5, Playwright + axe.
+`workflow/` is framework-free. Lane layout and Path routing are derived at render time and are not stored in undo history. Stack: Mantine 9, Tabler icons, `@xyflow/react` 12, Zustand 5, Zod 4, yaml 2, elkjs 0.12, Vitest 5, Playwright + axe.
 
 The product contract is `.docs/GOAL.md`. The relay record is `.docs/handoff.md`. A post-relay review checklist is `.docs/REVIEW_PLAN.md`.

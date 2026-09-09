@@ -1,6 +1,6 @@
 /**
  * Shared New / Demo / Import gate: Save copy, Discard, or Cancel (SH-06).
- * Cancel never mutates. Save copy downloads the current v2 JSON first.
+ * Cancel never mutates. Save copy downloads the current v2 YAML first.
  */
 import { Button, Group, Modal, Text } from "@mantine/core";
 import { demoName } from "../../demos/catalog";

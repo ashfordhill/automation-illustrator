@@ -1,0 +1,26 @@
+---
+description: Keep workflow YAML/JSON serialization valid when document fields change
+alwaysApply: true
+---
+
+# Workflow serialization
+
+The interchange format is the versioned `WorkflowDoc` as **YAML 1.2** (Export, Import, demo fixtures). YAML 1.2 is a JSON superset, so `.json` still imports. Browser **localStorage stays pretty JSON**. There is no custom file format.
+
+## When you change stored meaning
+
+If you add, rename, remove, or change the meaning of a field on `WorkflowDoc` (actors, Nodes, Paths, assignments, After overlay, catalogs stored as strings), do all of these in the same change:
+
+1. Update `src/workflow/types.ts` and the Zod schemas in `src/workflow/schema.ts`.
+2. If the on-disk shape breaks, bump `WORKFLOW_VERSION` and add a deterministic migrate path in `src/workflow/migrate.ts`. Do not silently drop user data.
+3. Edit the demo YAML in `src/demos/*.yaml` (not TypeScript factories). Loaders only parse/clone. Keep ID constants in the `.ts` files in sync with the YAML.
+4. Add or extend a round-trip test (`workflowToYaml` → `parseDocument`) and fixture parse tests.
+5. Record a GOAL amendment when version or Import/Export behavior changes.
+
+## Do not serialize
+
+Derived ELK layout, viewports, interaction, undo history, theme, sound, and keybinds. Positions in the document remain creation hints only.
+
+## YAML pitfalls
+
+Quote strings that YAML treats as syntax (`#` colors, `&`, `>`). Prefer the `yaml` package stringify for Export so quoting stays correct.

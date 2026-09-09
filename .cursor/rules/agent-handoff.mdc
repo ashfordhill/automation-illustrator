@@ -18,10 +18,11 @@ This repo is built by sequential slice agents. You are one of them. Work only on
 - Implement your slice only. Something worth doing outside it is a note for a later slice, not a change.
 - A defect in an earlier slice may be fixed minimally when it blocks you; record it in your handoff entry.
 - `.docs/GOAL.md` clauses are never edited. If the contract is ambiguous or you need a new dependency or product decision, stop and ask the user. Do not guess or widen scope. Approved changes go under `## Amendments` in GOAL.md, dated, citing clause IDs.
-- Retained stack: Mantine 9, Tabler icons, `@xyflow/react` 12, Zustand 5, Zod 4, elkjs 0.12 (layout and Path routing, worker-loaded), Vitest 5, Playwright + axe. No other runtime dependency without asking.
+- Retained stack: Mantine 9, Tabler icons, `@xyflow/react` 12, Zustand 5, Zod 4, elkjs 0.12 (layout and Path routing, worker-loaded), yaml 2 (workflow file Import/Export), Vitest 5, Playwright + axe. No other runtime dependency without asking.
 - Improvements after the relay are specified in `.docs/IMPROVEMENTS.md`; same protocol; commits are `feat(improve-NN): <title>`; evidence under `.docs/evidence/improve-NN-<slug>/`.
 - When the user attaches pictures or GIFs, copy them into `.docs/visual-improvements/` and append a short entry to `.docs/VISUAL_IMPROVEMENTS.md` (`.cursor/rules/visual-improvements.mdc`). Do this in planning chats too.
 - Vocabulary in UI and code comments: Node, Step, Data, Path, condition, stroke (solid = always visited, dotted = choice), Who, Before / After / Both, merge group. Never "Arrow" or "label" for a Path.
+- Workflow files are YAML 1.2 (`src/workflow/serialize.ts`, `.cursor/rules/workflow-serialization.mdc`). Changing stored document fields requires schema, migration when breaking, demo YAML, and round-trip tests in the same change.
 
 ## Finishing a slice
 

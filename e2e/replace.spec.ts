@@ -46,10 +46,10 @@ test.describe("slice 5 replacement and demos", () => {
     await expect(page.getByRole("menuitem", { name: "Present" })).toBeVisible();
     await expect(page.getByRole("menuitem", { name: "New" })).toBeVisible();
     await expect(page.getByRole("menuitem", { name: "Import" })).toBeVisible();
+    await expect(page.getByRole("menuitem", { name: "Export" })).toBeVisible();
     await expect(page.getByRole("menuitem", { name: "Oak Park Invoice" })).toBeVisible();
     await expect(page.getByRole("menuitem", { name: "Robot Mailroom" })).toBeVisible();
     await expect(page.getByRole("menuitem", { name: "Demo", exact: true })).toHaveCount(0);
-    await expect(page.getByRole("menuitem", { name: "Export" })).toHaveCount(0);
     await capturePage(page, `${EVIDENCE}/hamburger-1440.png`);
   });
 
@@ -78,14 +78,14 @@ test.describe("slice 5 replacement and demos", () => {
     await expect(page.getByText("Other").first()).toBeVisible();
   });
 
-  test("Save copy downloads JSON then loads Robot Mailroom", async ({ page }) => {
+  test("Save copy downloads YAML then loads Robot Mailroom", async ({ page }) => {
     await loadDemo(page);
     await openMenu(page);
     await page.getByRole("menuitem", { name: "Robot Mailroom" }).click();
     const downloadPromise = page.waitForEvent("download");
     await page.getByRole("button", { name: "Save copy" }).click();
     const download = await downloadPromise;
-    expect(download.suggestedFilename()).toBe("automation-pitch.json");
+    expect(download.suggestedFilename()).toBe("oak-park-invoice.yaml");
     await expect(page.getByText(MAIL_STEP).first()).toBeVisible({ timeout: 15_000 });
     await expect(page.getByText(DEMO_STEP)).toHaveCount(0);
     await capturePage(page, `${EVIDENCE}/robot-mailroom-1440.png`);

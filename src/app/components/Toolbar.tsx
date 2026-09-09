@@ -118,7 +118,7 @@ export function Toolbar() {
           <input
             ref={fileRef}
             type="file"
-            accept="application/json"
+            accept=".yaml,.yml,.json,application/json,text/yaml,text/x-yaml,application/yaml"
             hidden
             onChange={(e) => {
               const file = e.target.files?.[0];
@@ -141,6 +141,7 @@ export function Toolbar() {
               </Menu.Item>
               <Menu.Item onClick={() => useStore.getState().requestNew()}>New</Menu.Item>
               <Menu.Item onClick={() => fileRef.current?.click()}>Import</Menu.Item>
+              <Menu.Item onClick={() => useStore.getState().exportWorkflow()}>Export</Menu.Item>
               {showActors ? (
                 <Menu.Item onClick={() => useStore.getState().openManageActors()}>Actors</Menu.Item>
               ) : null}

@@ -2,7 +2,7 @@ import { expect, test } from "vitest";
 import { DemoId, workflowForDemo } from "./catalog";
 import { freshBoard, isEmptyBoard, oakParkInvoice, OAK_PARK_IDS } from "./oakParkInvoice";
 import { MAILROOM_IDS, robotMailroom } from "./robotMailroom";
-import { ActorKind } from "../workflow/catalogs";
+import { ActorKind, RobotKind } from "../workflow/catalogs";
 import { edgeIsDotted, validateWorkflow } from "../workflow/graph";
 
 test("Oak Park IDs are deterministic and both amount Paths are dotted (PC-06)", () => {
@@ -16,6 +16,8 @@ test("Oak Park IDs are deterministic and both amount Paths are dotted (PC-06)", 
     OAK_PARK_IDS.acct,
     OAK_PARK_IDS.enter,
     OAK_PARK_IDS.review,
+    OAK_PARK_IDS.review2,
+    OAK_PARK_IDS.review3,
   ]);
   const gt = a.edges.find((e) => e.id === OAK_PARK_IDS.gt)!;
   const lt = a.edges.find((e) => e.id === OAK_PARK_IDS.lt)!;
@@ -24,6 +26,20 @@ test("Oak Park IDs are deterministic and both amount Paths are dotted (PC-06)", 
   expect(edgeIsDotted(a.nodes, a.edges, gt)).toBe(true);
   expect(edgeIsDotted(a.nodes, a.edges, lt)).toBe(true);
   expect(validateWorkflow(a)).toEqual([]);
+  const write = a.nodes.find((n) => n.id === OAK_PARK_IDS.enter);
+  expect(write && "detail" in write && write.detail).toBe("invoice details");
+  expect(a.assignments[OAK_PARK_IDS.review]).toBe(OAK_PARK_IDS.roy);
+  expect(a.assignments[OAK_PARK_IDS.review2]).toBe(OAK_PARK_IDS.jack);
+  expect(a.assignments[OAK_PARK_IDS.review3]).toBe(OAK_PARK_IDS.missy);
+  expect(a.after.assignments[OAK_PARK_IDS.read]).toBe(OAK_PARK_IDS.llm);
+  expect(a.after.assignments[OAK_PARK_IDS.web]).toBe(OAK_PARK_IDS.llm);
+  expect(a.after.assignments[OAK_PARK_IDS.fs]).toBe(OAK_PARK_IDS.llm);
+  expect(a.after.assignments[OAK_PARK_IDS.enter]).toBe(OAK_PARK_IDS.robot);
+  expect(a.after.assignments[OAK_PARK_IDS.review]).toBe(OAK_PARK_IDS.roy);
+  const llm = a.actors.find((actor) => actor.id === OAK_PARK_IDS.llm);
+  const script = a.actors.find((actor) => actor.id === OAK_PARK_IDS.robot);
+  expect(llm && "robotKind" in llm && llm.robotKind).toBe(RobotKind.Llm);
+  expect(script && "robotKind" in script && script.robotKind).toBe(RobotKind.Script);
 });
 
 test("Robot Mailroom matches Appendix A overlay", () => {

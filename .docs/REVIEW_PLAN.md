@@ -59,7 +59,7 @@ Use `npm run dev` at **1440×900** and again at **1024×768**. Repeat critical s
 - Top bar left: **Undo**, then **Sound off**, no Pointer/Hand, no Redo.
 - Center: Before / After / Both radios (high contrast).
 - Right: inspector **320 px**, score footer. Hamburger last.
-- Hamburger order: Present, New, Import, Keybinds, Light/Dark, divider, Demo label, Oak Park Invoice, Robot Mailroom. **No Export**.
+- Hamburger order: Present, New, Import, Export, Actors, Keybinds, Light/Dark, divider, Demo label, Oak Park Invoice, Robot Mailroom.
 - Resize below 1024 px: unsupported message; board gone. Resize back: board returns.
 - Present: inspector, NodeToolbars, merge dock, and hints hidden; score in the top bar; Space toggles Before/After; Exit present restores view and selection.
 
@@ -168,7 +168,7 @@ Evidence folders: `.docs/evidence/NN-<slug>/`. Slice 12 final set is `.docs/evid
 | AQ-01–03 | keybinds catalog; Menu focus after Keybinds (hardening.spec) |
 | AQ-04–05 | axe in smoke/shell/inspector/hardening; reduced-motion screenshot |
 | AQ-06–07 | Vitest workflow tests + Playwright critical flows |
-| NG-01–09 | no mobile UI; no Export; no Pointer/Hand; no Path delete; no nested merge; README has no CLI exporter |
+| NG-01–09 | no mobile UI; Export is a hamburger YAML download (Improvement 32); no CLI exporter; no Pointer/Hand; Path delete is allowed when reachability holds; no nested merge |
 
 ## 6. Known non-blockers (do not expand scope)
 

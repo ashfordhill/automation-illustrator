@@ -1,0 +1,33 @@
+/**
+ * YAML interchange for a WorkflowDoc (Export, Import, demo fixtures).
+ * YAML 1.2 is a JSON superset, so Import also accepts JSON files.
+ * Browser localStorage stays pretty JSON (see persistence.ts).
+ */
+import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
+import { projectDisplayName, type WorkflowDoc } from "./types";
+
+const YAML_STRINGIFY = { indent: 2, lineWidth: 0 } as const;
+
+/** Pretty YAML 1.2 for files. Trailing newline so diffs stay tidy. */
+export function workflowToYaml(doc: WorkflowDoc): string {
+  return `${stringifyYaml(doc, YAML_STRINGIFY).trimEnd()}\n`;
+}
+
+/** Parse YAML or JSON text into an unknown value. Throws on syntax errors. */
+export function parseWorkflowText(raw: string): unknown {
+  return parseYaml(raw);
+}
+
+/** Download name: "Oak Park Invoice" → oak-park-invoice.yaml. */
+export function workflowExportFilename(doc: Pick<WorkflowDoc, "name">): string {
+  const slug = projectDisplayName(doc)
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return `${slug || "untitled"}.yaml`;
+}
+
+export const WORKFLOW_YAML_MIME = "text/yaml";
+export const WORKFLOW_JSON_MIME = "application/json";

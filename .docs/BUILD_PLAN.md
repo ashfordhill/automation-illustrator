@@ -350,6 +350,8 @@ Added (versions verified 2026-09-06):
 Do not add ELK/Dagre, rough.js, NES.css, Howler, XState, zundo, a second graph engine, or a new component library. Smart Edge solves routing, not label collision; label placement remains a small product-specific deterministic module.
 
 > 2026-09-07: superseded for layout and Path routing by .docs/IMPROVEMENTS.md Improvement 01 — elkjs is approved; @tisoap/react-flow-smart-edge is retired.
+>
+> 2026-09-08: Improvement 32 — `yaml@^2.9` is approved for workflow file Import/Export. localStorage remains JSON.
 
 ## 4. Sequential relay protocol
 

@@ -1856,4 +1856,35 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(improve-31): hide the nav bar in Present`
 
+## Improvement 32 — YAML import and export — 2026-09-08
+
+- Starting commit: `b4c756c0ad631ce6326a01386d116aa4ac0c7505` (`chore: publish Docker image to GHCR`)
+- Working tree at start: not clean. Concurrent Type-picker / Who-select / tile-pie / evidence recaptures were left unstaged and are not in this commit. Latest COMPLETE handoff was Improvement 31; HEAD is the later Docker publish.
+- GOAL clauses addressed: SH-05, SH-08, SH-13, NG-07, SH-06, SH-07, P-02 (save and load), AQ-06 / AQ-07 (amendments dated 2026-09-08).
+- Library research and decisions: YAML 1.2 via `yaml@^2.9` (eemeli). YAML is a JSON superset, so Import still accepts JSON. Hex colors and `&` need quoting; stringify handles Export. Browser localStorage stays pretty JSON so existing saved boards do not migrate. Demo documents are YAML fixtures parsed with `parseDocument` (same path as Import). `freshBoard` stays TypeScript because IDs are generated. Filename slug from project name (`oak-park-invoice.yaml`). No CLI exporter.
+- Files changed:
+  - Serialize: `src/workflow/serialize.ts`, `src/workflow/serialize.test.ts`, `src/workflow/migrate.ts`
+  - Demos: `src/demos/oak-park-invoice.yaml`, `src/demos/robot-mailroom.yaml`, `src/demos/loadYamlFixture.ts`, `src/demos/oakParkInvoice.ts`, `src/demos/robotMailroom.ts`, `src/demos/catalog.ts`, `src/demos/demos.test.ts`
+  - Shell: `src/app/components/Toolbar.tsx` (Export after Import; file picker accepts YAML/JSON), `src/app/components/ReplaceDocumentModal.tsx`
+  - State: `src/state/persistence.ts`, `src/state/store.ts` (`exportWorkflow`), tests
+  - E2E: `e2e/improve-32-import-export.spec.ts`, `e2e/replace.spec.ts`, `e2e/hardening.spec.ts`
+  - Docs/rules: `.docs/GOAL.md`, `.docs/IMPROVEMENTS.md`, `.docs/BUILD_PLAN.md`, `.docs/REVIEW_PLAN.md`, `README.md`, `.cursor/rules/workflow-serialization.mdc`, `.cursor/rules/agent-handoff.mdc`
+  - Evidence: `.docs/evidence/improve-32-import-export/`
+- Behavior implemented:
+  - Demos load from YAML files through the Import parser.
+  - Hamburger Export downloads the open board as YAML without replacing it.
+  - Save copy downloads the same YAML. Import accepts YAML and JSON.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning). Local untracked `pieGeometry.test.ts` was moved aside for tsc (missing `./pieGeometry`); it is not in this commit.
+  - `npm run test:unit` — 38 files, 221 tests pass (excluding untracked `pieGeometry.test.ts`).
+  - `npm run test:e2e` — `e2e/improve-32-import-export.spec.ts` (4), `e2e/replace.spec.ts` (7), `e2e/hardening.spec.ts` (13) all pass (24). Chromium via `LD_LIBRARY_PATH` `~/.local/pw-libs`.
+- Evidence:
+  - `.docs/evidence/improve-32-import-export/hamburger-export-1440.png` — Menu open with Export after Import (1440×900)
+  - `.docs/evidence/improve-32-import-export/import-mailroom-1440.png` — Robot Mailroom after YAML Import (1440×900)
+  - `.docs/evidence/improve-32-import-export/hamburger-export-1024.png` — Export in the hamburger at 1024×768
+- Earlier-slice defects fixed: none. Oak Park YAML matches the working-tree fixture (extra review Steps and LLM After Who) that was already unstaged.
+- Known limitations / follow-ups: Concurrent Type-picker / Who-select / tile-pie WIP remains unstaged. Untracked `pieGeometry.test.ts` still breaks `tsc` until `pieGeometry.ts` exists.
+- Status: COMPLETE
+- Commit: `feat(improve-32): import and export workflows as YAML`
+
 

@@ -1,7 +1,7 @@
 /**
  * Named catalogs for domain values that used to be scattered as raw strings.
  * Import the const object at call sites (`WorkflowNodeKind.Step`) and the matching
- * type for annotations. JSON on disk still stores the string values.
+ * type for annotations. YAML/JSON files and localStorage JSON still store these strings.
  */
 
 /** Version 1 on-disk documents; migrate.ts maps them to WORKFLOW_VERSION. */

@@ -217,3 +217,6 @@ Append only, newest last. Format: `- YYYY-MM-DD — <clause IDs> — <decision a
 - 2026-09-08 — P-05 — The status bar does not show the loaded project name. It shows Right Click Delete and the application version. — approved by user
 - 2026-09-08 — P-05 — Right Click Delete sits on the right of the status bar, next to the version, not on the left. — approved by user
 - 2026-09-08 — P-07, P-05 — Present also hides the top bar (Undo, sound, view switch, hamburger) and the status bar so the board is full-bleed. Space still toggles Before/After. Escape exits Present and restores the previous view and selection. Present remains the first hamburger item for entering. — approved by user
+- 2026-09-08 — SH-05, SH-13, NG-07 — The hamburger adds **Export** immediately after Import. Export downloads the validated v2 document as YAML 1.2 without replacing the board. Save copy uses the same YAML download. There is still no command-line exporter. Demo fixtures are YAML files loaded through the same parser as Import. — approved by user
+- 2026-09-08 — SH-08 — Imported files are YAML or JSON, validated at runtime with Zod 4. Browser localStorage remains pretty JSON. Valid version 1 data still migrates deterministically to version 2. — approved by user
+

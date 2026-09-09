@@ -65,6 +65,16 @@ test("Save copy downloads then replaces (SH-06, SH-13)", () => {
   expect(useStore.getState().past).toEqual([]);
 });
 
+test("Export downloads the live board without replacing it", () => {
+  const download = vi.spyOn(persist, "downloadWorkflowCopy").mockImplementation(() => undefined);
+  const before = useStore.getState().workflow;
+  useStore.getState().exportWorkflow();
+  expect(download).toHaveBeenCalledTimes(1);
+  expect(download.mock.calls[0]?.[0]).toBe(before);
+  expect(useStore.getState().workflow).toBe(before);
+  expect(useStore.getState().pendingReplace).toBeNull();
+});
+
 test("requestNew on an empty board is a no-op", () => {
   useStore.getState().loadDoc(freshBoard());
   useStore.getState().requestNew();
@@ -129,8 +139,8 @@ test("Start fresh discards recovery and writes an empty board (SH-10)", () => {
   useStore.setState({
     recovery: {
       raw,
-      violations: [{ code: "invalid-shape", message: "Saved data is not valid JSON." }],
-      message: "Saved data is not valid JSON.",
+      violations: [{ code: "invalid-shape", message: "This file is not valid YAML or JSON." }],
+      message: "This file is not valid YAML or JSON.",
     },
     persistStatus: "dirty",
   });

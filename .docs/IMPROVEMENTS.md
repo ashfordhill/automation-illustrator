@@ -638,3 +638,27 @@ Approved 2026-09-08. Present already hid the inspector, tile chrome, and hints. 
 
 Commit: `feat(improve-31): hide the nav bar in Present`.  
 Evidence: `.docs/evidence/improve-31-present-nav/`.
+
+---
+
+# Improvement 32 — YAML import and export
+
+Approved 2026-09-08. User request: load demos from a serialized file, add hamburger **Export**, prefer YAML, and add an agent rule so later document changes keep serialization valid.
+
+## Locked decisions
+
+- Interchange format is the existing v2 `WorkflowDoc` as YAML 1.2 via `yaml@^2.9` (YAML 1.2, so JSON files still import). No custom schema language.
+- Demo documents live in `src/demos/*.yaml` and load through `parseDocument` (same path as Import). TypeScript keeps ID constants, `freshBoard`, and clone loaders only.
+- Hamburger: Present, New, Import, **Export**, Actors, Keybinds, Light/Dark, Demo chooser. Export downloads YAML and does not replace the board.
+- Save copy uses the same YAML download and filename slug (`Oak Park Invoice` → `oak-park-invoice.yaml`).
+- Browser localStorage remains pretty JSON. Recovery copy stays the raw stored payload.
+- No CLI exporter.
+- Agent rule: `.cursor/rules/workflow-serialization.mdc` (`alwaysApply`).
+
+## Contract
+
+Append to `## Amendments` in `.docs/GOAL.md` (already recorded with this improvement): SH-05, SH-13, NG-07, SH-08 as dated 2026-09-08.
+
+Commit: `feat(improve-32): import and export workflows as YAML`.  
+Evidence: `.docs/evidence/improve-32-import-export/`.
+

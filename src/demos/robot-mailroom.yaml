@@ -1,0 +1,159 @@
+# Robot Mailroom demo. After-only receipt Step; no merge group.
+version: 2
+name: Robot Mailroom
+actors:
+  - id: h_dana
+    kind: human
+    name: Dana
+    color: "#f4a06a"
+    role: Mail clerk
+  - id: h_omar
+    kind: human
+    name: Omar
+    color: "#7eb6f5"
+    role: Records
+  - id: h_priya
+    kind: human
+    name: Priya
+    color: "#c89bf5"
+    role: Accounts payable
+  - id: r_mailbot
+    kind: robot
+    name: Mailbot
+    color: "#6ab0c8"
+    robotKind: script
+  - id: r_reader
+    kind: robot
+    name: Reader
+    color: "#5ec4d8"
+    robotKind: ai
+nodes:
+  - id: s_mail_open
+    type: step
+    position:
+      x: 32
+      y: 160
+    stepKind: read
+    title: incoming mail
+    detail: ""
+    split: exclusive
+  - id: s_mail_scan
+    type: step
+    position:
+      x: 352
+      y: 160
+    stepKind: scan
+    title: letter to PDF
+    detail: ""
+    split: exclusive
+  - id: d_recipient
+    type: dataField
+    position:
+      x: 672
+      y: 192
+    label: Recipient
+  - id: s_mail_lookup
+    type: step
+    position:
+      x: 864
+      y: 160
+    stepKind: search
+    title: staff directory
+    detail: ""
+    split: exclusive
+  - id: s_mail_route
+    type: step
+    position:
+      x: 1184
+      y: 32
+    stepKind: email
+    title: PDF to recipient
+    detail: ""
+    split: exclusive
+  - id: s_mail_call
+    type: step
+    position:
+      x: 1184
+      y: 352
+    stepKind: call
+    title: sender for details
+    detail: ""
+    split: exclusive
+  - id: s_mail_file
+    type: step
+    position:
+      x: 1504
+      y: 352
+    stepKind: file
+    title: original in archive
+    detail: ""
+    split: exclusive
+edges:
+  - id: e_mail_1
+    source: s_mail_open
+    target: s_mail_scan
+    label: ""
+    dashed: false
+  - id: e_mail_2
+    source: s_mail_scan
+    target: d_recipient
+    label: ""
+    dashed: false
+  - id: e_mail_3
+    source: d_recipient
+    target: s_mail_lookup
+    label: ""
+    dashed: false
+  - id: e_mail_4
+    source: s_mail_lookup
+    target: s_mail_route
+    label: recipient found
+    dashed: true
+  - id: e_mail_5
+    source: s_mail_lookup
+    target: s_mail_call
+    label: no recipient
+    dashed: true
+  - id: e_mail_6
+    source: s_mail_route
+    target: s_mail_file
+    label: ""
+    dashed: false
+  - id: e_mail_7
+    source: s_mail_call
+    target: s_mail_file
+    label: ""
+    dashed: false
+assignments:
+  s_mail_open: h_dana
+  s_mail_scan: h_dana
+  s_mail_lookup: h_dana
+  s_mail_route: h_dana
+  s_mail_call: h_omar
+  s_mail_file: h_omar
+after:
+  assignments:
+    s_mail_open: h_dana
+    s_mail_scan: r_mailbot
+    s_mail_lookup: r_mailbot
+    s_mail_route: r_mailbot
+    s_mail_call: h_omar
+    s_mail_file: h_omar
+    s_mail_receipt: r_mailbot
+  groups: []
+  extraNodes:
+    - id: s_mail_receipt
+      type: step
+      position:
+        x: 1504
+        y: 32
+      stepKind: email
+      title: delivery receipt to sender
+      detail: ""
+      split: exclusive
+  extraEdges:
+    - id: e_mail_x1
+      source: s_mail_route
+      target: s_mail_receipt
+      label: ""
+      dashed: false

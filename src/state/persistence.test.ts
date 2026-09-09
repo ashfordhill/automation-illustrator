@@ -192,26 +192,29 @@ test("setItem failure is unavailable; repeated writes stay a single status", () 
   expect(second).toBe("unavailable");
 });
 
-test("downloadWorkflowCopy writes a JSON attachment", () => {
+test("downloadWorkflowCopy writes a YAML attachment named from the project", () => {
   const click = vi.fn();
-  const createObjectURL = vi.fn(() => "blob:test");
+  const createObjectURL = vi.fn((blob: Blob) => {
+    expect(blob.type).toBe("text/yaml");
+    return "blob:test";
+  });
   const revoke = vi.fn();
   vi.stubGlobal("URL", { createObjectURL, revokeObjectURL: revoke });
   const realCreate = document.createElement.bind(document);
+  const anchor = {
+    href: "",
+    download: "",
+    rel: "",
+    click,
+    remove: () => {},
+  };
   vi.spyOn(document, "createElement").mockImplementation((tag: string) => {
-    if (tag === "a") {
-      return {
-        href: "",
-        download: "",
-        rel: "",
-        click,
-        remove: () => {},
-      } as unknown as HTMLAnchorElement;
-    }
+    if (tag === "a") return anchor as unknown as HTMLAnchorElement;
     return realCreate(tag);
   });
   vi.spyOn(document.body, "appendChild").mockImplementation((node) => node);
   downloadWorkflowCopy(emptyWorkflow());
+  expect(anchor.download).toBe("untitled.yaml");
   expect(createObjectURL).toHaveBeenCalled();
   expect(click).toHaveBeenCalled();
   expect(revoke).toHaveBeenCalled();

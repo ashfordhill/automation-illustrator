@@ -10,7 +10,7 @@
  * insertOnPath — drop a tile onto a Path
  * toggleSelectedDash — selected Path solid / dotted
  * removePath / openPathMenu — redundant Path Delete (reachability)
- * requestNew / requestDemo / importRaw — replacement gate (SH-06, SH-12)
+ * requestNew / requestDemo / importRaw / exportWorkflow — replacement gate and YAML Export
  * startFresh / downloadHeldRecovery — corrupt-storage recovery (SH-10)
  * setSoundEnabled — persisted Web Audio cues (SH-03, SH-04)
  * setRightClickDelete — persisted Tile right-click remove (off by default)
@@ -310,6 +310,7 @@ export const useStore = create<{
   confirmReplaceDiscard: () => void;
   confirmReplaceSaveCopy: () => void;
   loadDoc: (doc: WorkflowDoc) => void;
+  exportWorkflow: () => void;
   importRaw: (raw: string) => ParseResult;
   clearImportError: () => void;
   resetDemo: () => void;
@@ -1232,6 +1233,9 @@ export const useStore = create<{
   },
   loadDoc: (doc) => {
     get().replaceDoc(doc);
+  },
+  exportWorkflow: () => {
+    downloadWorkflowCopy(get().workflow);
   },
   importRaw: (raw) => {
     const parsed = parseDocument(raw);

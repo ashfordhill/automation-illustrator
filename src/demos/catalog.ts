@@ -1,5 +1,5 @@
 /**
- * Hamburger Demo chooser (SH-05). Loaders return deterministic v2 documents.
+ * Hamburger Demo chooser (SH-05). Loaders parse the YAML fixtures in this folder.
  */
 import { oakParkInvoice } from "./oakParkInvoice";
 import { robotMailroom } from "./robotMailroom";

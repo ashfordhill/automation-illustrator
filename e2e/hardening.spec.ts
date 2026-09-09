@@ -161,7 +161,7 @@ test.describe("slice 12 persistence, keymap, and reload", () => {
 });
 
 test.describe("slice 12 surfaces, dialogs, and final screenshots", () => {
-  test("hamburger order, no Export, Before/After/Both in both themes", async ({ page }) => {
+  test("hamburger order includes Export, Before/After/Compare in both themes", async ({ page }) => {
     await loadOakPark(page);
     await screenshotBoard(page, `${EVIDENCE}/before-light-1440.png`);
 
@@ -183,13 +183,13 @@ test.describe("slice 12 surfaces, dialogs, and final screenshots", () => {
       "Present",
       "New",
       "Import",
+      "Export",
       "Actors",
       "Keybinds",
       "Dark mode",
       "Oak Park Invoice",
       "Robot Mailroom",
     ]);
-    await expect(page.getByRole("menuitem", { name: "Export" })).toHaveCount(0);
     await expect(page.getByRole("button", { name: /Redo/ })).toHaveCount(0);
     await capturePage(page, `${EVIDENCE}/hamburger-1440.png`);
     await page.keyboard.press("Escape");

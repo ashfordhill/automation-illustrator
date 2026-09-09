@@ -1,14 +1,20 @@
 /**
- * Load/save the workflow document as JSON (Import menu + localStorage).
+ * Load/save the workflow document (Import / Export + localStorage).
  * Theme, keybind, sound, and inspector-fold keys live here so persist concerns stay in one module.
  *
  * Persistence status is saved / dirty / unavailable (SH-11). Failed startup
  * payloads stay under LS_WORKFLOW until the user downloads or starts fresh (SH-10).
- * Save copy downloads the validated v2 document (SH-13).
+ * localStorage is pretty JSON. Export and Save copy download YAML (SH-13).
  */
 import { ColorScheme } from "../workflow/catalogs";
 import { parseDocument } from "../workflow/migrate";
 import type { GraphViolation } from "../workflow/graph";
+import {
+  WORKFLOW_JSON_MIME,
+  WORKFLOW_YAML_MIME,
+  workflowExportFilename,
+  workflowToYaml,
+} from "../workflow/serialize";
 import type { WorkflowDoc } from "../workflow/types";
 
 export type PersistStatus = "saved" | "dirty" | "unavailable";
@@ -28,7 +34,7 @@ export type HydrateResult = {
   unfolded?: boolean;
 };
 
-/** Pretty JSON for localStorage and the Import file picker. */
+/** Pretty JSON for localStorage. Files use YAML via workflowToYaml. */
 export function toJson(doc: WorkflowDoc): string {
   return JSON.stringify(doc, null, 2);
 }
@@ -48,15 +54,19 @@ export const LS_THEME = "automation-pitch.theme";
 export const LS_SOUND = "automation-pitch.sound";
 export const LS_RIGHT_CLICK_DELETE = "automation-pitch.right-click-delete";
 export const LS_INSPECTOR_COLLAPSED = "automation-pitch.inspectorCollapsed";
-export const SAVE_COPY_FILENAME = "automation-pitch.json";
+export const SAVE_COPY_FILENAME = "untitled.yaml";
 export const RECOVERY_COPY_FILENAME = "automation-pitch.recovery.json";
 
-/** Trigger a JSON file download (Save copy / recovery). No-op when Blob URLs are missing. */
-export function downloadTextFile(filename: string, contents: string): void {
+/** Trigger a file download. No-op when Blob URLs are missing. */
+export function downloadTextFile(
+  filename: string,
+  contents: string,
+  mimeType: string = WORKFLOW_YAML_MIME,
+): void {
   if (typeof document === "undefined" || typeof URL.createObjectURL !== "function") {
     return;
   }
-  const blob = new Blob([contents], { type: "application/json" });
+  const blob = new Blob([contents], { type: mimeType });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
@@ -68,14 +78,14 @@ export function downloadTextFile(filename: string, contents: string): void {
   URL.revokeObjectURL(url);
 }
 
-/** Save copy of the live validated v2 document (SH-06, SH-13). */
+/** Export / Save copy of the live validated v2 document as YAML. */
 export function downloadWorkflowCopy(doc: WorkflowDoc): void {
-  downloadTextFile(SAVE_COPY_FILENAME, toJson(doc));
+  downloadTextFile(workflowExportFilename(doc), workflowToYaml(doc), WORKFLOW_YAML_MIME);
 }
 
 /** Download the untouched failed startup payload (SH-10). */
 export function downloadRecoveryCopy(raw: string): void {
-  downloadTextFile(RECOVERY_COPY_FILENAME, raw);
+  downloadTextFile(RECOVERY_COPY_FILENAME, raw, WORKFLOW_JSON_MIME);
 }
 
 function browserStorage(): StorageLike | null {

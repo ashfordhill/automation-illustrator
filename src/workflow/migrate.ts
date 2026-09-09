@@ -1,8 +1,9 @@
 /**
- * Parse unknown JSON into a validated v2 document.
+ * Parse YAML or JSON into a validated v2 document.
  * v1 migrates deterministically; invalid graphs are rejected, not repaired (SH-09).
  */
 import { ActorKind, WorkflowNodeKind, WORKFLOW_VERSION } from "./catalogs";
+import { parseWorkflowText } from "./serialize";
 import { validateWorkflow, validateWorkflowV1, type GraphViolation } from "./graph";
 import { shapeViolations, workflowDocV1Shape, workflowDocV2Shape } from "./schema";
 import {
@@ -130,14 +131,14 @@ function parseUnknown(data: unknown): ParseResult {
   );
 }
 
-/** JSON.parse then validate/migrate. Never throws; never mutates the caller. */
+/** YAML (or JSON) parse, then validate/migrate. Never throws; never mutates the caller. */
 export function parseDocument(raw: string): ParseResult {
   let data: unknown;
   try {
-    data = JSON.parse(raw);
+    data = parseWorkflowText(raw);
   } catch {
-    return fail("invalid-json", "Saved data is not valid JSON.", [
-      { code: "invalid-shape", message: "Saved data is not valid JSON." },
+    return fail("invalid-json", "This file is not valid YAML or JSON.", [
+      { code: "invalid-shape", message: "This file is not valid YAML or JSON." },
     ]);
   }
   return parseUnknown(data);

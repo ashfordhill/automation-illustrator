@@ -1,6 +1,6 @@
 /**
  * Domain document types for a Before/After workflow board.
- * Runtime state lives in state/store.ts; JSON IO in state/persistence.ts.
+ * Runtime state lives in state/store.ts; YAML/JSON IO in serialize.ts and persistence.ts.
  * String catalogs (ActorKind, StepKind, …) live in catalogs.ts and are re-exported here.
  */
 import {
