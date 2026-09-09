@@ -2,8 +2,8 @@ import { expect, test } from "@playwright/test";
 import { capturePage, loadOakPark } from "./ready";
 
 const EVIDENCE = ".docs/evidence/improve-25-data-mark";
-const MARK_LIGHT = "rgb(123, 63, 224)";
-const MARK_DARK = "rgb(176, 125, 255)";
+const MARK_LIGHT = "rgb(174, 120, 242)";
+const MARK_DARK = "rgb(201, 166, 255)";
 const TEAL_LIGHT = "rgb(29, 184, 168)";
 const CORAL_LIGHT = "rgb(232, 120, 74)";
 

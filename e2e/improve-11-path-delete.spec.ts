@@ -9,15 +9,14 @@ async function rightClickPath(page: import("@playwright/test").Page, edgeId: str
 }
 
 test.describe("Improvement 11 Path Delete menu", () => {
-  test("selected Path hints include Right-click Delete", async ({ page }) => {
+  test("selected Path hints include Remove Path and omit Right-click Delete while the toggle is off", async ({ page }) => {
     await loadOakPark(page);
     const pt = await pathScreenPoint(page, "e_web_acct", 0.22);
     await page.mouse.click(pt.x, pt.y);
     const helper = page.locator(".canvas-helper");
-    await expect(helper).toContainText("Right-click");
-    await expect(helper).toContainText("Delete");
     await expect(helper).toContainText("Remove Path");
     await expect(helper).toContainText("Dotted / Solid");
+    await expect(helper).not.toContainText("Right-click");
     await capturePage(page, `${EVIDENCE}/path-hints-1440.png`);
   });
 

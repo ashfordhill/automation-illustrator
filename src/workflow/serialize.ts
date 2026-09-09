@@ -4,14 +4,24 @@
  * Browser localStorage stays pretty JSON (see persistence.ts).
  */
 import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
-import { projectDisplayName, type WorkflowDoc } from "./types";
+import { DEFAULT_HUMAN_ROLE, isHuman, projectDisplayName, type WorkflowDoc } from "./types";
 
 const YAML_STRINGIFY = { indent: 2, lineWidth: 0 } as const;
 const MAX_EXPORT_SLUG = 80;
 
+/** Fill blanks so a dropped demo YAML still parses (empty Human role is worker). */
+function normalizeForFile(doc: WorkflowDoc): WorkflowDoc {
+  return {
+    ...doc,
+    actors: doc.actors.map((actor) =>
+      isHuman(actor) ? { ...actor, role: actor.role.trim() || DEFAULT_HUMAN_ROLE } : actor,
+    ),
+  };
+}
+
 /** Pretty YAML 1.2 for files. Trailing newline so diffs stay tidy. */
 export function workflowToYaml(doc: WorkflowDoc): string {
-  return `${stringifyYaml(doc, YAML_STRINGIFY).trimEnd()}\n`;
+  return `${stringifyYaml(normalizeForFile(doc), YAML_STRINGIFY).trimEnd()}\n`;
 }
 
 /** Parse YAML or JSON text into an unknown value. Throws on syntax errors. */

@@ -3,6 +3,7 @@
  */
 import { STEP_KIND_META, StepKind, typePickerKinds } from "../../workflow/types";
 import { StepKindIcon } from "../../board/tiles/StepKindIcon";
+import "./TypeButtons.css";
 
 export function TypeButtons({
   value,
@@ -29,25 +30,10 @@ export function TypeButtons({
             disabled={disabled}
             onClick={() => onChange(kind)}
           >
-            <span
-              className={other ? undefined : "inspector-type-icon"}
-              style={
-                other
-                  ? {
-                      width: 30,
-                      height: 30,
-                      flex: "0 0 30px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      overflow: "hidden",
-                    }
-                  : undefined
-              }
-            >
-              <StepKindIcon kind={kind} size={other ? 30 : 52} />
+            <span className={`inspector-type-icon${other ? " is-other" : ""}`}>
+              <StepKindIcon kind={kind} size={other ? 30 : 26} />
             </span>
-            {label}
+            <span className="inspector-type-name">{label}</span>
           </button>
         );
       })}

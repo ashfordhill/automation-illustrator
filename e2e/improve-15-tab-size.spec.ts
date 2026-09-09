@@ -11,7 +11,7 @@ async function tabCssSize(locator: import("@playwright/test").Locator) {
 }
 
 test.describe("Improvement 15 — larger + and Path tabs", () => {
-  test("+ and Path tabs are 44px and easier to grab", async ({ page }) => {
+  test("+ and Path tabs are 40px", async ({ page }) => {
     await loadOakPark(page);
     await page.getByText(DEMO_STEP).first().click();
     const plus = page.getByRole("button", { name: "Add Step or Data" });
@@ -20,8 +20,8 @@ test.describe("Improvement 15 — larger + and Path tabs", () => {
     await expect(pathTab).toBeVisible();
     const plusSize = await tabCssSize(plus);
     const pathSize = await tabCssSize(pathTab);
-    expect(plusSize).toEqual({ w: 44, h: 44 });
-    expect(pathSize).toEqual({ w: 44, h: 44 });
+    expect(plusSize).toEqual({ w: 40, h: 40 });
+    expect(pathSize).toEqual({ w: 40, h: 40 });
 
     await capturePage(page, `${EVIDENCE}/selected-tabs-1440.png`);
   });

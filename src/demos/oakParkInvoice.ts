@@ -33,11 +33,9 @@ export const OAK_PARK_IDS = {
   reviewTo3: "e_review_3",
 } as const;
 
-const OAK_PARK = loadYamlFixture(oakParkYaml, "Oak Park Invoice");
-
 /** Read → (amount split) Search → Account # → Write → three Human Reviews. */
 export function oakParkInvoice(): WorkflowDoc {
-  return cloneWorkflow(OAK_PARK);
+  return cloneWorkflow(loadYamlFixture(oakParkYaml, "Oak Park Invoice"));
 }
 
 /** Empty consulting board: default roster, zero Nodes (WG-01). Add Step or Add Data creates the root. */

@@ -9,7 +9,7 @@ When the user attaches pictures or GIFs with a request, do this in the **same ch
 
 1. Copy each original into `.docs/visual-improvements/` with a dated, readable name (`YYYY-MM-DD-short-slug.png`). Do not leave the only copy in Cursor `assets/` or workspaceStorage.
 2. Append one entry to `.docs/VISUAL_IMPROVEMENTS.md` (newest last). Never rewrite earlier entries.
-3. Keep the entry short: date, issue, resolution, markdown links to the copies.
+3. Keep the entry short: date, issue, resolution, and **embedded** markdown images from the workspace root (`![alt](.docs/visual-improvements/...)`), not links. Cursor preview resolves from the repo root, not from this markdown file.
 
 Resolution is what was decided or shipped — a sentence, not a screenshot. Do **not** capture after-images for drags or GIFs. Relay evidence PNGs under `.docs/evidence/` stay separate.
 
@@ -22,5 +22,6 @@ Example entry:
 
 - Issue: Selected Before is a yellow rectangle that does not meet the rounded frame.
 - Resolution: Planned for Improvement 05 (chunky ink border, fill to the radius).
-- Attachments: [view-switch-fill](visual-improvements/2026-09-07-view-switch-fill.png)
+- Attachments:
+  ![view-switch-fill](.docs/visual-improvements/2026-09-07-view-switch-fill.png)
 ```

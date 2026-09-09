@@ -99,7 +99,10 @@ export function ManageActorsPanel() {
               ...HUMAN_PRESETS.map((p) => p.color),
               ...Object.values(ROBOT_COLORS),
             ]}
-            onChange={(color) => useStore.getState().updateActor(actor.id, { color })}
+            onChange={(color) => {
+              if (!color.trim()) return;
+              useStore.getState().updateActor(actor.id, { color });
+            }}
           />
           {actor.kind === ActorKind.Human ? (
             <Textarea

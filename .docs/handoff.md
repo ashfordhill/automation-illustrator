@@ -2052,4 +2052,38 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(improve-37): insert left spawn as parent`
 
+## Improvement 38 — tile chrome, hints, Type, Who, demo YAML — 2026-09-09
+
+- Starting commit: `83256841416d3e0256f8dcc8294d7939761a60ce` (`feat(improve-37): insert left spawn as parent`)
+- Working tree at start: not clean. Concurrent inspector / Type keypad / visual-rule WIP was left unstaged and is folded into this improvement where it matches the request.
+- GOAL clauses addressed: P-06, WG-05, NA-06, NA-05, CX-07 (amendments dated 2026-09-09). Path right-click menu and Delete-key Path remove are unchanged.
+- Library research and decisions: no new runtime dependency. Tabs are 40×40 with an 18px peek (were 44 / 14) so they sit slightly off the face. Vite `liveDemoYaml` re-reads `src/demos/*.yaml?raw` from disk in dev. Export fills a blank Human role as `worker` so a dropped fixture still parses. Type keypad is a 3×3 including Other. Selected Who is yellow fill with a matching yellow border.
+- Files changed:
+  - Chrome/hints: `src/board/controls/TileChrome.tsx`, `src/app/styles/tokens.css`, `src/app/components/CanvasHelper.tsx`, `src/board/tiles/dataMark.css`
+  - Inspector: `src/app/inspector/TypeButtons.tsx`, `TypeButtons.css`, `ManageActorsPanel.tsx`
+  - Store/demos/export: `src/state/store.ts`, `src/demos/oakParkInvoice.ts`, `src/demos/robotMailroom.ts`, `src/workflow/serialize.ts`, `src/workflow/schema.ts`, `vite.config.ts`
+  - Tests: `src/app/components/CanvasHelper.test.tsx`, `src/app/App.test.tsx`, `src/app/inspector/whoSelect.test.tsx`, `src/state/store.actors.test.ts`, `src/workflow/schema.test.ts`, `src/workflow/serialize.test.ts`, `e2e/improve-38-chrome-hints.spec.ts`, `e2e/canvas-helper-hints.spec.ts`, plus color/tab assertions in improve-09/11/15/22/25/27/28/34/18
+  - Docs: `.docs/GOAL.md`, `.docs/IMPROVEMENTS.md`, `.docs/VISUAL_IMPROVEMENTS.md`, `.cursor/rules/visual-improvements.mdc`, this handoff entry
+  - Evidence: `.docs/evidence/improve-38-chrome-hints/`, user attachments under `.docs/visual-improvements/2026-09-09-*`
+- Behavior implemented:
+  - Selected-tile `+` / Path tabs sit slightly farther off the card and are a little smaller. The X is centered on Step and Data.
+  - Right-click Delete hint follows the status-bar toggle. Spawn hints are a two-line Q/E Step and A/D Data diagram with a left/right arrow.
+  - Data mark is a lighter grape. Type names are not clipped. Selected Who is yellow without an ink outline.
+  - Manage actors opens on the selected Step’s Who. Overwriting a demo YAML is re-read from disk in dev; Export no longer writes a blank Human role.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning). Node 24.
+  - `npm run test:unit` — 41 files, 280 tests pass.
+  - `npm run test:e2e` — 170 passed (1.7m). Chromium via `LD_LIBRARY_PATH` `~/.local/pw-libs`. Untracked `e2e/improve-23-tile-edit.spec.ts` was asided for this run (concurrent WIP).
+- Evidence:
+  - `.docs/evidence/improve-38-chrome-hints/step-chrome-hints-1440.png` — selected Search filesystem; 40px tabs, centered X, two-line spawn hints (1440×900)
+  - `.docs/evidence/improve-38-chrome-hints/data-chrome-1440.png` — Account # selected; lighter purple mark, centered X (1440×900)
+  - `.docs/evidence/improve-38-chrome-hints/type-who-1440.png` — 3×3 Type keypad; Who Alice yellow without ink outline (1440×900)
+  - `.docs/evidence/improve-38-chrome-hints/manage-alice-1440.png` — Manage actors opened from Search filesystem with Alice selected (1440×900)
+  - `.docs/evidence/improve-38-chrome-hints/path-hint-toggle-on-1440.png` — Right-click Delete hint appears after the toggle is on (1440×900)
+  - `.docs/evidence/improve-38-chrome-hints/chrome-hints-1024.png` — spawn hints and Type keypad at 1024×768
+- Earlier-slice defects fixed: Type inspector icons were 52px inside a 26px well (WIP). Empty Human role on Export failed Zod when the YAML was dropped back into `src/demos`. Vite cached `?raw` demo YAML across overwrite. Improve-09 tab z-index locator did not distinguish left/right tabs. Improve-18 Path-pull expected 7 RF edges; Oak Park Before has 8 plus the new Path.
+- Known limitations / follow-ups: Refresh still loads localStorage, so a replaced demo YAML needs Demo from the menu. Untracked `e2e/improve-23-tile-edit.spec.ts` and elk plan files remain outside this commit. Path-end wobble is still a later improvement.
+- Status: COMPLETE
+- Commit: `feat(improve-38): polish tile chrome hints and Type`
+
 

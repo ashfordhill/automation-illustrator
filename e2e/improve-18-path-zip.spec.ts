@@ -32,7 +32,7 @@ test.describe("Improvement 18 Path zip vs Tile blip", () => {
     await page.mouse.up();
     await waitForLayout(page);
 
-    await expect(page.locator(".react-flow__edge")).toHaveCount(7);
+    await expect(page.locator(".react-flow__edge")).toHaveCount(9);
     await expect(page.getByText("Search filesystem").first()).toBeVisible();
     await capturePage(page, `${EVIDENCE}/path-connected-1440.png`);
   });

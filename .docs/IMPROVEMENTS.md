@@ -747,3 +747,28 @@ Append to `## Amendments` in `.docs/GOAL.md`: WG-07, NA-03, CX-05 as dated 2026-
 Commit: `feat(improve-37): insert left spawn as parent`.  
 Evidence: `.docs/evidence/improve-37-left-parent/`.
 
+---
+
+# Improvement 38 — tile chrome, hints, Type, Who, demo YAML
+
+Approved 2026-09-09. Visual polish plus two product fixes from the same review.
+
+## Locked decisions
+
+- Tile `+` / Path tabs are **40×40** (were 44) and peek **18px** (were 14) so they sit slightly off the face without covering Path hits.
+- The tile X is centered on the tile box (`left: 0; right: 0; margin: auto`), Step and Data.
+- Right-click Delete hint follows the status-bar toggle. Path context-menu Delete is unchanged.
+- Selected-tile hints are a two-line Q/E Step and A/D Data diagram with a left/right arrow.
+- Data mark is a lighter grape (`#ae78f2` light, `#c9a6ff` dark).
+- Type keypad keeps 3×3 including Other; names are not clipped. Selected Who is yellow like Type, with a matching yellow border (no ink outline).
+- Manage actors opens on the selected Step’s Who.
+- Demo YAML is re-read from disk in dev (Vite cache invalidation). Export fills a blank Human role as worker so a dropped fixture still parses.
+- No new runtime dependency.
+
+## Contract
+
+Append to `## Amendments` in `.docs/GOAL.md`: P-06, WG-05, NA-06, NA-05, CX-07 as dated 2026-09-09.
+
+Commit: `feat(improve-38): polish tile chrome hints and Type`.  
+Evidence: `.docs/evidence/improve-38-chrome-hints/`.
+

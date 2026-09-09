@@ -4,7 +4,7 @@ import { DEMO_STEP, capturePage, loadOakPark } from "./ready";
 const EVIDENCE = ".docs/evidence/improve-22-tab-peek";
 
 test.describe("Improvement 22 — create tabs closer to the tile", () => {
-  test("+ and Path tabs peek 14px on the right edge", async ({ page }) => {
+  test("+ and Path tabs peek 18px on the right edge", async ({ page }) => {
     await loadOakPark(page);
     await page.getByText(DEMO_STEP).first().click();
     const plus = page.getByRole("button", { name: "Add Step or Data" });
@@ -13,9 +13,9 @@ test.describe("Improvement 22 — create tabs closer to the tile", () => {
     await expect(pathTab).toBeVisible();
 
     const peek = await page
-      .locator(".tile-chrome-host.is-selected .tile-side-tabs")
+      .locator(".tile-chrome-host.is-selected .tile-side-tabs.is-out")
       .evaluate((el) => getComputedStyle(el).right);
-    expect(peek).toBe("-14px");
+    expect(peek).toBe("-18px");
 
     const tile = page.locator(".tile-chrome-host.is-selected .step-piece");
     const tileBox = await tile.boundingBox();
@@ -25,8 +25,9 @@ test.describe("Improvement 22 — create tabs closer to the tile", () => {
     const tileRight = tileBox!.x + tileBox!.width;
     const plusOverlap = tileRight - plusBox!.x;
     const pathOverlap = tileRight - pathBox!.x;
-    expect(plusOverlap / plusBox!.width).toBeGreaterThan(0.6);
-    expect(pathOverlap / pathBox!.width).toBeGreaterThan(0.6);
+    expect(plusOverlap / plusBox!.width).toBeGreaterThan(0.5);
+    expect(plusOverlap / plusBox!.width).toBeLessThan(0.65);
+    expect(pathOverlap / pathBox!.width).toBeGreaterThan(0.5);
     expect(plusBox!.x + plusBox!.width).toBeGreaterThan(tileRight);
     expect(pathBox!.x + pathBox!.width).toBeGreaterThan(tileRight);
 

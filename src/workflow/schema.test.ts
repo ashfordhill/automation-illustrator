@@ -70,6 +70,22 @@ test("v2 documents may omit name; demos keep their titles", () => {
   if (mail.ok) expect(mail.doc.name).toBe("Robot Mailroom");
 });
 
+test("empty Human role becomes worker", () => {
+  const parsed = parseCodes({
+    version: 2,
+    actors: [{ id: "h1", kind: "human", name: "Ada", color: "#f4c6d4", role: "" }],
+    nodes: [step("a")],
+    edges: [],
+    assignments: {},
+    after: emptyAfterOverlay(),
+  });
+  expect(parsed.ok).toBe(true);
+  if (parsed.ok) {
+    const ada = parsed.doc.actors[0];
+    expect(ada && "role" in ada && ada.role).toBe("worker");
+  }
+});
+
 test("invalid shape: missing fields, bad enums, empty color, non-object", () => {
   const invalidJson = parseDocument("{");
   expect(invalidJson.ok).toBe(false);

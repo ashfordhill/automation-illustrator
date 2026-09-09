@@ -12,7 +12,7 @@ import {
   WORKFLOW_VERSION_V1,
 } from "./catalogs";
 import { validateWorkflow, validateWorkflowV1, type GraphViolation } from "./graph";
-import { STEP_KINDS, type WorkflowDoc, type WorkflowDocV1 } from "./types";
+import { DEFAULT_HUMAN_ROLE, STEP_KINDS, type WorkflowDoc, type WorkflowDocV1 } from "./types";
 
 const idSchema = z.string().min(1);
 const colorSchema = z.string().min(1);
@@ -39,7 +39,10 @@ const humanV1Schema = z.object({
 
 const humanV2Schema = z.object({
   ...humanShape,
-  role: z.string().min(1),
+  role: z.preprocess(
+    (value) => (typeof value === "string" && value.trim() === "" ? DEFAULT_HUMAN_ROLE : value),
+    z.string().min(1),
+  ),
 });
 
 const robotSchema = z.object({

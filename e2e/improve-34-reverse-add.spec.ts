@@ -55,8 +55,9 @@ test.describe("Improvement 34 — add Tiles and Paths to the left", () => {
     await waitForLayout(page);
     await expect(page.locator(".react-flow__node")).toHaveCount(2);
     const helper = page.locator(".canvas-helper");
-    await expect(helper).toContainText("New Step left");
-    await expect(helper).toContainText("New Step right");
+    await expect(helper).toContainText("+ Step");
+    await expect(helper.locator("[data-spawn-hints]")).toContainText("Q");
+    await expect(helper.locator("[data-spawn-hints]")).toContainText("E");
     await capturePage(page, `${EVIDENCE}/q-predecessor-1440.png`);
     await page.locator(".react-flow__node:not(.selected)").first().click();
     await page.keyboard.press("e");

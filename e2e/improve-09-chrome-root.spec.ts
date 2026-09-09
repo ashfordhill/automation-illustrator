@@ -50,7 +50,7 @@ test.describe("Improvement 09 — tile chrome, Data root, After removal", () => 
     expect(plusBox!.x).toBeLessThan(tileBox!.x + tileBox!.width);
     expect(plusBox!.x + plusBox!.width).toBeGreaterThan(tileBox!.x + tileBox!.width);
     const tabZ = await page
-      .locator(".tile-chrome-host.is-selected .tile-side-tabs")
+      .locator(".tile-chrome-host.is-selected .tile-side-tabs.is-out")
       .evaluate((el) => Number(getComputedStyle(el).zIndex));
     const faceZ = await page
       .locator(".tile-chrome-host.is-selected .tile-pickup")

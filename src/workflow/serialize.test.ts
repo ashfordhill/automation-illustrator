@@ -135,6 +135,25 @@ test("YAML comments are ignored and hex colors stay strings", () => {
   });
 });
 
+test("exported YAML quotes hex colors and keeps actor edits", () => {
+  const doc = oakParkInvoice();
+  const alice = doc.actors.find((a) => a.id === "h_alice");
+  if (alice && "role" in alice) {
+    alice.name = "Alicia";
+    alice.role = "";
+  }
+  const yaml = workflowToYaml(doc);
+  expect(yaml).toMatch(/name: Alicia/);
+  expect(yaml).toMatch(/role: worker/);
+  expect(yaml).toMatch(/color: ["']#/);
+  expect(yaml).not.toMatch(/color: #/);
+  const parsed = parseDocument(yaml);
+  expect(parsed.ok).toBe(true);
+  if (!parsed.ok) return;
+  const round = parsed.doc.actors.find((a) => a.id === "h_alice");
+  expect(round).toMatchObject({ name: "Alicia", color: "#ff9fbf", role: "worker" });
+});
+
 test("export filename slugs the project name", () => {
   expect(workflowExportFilename(oakParkInvoice())).toBe("oak-park-invoice.yaml");
   expect(workflowExportFilename(robotMailroom())).toBe("robot-mailroom.yaml");

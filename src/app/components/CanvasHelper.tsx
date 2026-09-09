@@ -23,88 +23,136 @@ function Chip({ item }: { item: Hint }) {
   );
 }
 
-function hintsFor(): Hint[] {
+function SpawnArrows() {
+  return (
+    <div className="canvas-helper-spawn-arrows" aria-hidden>
+      <span className="canvas-helper-arrow-head is-left" />
+      <span className="canvas-helper-arrow-shaft" />
+      <span className="canvas-helper-arrow-mid" />
+      <span className="canvas-helper-arrow-shaft" />
+      <span className="canvas-helper-arrow-head is-right" />
+    </div>
+  );
+}
+
+function SpawnHints({ after }: { after: boolean }) {
+  const k = useStore.getState().keymap;
+  const pk = (a: (typeof KeyAction)[keyof typeof KeyAction]) => prettyKey(k[a]);
+  const step = after ? "After-only Step" : "+ Step";
+  const leftStep = k[KeyAction.AddStepIn] ? { key: pk(KeyAction.AddStepIn), label: step } : null;
+  const rightStep = k[KeyAction.AddStepOut] ? { key: pk(KeyAction.AddStepOut), label: step } : null;
+  const leftData = !after && k[KeyAction.AddDataIn] ? { key: pk(KeyAction.AddDataIn), label: "+ Data" } : null;
+  const rightData = !after && k[KeyAction.AddDataOut] ? { key: pk(KeyAction.AddDataOut), label: "+ Data" } : null;
+  if (!leftStep && !rightStep && !leftData && !rightData) return null;
+  return (
+    <div
+      className="canvas-helper-spawn"
+      data-spawn-hints="true"
+      role="group"
+      aria-label={
+        after ? "Add After-only Step left or right" : "Q and A add to the left, E and D add to the right"
+      }
+    >
+      <div className="canvas-helper-spawn-row">
+        {leftStep ? <Chip item={leftStep} /> : <span />}
+        <span className="canvas-helper-spawn-pipe">|</span>
+        {rightStep ? <Chip item={rightStep} /> : <span />}
+      </div>
+      <SpawnArrows />
+      {after ? null : (
+        <div className="canvas-helper-spawn-row">
+          {leftData ? <Chip item={leftData} /> : <span />}
+          <span className="canvas-helper-spawn-pipe">|</span>
+          {rightData ? <Chip item={rightData} /> : <span />}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function hintsFor(): { chips: Hint[]; spawnAfter: boolean | null } {
   const s = useStore.getState();
   const k = s.keymap;
   const pk = (a: (typeof KeyAction)[keyof typeof KeyAction]) => prettyKey(k[a]);
 
   if (s.interaction.kind === "path-label-edit") {
-    return [{ key: "Esc", label: "Close" }];
+    return { chips: [{ key: "Esc", label: "Close" }], spawnAfter: null };
   }
   if (s.interaction.kind === "plus-pull") {
-    return [{ key: "Esc", label: "Cancel" }];
+    return { chips: [{ key: "Esc", label: "Cancel" }], spawnAfter: null };
   }
   if (s.interaction.kind === "path-pull") {
-    return [
-      { key: "Release", label: "Connect to the Node under the knot" },
-      { key: "Esc", label: "Cancel" },
-    ];
+    return {
+      chips: [
+        { key: "Release", label: "Connect to the Node under the knot" },
+        { key: "Esc", label: "Cancel" },
+      ],
+      spawnAfter: null,
+    };
   }
   if (s.interaction.kind === "tile-drag") {
-    return [
-      { key: "Drop", label: "on a Path to insert. Neighbors make a gap." },
-      { key: "Esc", label: "Cancel" },
-    ];
+    return {
+      chips: [{ key: "Drop", label: "on a Path to insert. Neighbors make a gap." }, { key: "Esc", label: "Cancel" }],
+      spawnAfter: null,
+    };
   }
   if (s.interaction.kind === "remove-preview") {
-    return [
-      { key: pk(KeyAction.Confirm), label: "Apply pairings" },
-      { key: "Esc", label: "Cancel" },
-    ];
+    return {
+      chips: [
+        { key: pk(KeyAction.Confirm), label: "Apply pairings" },
+        { key: "Esc", label: "Cancel" },
+      ],
+      spawnAfter: null,
+    };
   }
   if (s.interaction.kind === "connect-existing") {
-    return [
-      { key: "Click", label: "Connect existing Node" },
-      { key: "Esc", label: "Cancel" },
-    ];
+    return {
+      chips: [
+        { key: "Click", label: "Connect existing Node" },
+        { key: "Esc", label: "Cancel" },
+      ],
+      spawnAfter: null,
+    };
   }
   if (s.selected?.type === SelectionKind.Edge) {
-    if (s.view === ViewMode.Both) return [];
+    if (s.view === ViewMode.Both) return { chips: [], spawnAfter: null };
     const items: Hint[] = [
       { key: pk(KeyAction.ToggleDash), label: "Dotted / Solid" },
       { key: pk(KeyAction.Confirm), label: "Edit label" },
-      { key: "Right-click", label: "Delete" },
     ];
+    if (s.rightClickDelete) {
+      items.push({ key: "Right-click", label: "Delete" });
+    }
     if (canRemovePath(s.workflow, s.selected.id)) {
       items.push({ key: pk(KeyAction.Delete), label: "Remove Path" });
     }
-    return items;
+    return { chips: items, spawnAfter: null };
   }
   if (s.selected?.type === SelectionKind.Node) {
+    if (s.view === ViewMode.Both) return { chips: [], spawnAfter: null };
     const n =
       s.workflow.nodes.find((x) => x.id === s.selected!.id) ??
       s.workflow.after.extraNodes.find((x) => x.id === s.selected!.id);
-    const items: Hint[] = [];
-    if (s.view === ViewMode.Both) return [];
+    const chips: Hint[] = [];
     if (s.view === ViewMode.After) {
-      if (k[KeyAction.AddStepIn]) {
-        items.push({ key: pk(KeyAction.AddStepIn), label: "After-only Step left" });
-      }
-      if (k[KeyAction.AddStepOut]) {
-        items.push({ key: pk(KeyAction.AddStepOut), label: "After-only Step right" });
-      }
       if (s.workflow.after.extraNodes.some((x) => x.id === s.selected!.id)) {
-        items.push({ key: pk(KeyAction.RemoveNode), label: "Remove Step" });
+        chips.push({ key: pk(KeyAction.RemoveNode), label: "Remove Step" });
       }
       if (s.rightClickDelete) {
-        items.push({ key: "Right-click", label: "Delete" });
+        chips.push({ key: "Right-click", label: "Delete" });
       }
-      return items;
+      return { chips, spawnAfter: true };
     }
-    if (k[KeyAction.AddStepIn]) items.push({ key: pk(KeyAction.AddStepIn), label: "New Step left" });
-    if (k[KeyAction.AddStepOut]) items.push({ key: pk(KeyAction.AddStepOut), label: "New Step right" });
-    if (k[KeyAction.AddDataIn]) items.push({ key: pk(KeyAction.AddDataIn), label: "New Data left" });
-    if (k[KeyAction.AddDataOut]) items.push({ key: pk(KeyAction.AddDataOut), label: "New Data right" });
-    items.push({
+    chips.push({
       key: pk(KeyAction.RemoveNode),
       label: n?.type === WorkflowNodeKind.DataField ? "Remove Data" : "Remove Step",
     });
     if (s.rightClickDelete) {
-      items.push({ key: "Right-click", label: "Delete" });
+      chips.push({ key: "Right-click", label: "Delete" });
     }
-    return items;
+    return { chips, spawnAfter: false };
   }
-  return [];
+  return { chips: [], spawnAfter: null };
 }
 
 export function CanvasHelper() {
@@ -115,11 +163,12 @@ export function CanvasHelper() {
   useStore((s) => s.view);
   useStore((s) => s.rightClickDelete);
   if (present) return null;
-  const items = hintsFor();
-  if (!items.length) return null;
+  const { chips, spawnAfter } = hintsFor();
+  if (!chips.length && spawnAfter === null) return null;
   return (
     <div className="canvas-helper" aria-live="polite">
-      {items.map((item) => (
+      {spawnAfter !== null ? <SpawnHints after={spawnAfter} /> : null}
+      {chips.map((item) => (
         <Chip key={`${item.key}-${item.label}`} item={item} />
       ))}
     </div>

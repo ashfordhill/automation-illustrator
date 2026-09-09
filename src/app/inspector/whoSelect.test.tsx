@@ -1,5 +1,5 @@
 /**
- * Selected Who is cream + chunky ink, not mustard (Improvement 28).
+ * Selected Who is yellow fill like Type, not a chunky ink frame.
  * Color values are asserted in e2e (jsdom does not resolve CSS variables).
  */
 import { act } from "react";

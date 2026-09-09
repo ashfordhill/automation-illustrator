@@ -1,0 +1,67 @@
+/**
+ * Compact 3×3 Type keypad: icon above a full, unclipped name.
+ */
+.inspector-type-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  justify-content: stretch;
+  width: 100%;
+  gap: 6px;
+}
+
+.inspector-type-grid > .inspector-type:last-child {
+  grid-column: auto;
+}
+
+.inspector-type-grid .inspector-type {
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  aspect-ratio: auto;
+  width: auto;
+  max-width: none;
+  height: auto;
+  min-height: 4.75rem;
+  min-width: 0;
+  padding: 8px 4px 7px;
+  gap: 4px;
+  font-size: 11px;
+  line-height: 1.2;
+  text-align: center;
+  overflow: visible;
+}
+
+.inspector-type-grid .inspector-type.is-on {
+  border-width: 2px;
+}
+
+.inspector-type-grid .inspector-type-icon {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 26px;
+  overflow: visible;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.inspector-type-grid .inspector-type-icon svg {
+  width: 26px;
+  height: 26px;
+}
+
+.inspector-type-grid .inspector-type-icon.is-other,
+.inspector-type-grid .inspector-type-icon.is-other svg {
+  width: 30px;
+  height: 30px;
+  flex-basis: 30px;
+}
+
+.inspector-type-grid .inspector-type-name {
+  display: block;
+  max-width: 100%;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: nowrap;
+  line-height: 1.2;
+}

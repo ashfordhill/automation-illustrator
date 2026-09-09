@@ -700,11 +700,21 @@ export const useStore = create<{
   },
   openManageActors: () => {
     if (get().inspectorCollapsed) get().setInspectorCollapsed(false);
-    const { workflow, manageActorId } = get();
+    const { workflow, selected, manageActorId } = get();
+    const fromTile = (() => {
+      if (selected?.type !== SelectionKind.Node) return null;
+      const node = findNode(workflow, selected.id);
+      if (!node || !isStepNode(node)) return null;
+      const whoId = laneAssignments(workflow, get().assignmentLane())[selected.id];
+      return whoId && workflow.actors.some((a) => a.id === whoId) ? whoId : null;
+    })();
     const nextId =
-      manageActorId && workflow.actors.some((a) => a.id === manageActorId)
+      fromTile ??
+      (manageActorId && workflow.actors.some((a) => a.id === manageActorId)
         ? manageActorId
-        : (workflow.actors[0]?.id ?? null);
+        : null) ??
+      workflow.actors[0]?.id ??
+      null;
     set({ manageActorsOpen: true, manageActorId: nextId });
   },
   closeManageActors: (opts) => {

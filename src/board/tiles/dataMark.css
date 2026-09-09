@@ -1,12 +1,12 @@
 /**
- * Data oval fill. Saturated grape, not Missy’s pastel lavender Who,
- * not yellow select, not teal Path tab, not plus green or minus red.
+ * Data oval fill. Lighter grape than the old #7b3fe0, still distinct from
+ * Missy’s pastel lavender Who (#c89bf5), yellow select, and teal Path tab.
  */
 :root,
 :root[data-theme="light"] {
-  --data-mark: #7b3fe0;
+  --data-mark: #ae78f2;
 }
 
 :root[data-theme="dark"] {
-  --data-mark: #b07dff;
+  --data-mark: #c9a6ff;
 }

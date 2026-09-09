@@ -212,6 +212,19 @@ test("beginTileTextEdit and beginTilePie open on-canvas Step edit (NA-08, NA-11)
   expect(useStore.getState().interaction).toEqual({ kind: "idle" });
 });
 
+test("Manage actors opens on the selected Step’s Who", () => {
+  const { fs, review, roy, alice } = OAK_PARK_IDS;
+  const s = useStore.getState();
+  s.select({ type: SelectionKind.Node, id: fs });
+  s.openManageActors();
+  expect(useStore.getState().manageActorsOpen).toBe(true);
+  expect(useStore.getState().manageActorId).toBe(alice);
+  s.closeManageActors({ restoreFocus: false });
+  s.select({ type: SelectionKind.Node, id: review });
+  s.openManageActors();
+  expect(useStore.getState().manageActorId).toBe(roy);
+});
+
 test("new Other Steps are named Task; choosing Other fills an empty Name once", () => {
   const { review, read } = OAK_PARK_IDS;
   const child = useStore.getState().spawnBranch(review, WorkflowNodeKind.Step);

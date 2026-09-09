@@ -143,22 +143,20 @@ test("inspector Type buttons are alphabetical with Other last; Who offers every 
   expect(useStore.getState().workflow.assignments[OAK_PARK_IDS.read]).toBe(OAK_PARK_IDS.robot);
 });
 
-test("selected Path hints include Right-click Delete with the other hotkeys", () => {
+test("selected Path hints omit Right-click Delete while the toggle is off", () => {
   act(() => {
     useStore.getState().select({ type: SelectionKind.Edge, id: OAK_PARK_IDS.webAcct });
   });
   const helper = host.querySelector(".canvas-helper")?.textContent ?? "";
   expect(helper).toMatch(/Dotted \/ Solid/);
   expect(helper).toMatch(/Edit label/);
-  expect(helper).toMatch(/Right-click/);
-  expect(helper).toMatch(/Delete/);
+  expect(helper).not.toMatch(/Right-click/);
   expect(helper).toMatch(/Remove Path/);
   act(() => {
     useStore.getState().select({ type: SelectionKind.Edge, id: OAK_PARK_IDS.reviewTo3 });
   });
   const bridge = host.querySelector(".canvas-helper")?.textContent ?? "";
-  expect(bridge).toMatch(/Right-click/);
-  expect(bridge).toMatch(/Delete/);
+  expect(bridge).not.toMatch(/Right-click/);
   expect(bridge).not.toMatch(/Remove Path/);
 });
 

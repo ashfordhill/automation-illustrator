@@ -31,8 +31,6 @@ export const MAILROOM_IDS = {
   group: "g_mail_sort",
 } as const;
 
-const MAILROOM = loadYamlFixture(mailroomYaml, "Robot Mailroom");
-
 export function robotMailroom(): WorkflowDoc {
-  return cloneWorkflow(MAILROOM);
+  return cloneWorkflow(loadYamlFixture(mailroomYaml, "Robot Mailroom"));
 }

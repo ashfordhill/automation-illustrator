@@ -490,7 +490,7 @@ function PathPullTab({ nodeId, inbound }: { nodeId: string; inbound: boolean }) 
             </svg>
             {drag.live ? (
               <div className="path-tab-ghost" style={{ left: endX, top: endY }}>
-                <PathKnotIcon size={24} />
+                <PathKnotIcon size={22} />
               </div>
             ) : null}
           </div>,
@@ -518,7 +518,7 @@ function PathPullTab({ nodeId, inbound }: { nodeId: string; inbound: boolean }) 
         onPointerCancel={onPointerUp}
         onClick={(e) => e.stopPropagation()}
       >
-        <PathKnotIcon size={24} />
+        <PathKnotIcon size={22} />
       </button>
       {overlay}
     </>

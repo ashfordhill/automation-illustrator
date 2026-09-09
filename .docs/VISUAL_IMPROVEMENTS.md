@@ -199,3 +199,20 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 - Resolution: Shipped in `feat(improve-37): insert left spawn as parent`. Left always inserts a parent in the chain and inherits Who from the successor. Forks are right-only.
 - Attachments:
   ![left plus should be parent](.docs/visual-improvements/2026-09-09-left-plus-should-be-parent.gif)
+
+## 2026-09-09 — insert into a merge fork
+
+- Issue: Dragging a Data tile onto the T-junction where two Paths merge into a Step does not insert it as the new merge target; both incoming Paths keep going to the Step.
+- Resolution: Planned — treat the shared merge (and the dual shared split trunk) as a bundle drop, so one drop retargets every Path in that junction.
+- Attachments:
+  ![insert into fork](.docs/visual-improvements/2026-09-09-insert-into-fork.gif)
+
+## 2026-09-09 — tile chrome, hints, Type keypad
+
+- Issue: `+` / Path tabs sit on the tile face; X looks off-center; Right-click Delete hint shows while the toggle is off; Data purple is too dark; Type names are clipped; selected Who still has a chunky ink outline; spawn hints are a long single row.
+- Resolution: Shipped in `feat(improve-38): polish tile chrome hints and Type` — 40px tabs with 18px peek, centered X, gated hint, lighter Data mark, unclipped Type names, yellow Who, two-line Q/E A/D helpers.
+- Attachments:
+  ![tile chrome tabs and X](.docs/visual-improvements/2026-09-09-tile-chrome-tabs-x.png)
+  ![hints and status](.docs/visual-improvements/2026-09-09-hints-and-status.png)
+  ![type picker squished](.docs/visual-improvements/2026-09-09-type-picker-squished.png)
+

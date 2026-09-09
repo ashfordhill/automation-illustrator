@@ -34,6 +34,8 @@
   --actor-empty: #cfe8f2;
   --banner: #d4f0f8;
   --status-bar-height: 36px;
+  --tile-tab-size: 40px;
+  --tile-tab-peek: 18px;
   --mantine-color-dimmed: var(--ink-soft);
   /* Windows has no native grab cursor; Chrome’s bitmap is 1x and looks soft next to move/pointer.
      White fill + black outline matches the OS pointer the delete X already uses. */
@@ -637,6 +639,71 @@ body.is-tile-dragging * {
   color: color-mix(in srgb, var(--ink) 58%, var(--paper));
 }
 
+.canvas-helper-spawn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
+.canvas-helper-spawn-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  column-gap: 10px;
+  min-width: 268px;
+}
+
+.canvas-helper-spawn-row > :first-child {
+  justify-self: end;
+}
+
+.canvas-helper-spawn-row > :last-child {
+  justify-self: start;
+}
+
+.canvas-helper-spawn-pipe {
+  opacity: 0.5;
+  font-weight: 700;
+}
+
+.canvas-helper-spawn-arrows {
+  display: flex;
+  align-items: center;
+  width: min(268px, 72vw);
+  color: inherit;
+  opacity: 0.72;
+}
+
+.canvas-helper-arrow-shaft {
+  flex: 1 1 auto;
+  height: 0;
+  border-top: 2px solid currentColor;
+}
+
+.canvas-helper-arrow-mid {
+  width: 0;
+  height: 11px;
+  margin: 0 5px;
+  border-left: 2px solid currentColor;
+}
+
+.canvas-helper-arrow-head {
+  width: 0;
+  height: 0;
+  border-style: solid;
+}
+
+.canvas-helper-arrow-head.is-left {
+  border-width: 5px 9px 5px 0;
+  border-color: transparent currentColor transparent transparent;
+}
+
+.canvas-helper-arrow-head.is-right {
+  border-width: 5px 0 5px 9px;
+  border-color: transparent transparent transparent currentColor;
+}
+
 .path-plus-menu {
   display: flex;
   flex-direction: column;
@@ -875,13 +942,24 @@ body.is-tile-dragging * {
   outline-offset: 2px;
 }
 
+.tile-chrome-actions {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+
 .tile-remove-x {
   position: absolute;
   top: -14px;
-  left: 50%;
-  right: auto;
-  transform: translateX(-50%);
+  left: 0;
+  right: 0;
+  width: 40px;
+  height: 40px;
+  margin: 0 auto;
+  transform: none;
   z-index: 6;
+  pointer-events: auto;
 }
 
 .tile-chrome-host:not(.is-selected):not(:hover):not(.is-pulling) .tile-chrome-actions {
@@ -918,7 +996,7 @@ body.is-tile-dragging * {
 
 .tile-side-tabs {
   position: absolute;
-  /* 44px tabs, 14px peek — same hang as the X, snug on the edge. */
+  /* 40px tabs (~9% under 44), 18px peek — off the face without covering Path hits. */
   top: 50%;
   transform: translateY(-50%);
   z-index: 5;
@@ -929,12 +1007,12 @@ body.is-tile-dragging * {
 }
 
 .tile-side-tabs.is-out {
-  right: -14px;
+  right: calc(-1 * var(--tile-tab-peek));
 }
 
 .tile-side-tabs.is-in {
   right: auto;
-  left: -14px;
+  left: calc(-1 * var(--tile-tab-peek));
 }
 
 .plus-tab,
@@ -943,8 +1021,9 @@ body.is-tile-dragging * {
   right: auto;
   top: auto;
   z-index: 5;
-  width: 44px;
-  height: 44px;
+  width: var(--tile-tab-size);
+  height: var(--tile-tab-size);
+  pointer-events: auto;
   box-sizing: border-box;
   display: inline-flex;
   align-items: center;
@@ -953,7 +1032,7 @@ body.is-tile-dragging * {
   border-radius: 12px;
   border: 3px solid var(--line);
   font-weight: 800;
-  font-size: 30px;
+  font-size: 27px;
   line-height: 1;
   cursor: var(--tile-grab-cursor);
   font-family: inherit;
@@ -1071,15 +1150,15 @@ body.is-tile-dragging * {
   position: absolute;
   transform: translate(-50%, -50%);
   pointer-events: none;
-  width: 44px;
-  height: 44px;
+  width: var(--tile-tab-size);
+  height: var(--tile-tab-size);
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 12px;
   border: 3px solid var(--line);
   font-weight: 800;
-  font-size: 30px;
+  font-size: 27px;
   box-shadow: 0 3px 0 var(--btn-shadow);
 }
 
@@ -1249,12 +1328,14 @@ body.is-tile-dragging * {
 
 .inspector-type-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  justify-content: stretch;
+  width: 100%;
   gap: 6px;
 }
 
 .inspector-type-grid > :last-child {
-  grid-column: 1 / -1;
+  grid-column: auto;
 }
 
 .inspector-type,
@@ -1284,13 +1365,12 @@ body.is-tile-dragging * {
   color: var(--on-yellow);
 }
 
-/* Who sits on always-dark chrome; mustard fill fights the pastel figure.
-   Selected = cream well + chunky ink frame (SH-01, P-09, CX-07). */
+/* Selected Who matches Type: yellow fill. No extra ink outline (the fill is the cue). */
 .inspector-who.is-on {
-  background: var(--cream);
-  color: var(--ink);
-  border-width: 4px;
-  border-color: var(--ink);
+  background: var(--yellow);
+  color: var(--on-yellow);
+  border-width: 2px;
+  border-color: var(--yellow);
   box-shadow: none;
 }
 
