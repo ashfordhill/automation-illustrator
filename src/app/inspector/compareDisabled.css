@@ -1,0 +1,12 @@
+/**
+ * Compare (Both) inspector: Who keys and text fields match Type/Split greying.
+ */
+.inspector-who:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.details-rail-body :is(input, textarea):disabled {
+  opacity: 0.55;
+  cursor: default;
+}

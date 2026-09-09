@@ -75,7 +75,8 @@ test.describe("slice 10 After projection and comparison", () => {
     await expect(page.getByRole("button", { name: "Remove Node" })).toHaveCount(0);
 
     await page.getByText(DEMO_STEP).first().click();
-    await expect(aside(page).getByLabel("Name")).toHaveAttribute("readonly", "");
+    await expect(aside(page).getByLabel("Name")).toBeDisabled();
+    await expect(aside(page).getByRole("button", { name: "Who Alice" })).toBeDisabled();
 
     const afterLane = page.locator('[data-lane="after"]');
     await afterLane.getByText(DEMO_STEP).click();

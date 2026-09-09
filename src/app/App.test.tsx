@@ -255,6 +255,21 @@ test("view switching has no BEFORE/AFTER corner chips", () => {
   expect(host.textContent).not.toMatch(/\bBEFORE\b/);
 });
 
+test("Compare disables Type, Who, and inspector text fields", () => {
+  act(() => {
+    useStore.getState().select({ type: SelectionKind.Node, id: OAK_PARK_IDS.read });
+    useStore.getState().setView(ViewMode.Both);
+  });
+  const typeOn = host.querySelector<HTMLButtonElement>('[aria-label="Type Read"]');
+  const whoOn = host.querySelector<HTMLButtonElement>('[aria-label="Who Alice"]');
+  const name = host.querySelector<HTMLInputElement>("#step-name-field");
+  const details = host.querySelector<HTMLInputElement>("#step-details-field");
+  expect(typeOn?.disabled).toBe(true);
+  expect(whoOn?.disabled).toBe(true);
+  expect(name?.disabled).toBe(true);
+  expect(details?.disabled).toBe(true);
+});
+
 test("Step inspector uses a trash control, not a Remove text button", () => {
   act(() => {
     useStore.getState().select({ type: SelectionKind.Node, id: OAK_PARK_IDS.read });

@@ -662,3 +662,14 @@ Append to `## Amendments` in `.docs/GOAL.md` (already recorded with this improve
 Commit: `feat(improve-32): import and export workflows as YAML`.  
 Evidence: `.docs/evidence/improve-32-import-export/`.
 
+---
+
+# Improvement 33 — Compare greys Who and text fields
+
+Approved 2026-09-08. Compare already greys Type and Split keys (`opacity: 0.55`). Who keys stayed full-color even though they are disabled. Name, Details, Data Label, and Path condition used `readOnly`, so they looked like live fields.
+
+Who keys use that same disabled fade. Inspector text fields are `disabled` in Compare so they pick up the same fade. No new dependency.
+
+Commit: `feat(improve-33): grey Compare Who and text fields`.  
+Evidence: `.docs/evidence/improve-33-compare-readonly/`.
+

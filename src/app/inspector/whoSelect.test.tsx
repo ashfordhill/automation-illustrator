@@ -55,3 +55,13 @@ test("selected Who is marked is-on without a dashed ring", () => {
   expect(off?.textContent).toContain("Roy");
   expect(getComputedStyle(on!).outlineStyle === "dashed").toBe(false);
 });
+
+test("disabled Who keys cannot be clicked", () => {
+  act(() => {
+    root.render(<WhoButtons actors={ACTORS} value="h_alice" onChange={() => {}} disabled />);
+  });
+  const on = host.querySelector(".inspector-who.is-on") as HTMLButtonElement;
+  const off = host.querySelector(".inspector-who:not(.is-on)") as HTMLButtonElement;
+  expect(on.disabled).toBe(true);
+  expect(off.disabled).toBe(true);
+});

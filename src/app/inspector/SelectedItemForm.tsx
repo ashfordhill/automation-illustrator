@@ -16,6 +16,7 @@ import { useStore } from "../../state/store";
 import { ManageActorsPanel } from "./ManageActorsPanel";
 import { TypeButtons } from "./TypeButtons";
 import { WhoButtons } from "./WhoButtons";
+import "./compareDisabled.css";
 
 function InspectorHeader({
   title,
@@ -126,7 +127,7 @@ export function DetailsPanel() {
             id="data-label-field"
             label="Label"
             value={n.label}
-            readOnly={readOnly}
+            disabled={readOnly}
             onChange={(e) => useStore.getState().updateNode(n.id, { label: e.target.value })}
           />
         </Stack>
@@ -152,14 +153,14 @@ export function DetailsPanel() {
           id="step-name-field"
           label="Name"
           value={n.title}
-          readOnly={readOnly}
+          disabled={readOnly}
           onChange={(e) => useStore.getState().updateNode(n.id, { title: e.target.value })}
         />
         <TextInput
           id="step-details-field"
           label="Details"
           value={n.detail}
-          readOnly={readOnly}
+          disabled={readOnly}
           onChange={(e) => useStore.getState().updateNode(n.id, { detail: e.target.value })}
         />
         <Text size="sm" fw={700}>
@@ -188,7 +189,7 @@ export function DetailsPanel() {
           id="path-condition-field"
           label="label"
           value={e.label}
-          readOnly={readOnly}
+          disabled={readOnly}
           onChange={(ev) => useStore.getState().updateEdge(e.id, { label: ev.target.value })}
         />
         <FatChoice

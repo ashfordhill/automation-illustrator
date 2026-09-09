@@ -1898,4 +1898,32 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(improve-32): cover import export edge cases`
 
+## Improvement 33 — Compare greys Who and text fields — 2026-09-08
+
+- Starting commit: `19c00dbba12dc27c39cfd24ac5b45e64fa9f0e5d` (`feat(improve-32): cover import export edge cases`)
+- Working tree at start: not clean. Concurrent Type-picker / Who-select / tile-pie / graph WIP was stashed as `concurrent-wip-aside-for-improve-33` for build and e2e, then restored after this commit.
+- GOAL clauses addressed: BA-05, NA-09. No amendment — Compare was already read-only; this is the disabled look.
+- Library research and decisions: no new runtime dependency. Type and Split already used `disabled` plus `opacity: 0.55`. Who was disabled with no fade. Text fields used `readOnly`, which keeps the live cream field. Compare now uses `disabled` on those fields so they share the Type fade. jsdom does not apply the CSS, so fade is asserted in e2e.
+- Files changed:
+  - `src/app/inspector/SelectedItemForm.tsx` (`disabled` on Label / Name / Details / Path condition; import `compareDisabled.css`)
+  - `src/app/inspector/compareDisabled.css` (Who and input fade)
+  - Tests: `src/app/App.test.tsx`, `src/app/inspector/whoSelect.test.tsx`, `e2e/improve-33-compare-readonly.spec.ts`, `e2e/projection.spec.ts`
+  - Docs: `.docs/IMPROVEMENTS.md` (33); this handoff entry
+  - Evidence: `.docs/evidence/improve-33-compare-readonly/`
+- Behavior implemented:
+  - In Compare, Who keys fade like Type keys.
+  - Name, Details, Data Label, and Path condition look disabled, not like live fields.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning). Concurrent WIP stashed for this run.
+  - `npm run test:unit` — this commit: `whoSelect.test.tsx` and `App.test.tsx` pass (20). Full suite on the isolated tree: 38 files, 247 passed / 2 failed (`store.actors.test.ts` inherit/assign — unrelated, present on isolated HEAD).
+  - `npm run test:e2e` — `e2e/improve-33-compare-readonly.spec.ts` (2), `e2e/projection.spec.ts` (6) all pass (8). Chromium via `LD_LIBRARY_PATH` `~/.local/pw-libs`.
+- Evidence:
+  - `.docs/evidence/improve-33-compare-readonly/compare-step-1440.png` — Compare inspector; Type, Who, Name, Details faded (1440×900)
+  - `.docs/evidence/improve-33-compare-readonly/compare-step-dark-1440.png` — same in dark (1440×900)
+  - `.docs/evidence/improve-33-compare-readonly/compare-step-1024.png` — same at 1024×768
+- Earlier-slice defects fixed: none
+- Known limitations / follow-ups: Concurrent Type-picker / Who-select / tile-pie / graph WIP remains in stash `concurrent-wip-aside-for-improve-33` until restored.
+- Status: COMPLETE
+- Commit: `feat(improve-33): grey Compare Who and text fields`
+
 
