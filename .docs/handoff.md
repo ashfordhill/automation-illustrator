@@ -2146,3 +2146,30 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(improve-39): pack Type keypad and blank Other`
 
+## Improvement 41 — center Who keys in the inspector — 2026-09-09
+
+- Starting commit: `3bd238dc717d0e7043c773e4b569598a421efd35` (`feat(improve-39): pack Type keypad and blank Other`)
+- Working tree at start: not clean. This Who-center follow-up was already in progress after 39; untracked elk plans, chrome GIFs, and `e2e/improve-23-tile-edit.spec.ts` remained outside the commit.
+- GOAL clauses addressed: NA-05, NA-06 (amendment dated 2026-09-09). Document version unchanged.
+- Library research and decisions: no new runtime dependency. Mantine Stack stretches children, so the Human/Robot cluster uses `width: fit-content`, `align-self: center`, and `margin-inline: auto`. Rows stay `flex-start` inside the cluster so columns still line up.
+- Files changed:
+  - Inspector: `src/app/styles/tokens.css`, `src/app/inspector/ActorWhoGrid.tsx`
+  - Tests: `e2e/improve-41-who-center.spec.ts`
+  - Docs: `.docs/GOAL.md`, `.docs/IMPROVEMENTS.md`, `.docs/VISUAL_IMPROVEMENTS.md`, `.docs/visual-improvements/2026-09-09-who-actors-off-center.png`, this handoff entry
+  - Evidence: `.docs/evidence/improve-41-who-center/`
+- Behavior implemented:
+  - Who and Manage actors keys sit as one centered cluster in the inspector (equal inset from Manage actors / Name).
+  - Humans still wrap among themselves; Robots still start on their own row with the first Human above the first Robot.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning). Node 24.
+  - `npm run test:unit` — 41 files, 284 tests pass.
+  - `npm run test:e2e` — 179 passed (1.8m). Chromium via `LD_LIBRARY_PATH` `/home/ash/.local/pw-libs/usr/lib/x86_64-linux-gnu`. Untracked `e2e/improve-23-tile-edit.spec.ts` was asided for this run.
+- Evidence:
+  - `.docs/evidence/improve-41-who-center/who-center-1440.png` — Who keys centered over Manage actors; Alice above Script (1440×900)
+  - `.docs/evidence/improve-41-who-center/manage-center-1440.png` — Manage actors keys centered over Name (1440×900)
+  - `.docs/evidence/improve-41-who-center/who-center-1024.png` — Who keys still centered at 1024×768
+- Earlier-slice defects fixed: none
+- Known limitations / follow-ups: Concurrent insert-on-bundle WIP was not in this commit. Path-end wobble is still a later improvement.
+- Status: COMPLETE
+- Commit: `feat(improve-41): center Who keys in the inspector`
+

@@ -813,3 +813,22 @@ Append to `## Amendments` in `.docs/GOAL.md`: NA-05, NA-10 as dated 2026-09-09.
 Commit: `feat(improve-39): pack Type keypad and blank Other`.  
 Evidence: `.docs/evidence/improve-39-type-compact/`.
 
+---
+
+# Improvement 41 — center Who keys in the inspector
+
+Approved 2026-09-09. Who keys were left-aligned, so extra rail showed to the right of the last column.
+
+## Locked decisions
+
+- Who and Manage actors use the same cluster: `fit-content` width, `align-self: center` in the inspector stack, max 100% of the rail.
+- Human/Robot row split is unchanged. Columns stay left-aligned inside the cluster so the first Human still sits above the first Robot.
+- No new runtime dependency.
+
+## Contract
+
+Append to `## Amendments` in `.docs/GOAL.md`: NA-05, NA-06 as dated 2026-09-09.
+
+Commit: `feat(improve-41): center Who keys in the inspector`.  
+Evidence: `.docs/evidence/improve-41-who-center/`.
+

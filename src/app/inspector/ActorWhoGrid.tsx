@@ -1,5 +1,6 @@
 /**
- * Who / Manage actors keys: Humans first, Robots on their own row (NA-05, NA-06).
+ * Who / Manage actors keys: Humans first, Robots on their own row,
+ * centered as one cluster in the inspector (NA-05, NA-06).
  */
 import { FIGURE_INK_ON_PASTEL, humansOf, robotsOf } from "../../workflow/actors";
 import { isHuman, type ActorDto } from "../../workflow/types";

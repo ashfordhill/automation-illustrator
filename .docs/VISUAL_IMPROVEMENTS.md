@@ -231,3 +231,10 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 - Attachments:
   ![type keypad whitespace](.docs/visual-improvements/2026-09-09-type-keypad-whitespace.png)
 
+## 2026-09-09 — Who actors off-center
+
+- Issue: Inspector Who keys sit left, with extra rail space on the right of Missy / Person.
+- Resolution: Shipped in `feat(improve-41): center Who keys in the inspector` — the Human/Robot cluster is centered; columns still line up.
+- Attachments:
+  ![who actors off center](.docs/visual-improvements/2026-09-09-who-actors-off-center.png)
+
