@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
-import { waitForLayout, capturePage } from "./ready";
+import { waitForLayout, capturePage, enterPresent, enterDarkTheme } from "./ready";
 
 const DEMO_STEP = "Read invoice.pdf";
 const EVIDENCE = ".docs/evidence/08-shell";
@@ -32,8 +32,7 @@ test.describe("slice 8 shell, typography, and sound", () => {
     await page.getByText(DEMO_STEP).first().click();
     await expect(page.locator("aside").getByRole("button", { name: "Type Read" })).toBeVisible();
 
-    await page.getByRole("button", { name: "Menu" }).click();
-    await page.getByRole("menuitem", { name: "Present" }).click();
+    await enterPresent(page);
     await expect(page.locator("aside")).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Menu" })).toHaveCount(0);
     await expect(page.locator("footer.status-bar")).toHaveCount(0);
@@ -89,7 +88,8 @@ test.describe("slice 8 shell, typography, and sound", () => {
 
     await viewRadio(page, "Before").click();
     await page.getByRole("button", { name: "Menu" }).click();
-    await expect(page.getByRole("menuitem", { name: "Present" })).toBeVisible();
+    await expect(page.getByRole("menuitem", { name: "New" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Present" })).toBeVisible();
     await capturePage(page, `${EVIDENCE}/hamburger-1440.png`);
     await page.keyboard.press("Escape");
 
@@ -110,8 +110,7 @@ test.describe("slice 8 shell, typography, and sound", () => {
 
   test("dark theme shell contrast and axe on the restyled view switch", async ({ page }) => {
     await loadDemo(page);
-    await page.getByRole("button", { name: "Menu" }).click();
-    await page.getByRole("menuitem", { name: "Dark mode" }).click();
+    await enterDarkTheme(page);
     await expect(page.getByRole("button", { name: "Menu" })).toBeVisible();
     await capturePage(page, `${EVIDENCE}/before-dark-1440.png`);
     await viewRadio(page, "After").click();

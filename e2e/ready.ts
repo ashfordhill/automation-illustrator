@@ -23,6 +23,19 @@ export async function loadOakPark(page: Page) {
   await waitForLayout(page);
 }
 
+/** Present is a top-right icon, not a hamburger item. */
+export async function enterPresent(page: Page) {
+  await page.getByRole("button", { name: "Present" }).click();
+}
+
+/** Dark is not a menu item; tests still switch via the in-app theme event. */
+export async function enterDarkTheme(page: Page) {
+  await page.evaluate(() => {
+    window.dispatchEvent(new CustomEvent("automation-pitch-theme", { detail: "dark" }));
+  });
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+}
+
 /** Write a PNG via buffer so a briefly locked evidence file can be retried (Windows). */
 export async function capturePage(page: Page, path: string) {
   const buf = await page.screenshot({ animations: "disabled" });

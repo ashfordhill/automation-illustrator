@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { capturePage, loadOakPark } from "./ready";
+import { capturePage, loadOakPark, enterDarkTheme } from "./ready";
 
 const EVIDENCE = ".docs/evidence/improve-28-who-select";
 const YELLOW_LIGHT = "rgb(232, 193, 74)";
@@ -23,8 +23,7 @@ test.describe("Improvement 28 — Who select is yellow", () => {
     await page.locator("aside").getByLabel("Name").click();
     await capturePage(page, `${EVIDENCE}/manage-actors-light-1440.png`);
 
-    await page.getByRole("button", { name: "Menu" }).click();
-    await page.getByRole("menuitem", { name: "Dark mode" }).click();
+    await enterDarkTheme(page);
     await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
     await expect(alice).toHaveCSS("background-color", YELLOW_DARK);
     await expect(alice).toHaveCSS("border-top-color", YELLOW_DARK);

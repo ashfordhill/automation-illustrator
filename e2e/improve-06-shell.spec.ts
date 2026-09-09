@@ -52,7 +52,7 @@ test.describe("Improvement 06 Who, trash, Other, chips, hamburger", () => {
   test("hamburger closes when the pointer moves onto the board", async ({ page }) => {
     await loadOakPark(page);
     await page.getByRole("button", { name: "Menu" }).click();
-    await expect(page.getByRole("menuitem", { name: "Present" })).toBeVisible();
+    await expect(page.getByRole("menuitem", { name: "New" })).toBeVisible();
     const items = page.getByRole("menuitem");
     await expect(items.first()).toBeVisible();
     expect(await items.locator("svg").count()).toBe(0);
@@ -60,6 +60,6 @@ test.describe("Improvement 06 Who, trash, Other, chips, hamburger", () => {
     const box = await lane.boundingBox();
     expect(box).toBeTruthy();
     await page.mouse.move(box!.x + Math.min(120, box!.width * 0.25), box!.y + box!.height * 0.55);
-    await expect(page.getByRole("menuitem", { name: "Present" })).toHaveCount(0);
+    await expect(page.getByRole("menuitem", { name: "New" })).toHaveCount(0);
   });
 });

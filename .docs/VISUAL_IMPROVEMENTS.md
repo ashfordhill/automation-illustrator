@@ -295,3 +295,11 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 - Attachments:
   ![spawn hint keys](.docs/visual-improvements/2026-09-09-spawn-hint-keys.png)
 
+## 2026-09-09 — Present as a person-in-a-box button
+
+- Issue: Present was a hamburger item. The presenter glyph should become a top-right button: person overlapping a rounded rect, white figure, complementary light-blue box, no white scribbles on the legs.
+- Resolution: Shipped in `feat(improve-48): present icon menu left and Z remove` — Present is a top-right icon (white figure in front of a light-blue slide). Menu moved leftmost. Dark and Actors left the hamburger. Remove default is Z.
+- Attachments:
+  ![presenter](.docs/visual-improvements/2026-09-09-presenter.svg)
+  ![presenter button mock](.docs/visual-improvements/2026-09-09-presenter-edited.svg)
+

@@ -34,7 +34,7 @@ export const DEFAULT_KEYMAP: Keymap = {
   [KeyAction.Confirm]: "enter",
   [KeyAction.Delete]: "delete",
   [KeyAction.AddPath]: "=",
-  [KeyAction.RemoveNode]: "-",
+  [KeyAction.RemoveNode]: "z",
   [KeyAction.ToggleDash]: ".",
   [KeyAction.AddStepIn]: "q",
   [KeyAction.AddStepOut]: "e",

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { loadOakPark, screenshotBoard, waitForLayout } from "./ready";
+import { loadOakPark, screenshotBoard, waitForLayout, enterDarkTheme } from "./ready";
 
 const EVIDENCE = ".docs/evidence/improve-26-compare";
 const CYAN_LINE = "rgb(94, 200, 232)";
@@ -41,8 +41,7 @@ test.describe("Improvement 26 — Compare without pan outline", () => {
 
     await screenshotBoard(page, `${EVIDENCE}/compare-light-1440.png`);
 
-    await page.getByRole("button", { name: "Menu" }).click();
-    await page.getByRole("menuitem", { name: "Dark mode" }).click();
+    await enterDarkTheme(page);
     await waitForLayout(page);
     await screenshotBoard(page, `${EVIDENCE}/compare-dark-1440.png`);
   });

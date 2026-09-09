@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { capturePage, loadOakPark } from "./ready";
+import { capturePage, loadOakPark, enterDarkTheme } from "./ready";
 
 const EVIDENCE = ".docs/evidence/improve-30-status-toggle-right";
 
@@ -35,8 +35,7 @@ test.describe("Improvement 30 — Right Click Delete on the right", () => {
     await expect(toggle).toHaveAttribute("aria-pressed", "true");
     await capturePage(page, `${EVIDENCE}/toggle-on-1440.png`);
 
-    await page.getByRole("button", { name: "Menu" }).click();
-    await page.getByRole("menuitem", { name: "Dark mode" }).click();
+    await enterDarkTheme(page);
     await expect(page.locator("footer.status-bar")).toBeVisible();
     const barBox = await page.locator("footer.status-bar").boundingBox();
     const toggleBox = await toggle.boundingBox();

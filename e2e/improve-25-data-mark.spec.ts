@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { capturePage, loadOakPark } from "./ready";
+import { capturePage, loadOakPark, enterDarkTheme } from "./ready";
 
 const EVIDENCE = ".docs/evidence/improve-25-data-mark";
 const MARK_LIGHT = "rgb(174, 120, 242)";
@@ -24,8 +24,7 @@ test.describe("Improvement 25 — Data mark is not teal", () => {
       .not.toBe(CORAL_LIGHT);
     await capturePage(page, `${EVIDENCE}/data-mark-light-1440.png`);
 
-    await page.getByRole("button", { name: "Menu" }).click();
-    await page.getByRole("menuitem", { name: "Dark mode" }).click();
+    await enterDarkTheme(page);
     await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
     await expect
       .poll(async () => mark.evaluate((el) => getComputedStyle(el).fill))

@@ -43,7 +43,7 @@ test.describe("slice 5 replacement and demos", () => {
 
     await viewLabel(page, "Before").click();
     await openMenu(page);
-    await expect(page.getByRole("menuitem", { name: "Present" })).toBeVisible();
+    await expect(page.getByRole("menuitem", { name: "New" })).toBeVisible();
     await expect(page.getByRole("menuitem", { name: "New" })).toBeVisible();
     await expect(page.getByRole("menuitem", { name: "Import" })).toBeVisible();
     await expect(page.getByRole("menuitem", { name: "Export" })).toBeVisible();

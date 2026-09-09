@@ -54,6 +54,7 @@ test("app mounts the shell and view switcher", () => {
   expect(host.textContent).toContain("After");
   expect(host.textContent).toContain("Compare");
   expect(host.querySelector('[aria-label="Menu"]')).not.toBeNull();
+  expect(host.querySelector('[aria-label="Present"]')).not.toBeNull();
   expect(host.querySelector("[data-unsupported-viewport]")).toBeNull();
   expect(host.textContent).not.toMatch(/will become automated/);
 });
@@ -359,4 +360,13 @@ test("Step Name uses a Type prefix and drops Name/Details captions", () => {
   expect([... (rail?.querySelectorAll(".mantine-Text-root") ?? [])].map((el) => el.textContent?.trim())).not.toContain(
     "Who",
   );
+});
+
+test("hamburger omits Present, Actors, and Dark mode; Present is a toolbar button", () => {
+  expect(host.querySelector('[aria-label="Present"]')).not.toBeNull();
+  expect(host.querySelector('[aria-label="Menu"]')).not.toBeNull();
+  expect(host.querySelector('[data-present-btn="true"] svg .present-box')).not.toBeNull();
+  expect(host.querySelector('[data-present-btn="true"] svg .present-figure')).not.toBeNull();
+  expect(host.textContent).not.toMatch(/Dark mode/);
+  expect(host.textContent).not.toMatch(/Light mode/);
 });

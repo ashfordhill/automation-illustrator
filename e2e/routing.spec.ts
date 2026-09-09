@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { DEMO_STEP, loadOakPark, screenshotBoard, waitForLayout } from "./ready";
+import { DEMO_STEP, loadOakPark, screenshotBoard, waitForLayout, enterDarkTheme } from "./ready";
 
 const EVIDENCE = ".docs/evidence/improve-01-layout";
 
@@ -195,8 +195,7 @@ test.describe("ELK layout and bundled Path routing (Improvement 01)", () => {
 
   test("dark theme routed Paths stay legible (P-09)", async ({ page }) => {
     await loadOakPark(page);
-    await page.getByRole("button", { name: "Menu" }).click();
-    await page.getByRole("menuitem", { name: "Dark mode" }).click();
+    await enterDarkTheme(page);
     await waitForLayout(page);
     await screenshotBoard(page, `${EVIDENCE}/before-dark-1440.png`);
   });

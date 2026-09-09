@@ -11,7 +11,7 @@ import { Board } from "../board/Board";
 import { KeybindsModal } from "../keyboard/KeybindsModal";
 import { useAppKeys } from "../keyboard/useAppKeys";
 import { useStore } from "../state/store";
-import { AssignmentLane, ViewMode } from "../workflow/catalogs";
+import { AssignmentLane, ColorScheme, ViewMode } from "../workflow/catalogs";
 import { CanvasHelper } from "./components/CanvasHelper";
 import { EmptyBoardCta } from "./components/EmptyBoardCta";
 import { ImportErrorModal } from "./components/ImportErrorModal";
@@ -92,6 +92,17 @@ export default function App() {
   useEffect(() => {
     document.documentElement.dataset.theme = colorScheme;
   }, [colorScheme]);
+
+  useEffect(() => {
+    const onTheme = (e: Event) => {
+      const next = (e as CustomEvent<string>).detail;
+      if (next === ColorScheme.Dark || next === ColorScheme.Light) {
+        useStore.getState().setColorScheme(next);
+      }
+    };
+    window.addEventListener("automation-pitch-theme", onTheme);
+    return () => window.removeEventListener("automation-pitch-theme", onTheme);
+  }, []);
 
   return (
     <MantineProvider theme={theme} forceColorScheme={colorScheme}>

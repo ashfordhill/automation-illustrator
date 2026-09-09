@@ -28,10 +28,11 @@ Chromium must be installed once: `npx playwright install chromium`.
 ## Using the board
 
 - **Add Step** on an empty board creates the sole root. Tile **+** adds a Step, Data, or Connect existing (in After: After-only Step or Connect existing; no Data). Empty-canvas click cancels linking and never creates a Node.
-- **−**, Delete, and inspector **Remove** open the same Node-removal picker. Paths are not deleted; the workflow reconnects when a Node is removed. **Backspace** is Undo.
-- **Before / After / Both** sits in the top bar. Shared Step/Data/Path fields edit the same base document from either lane. Who is per-lane. Both is read-only comparison.
-- In **After**, the merge dock merges connected Before-origin Steps into one giant Step (default Robot) and Unmerge restores the whole group. After-only Steps exist only in After and are omitted from the automation score.
-- **Menu**: Present, New, Import, Export, Actors, Keybinds, Light/Dark, then Demo (Oak Park Invoice, Robot Mailroom). New / Demo / Import share Save copy / Discard / Cancel. Export and Save copy download the current board as YAML. Import accepts YAML or JSON.
+- **− / Z**, Delete, and inspector **Remove** open the same Node-removal picker. Paths are not deleted; the workflow reconnects when a Node is removed. **Backspace** is Undo. **Z** is the default Remove Node key (**Ctrl+Z** remains Undo).
+- **Before / After / Compare** sits in the top bar. Shared Step/Data/Path fields edit the same base document from either lane. Who is per-lane. Compare is read-only comparison.
+- In **After**, After-only Steps exist only in After. Merge stays withdrawn.
+- **Menu** (top-left hamburger): New, Import, Export, Keybinds, then Demo (Oak Park Invoice, Robot Mailroom). New / Demo / Import share Save copy / Discard / Cancel. Export and Save copy download the current board as YAML. Import accepts YAML or JSON.
+- **Present** is a top-right icon (person in front of a light-blue slide). It hides the top bar, inspector, and status bar. Space toggles Before/After. Escape leaves Present.
 - **Sound** starts off. The toggle after Undo plays original Web Audio cues (create, remove, reject, merge, tick). Preference persists in this browser.
 - Invalid saved JSON is not overwritten. Download recovery copy or Start fresh. If the browser cannot write storage, editing continues in memory with a **Not saved** chip.
 

@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { expectAxeClean } from "./axe";
-import { DEMO_STEP, capturePage, loadOakPark, waitForLayout } from "./ready";
+import { DEMO_STEP, capturePage, loadOakPark, waitForLayout, enterPresent, enterDarkTheme } from "./ready";
 
 const EVIDENCE = ".docs/evidence/improve-31-present-nav";
 
@@ -12,8 +12,7 @@ test.describe("Improvement 31 — Present hides the nav bar", () => {
     await page.getByText(DEMO_STEP).first().click();
     await expect(page.locator("aside").getByRole("button", { name: "Type Read" })).toBeVisible();
 
-    await page.getByRole("button", { name: "Menu" }).click();
-    await page.getByRole("menuitem", { name: "Present" }).click();
+    await enterPresent(page);
 
     await expect(page.getByRole("button", { name: "Menu" })).toHaveCount(0);
     await expect(page.getByRole("radio", { name: "Before", exact: true })).toHaveCount(0);
@@ -32,6 +31,7 @@ test.describe("Improvement 31 — Present hides the nav bar", () => {
 
     await page.keyboard.press("Escape");
     await expect(page.getByRole("button", { name: "Menu" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Present" })).toBeVisible();
     await expect(page.locator("footer.status-bar")).toBeVisible();
     await expect(page.getByRole("radio", { name: "Before", exact: true })).toHaveAttribute(
       "aria-checked",
@@ -42,10 +42,8 @@ test.describe("Improvement 31 — Present hides the nav bar", () => {
 
   test("Present dark theme has no chrome", async ({ page }) => {
     await loadOakPark(page);
-    await page.getByRole("button", { name: "Menu" }).click();
-    await page.getByRole("menuitem", { name: "Dark mode" }).click();
-    await page.getByRole("button", { name: "Menu" }).click();
-    await page.getByRole("menuitem", { name: "Present" }).click();
+    await enterDarkTheme(page);
+    await enterPresent(page);
     await expect(page.getByRole("button", { name: "Menu" })).toHaveCount(0);
     await expect(page.locator("footer.status-bar")).toHaveCount(0);
     await capturePage(page, `${EVIDENCE}/present-dark-1440.png`);
@@ -57,8 +55,7 @@ test.describe("Improvement 31 Present at 1024", () => {
 
   test("Present fills the supported min viewport", async ({ page }) => {
     await loadOakPark(page);
-    await page.getByRole("button", { name: "Menu" }).click();
-    await page.getByRole("menuitem", { name: "Present" }).click();
+    await enterPresent(page);
     await expect(page.getByRole("button", { name: "Menu" })).toHaveCount(0);
     await expect(page.locator("footer.status-bar")).toHaveCount(0);
     await capturePage(page, `${EVIDENCE}/present-1024.png`);

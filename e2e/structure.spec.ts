@@ -41,7 +41,8 @@ test.describe("slice 2 structure evidence", () => {
     await viewLabel(page, "Before").click();
     await page.getByRole("button", { name: "Menu" }).focus();
     await page.keyboard.press("Enter");
-    await expect(page.getByRole("menuitem", { name: "Present" })).toBeVisible();
+    await expect(page.getByRole("menuitem", { name: "New" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Present" })).toBeVisible();
     await capturePage(page, `${EVIDENCE}/hamburger-keyboard-1440.png`);
   });
 });

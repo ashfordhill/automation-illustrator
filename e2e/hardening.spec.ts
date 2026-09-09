@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { expectAxeClean } from "./axe";
-import { DEMO_STEP, loadOakPark, screenshotBoard, waitForLayout, capturePage } from "./ready";
+import { DEMO_STEP, loadOakPark, screenshotBoard, waitForLayout, capturePage, enterPresent, enterDarkTheme } from "./ready";
 
 const EVIDENCE = ".docs/evidence/12-release";
 const MAIL_STEP = "Read incoming mail";
@@ -93,8 +93,7 @@ test.describe("slice 12 persistence, keymap, and reload", () => {
     await expect(page.getByRole("button", { name: "Sound off" })).toBeVisible();
     await page.getByRole("button", { name: "Sound off" }).click();
     await expect(page.getByRole("button", { name: "Sound on" })).toBeVisible();
-    await openMenu(page);
-    await page.getByRole("menuitem", { name: "Dark mode" }).click();
+    await enterDarkTheme(page);
     await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
     await page.reload();
     await expect(page.getByText(DEMO_STEP).first()).toBeVisible({ timeout: 15_000 });
@@ -181,17 +180,14 @@ test.describe("slice 12 surfaces, dialogs, and final screenshots", () => {
     await screenshotBoard(page, `${EVIDENCE}/both-light-1440.png`);
 
     await viewRadio(page, "Before").click();
+    await expect(page.getByRole("button", { name: "Present" })).toBeVisible();
     await openMenu(page);
-    await expect(page.getByRole("menuitem", { name: "Present" })).toBeVisible();
     const items = await page.getByRole("menuitem").allTextContents();
     expect(items.map((t) => t.trim())).toEqual([
-      "Present",
       "New",
       "Import",
       "Export",
-      "Actors",
       "Keybinds",
-      "Dark mode",
       "Oak Park Invoice",
       "Robot Mailroom",
     ]);
@@ -199,8 +195,7 @@ test.describe("slice 12 surfaces, dialogs, and final screenshots", () => {
     await capturePage(page, `${EVIDENCE}/hamburger-1440.png`);
     await page.keyboard.press("Escape");
 
-    await openMenu(page);
-    await page.getByRole("menuitem", { name: "Dark mode" }).click();
+    await enterDarkTheme(page);
     await waitForLayout(page);
     await screenshotBoard(page, `${EVIDENCE}/before-dark-1440.png`);
     await viewRadio(page, "After").click();
@@ -214,8 +209,7 @@ test.describe("slice 12 surfaces, dialogs, and final screenshots", () => {
   test("Present, replace gate, and empty New", async ({ page }) => {
     await loadOakPark(page);
     await page.getByText(DEMO_STEP).first().click();
-    await openMenu(page);
-    await page.getByRole("menuitem", { name: "Present" }).click();
+    await enterPresent(page);
     await expect(page.locator("aside")).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Menu" })).toHaveCount(0);
     await expect(page.getByRole("region", { name: "Merge and Unmerge" })).toHaveCount(0);
@@ -240,8 +234,7 @@ test.describe("slice 12 surfaces, dialogs, and final screenshots", () => {
     await expect(page.getByRole("region", { name: "Merge and Unmerge" })).toHaveCount(0);
     await expect(page.getByText(RECEIPT).first()).toBeVisible();
     await screenshotBoard(page, `${EVIDENCE}/mailroom-after-1440.png`);
-    await openMenu(page);
-    await page.getByRole("menuitem", { name: "Dark mode" }).click();
+    await enterDarkTheme(page);
     await waitForLayout(page);
     await screenshotBoard(page, `${EVIDENCE}/mailroom-after-dark-1440.png`);
   });

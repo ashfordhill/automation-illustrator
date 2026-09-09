@@ -58,3 +58,8 @@ test("prettyKey shows None for an unbound action", () => {
   expect(prettyKey("")).toBe("None");
   expect(prettyKey("q")).toBe("Q");
 });
+
+test("default Remove Node is Z, not minus", () => {
+  expect(DEFAULT_KEYMAP[KeyAction.RemoveNode]).toBe("z");
+  expect(prettyKey(DEFAULT_KEYMAP[KeyAction.RemoveNode])).toBe("Z");
+});

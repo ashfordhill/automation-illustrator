@@ -154,7 +154,7 @@ export function hydratePersistedWorkflow(
   };
 }
 
-/** Last chosen light/dark; Toolbar hamburger toggles this. */
+/** Last chosen light/dark. There is no hamburger toggle; tests may still set this. */
 export function loadTheme(): ColorScheme {
   try {
     const v = localStorage.getItem(LS_THEME);

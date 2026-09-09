@@ -63,7 +63,8 @@ test.describe("baseline smoke", () => {
     await page.getByRole("button", { name: "Menu" }).focus();
     await expect(page.getByRole("button", { name: "Menu" })).toBeFocused();
     await page.keyboard.press("Enter");
-    await expect(page.getByRole("menuitem", { name: "Present" })).toBeVisible();
+    await expect(page.getByRole("menuitem", { name: "New" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Present" })).toBeVisible();
     await capturePage(page, ".docs/evidence/01-harness/hamburger-keyboard-1440.png");
   });
 

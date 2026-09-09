@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { DEMO_STEP, loadOakPark, screenshotBoard, waitForLayout, laneZoom, waitForZoomIdle } from "./ready";
+import { DEMO_STEP, loadOakPark, screenshotBoard, waitForLayout, laneZoom, waitForZoomIdle, enterDarkTheme } from "./ready";
 
 const EVIDENCE = ".docs/evidence/10-projection";
 const MAIL_STEP = "Read incoming mail";
@@ -40,8 +40,7 @@ test.describe("slice 10 After projection and comparison", () => {
     await expect(page.getByText("Scan letter to PDF").first()).toBeVisible();
     await screenshotBoard(page, `${EVIDENCE}/after-light-1440.png`);
 
-    await page.getByRole("button", { name: "Menu" }).click();
-    await page.getByRole("menuitem", { name: "Dark mode" }).click();
+    await enterDarkTheme(page);
     await waitForLayout(page);
     await screenshotBoard(page, `${EVIDENCE}/after-dark-1440.png`);
   });

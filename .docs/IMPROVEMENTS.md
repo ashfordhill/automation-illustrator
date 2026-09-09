@@ -959,3 +959,25 @@ Append to `## Amendments` in `.docs/GOAL.md`: NA-05, NA-10, NA-07 as dated 2026-
 Commit: `feat(improve-46): cluster Type Who and Scan`.  
 Evidence: `.docs/evidence/improve-46-inspector-cluster/`.
 
+---
+
+# Improvement 48 — Present icon, menu left, Z remove, drop Dark and Actors
+
+Approved 2026-09-09. User request with presenter.svg / presenter-edited.svg.
+
+## Locked decisions
+
+- Default Remove Node key is **Z** (Delete still removes; Ctrl+Z stays Undo). Saved maps that already bound Remove Node keep that bind.
+- Hamburger drops **Present**, **Actors**, and **Light/Dark**. Remaining items: New, Import, Export, Keybinds, Demo chooser.
+- Hamburger is the **leftmost** top-bar control (then Undo, sound).
+- **Present** is a top-right icon: Streamline presenter (CC BY 4.0) as a white figure standing in front of a light-blue rounded rect so the figure fill covers the box stroke. No Tabler icon for this control.
+- Present behavior is unchanged (full-bleed board; Space toggles; Escape exits). Manage actors stays in the inspector. Dark tokens remain for tests.
+- No new runtime dependency.
+
+## Contract
+
+Append to `## Amendments` in `.docs/GOAL.md`: P-05, P-07, P-08, P-09, P-10, NA-06, SH-05, SH-14, WG-08 as dated 2026-09-09.
+
+Commit: `feat(improve-48): present icon menu left and Z remove`.  
+Evidence: `.docs/evidence/improve-48-chrome/`.
+

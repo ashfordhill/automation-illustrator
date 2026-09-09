@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
-import { capturePage, loadOakPark, waitForLayout } from "./ready";
+import { capturePage, loadOakPark, waitForLayout, enterPresent, enterDarkTheme } from "./ready";
 
 const EVIDENCE = ".docs/evidence/improve-21-status-bar";
 
@@ -47,19 +47,17 @@ test.describe("Improvement 21 — bottom status bar", () => {
     ).toEqual([]);
   });
 
-  test("hamburger Actors opens Manage actors; Present hides it", async ({
+  test("inspector Manage actors opens; Present hides the inspector", async ({
     page,
   }) => {
     await loadOakPark(page);
-    await page.getByRole("button", { name: "Menu" }).click();
-    await page.getByRole("menuitem", { name: "Actors", exact: true }).click();
+    await page.getByRole("button", { name: "Manage actors" }).click();
     await expect(page.getByRole("heading", { name: "Manage actors" })).toBeVisible();
     await capturePage(page, `${EVIDENCE}/actors-1440.png`);
 
-    await page.getByRole("button", { name: "Menu" }).click();
-    await page.getByRole("menuitem", { name: "Present" }).click();
+    await enterPresent(page);
     await expect(page.getByRole("button", { name: "Menu" })).toHaveCount(0);
-    await expect(page.getByRole("menuitem", { name: "Actors", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "Manage actors" })).toHaveCount(0);
     await page.keyboard.press("Escape");
   });
 
@@ -82,8 +80,7 @@ test.describe("Improvement 21 — bottom status bar", () => {
 
   test("dark theme status bar stays chunky chrome", async ({ page }) => {
     await loadOakPark(page);
-    await page.getByRole("button", { name: "Menu" }).click();
-    await page.getByRole("menuitem", { name: "Dark mode" }).click();
+    await enterDarkTheme(page);
     await expect(page.locator("footer.status-bar")).toBeVisible();
     await capturePage(page, `${EVIDENCE}/dark-1440.png`);
   });

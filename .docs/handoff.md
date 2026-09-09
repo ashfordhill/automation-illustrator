@@ -2347,3 +2347,34 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(improve-43): uniform hint keys and longer tick`
 
+## Improvement 48 — Present icon, menu left, Z remove — 2026-09-09
+
+- Starting commit: `30ee4018a59bf51f47cd21df1f044394b5f1db56` (`feat(improve-43): uniform hint keys and longer tick`)
+- Working tree at start: not clean. HEAD matched improve-43 correction 2. Concurrent Improvement 47 insert-on-bundle WIP (store, Board, insertPreview, pathHit, commands/graph) plus leftover untracked elk plans and chrome GIFs. Those 47 files were left unstaged.
+- GOAL clauses addressed: P-05, P-07, P-08, P-09, P-10, NA-06, SH-05, SH-14, WG-08 (amendments dated 2026-09-09)
+- Library research and decisions: no new runtime dependency. Present figure is Streamline “class-lesson” (CC BY 4.0) from the user-provided SVG, white fill + ink stroke, standing in front of a light-blue rounded slide (`--present-box` `#8ed6f0`). A white knockout stroke on the stick leg covers the box stroke (no Excalidraw scribbles). Dark remains in tokens/`setColorScheme`; tests switch with `window` event `automation-pitch-theme`. Manage actors stays in the inspector.
+- Files changed:
+  - Chrome: `src/app/components/PresentButton.tsx`, `src/app/components/Toolbar.tsx`, `src/app/styles/tokens.css`, `src/app/App.tsx`, `src/state/persistence.ts`
+  - Keys: `src/keyboard/bindings.ts`, `src/keyboard/bindings.test.ts`
+  - Tests: `src/app/App.test.tsx`, `e2e/ready.ts`, `e2e/improve-48-chrome.spec.ts`, plus Present/Dark/menu updates in shell/smoke/structure/hardening/replace/routing/projection and improve-06/20/21/25/26/27/28/30/31/33
+  - Docs: `.docs/GOAL.md`, `.docs/IMPROVEMENTS.md`, `.docs/VISUAL_IMPROVEMENTS.md`, README.md, this handoff entry
+  - Visual log: `.docs/visual-improvements/2026-09-09-presenter.svg`, `2026-09-09-presenter-edited.svg` (and the user originals)
+  - Evidence: `.docs/evidence/improve-48-chrome/`
+- Behavior implemented:
+  - Default Remove Node key is **Z** (Delete still removes; Ctrl+Z stays Undo). Saved maps that already bound Remove keep that bind.
+  - Hamburger is the leftmost top-bar control. Items: New, Import, Export, Keybinds, Demo chooser. No Present, Actors, or Light/Dark.
+  - Present is a top-right icon (white presenter in front of a light-blue slide). Full-bleed Present, Space, and Escape are unchanged.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning). Node 24.
+  - `npm run test:unit` — 41 files, 306 tests pass.
+  - `npm run test:e2e` — full suite minus Improvement 47 on port 4191 (4177 held by concurrent 47): 192 passed, 1 failed (`improve-08-plus-chrome` empty-release `<250ms` timing under load). Re-run of that spec plus `improve-48-chrome` (5) passed. Chromium via `LD_LIBRARY_PATH` `/home/ash/.local/pw-libs/usr/lib/x86_64-linux-gnu`.
+- Evidence:
+  - `.docs/evidence/improve-48-chrome/chrome-1440.png` — hamburger leftmost, Present top-right (white figure, light-blue slide) (1440×900)
+  - `.docs/evidence/improve-48-chrome/hamburger-1440.png` — menu: New, Import, Export, Keybinds, demos; no Present/Actors/Dark (1440×900)
+  - `.docs/evidence/improve-48-chrome/present-1440.png` — full-bleed Present, chrome gone (1440×900)
+  - `.docs/evidence/improve-48-chrome/chrome-1024.png` — same chrome at 1024×768
+- Earlier-slice defects fixed: none. The 08 timing miss was load flake, not a chrome regression.
+- Known limitations / follow-ups: Dark has no UI toggle (tests only). Concurrent Improvement 47 code and its spec/amendment/visual line were left unstaged. Historical evidence recaptures from this e2e pass were restored to HEAD.
+- Status: COMPLETE
+- Commit: `feat(improve-48): present icon menu left and Z remove`
+

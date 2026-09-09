@@ -39,6 +39,9 @@
   --inspector-cluster: calc(4 * var(--inspector-who-key) + 3 * var(--inspector-who-gap));
   --tile-tab-size: 40px;
   --tile-tab-peek: 18px;
+  --present-box: #8ed6f0;
+  --present-box-hover: #b3e7f7;
+  --present-figure: #ffffff;
   --mantine-color-dimmed: var(--ink-soft);
   /* Windows has no native grab cursor; Chrome’s bitmap is 1x and looks soft next to move/pointer.
      White fill + black outline matches the OS pointer the delete X already uses. */
@@ -76,6 +79,9 @@
   --actor-empty: #2a4554;
   --banner: #1e3f4e;
   --mantine-color-dimmed: var(--ink-soft);
+  --present-box: #4aa8c8;
+  --present-box-hover: #62bdd9;
+  --present-figure: #ffffff;
 }
 
 [data-mantine-color-scheme="light"],
@@ -211,6 +217,11 @@ body.is-tile-dragging * {
   color: var(--chrome-ink);
   --mantine-color-text: var(--chrome-ink);
   --mantine-color-dimmed: var(--chrome-ink-soft);
+  overflow: visible;
+}
+
+.mantine-AppShell-header.chrome-bar {
+  overflow: visible !important;
 }
 
 .chrome-bar .mantine-ActionIcon-root {
@@ -232,6 +243,59 @@ body.is-tile-dragging * {
 .chrome-bar .mantine-ActionIcon-root:focus-visible {
   outline: 3px solid var(--yellow);
   outline-offset: 2px;
+}
+
+.present-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 46px;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 12px;
+  filter: drop-shadow(0 3px 0 var(--btn-shadow));
+}
+
+.present-btn:focus-visible {
+  outline: 3px solid var(--yellow);
+  outline-offset: 2px;
+}
+
+.present-box {
+  fill: var(--present-box);
+  stroke: var(--ink);
+  stroke-width: 2.75;
+}
+
+.present-btn:hover .present-box,
+.present-btn:focus-visible .present-box {
+  fill: var(--present-box-hover);
+}
+
+.present-figure {
+  fill: var(--present-figure);
+  stroke: var(--ink);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.present-leg-knockout {
+  fill: none;
+  stroke: var(--present-figure);
+  stroke-width: 8;
+  stroke-linecap: round;
+}
+
+.present-leg {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 3;
+  stroke-linecap: round;
 }
 
 .status-bar {

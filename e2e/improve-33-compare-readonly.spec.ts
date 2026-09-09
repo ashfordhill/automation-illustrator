@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { capturePage, loadOakPark, waitForLayout } from "./ready";
+import { capturePage, loadOakPark, waitForLayout, enterDarkTheme } from "./ready";
 
 const EVIDENCE = ".docs/evidence/improve-33-compare-readonly";
 const DEMO_STEP = "Read invoice.pdf";
@@ -36,8 +36,7 @@ test.describe("Improvement 33 — Compare greys Who and fields", () => {
 
     await capturePage(page, `${EVIDENCE}/compare-step-1440.png`);
 
-    await page.getByRole("button", { name: "Menu" }).click();
-    await page.getByRole("menuitem", { name: "Dark mode" }).click();
+    await enterDarkTheme(page);
     await waitForLayout(page);
     await capturePage(page, `${EVIDENCE}/compare-step-dark-1440.png`);
   });

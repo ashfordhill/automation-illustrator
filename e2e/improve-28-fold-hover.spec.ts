@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { capturePage, loadOakPark } from "./ready";
+import { capturePage, loadOakPark, enterDarkTheme } from "./ready";
 
 const EVIDENCE = ".docs/evidence/improve-28-fold-hover";
 const STEEL_LIGHT = "rgb(63, 95, 113)";
@@ -43,8 +43,7 @@ test.describe("Improvement 28 correction — inspector fold hover", () => {
 
   test("fold hover in dark stays steel, not cream yellow or blue", async ({ page }) => {
     await loadOakPark(page);
-    await page.getByRole("button", { name: "Menu" }).click();
-    await page.getByRole("menuitem", { name: "Dark mode" }).click();
+    await enterDarkTheme(page);
     await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
     const fold = page.getByRole("button", { name: "Hide inspector" });
     await expectSteelHover(fold, STEEL_DARK, CREAM_DARK, YELLOW_DARK);

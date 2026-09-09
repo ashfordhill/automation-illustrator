@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { expectAxeClean } from "./axe";
-import { DEMO_STEP, capturePage, loadOakPark, waitForLayout } from "./ready";
+import { DEMO_STEP, capturePage, loadOakPark, waitForLayout, enterPresent, enterDarkTheme } from "./ready";
 
 const EVIDENCE = ".docs/evidence/improve-20-inspector-fold";
 
@@ -41,8 +41,7 @@ test.describe("Improvement 20 — inspector fold", () => {
     await page.getByRole("button", { name: "Hide inspector" }).click();
     await expect(page.getByRole("button", { name: "Show inspector" })).toBeVisible();
 
-    await page.getByRole("button", { name: "Menu" }).click();
-    await page.getByRole("menuitem", { name: "Present" }).click();
+    await enterPresent(page);
     await expect(page.locator("aside")).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Show inspector" })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Menu" })).toHaveCount(0);
@@ -61,8 +60,7 @@ test.describe("Improvement 20 — inspector fold", () => {
     await expect(page.getByRole("button", { name: "Show inspector" })).toBeVisible();
     await expectAxeClean(page);
 
-    await page.getByRole("button", { name: "Menu" }).click();
-    await page.getByRole("menuitem", { name: "Dark mode" }).click();
+    await enterDarkTheme(page);
     await expect(page.getByRole("button", { name: "Show inspector" })).toBeVisible();
     await capturePage(page, `${EVIDENCE}/inspector-collapsed-dark-1440.png`);
   });
