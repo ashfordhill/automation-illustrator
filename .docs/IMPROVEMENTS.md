@@ -703,3 +703,26 @@ Append to `## Amendments` in `.docs/GOAL.md`: WG-01, NA-04 as dated 2026-09-09.
 Commit: `feat(improve-35): default LLM Script and Agent robots`.  
 Evidence: `.docs/evidence/improve-35-default-robots/`.
 
+---
+
+# Improvement 36 — keep branch rows when forking
+
+Approved 2026-09-09. Left `+` / `Q` on a Tile that already has an incoming Path is a **fork** (fan-in): Path `new → this`, existing Paths stay. Right `+` / `E` is the same on the outgoing side. Drag-onto-Path still inserts; it does not fork.
+
+Today ELK re-solves the whole lane (`NETWORK_SIMPLEX` + `LAYER_SWEEP`). A new predecessor is appended last in the model, so it sits at the bottom of the leftmost column. Crossing-minimization then lines the old top branch up with that new source and the other branch moves up. Same-row dock is skipped because `clearDockPosition` starts at port index 1 and walks down, and spawn uses saved creation hints instead of the displayed layout.
+
+## Locked decisions
+
+- Graph commands stay as they are: `+` on a side that already has a Path is a fork, not an insert. No new runtime dependency.
+- First layout of a lane is unchanged (document order, `NETWORK_SIMPLEX`).
+- After a derived layout exists, the next ELK pass orders Nodes and Paths by those displayed y values (new Tiles use their dock hint). `forceNodeModelOrder` and `LONGEST_PATH_SOURCE` keep that order so a short branch is not pulled into a new column.
+- Spawn docks on the **same row** as the source, then walks further left/right if that slot overlaps; only then stacks down. Dock uses displayed positions, not stale document hints.
+- Hints are not saved and are not undo entries.
+
+## Contract
+
+Append to `## Amendments` in `.docs/GOAL.md`: CX-05 as dated 2026-09-09.
+
+Commit: `feat(improve-36): keep branch rows when forking`.  
+Evidence: `.docs/evidence/improve-36-branch-rows/`.
+

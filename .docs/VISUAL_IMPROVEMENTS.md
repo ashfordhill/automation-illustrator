@@ -185,3 +185,10 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 - Issue: Present hides the inspector and tile chrome but leaves the top bar (and status bar) on screen.
 - Resolution: Shipped in `feat(improve-31): hide the nav bar in Present` — full-bleed board; Escape exits.
 - Attachments: n/a
+
+## 2026-09-09 — branch rows flip when a branch grows
+
+- Issue: Left `+` / `Q` on Roy (top Search) created a parent fork and swapped that whole row with Alice’s bottom branch.
+- Resolution: Shipped in `feat(improve-36): keep branch rows when forking`. Left/right `+` still forks; displayed rows stay put.
+- Attachments:
+  ![branch row flip](.docs/visual-improvements/2026-09-09-branch-row-flip.gif)

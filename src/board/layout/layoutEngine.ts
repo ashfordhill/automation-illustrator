@@ -12,6 +12,7 @@
 import type { ElkNode } from "elkjs/lib/elk-api";
 import type { LaneProjection } from "../../state/projection";
 import type { AssignmentLane } from "../../workflow/catalogs";
+import type { PositionMap } from "../../workflow/types";
 import { buildElkGraph, laneGraphKey, type TileSizes } from "./elkGraph";
 import { emptyLayout, toLaneLayout } from "./elkLayout";
 import type { LabelBox } from "./labelBox";
@@ -30,6 +31,7 @@ export type LayoutEngine = {
     projection: LaneProjection,
     boxes: Record<string, LabelBox>,
     sizes?: TileSizes,
+    previous?: PositionMap,
   ): Promise<LaneLayout>;
 };
 
@@ -95,7 +97,7 @@ export function createLayoutEngine(
   return {
     get: (key) => cache.get(key),
     keyFor: (projection, boxes, sizes) => laneGraphKey(projection, boxes, sizes),
-    request(lane, projection, boxes, sizes) {
+    request(lane, projection, boxes, sizes, previous) {
       const key = laneGraphKey(projection, boxes, sizes);
       const hit = cache.get(key);
       if (hit) return Promise.resolve(hit);
@@ -115,7 +117,7 @@ export function createLayoutEngine(
         current.reject(new LayoutSuperseded(current.key));
       }
 
-      const graph = buildElkGraph(projection, boxes, sizes);
+      const graph = buildElkGraph(projection, boxes, sizes, previous);
       let resolve!: (layout: LaneLayout) => void;
       let reject!: (error: unknown) => void;
       const promise = new Promise<LaneLayout>((res, rej) => {

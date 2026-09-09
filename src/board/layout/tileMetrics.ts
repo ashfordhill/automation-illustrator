@@ -3,7 +3,7 @@
  * Board.tsx uses the sizes; store.ts uses snap/vacant/dock when adding or linking tiles.
  */
 import { WorkflowNodeKind, type WorkflowNodeKind as WorkflowNodeKindT } from "../../workflow/catalogs";
-import type { Point } from "../../workflow/types";
+import type { Point, PositionMap } from "../../workflow/types";
 
 export const STEP_W = 256;
 export const STEP_H = 160;
@@ -19,7 +19,7 @@ export const TILE_GAP = 64;
 export const BRANCH_GAP = 32;
 export const GRID = 32;
 
-export type Placed = { position: Point; type: WorkflowNodeKindT };
+export type Placed = { position: Point; type: WorkflowNodeKindT; id?: string };
 
 /** Snap a coordinate onto the 32px board grid. */
 export function snapToGrid(n: number): number {
@@ -68,9 +68,9 @@ function dockStride(sourceType: WorkflowNodeKindT, targetType: WorkflowNodeKindT
 }
 
 /**
- * Where a newly linked tile should sit: to the right of `source`, stacked by port index.
- * Stride uses the taller of source/target so a Step never overlaps another Step
- * when both hang off a shorter Data tile.
+ * Where a newly linked tile should sit: to the right (or left) of `source`.
+ * Same row first (port 0). Stride uses the taller of source/target so a Step
+ * never overlaps another Step when both hang off a shorter Data tile.
  */
 export function dockPosition(
   source: Placed,
@@ -92,8 +92,20 @@ export function dockPosition(
 }
 
 /**
- * Same as dockPosition, then walk down the column until the slot is empty.
- * Used by store.spawnBranch when + creates a connected Node.
+ * Overlay displayed (ELK) positions onto tiles for docking. Saved document
+ * positions stay creation hints until a layout exists.
+ */
+export function withDisplayedPositions(nodes: Placed[], positions?: PositionMap): Placed[] {
+  if (!positions) return nodes;
+  return nodes.map((n) => {
+    const next = n.id ? positions[n.id] : undefined;
+    return next ? { ...n, position: next } : n;
+  });
+}
+
+/**
+ * Same row as `source`, walking further along the dock axis if that slot is
+ * taken; then stack down from `portIndex`. Used by store.spawnBranch.
  */
 export function clearDockPosition(
   source: Placed,
@@ -102,7 +114,21 @@ export function clearDockPosition(
   others: Placed[],
   side: "out" | "in" = "out",
 ): Point {
-  for (let i = portIndex; i < portIndex + 40; i++) {
+  const src = nodeSize(source.type);
+  const tgt = nodeSize(targetType);
+  const sameY = snapToGrid(source.position.y + src.h / 2 - tgt.h / 2);
+  const strideX = tgt.w + TILE_GAP;
+  const baseX =
+    side === "in"
+      ? snapToGrid(source.position.x - TILE_GAP - tgt.w)
+      : snapToGrid(source.position.x + src.w + TILE_GAP);
+  const dir = side === "in" ? -1 : 1;
+  for (let col = 0; col < 40; col++) {
+    const pos = { x: snapToGrid(baseX + dir * col * strideX), y: sameY };
+    if (!overlapsAny(pos, targetType, others)) return pos;
+  }
+  const start = Math.max(1, portIndex);
+  for (let i = start; i < start + 40; i++) {
     const pos = dockPosition(source, targetType, i, side);
     if (!overlapsAny(pos, targetType, others)) return pos;
   }

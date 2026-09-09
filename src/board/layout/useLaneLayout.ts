@@ -1,9 +1,10 @@
 /**
- * Ask the layout engine for one lane's ELK layout (Improvement 01).
+ * Ask the layout engine for one lane's ELK layout (Improvement 01 / 36).
  * A cache hit renders synchronously (no flash on view switches). Otherwise the
  * previous layout stays on screen with phase "updating", or "initial" when
  * nothing has been laid out yet. Publishes displayed positions to the store so
- * WG-09 / WG-11 follow what the user sees.
+ * WG-09 / WG-11 follow what the user sees. The previous layout is also passed
+ * into ELK as row-stability hints when the graph changes.
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { LaneProjection } from "../../state/projection";
@@ -38,6 +39,11 @@ export function useLaneLayout(
   const inputs = useRef({ projection, boxes, sizes });
   inputs.current = { projection, boxes, sizes };
 
+  const layout = cached ?? state.layout;
+  const shownRef = useRef<LaneLayout | null>(layout);
+  shownRef.current = layout;
+  const phase: LayoutPhase = !layout ? "initial" : layout.key === key ? "ready" : "updating";
+
   useEffect(() => {
     if (cached) {
       setState((s) => (s.layout === cached && !s.error ? s : { layout: cached, error: false }));
@@ -45,7 +51,7 @@ export function useLaneLayout(
     }
     let live = true;
     const { projection: p, boxes: b, sizes: z } = inputs.current;
-    engine.request(lane, p, b, z).then(
+    engine.request(lane, p, b, z, shownRef.current?.positions).then(
       (layout) => {
         if (live) setState({ layout, error: false });
       },
@@ -60,9 +66,6 @@ export function useLaneLayout(
     // `cached` is derived from `key`; inputs are read through the ref.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [engine, lane, key]);
-
-  const layout = cached ?? state.layout;
-  const phase: LayoutPhase = !layout ? "initial" : layout.key === key ? "ready" : "updating";
 
   useEffect(() => {
     if (layout) useStore.getState().setLaneLayoutPositions(lane, layout.positions);

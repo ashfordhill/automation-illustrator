@@ -1,10 +1,12 @@
 /**
- * Build the ELK input graph for one lane projection (Improvement 01).
- * Framework-free. Model order is the projection's array order; nothing is sorted here.
+ * Build the ELK input graph for one lane projection (Improvement 01 / 36).
+ * First layout uses projection array order. When a previous derived layout is
+ * supplied, Nodes and Paths are ordered by those y values so forks keep their rows.
  */
 import type { ElkExtendedEdge, ElkNode } from "elkjs/lib/elk-api";
 import type { LaneProjection } from "../../state/projection";
 import { WorkflowNodeKind } from "../../workflow/catalogs";
+import type { Point, PositionMap } from "../../workflow/types";
 import type { LabelBox } from "./labelBox";
 import { BRANCH_GAP, GRID, TILE_GAP, nodeSize } from "./tileMetrics";
 
@@ -38,6 +40,15 @@ export const ROOT_OPTIONS: Record<string, string> = {
   "elk.aspectRatio": "1.6",
 };
 
+/**
+ * After the first layout: keep source-rank columns and the y-order we just
+ * seeded from displayed positions (Improvement 36).
+ */
+export const STABILITY_OPTIONS: Record<string, string> = {
+  "elk.layered.layering.strategy": "LONGEST_PATH_SOURCE",
+  "elk.layered.crossingMinimization.forceNodeModelOrder": "true",
+};
+
 export const NODE_OPTIONS: Record<string, string> = {
   "elk.portConstraints": "FIXED_POS",
 };
@@ -54,6 +65,7 @@ export const LABEL_OPTIONS: Record<string, string> = {
 export function usedOptionIds(): string[] {
   return [
     ...Object.keys(ROOT_OPTIONS),
+    ...Object.keys(STABILITY_OPTIONS),
     ...Object.keys(NODE_OPTIONS),
     ...Object.keys(PORT_OPTIONS_IN),
     ...Object.keys(PORT_OPTIONS_OUT),
@@ -80,6 +92,22 @@ function sizeOf(projection: LaneProjection, id: string, sizes: TileSizes | undef
   return n ? nodeSize(n.type) : nodeSize(WorkflowNodeKind.Step);
 }
 
+function hintOf(projection: LaneProjection, id: string, previous: PositionMap | undefined): Point {
+  if (previous?.[id]) return previous[id]!;
+  const n = projection.nodes.find((x) => x.id === id);
+  return n?.position ?? { x: 0, y: 0 };
+}
+
+function byHint(a: Point & { id: string }, b: Point & { id: string }): number {
+  if (a.y !== b.y) return a.y - b.y;
+  if (a.x !== b.x) return a.x - b.x;
+  return a.id.localeCompare(b.id);
+}
+
+function hasPreviousHints(projection: LaneProjection, previous: PositionMap | undefined): boolean {
+  return !!previous && projection.nodes.some((n) => previous[n.id]);
+}
+
 /**
  * Flat root graph: one child per projected Node with fixed WEST/EAST ports at
  * mid-height (matching the React Flow handles), one edge per projected Path,
@@ -89,8 +117,28 @@ export function buildElkGraph(
   projection: LaneProjection,
   boxes: Record<string, LabelBox>,
   sizes?: TileSizes,
+  previous?: PositionMap,
 ): ElkNode {
-  const children: ElkNode[] = projection.nodes.map((n) => {
+  const stable = hasPreviousHints(projection, previous);
+  const nodes = stable
+    ? [...projection.nodes].sort((a, b) =>
+        byHint({ id: a.id, ...hintOf(projection, a.id, previous) }, { id: b.id, ...hintOf(projection, b.id, previous) }),
+      )
+    : projection.nodes;
+  const edgesIn = stable
+    ? [...projection.edges].sort((a, b) => {
+        const ta = { id: a.target, ...hintOf(projection, a.target, previous) };
+        const tb = { id: b.target, ...hintOf(projection, b.target, previous) };
+        const byTarget = byHint(ta, tb);
+        if (byTarget) return byTarget;
+        return byHint(
+          { id: a.source, ...hintOf(projection, a.source, previous) },
+          { id: b.source, ...hintOf(projection, b.source, previous) },
+        );
+      })
+    : projection.edges;
+
+  const children: ElkNode[] = nodes.map((n) => {
     const { w, h } = sizeOf(projection, n.id, sizes);
     return {
       id: n.id,
@@ -103,7 +151,7 @@ export function buildElkGraph(
       ],
     };
   });
-  const edges: ElkExtendedEdge[] = projection.edges.map((e) => {
+  const edges: ElkExtendedEdge[] = edgesIn.map((e) => {
     const box = boxes[e.id];
     const edge: ElkExtendedEdge = {
       id: e.id,
@@ -125,7 +173,7 @@ export function buildElkGraph(
   });
   return {
     id: "root",
-    layoutOptions: { ...ROOT_OPTIONS },
+    layoutOptions: stable ? { ...ROOT_OPTIONS, ...STABILITY_OPTIONS } : { ...ROOT_OPTIONS },
     children,
     edges,
   };

@@ -18,7 +18,7 @@
  * setPresent — saves and restores view + selection (P-07)
  */
 import { create } from "zustand";
-import { clearDockPosition, snapToGrid, vacantSpot } from "../board/layout/tileMetrics";
+import { clearDockPosition, snapToGrid, vacantSpot, withDisplayedPositions } from "../board/layout/tileMetrics";
 import { type DemoId, workflowForDemo } from "../demos/catalog";
 import { freshBoard, isEmptyBoard, oakParkInvoice } from "../demos/oakParkInvoice";
 import {
@@ -971,11 +971,17 @@ export const useStore = create<{
       const port = inbound
         ? nextIncomingIndex(graph.edges, sourceId)
         : nextPortIndex(graph.edges, sourceId);
+      const displayed = get().activePositions();
+      const srcPlaced = withDisplayedPositions([srcNode], displayed)[0]!;
+      const others = withDisplayedPositions(
+        [...graph.nodes, ...projectAfter(workflow).nodes],
+        displayed,
+      );
       const pos = clearDockPosition(
-        srcNode,
+        srcPlaced,
         WorkflowNodeKind.Step,
         port,
-        [...graph.nodes, ...projectAfter(workflow).nodes],
+        others,
         dock,
       );
       const id = nid(IdPrefix.Step);
@@ -1014,7 +1020,10 @@ export const useStore = create<{
     const port = inbound
       ? nextIncomingIndex(workflow.edges, sourceId)
       : nextPortIndex(workflow.edges, sourceId);
-    const pos = clearDockPosition(src, type, port, workflow.nodes, dock);
+    const displayed = get().activePositions();
+    const srcPlaced = withDisplayedPositions([src], displayed)[0]!;
+    const others = withDisplayedPositions(workflow.nodes, displayed);
+    const pos = clearDockPosition(srcPlaced, type, port, others, dock);
     if (type === WorkflowNodeKind.DataField) {
       const id = nid(IdPrefix.DataField);
       const result = addConnectedNode(

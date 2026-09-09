@@ -1994,4 +1994,33 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(improve-35): default LLM Script and Agent robots`
 
+## Improvement 36 — keep branch rows when forking — 2026-09-09
+
+- Starting commit: `aeabd4e` (`feat(improve-35): default LLM Script and Agent robots`)
+- Working tree at start: not clean. Concurrent inspector / type-picker / visual-rule WIP left unstaged. Untracked `CanvasHelper.test.tsx` moved aside for the unit run, then restored.
+- GOAL clauses addressed: CX-05 (amendment dated 2026-09-09). Path create still forks (WG-07); drag-onto-Path still inserts (NG-02).
+- Library research and decisions: no new runtime dependency. ELK `considerModelOrder` only seeds order; `LAYER_SWEEP` was swapping a new left-fork source to the bottom and lining the old top branch with it. After the first layout, Nodes/Paths are ordered by displayed y, with `forceNodeModelOrder` and `LONGEST_PATH_SOURCE`. Spawn docks on the source row (walk further left/right on overlap) using displayed positions, not document hints.
+- Files changed:
+  - Layout: `src/board/layout/elkGraph.ts`, `layoutEngine.ts`, `useLaneLayout.ts`, `tileMetrics.ts`
+  - Store: `src/state/store.ts` (`spawnBranch` dock)
+  - Tests: `src/board/layout/layoutStability.test.ts`, `tileMetrics.test.ts`
+  - E2E: `e2e/improve-36-branch-rows.spec.ts`
+  - Docs: `.docs/GOAL.md`, `.docs/IMPROVEMENTS.md`, `.docs/VISUAL_IMPROVEMENTS.md`, `.docs/visual-improvements/2026-09-09-branch-row-flip.gif`, this handoff entry
+  - Evidence: `.docs/evidence/improve-36-branch-rows/`
+- Behavior implemented:
+  - Left `+` / `Q` on Search website (already has Read → website) forks a predecessor on that same top row. Search filesystem stays below.
+  - Right `+` / `E` still forks outgoing. Insert-on-Path is unchanged.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning). Node 24.
+  - `npm run test:unit` — 40 files, 269 tests pass (`CanvasHelper.test.tsx` asided for this run).
+  - `npm run test:e2e` — `e2e/improve-36-branch-rows.spec.ts` (3), `e2e/routing.spec.ts` (12), `e2e/improve-34-reverse-add.spec.ts` (7) all pass. Chromium via `LD_LIBRARY_PATH` `~/.local/pw-libs`.
+- Evidence:
+  - `.docs/evidence/improve-36-branch-rows/left-fork-website-1440.png` — Q on Search website; new Task stays on the top row (1440×900)
+  - `.docs/evidence/improve-36-branch-rows/left-fork-filesystem-1440.png` — Q on Search filesystem; website stays above (1440×900)
+  - `.docs/evidence/improve-36-branch-rows/left-fork-website-1024.png` — same website fork at 1024×768
+- Earlier-slice defects fixed: `clearDockPosition` started at port index 1 so a fork never tried the source row; spawn used saved positions instead of the derived layout.
+- Known limitations / follow-ups: Concurrent inspector / type-picker WIP remains unstaged. Path-end wobble (unrelated Paths lerping on every ELK pass) is still a later improvement.
+- Status: COMPLETE
+- Commit: `feat(improve-36): keep branch rows when forking`
+
 
