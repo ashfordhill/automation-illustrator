@@ -2336,3 +2336,14 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(improve-46): cluster Type Who and Scan`
 
+## Improvement 43 — correction 2 — 2026-09-09
+
+- Requested: Hotkey boxes were not one size; the compass tick was too short.
+- Changed: Canvas helper `kbd` is 22px tall with a 22px min-width (single-character keys are square). Compass tick spans the full 32px strip and overlaps the Step/Data rows.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning). Node 24.
+  - `npm run test:unit` — CanvasHelper 3 tests pass.
+  - `npm run test:e2e` — `e2e/improve-43-spawn-compass.spec.ts` (2) pass. Single-character hint keys are square; tick length > 24.
+- Status: COMPLETE
+- Commit: `feat(improve-43): uniform hint keys and longer tick`
+

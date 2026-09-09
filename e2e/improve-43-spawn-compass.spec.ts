@@ -22,11 +22,33 @@ test.describe("Improvement 43 — spawn hint compass", () => {
         shaftY2: shaft.getAttribute("y2"),
         tickX1: tick.getAttribute("x1"),
         tickX2: tick.getAttribute("x2"),
+        tickY1: tick.getAttribute("y1"),
+        tickY2: tick.getAttribute("y2"),
       };
     });
     expect(geom).toBeTruthy();
     expect(geom!.shaftY1).toBe(geom!.shaftY2);
     expect(geom!.tickX1).toBe(geom!.tickX2);
+    expect(Math.abs(Number(geom!.tickY2) - Number(geom!.tickY1))).toBeGreaterThan(24);
+
+    const keySizes = await page.locator(".canvas-helper kbd").evaluateAll((els) =>
+      els.map((el) => {
+        const b = el.getBoundingClientRect();
+        return {
+          text: (el.textContent ?? "").trim(),
+          w: Math.round(b.width * 10) / 10,
+          h: Math.round(b.height * 10) / 10,
+        };
+      }),
+    );
+    expect(keySizes.length).toBeGreaterThan(3);
+    const height = keySizes[0]!.h;
+    for (const k of keySizes) {
+      expect(k.h).toBe(height);
+    }
+    for (const k of keySizes.filter((k) => k.text.length <= 1)) {
+      expect(k.w).toBe(k.h);
+    }
     await capturePage(page, `${EVIDENCE}/spawn-compass-1440.png`);
   });
 });

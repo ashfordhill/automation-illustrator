@@ -56,6 +56,7 @@ test("selected Tile spawn hints are Q/E Step and A/D Data with direction arrows"
   const tick = svg?.querySelectorAll("line")[1];
   expect(shaft?.getAttribute("y1")).toBe(shaft?.getAttribute("y2"));
   expect(tick?.getAttribute("x1")).toBe(tick?.getAttribute("x2"));
+  expect(Math.abs(Number(tick?.getAttribute("y2")) - Number(tick?.getAttribute("y1")))).toBeGreaterThan(24);
   expect(text).not.toMatch(/\|/);
   expect(host.textContent ?? "").toMatch(/Remove Step/);
   expect(host.textContent ?? "").not.toMatch(/Right-click/);

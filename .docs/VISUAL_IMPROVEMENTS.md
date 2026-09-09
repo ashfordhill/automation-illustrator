@@ -288,3 +288,10 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 - Attachments:
   ![spawn compass wobbly](.docs/visual-improvements/2026-09-09-spawn-compass-wobbly.png)
 
+## 2026-09-09 — spawn hint keys and tick
+
+- Issue: Hotkey boxes are not one size (Q/E taller, minus wider) and the compass tick is a stub.
+- Resolution: Uniform 20px-tall keycaps (single-character keys are square); the center tick is a full-height cross.
+- Attachments:
+  ![spawn hint keys](.docs/visual-improvements/2026-09-09-spawn-hint-keys.png)
+

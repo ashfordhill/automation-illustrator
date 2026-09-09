@@ -29,15 +29,15 @@ function SpawnArrows() {
     <svg
       className="canvas-helper-spawn-arrows"
       data-spawn-compass="true"
-      viewBox="0 0 268 18"
+      viewBox="0 0 268 32"
       width="268"
-      height="18"
+      height="32"
       aria-hidden
     >
-      <line x1="16" y1="9" x2="252" y2="9" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round" />
-      <path d="M 22 3.2 L 6 9 L 22 14.8 Z" fill="currentColor" />
-      <path d="M 246 3.2 L 262 9 L 246 14.8 Z" fill="currentColor" />
-      <line x1="134" y1="2.4" x2="134" y2="15.6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+      <line x1="16" y1="16" x2="252" y2="16" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round" />
+      <path d="M 22 10 L 6 16 L 22 22 Z" fill="currentColor" />
+      <path d="M 246 10 L 262 16 L 246 22 Z" fill="currentColor" />
+      <line x1="134" y1="1" x2="134" y2="31" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
     </svg>
   );
 }
