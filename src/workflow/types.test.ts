@@ -40,9 +40,9 @@ test("Other on-tile copy is the Name only", () => {
   expect(stepDisplayLabel(StepKind.Email, "invoice.pdf")).toBe("Email invoice.pdf");
 });
 
-test("Other first gets Name Task; a typed Name is kept", () => {
-  expect(STEP_KIND_META[StepKind.Other].defaultTitle).toBe("Task");
-  expect(titleForStepKindChange(StepKind.Other, StepKind.Read, "")).toBe("Task");
+test("Other does not seed a Name; a typed Name is kept", () => {
+  expect(STEP_KIND_META[StepKind.Other].defaultTitle).toBe("");
+  expect(titleForStepKindChange(StepKind.Other, StepKind.Read, "")).toBe("");
   expect(titleForStepKindChange(StepKind.Other, StepKind.Read, "invoice.pdf")).toBe("invoice.pdf");
   expect(titleForStepKindChange(StepKind.Other, StepKind.Other, "")).toBe("");
   expect(titleForStepKindChange(StepKind.Email, StepKind.Other, "Task")).toBe("Task");

@@ -45,7 +45,7 @@ test.describe("Improvement 35 — default LLM Script Agent robots", () => {
 
     await viewLabel(page, "After").click();
     await waitForLayout(page);
-    await page.getByText("Task").first().click();
+    await page.locator(".react-flow__node.selected").click();
     await page.keyboard.press("e");
     await waitForLayout(page);
     await expect(aside(page).getByRole("button", { name: "Who LLM" })).toHaveAttribute(

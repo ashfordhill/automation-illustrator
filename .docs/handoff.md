@@ -2118,3 +2118,31 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(improve-40): group Humans then Robots on their own row`
 
+## Improvement 39 — packed Type keypad, blank Other — 2026-09-09
+
+- Starting commit: `3d6e181528cf3fcc0ba3a0dfe1db9963babe3020` (`feat(improve-40): group Humans then Robots on their own row`)
+- Working tree at start: not clean vs improve-38; Improvement 40 landed in this repo while this keypad work was in progress.
+- GOAL clauses addressed: NA-05, NA-10 (amendment dated 2026-09-09). Document version unchanged.
+- Library research and decisions: no new runtime dependency. Type keys hug icon + name (22px marks, 3×2×2 pad) in a centered `min(12.75rem, 100%)` 3×3. Other clipboard drops the writing-line path. Other `defaultTitle` is empty; `titleForStepKindChange` is a passthrough.
+- Files changed:
+  - Inspector: `src/app/inspector/TypeButtons.tsx`, `TypeButtons.css`, `src/app/styles/tokens.css`
+  - Icon/Name: `src/board/tiles/StepKindIcon.tsx`, `src/workflow/types.ts`
+  - Tests: `src/workflow/types.test.ts`, `src/state/store.actors.test.ts`, `src/state/store.replace.test.ts`, `src/app/App.test.tsx`, `e2e/improve-16-other-task.spec.ts`, `e2e/improve-34-reverse-add.spec.ts`, `e2e/improve-35-default-robots.spec.ts`, `e2e/improve-39-type-compact.spec.ts`
+  - Docs: `.docs/GOAL.md`, `.docs/IMPROVEMENTS.md`, `.docs/VISUAL_IMPROVEMENTS.md`, `.docs/visual-improvements/2026-09-09-type-keypad-whitespace.png`, this handoff entry
+  - Evidence: `.docs/evidence/improve-39-type-compact/`
+- Behavior implemented:
+  - Inspector Type keys are packed and centered; names stay unclipped.
+  - Other is a blank clipboard. New Other Steps and Type→Other leave Name empty (typed Names are kept). The tile still never prints the word Other.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning). Node 24.
+  - `npm run test:unit` — 41 files, 284 tests pass.
+  - `npm run test:e2e` — 176 passed (1.7m). Chromium via `LD_LIBRARY_PATH` `/home/ash/.local/pw-libs/usr/lib/x86_64-linux-gnu`. Untracked `e2e/improve-23-tile-edit.spec.ts` was asided for this run.
+- Evidence:
+  - `.docs/evidence/improve-39-type-compact/type-keypad-1440.png` — packed centered Type keypad; Read selected (1440×900)
+  - `.docs/evidence/improve-39-type-compact/other-empty-1440.png` — Other selected; blank clipboard; Name empty (1440×900)
+  - `.docs/evidence/improve-39-type-compact/type-keypad-1024.png` — packed Type names unclipped at 1024×768
+- Earlier-slice defects fixed: none
+- Known limitations / follow-ups: Concurrent insert-on-bundle WIP was not in this commit. Path-end wobble is still a later improvement.
+- Status: COMPLETE
+- Commit: `feat(improve-39): pack Type keypad and blank Other`
+

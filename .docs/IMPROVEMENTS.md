@@ -792,3 +792,24 @@ Append to `## Amendments` in `.docs/GOAL.md`: NA-05, NA-06 as dated 2026-09-09.
 
 Commit: `feat(improve-40): group Humans then Robots on their own row`.  
 Evidence: `.docs/evidence/improve-40-actor-groups/`.
+
+---
+
+# Improvement 39 — packed Type keypad, blank Other
+
+Approved 2026-09-09. Inspector Type keys were oversized squares. Other’s clipboard showed writing lines and Name seeded “Task”.
+
+## Locked decisions
+
+- Type keypad stays 3×3 with Other last. Each key is packed (icon + name, minimal pad) so names are not clipped. The 3×3 cluster is centered in the inspector.
+- Other Name is empty for new Steps and when switching Type to Other. A Name the user already typed is kept. The tile still never prints the word Other.
+- Other icon is a blank clipboard (no writing lines) at the same keypad size as the other Types. Tile clipboard may stay a little larger.
+- No new runtime dependency.
+
+## Contract
+
+Append to `## Amendments` in `.docs/GOAL.md`: NA-05, NA-10 as dated 2026-09-09.
+
+Commit: `feat(improve-39): pack Type keypad and blank Other`.  
+Evidence: `.docs/evidence/improve-39-type-compact/`.
+

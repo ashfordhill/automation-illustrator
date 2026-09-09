@@ -250,12 +250,12 @@ test("Manage actors opens on the selected Step’s Who", () => {
   expect(useStore.getState().manageActorId).toBe(roy);
 });
 
-test("new Other Steps are named Task; choosing Other fills an empty Name once", () => {
+test("new Other Steps have an empty Name; choosing Other does not fill Task", () => {
   const { review, read } = OAK_PARK_IDS;
   const child = useStore.getState().spawnBranch(review, WorkflowNodeKind.Step);
   const spawned = useStore.getState().workflow.nodes.find((n) => n.id === child);
   expect(spawned && isStepNode(spawned) && spawned.stepKind).toBe(StepKind.Other);
-  expect(spawned && isStepNode(spawned) && spawned.title).toBe("Task");
+  expect(spawned && isStepNode(spawned) && spawned.title).toBe("");
 
   useStore.getState().updateNode(read, { stepKind: StepKind.Other });
   const kept = useStore.getState().workflow.nodes.find((n) => n.id === read);
@@ -264,5 +264,5 @@ test("new Other Steps are named Task; choosing Other fills an empty Name once", 
   useStore.getState().updateNode(read, { title: "", stepKind: StepKind.Read });
   useStore.getState().updateNode(read, { stepKind: StepKind.Other });
   const seeded = useStore.getState().workflow.nodes.find((n) => n.id === read);
-  expect(seeded && isStepNode(seeded) && seeded.title).toBe("Task");
+  expect(seeded && isStepNode(seeded) && seeded.title).toBe("");
 });

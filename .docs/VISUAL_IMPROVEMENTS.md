@@ -223,3 +223,11 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 - Resolution: Shipped in `feat(improve-40): group Humans then Robots on their own row` — Humans wrap first; Robots always start on the next row. Add human / Add robot append to their own kind.
 - Attachments:
   ![manage actors human after robots](.docs/visual-improvements/2026-09-09-manage-actors-human-after-robots.png)
+
+## 2026-09-09 — Type keypad whitespace and Other Task
+
+- Issue: Inspector Type keys are oversized squares with empty pad. Other’s clipboard shows writing lines and Name seeds “Task”.
+- Resolution: Shipped in `feat(improve-39): pack Type keypad and blank Other` — packed centered keys, blank clipboard, empty Name.
+- Attachments:
+  ![type keypad whitespace](.docs/visual-improvements/2026-09-09-type-keypad-whitespace.png)
+

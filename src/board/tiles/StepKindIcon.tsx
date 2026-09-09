@@ -129,15 +129,10 @@ export function StepKindIcon({ kind, size = 52 }: { kind: StepKindT; size?: numb
     ),
     [StepKind.Other]: (
       <IconShell size={size}>
+        {/* Blank clipboard — no writing lines. */}
         <rect x="9" y="10" width="34" height="36" rx="4" fill={cream} stroke={ink} strokeWidth="2" />
         <rect x="17" y="6" width="18" height="10" rx="3" fill={blue} stroke={ink} strokeWidth="2" />
         <rect x="22" y="8.5" width="8" height="5" rx="1.5" fill={cream} />
-        <path
-          d="M16 24 H36 M16 32 H36 M16 40 H28"
-          stroke={blue}
-          strokeWidth="2.8"
-          strokeLinecap="round"
-        />
       </IconShell>
     ),
   };

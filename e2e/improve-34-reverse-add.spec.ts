@@ -95,13 +95,19 @@ test.describe("Improvement 34 — add Tiles and Paths to the left", () => {
     await viewLabel(page, "After").click();
     await waitForLayout(page);
     await page.getByText(DEMO_STEP).first().click();
+    const afterCount = await page.locator(".react-flow__node").count();
     await page.keyboard.press("q");
     await waitForLayout(page);
-    await expect(page.getByText("Task").first()).toBeVisible();
+    await expect(page.locator(".react-flow__node")).toHaveCount(afterCount + 1);
+    await expect(page.locator("aside").locator("#step-name-field")).toHaveValue("");
+    await expect(page.locator("aside").getByRole("button", { name: "Type Other" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
     await capturePage(page, `${EVIDENCE}/after-left-step-1440.png`);
     await viewLabel(page, "Before").click();
     await waitForLayout(page);
-    await expect(page.getByText("Task")).toHaveCount(0);
+    await expect(page.locator(".react-flow__node")).toHaveCount(afterCount);
   });
 
   test("deleting the last Tile returns the empty board", async ({ page }) => {

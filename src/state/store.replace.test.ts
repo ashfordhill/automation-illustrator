@@ -110,7 +110,7 @@ test("addStep on an empty board creates the root (WG-01)", () => {
   const root = useStore.getState().workflow.nodes[0];
   expect(root?.id).toBe(id);
   expect(root && isStepNode(root) && root.stepKind).toBe(StepKind.Other);
-  expect(root && isStepNode(root) && root.title).toBe("Task");
+  expect(root && isStepNode(root) && root.title).toBe("");
 });
 
 test("addField on an empty board creates a Data root (WG-01)", () => {

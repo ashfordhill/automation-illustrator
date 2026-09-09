@@ -1329,9 +1329,10 @@ body.is-tile-dragging * {
 .inspector-type-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  justify-content: stretch;
-  width: 100%;
-  gap: 6px;
+  justify-content: center;
+  width: min(12.75rem, 100%);
+  margin-inline: auto;
+  gap: 4px;
 }
 
 .inspector-type-grid > :last-child {
