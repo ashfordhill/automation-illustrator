@@ -42,16 +42,24 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: background-color 120ms ease, box-shadow 120ms ease;
 }
 
-.inspector-fold:hover {
-  background: var(--cream);
-  color: var(--ink);
+/* Steel lift, not cream/yellow/blue. Ice mixed into chrome so it reads on paper and on the rail. */
+.inspector-fold:hover,
+.inspector-fold:focus-visible {
+  background: #3f5f71;
+  color: var(--chrome-ink);
+  outline: none;
+}
+
+:root[data-theme="dark"] .inspector-fold:hover,
+:root[data-theme="dark"] .inspector-fold:focus-visible {
+  background: #3b4a51;
 }
 
 .inspector-fold:focus-visible {
-  outline: 3px solid var(--blue);
-  outline-offset: -3px;
+  box-shadow: inset 0 0 0 3px var(--ink);
 }
 
 .details-rail-body {
@@ -88,5 +96,9 @@
 @media (prefers-reduced-motion: reduce) {
   .app-shell-fold aside {
     transition: none !important;
+  }
+
+  .inspector-fold {
+    transition: none;
   }
 }

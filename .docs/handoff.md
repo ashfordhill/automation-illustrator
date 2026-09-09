@@ -1817,3 +1817,14 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(improve-30): put Right Click Delete on the right`
 
+## Improvement 28 — correction 2 — 2026-09-08
+
+- Requested: Cream fold hover is too harsh and hard to see; drop the blue outlines.
+- Changed: Fold hover/focus fill is steel (`#3f5f71` / `#3b4a51`), ice chevron, 120ms ease, `outline: none`. Keyboard `:focus-visible` uses a 3px ink inset, not blue. Not yellow, not cream.
+- Tests and exact results:
+  - `npm run test:e2e` — `e2e/improve-28-fold-hover.spec.ts` pass (2). Port 4204. Chromium via `LD_LIBRARY_PATH` `~/.local/pw-libs`.
+- Evidence: `.docs/evidence/improve-28-fold-hover/` recaptured (open, collapsed, dark).
+- Status: COMPLETE
+- Commit: `feat(improve-28): soften inspector fold hover`
+
+

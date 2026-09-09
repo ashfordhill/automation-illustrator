@@ -617,6 +617,8 @@ Evidence: `.docs/evidence/improve-28-who-select/`.
 
 Correction 1 (2026-09-08): the yellow the user wanted gone is the **inspector fold › / ‹ hover**, not the actor cards. Hover is cream + ink. Evidence: `.docs/evidence/improve-28-fold-hover/`.
 
+Correction 2 (2026-09-08): cream hover was too harsh and hard to see; the blue focus ring is gone. Hover is a steel lift (`#3f5f71` light, `#3b4a51` dark) with the ice chevron. Keyboard focus uses an ink inset, not a blue outline.
+
 ---
 
 # Improvement 30 — Right Click Delete on the right
