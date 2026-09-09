@@ -23,15 +23,34 @@ function Chip({ item }: { item: Hint }) {
   );
 }
 
+/** Chunky double-headed compass: left/right spawn, not a CAD axis (P-01, P-06). */
 function SpawnArrows() {
   return (
-    <div className="canvas-helper-spawn-arrows" aria-hidden>
-      <span className="canvas-helper-arrow-head is-left" />
-      <span className="canvas-helper-arrow-shaft" />
-      <span className="canvas-helper-arrow-mid" />
-      <span className="canvas-helper-arrow-shaft" />
-      <span className="canvas-helper-arrow-head is-right" />
-    </div>
+    <svg
+      className="canvas-helper-spawn-arrows"
+      data-spawn-compass="true"
+      viewBox="0 0 268 18"
+      width="268"
+      height="18"
+      aria-hidden
+    >
+      <path
+        d="M 20 9.1 C 72 7.2, 108 10.8, 134 9 C 160 7.2, 198 10.6, 248 8.9"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.55"
+        strokeLinecap="round"
+      />
+      <path d="M 21.5 3.4 L 7 9.05 L 21.2 14.9 Q 18.6 9.1 21.5 3.4 Z" fill="currentColor" />
+      <path d="M 246.5 3.2 L 261 8.95 L 247 15.1 Q 249.4 9 246.5 3.2 Z" fill="currentColor" />
+      <path
+        d="M 131.6 2.4 L 136.2 15.8"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.45"
+        strokeLinecap="round"
+      />
+    </svg>
   );
 }
 
@@ -55,14 +74,12 @@ function SpawnHints({ after }: { after: boolean }) {
     >
       <div className="canvas-helper-spawn-row">
         {leftStep ? <Chip item={leftStep} /> : <span />}
-        <span className="canvas-helper-spawn-pipe">|</span>
         {rightStep ? <Chip item={rightStep} /> : <span />}
       </div>
       <SpawnArrows />
       {after ? null : (
         <div className="canvas-helper-spawn-row">
           {leftData ? <Chip item={leftData} /> : <span />}
-          <span className="canvas-helper-spawn-pipe">|</span>
           {rightData ? <Chip item={rightData} /> : <span />}
         </div>
       )}

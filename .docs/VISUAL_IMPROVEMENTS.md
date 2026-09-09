@@ -245,3 +245,10 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 - Attachments:
   ![other type key label](.docs/visual-improvements/2026-09-09-other-type-key-label.png)
 
+## 2026-09-09 — spawn hint compass
+
+- Issue: The Q/E · A/D spawn diagram’s arrows and dividers read as CAD geometry, not the app’s chunky / quiet-sketch language.
+- Resolution: Shipped in `feat(improve-43): restyle spawn hint compass` — chunky filled heads, a slightly bowed round-cap shaft, and one tilted tick; the `|` pipes are gone.
+- Attachments:
+  ![spawn hint arrows](.docs/visual-improvements/2026-09-09-spawn-hint-arrows.png)
+

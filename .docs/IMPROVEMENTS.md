@@ -852,3 +852,23 @@ Append to `## Amendments` in `.docs/GOAL.md`: NA-05, NA-10 as dated 2026-09-09.
 Commit: `feat(improve-42): hide Other on the Type keypad`.  
 Evidence: `.docs/evidence/improve-42-other-type-blank/`.
 
+---
+
+# Improvement 43 — chunky spawn hint compass
+
+Approved 2026-09-09. Visual-only restyle of the selected-tile Q/E · A/D diagram.
+
+## Locked decisions
+
+- Keep the two-line Q/E Step and A/D Data map and the quiet keycaps.
+- Replace the CAD shaft, CSS triangles, and `|` pipes with one inline SVG: chunky filled heads, a slightly bowed round-cap shaft, and one tilted center tick.
+- Same muted ink as the hint strip. After still shows Q/E only.
+- No new runtime dependency.
+
+## Contract
+
+No GOAL amendment. P-01 / P-06 already cover the quiet chunky hint strip.
+
+Commit: `feat(improve-43): restyle spawn hint compass`.  
+Evidence: `.docs/evidence/improve-43-spawn-compass/`.
+

@@ -50,7 +50,8 @@ test("selected Tile spawn hints are Q/E Step and A/D Data with direction arrows"
   expect(text).toMatch(/A/);
   expect(text).toMatch(/D/);
   expect(text).toMatch(/\+ Data/);
-  expect(host.querySelector(".canvas-helper-spawn-arrows")).not.toBeNull();
+  expect(host.querySelector("[data-spawn-compass]")).not.toBeNull();
+  expect(text).not.toMatch(/\|/);
   expect(host.textContent ?? "").toMatch(/Remove Step/);
   expect(host.textContent ?? "").not.toMatch(/Right-click/);
 });

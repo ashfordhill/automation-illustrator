@@ -2199,3 +2199,28 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(improve-42): hide Other on the Type keypad`
 
+## Improvement 43 — chunky spawn hint compass — 2026-09-09
+
+- Starting commit: `bf725420754d7f6aa4474353220f0adc0a2b4842` (`feat(improve-42): hide Other on the Type keypad`)
+- Working tree at start: clean tracked tree. Untracked elk plans, chrome GIFs, and `e2e/improve-23-tile-edit.spec.ts.aside` remained outside the commit.
+- GOAL clauses addressed: P-01, P-06 (no amendment; quiet chunky hint strip already locked).
+- Library research and decisions: no new runtime dependency. One inline SVG compass (filled heads, bowed round-cap shaft, tilted tick) replaces CSS triangles, a ruled shaft, and `|` pipes.
+- Files changed:
+  - `src/app/components/CanvasHelper.tsx`, `src/app/styles/tokens.css`
+  - Tests: `src/app/components/CanvasHelper.test.tsx`, `e2e/improve-43-spawn-compass.spec.ts`
+  - Docs: `.docs/IMPROVEMENTS.md`, `.docs/VISUAL_IMPROVEMENTS.md`, `.docs/visual-improvements/2026-09-09-spawn-hint-arrows.png`, this handoff entry
+  - Evidence: `.docs/evidence/improve-43-spawn-compass/`
+- Behavior implemented:
+  - Selected-tile spawn hints keep Q/E above A/D. The divider is a chunky double-headed compass. After is still Q/E only.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning). Node 24.
+  - `npm run test:unit` — 41 files, 284 tests pass.
+  - `npm run test:e2e` — `e2e/improve-43-spawn-compass.spec.ts` (2), `e2e/canvas-helper-hints.spec.ts` (1) all pass (3). Chromium via `LD_LIBRARY_PATH` `~/.local/pw-libs`.
+- Evidence:
+  - `.docs/evidence/improve-43-spawn-compass/spawn-compass-1440.png` — selected Read; chunky compass under Q/E · A/D (1440×900)
+  - `.docs/evidence/improve-43-spawn-compass/spawn-compass-1024.png` — same at 1024×768
+- Earlier-slice defects fixed: none. An uncommitted preview of this compass was overwritten by Improvements 39–42.
+- Known limitations / follow-ups: none for this visual. Path-end wobble is still a later improvement.
+- Status: COMPLETE
+- Commit: `feat(improve-43): restyle spawn hint compass`
+
