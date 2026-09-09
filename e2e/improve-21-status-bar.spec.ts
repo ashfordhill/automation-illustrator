@@ -58,9 +58,9 @@ test.describe("Improvement 21 — bottom status bar", () => {
 
     await page.getByRole("button", { name: "Menu" }).click();
     await page.getByRole("menuitem", { name: "Present" }).click();
-    await page.getByRole("button", { name: "Menu" }).click();
+    await expect(page.getByRole("button", { name: "Menu" })).toHaveCount(0);
     await expect(page.getByRole("menuitem", { name: "Actors", exact: true })).toHaveCount(0);
-    await page.getByRole("menuitem", { name: "Exit present" }).click();
+    await page.keyboard.press("Escape");
   });
 
   test("right-click-delete on removes a Tile; off does not", async ({ page }) => {

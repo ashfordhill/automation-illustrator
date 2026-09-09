@@ -198,11 +198,17 @@ test("sound toggle is off by default and Present restores the inspector", () => 
   });
   expect(host.querySelector("aside")).toBeNull();
   expect(host.querySelector("[data-inspector-fold]")).toBeNull();
+  expect(host.querySelector('[aria-label="Menu"]')).toBeNull();
+  expect(host.querySelector(".view-switch")).toBeNull();
+  expect(host.querySelector("footer.status-bar")).toBeNull();
   expect(host.textContent).not.toMatch(/will become automated/);
   act(() => {
-    useStore.getState().setPresent(false);
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
   });
+  expect(useStore.getState().present).toBe(false);
   expect(host.querySelector("aside")).not.toBeNull();
+  expect(host.querySelector('[aria-label="Menu"]')).not.toBeNull();
+  expect(host.querySelector("footer.status-bar")).not.toBeNull();
   expect(useStore.getState().selected?.id).toBe(OAK_PARK_IDS.read);
 });
 

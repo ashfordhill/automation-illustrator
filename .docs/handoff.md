@@ -1827,4 +1827,33 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(improve-28): soften inspector fold hover`
 
+## Improvement 31 — Present hides the nav bar — 2026-09-08
+
+- Starting commit: `a8648b2fd3c9ffe2a8509a2ffce6d9e1059cdaa8` (`feat(improve-28): soften inspector fold hover`)
+- Working tree at start: not clean. Concurrent Type-picker / Who-select / tile-pie / evidence recaptures were left unstaged and are not in this commit.
+- GOAL clauses addressed: P-07, P-05 (amendment dated 2026-09-08).
+- Library research and decisions: no new runtime dependency. Present already hid the inspector, tile chrome, and hints; the top bar and status bar stayed. Hiding both makes the board full-bleed. Escape exits Present (CX-08 idle; Keybinds lists it). Space still toggles Before/After. Hamburger Present remains the enter path. Modals (Keybinds, replace, recovery, import) keep Escape first.
+- Files changed:
+  - Shell: `src/app/App.tsx` (omit header and status bar when Present)
+  - Keys: `src/keyboard/useAppKeys.ts` (Escape exits Present), `src/keyboard/KeybindsModal.tsx` (Exit present / Esc)
+  - Tests: `src/app/App.test.tsx`, `e2e/improve-31-present-nav.spec.ts`, `e2e/shell.spec.ts`, `e2e/improve-20-inspector-fold.spec.ts`, `e2e/improve-21-status-bar.spec.ts`, `e2e/hardening.spec.ts`
+  - Docs: `.docs/GOAL.md`, `.docs/IMPROVEMENTS.md`, `.docs/VISUAL_IMPROVEMENTS.md`; this handoff entry
+  - Evidence: `.docs/evidence/improve-31-present-nav/`
+- Behavior implemented:
+  - Present hides the top bar, status bar, and inspector. The board is full-bleed.
+  - Space still switches Before/After. Escape exits Present and restores view and selection.
+- Tests and exact results:
+  - `npm run build` — `tsc --noEmit` blocked on concurrent untracked `src/board/tiles/pieGeometry.test.ts` (missing `./pieGeometry`). This commit’s files typecheck. `npx vite build` pass (Vite 8.2.2; existing chunk-size warning).
+  - `npm run test:unit` — excluding concurrent pieGeometry: 37 files, 214 tests pass. Present App.test included.
+  - `npm run test:e2e` — Present-related: `e2e/improve-31-present-nav.spec.ts` (3), `e2e/shell.spec.ts` (5), `e2e/improve-20-inspector-fold.spec.ts` (4), `e2e/improve-21-status-bar.spec.ts` (5), `e2e/hardening.spec.ts` (13) all pass. Tracked suite: 135 passed; 1 failed (`e2e/improve-18-path-zip.spec.ts` edge count 9 vs 7 — unrelated Path-pull, not this chrome change). Chromium via `LD_LIBRARY_PATH` `~/.local/pw-libs`.
+- Evidence:
+  - `.docs/evidence/improve-31-present-nav/present-light-1440.png` — Oak Park Present; no top bar, inspector, or status bar (1440×900)
+  - `.docs/evidence/improve-31-present-nav/present-after-1440.png` — Space toggled After; still no chrome (1440×900)
+  - `.docs/evidence/improve-31-present-nav/present-dark-1440.png` — Present in dark theme; no chrome (1440×900)
+  - `.docs/evidence/improve-31-present-nav/present-1024.png` — Present at 1024×768
+- Earlier-slice defects fixed: none
+- Known limitations / follow-ups: Concurrent Type-picker / Who-select / tile-pie WIP remains unstaged. Improve-18 Path-zip e2e still fails on extra `.react-flow__edge` hit pads (pre-existing vs this change).
+- Status: COMPLETE
+- Commit: `feat(improve-31): hide the nav bar in Present`
+
 

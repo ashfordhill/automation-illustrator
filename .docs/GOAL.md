@@ -216,3 +216,4 @@ Append only, newest last. Format: `- YYYY-MM-DD — <clause IDs> — <decision a
 - 2026-09-08 — P-05, NA-06 — Actors is not on the status bar. The hamburger Menu has an Actors item that opens Manage actors (hidden in Present and Compare). The inspector Manage actors action remains. — approved by user
 - 2026-09-08 — P-05 — The status bar does not show the loaded project name. It shows Right Click Delete and the application version. — approved by user
 - 2026-09-08 — P-05 — Right Click Delete sits on the right of the status bar, next to the version, not on the left. — approved by user
+- 2026-09-08 — P-07, P-05 — Present also hides the top bar (Undo, sound, view switch, hamburger) and the status bar so the board is full-bleed. Space still toggles Before/After. Escape exits Present and restores the previous view and selection. Present remains the first hamburger item for entering. — approved by user

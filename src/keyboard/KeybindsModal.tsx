@@ -64,6 +64,10 @@ export function KeybindsModal() {
           <Text size="sm">Cancel link / remove picker</Text>
           <Kbd>Esc</Kbd>
         </Group>
+        <Group justify="space-between">
+          <Text size="sm">Exit present</Text>
+          <Kbd>Esc</Kbd>
+        </Group>
       </Stack>
     </Modal>
   );

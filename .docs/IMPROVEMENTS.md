@@ -629,3 +629,12 @@ After the project name left the status bar, **Right Click Delete** sat on the fa
 
 Commit: `feat(improve-30): put Right Click Delete on the right`.  
 Evidence: `.docs/evidence/improve-30-status-toggle-right/`.
+
+---
+
+# Improvement 31 — Present hides the nav bar
+
+Approved 2026-09-08. Present already hid the inspector, tile chrome, and hints. It still showed the top bar and status bar. Present now hides those too so the board is full-bleed. Space still toggles Before/After. Escape exits Present (Keybinds lists it). Present stays the first hamburger item for entering. No new dependency.
+
+Commit: `feat(improve-31): hide the nav bar in Present`.  
+Evidence: `.docs/evidence/improve-31-present-nav/`.

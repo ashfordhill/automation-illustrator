@@ -1,5 +1,5 @@
 /**
- * Global keydown handler for undo, pan, help, present toggle,
+ * Global keydown handler for undo, pan, help, Present Space/Escape,
  * selected-tile 1/2 spawn, and Delete/Remove. Mounted once from app/App.tsx.
  */
 import { useEffect } from "react";
@@ -80,6 +80,14 @@ export function useAppKeys() {
         if (s.manageActorsOpen) {
           e.preventDefault();
           s.closeManageActors();
+          return;
+        }
+        if (s.helpOpen || s.pendingReplace || s.recovery || s.importError) {
+          return;
+        }
+        if (s.present) {
+          e.preventDefault();
+          s.setPresent(false);
           return;
         }
       }

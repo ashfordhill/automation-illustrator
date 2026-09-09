@@ -1,9 +1,8 @@
 /**
  * App shell: header Toolbar, right DetailsPanel, center Board.
- * Present mode hides the right rail. The inspector folds to a thin strip (P-05).
- * A thin status bar overlaps the inspector (P-05 amendment).
- * Under 1024 CSS px the board is replaced (P-04).
- * Theme is dataset.theme for CSS plus Mantine forceColorScheme.
+ * Present hides the top bar, status bar, and right rail (P-07). The inspector
+ * folds to a thin strip when editing (P-05). Under 1024 CSS px the board is
+ * replaced (P-04). Theme is dataset.theme for CSS plus Mantine forceColorScheme.
  */
 import { useEffect } from "react";
 import { AppShell, MantineProvider, createTheme } from "@mantine/core";
@@ -57,7 +56,7 @@ function CanvasArea() {
             flex: 1,
             minHeight: 0,
             position: "relative",
-            borderBottom: "3px solid var(--chrome-line)",
+            borderBottom: "3px solid var(--line)",
           }}
         >
           <Board lane={AssignmentLane.Before} />
@@ -98,7 +97,7 @@ export default function App() {
     <MantineProvider theme={theme} forceColorScheme={colorScheme}>
       {supported ? (
         <AppShell
-        header={{ height: 56 }}
+        header={present ? undefined : { height: 56 }}
         aside={{ width: asideWidth, breakpoint: "xs" }}
         padding={0}
         transitionDuration={reduceMotion ? 0 : 200}
@@ -130,9 +129,11 @@ export default function App() {
           },
         }}
       >
-        <AppShell.Header className="chrome-bar">
-          <Toolbar />
-        </AppShell.Header>
+        {!present && (
+          <AppShell.Header className="chrome-bar">
+            <Toolbar />
+          </AppShell.Header>
+        )}
         {!present && (
           <AppShell.Aside
             p={0}
@@ -174,7 +175,7 @@ export default function App() {
       ) : (
         <UnsupportedViewport />
       )}
-      {supported ? <StatusBar /> : null}
+      {supported && !present ? <StatusBar /> : null}
       <KeybindsModal />
       <ReplaceDocumentModal />
       <RecoveryModal />

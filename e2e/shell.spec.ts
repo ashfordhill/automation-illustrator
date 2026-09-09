@@ -35,6 +35,8 @@ test.describe("slice 8 shell, typography, and sound", () => {
     await page.getByRole("button", { name: "Menu" }).click();
     await page.getByRole("menuitem", { name: "Present" }).click();
     await expect(page.locator("aside")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Menu" })).toHaveCount(0);
+    await expect(page.locator("footer.status-bar")).toHaveCount(0);
     await expect(page.getByText(/will become automated/)).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Add Step or Data" })).toHaveCount(
       0,
@@ -43,11 +45,12 @@ test.describe("slice 8 shell, typography, and sound", () => {
 
     await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
     await page.keyboard.press("Space");
-    await expect(viewRadio(page, "After")).toHaveAttribute("aria-checked", "true");
+    await expect(page.locator('.board-lane[data-lane="after"]')).toBeVisible();
+    await expect(page.locator('.board-lane[data-lane="before"]')).toHaveCount(0);
 
-    await page.getByRole("button", { name: "Menu" }).click();
-    await page.getByRole("menuitem", { name: "Exit present" }).click();
+    await page.keyboard.press("Escape");
     await expect(page.locator("aside")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Menu" })).toBeVisible();
     await expect(viewRadio(page, "Before")).toHaveAttribute("aria-checked", "true");
     await expect(page.locator("aside").getByRole("button", { name: "Type Read" })).toBeVisible();
   });

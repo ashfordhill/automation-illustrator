@@ -179,3 +179,9 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 - Issue: Right Click Delete sits on the left of the bottom status bar; version is on the right.
 - Resolution: Shipped in `feat(improve-30): put Right Click Delete on the right` — toggle and version are a right-side cluster.
 - Attachments: [right click delete left](visual-improvements/2026-09-08-right-click-delete-left.gif)
+
+## 2026-09-08 — Present still shows the nav bar
+
+- Issue: Present hides the inspector and tile chrome but leaves the top bar (and status bar) on screen.
+- Resolution: Shipped in `feat(improve-31): hide the nav bar in Present` — full-bleed board; Escape exits.
+- Attachments: n/a

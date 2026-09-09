@@ -212,11 +212,11 @@ test.describe("slice 12 surfaces, dialogs, and final screenshots", () => {
     await openMenu(page);
     await page.getByRole("menuitem", { name: "Present" }).click();
     await expect(page.locator("aside")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Menu" })).toHaveCount(0);
     await expect(page.getByRole("region", { name: "Merge and Unmerge" })).toHaveCount(0);
     await expect(page.getByText(/will become automated/)).toHaveCount(0);
     await screenshotBoard(page, `${EVIDENCE}/present-light-1440.png`);
-    await openMenu(page);
-    await page.getByRole("menuitem", { name: "Exit present" }).click();
+    await page.keyboard.press("Escape");
 
     await openMenu(page);
     await page.getByRole("menuitem", { name: "New" }).click();
