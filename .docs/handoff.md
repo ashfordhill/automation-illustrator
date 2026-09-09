@@ -1961,4 +1961,37 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(improve-34): add Tiles and Paths to the left`
 
+## Improvement 35 — default LLM, Script, Agent robots — 2026-09-09
+
+- Starting commit: `c0536b338f0916f49aeb68b8ec56fed50e0e7759` (`feat(improve-34): add Tiles and Paths to the left`)
+- Working tree at start: not clean. Concurrent Type keypad / Who-select / tile-pie WIP stashed as `concurrent-wip-aside-for-improve-35`. Untracked `CanvasHelper.test.tsx` and two untracked e2e specs moved aside for `tsc` / Playwright.
+- GOAL clauses addressed: WG-01, NA-01, NA-04 (amendments dated 2026-09-09)
+- Library research and decisions: no new runtime dependency. Default Robot remains “first Robot on the roster”; that is now LLM. If After needs a Robot and the roster has none, auto-create LLM/LLM (same as the new default). Existing localStorage boards are not migrated. Robot Mailroom is unchanged. Oak Park keeps its two robots; the Script actor is named Script.
+- Files changed:
+  - `src/workflow/actors.ts` (`ROBOT_PRESETS`; `defaultActors`; `ensureDefaultRobot`)
+  - `src/demos/oak-park-invoice.yaml` (Robot → Script)
+  - Tests: `src/workflow/actors.test.ts`, `src/demos/demos.test.ts`, `src/state/store.replace.test.ts`, `src/state/store.actors.test.ts`, `src/app/App.test.tsx`
+  - E2E: `e2e/improve-35-default-robots.spec.ts`, `e2e/inspector.spec.ts` (Who Script / Who LLM; After Review is Roy)
+  - Docs: `.docs/GOAL.md` (amendments), `.docs/IMPROVEMENTS.md` (35), this handoff entry
+  - Evidence: `.docs/evidence/improve-35-default-robots/`; inspector evidence under `.docs/evidence/07-inspector/` refreshed
+- Behavior implemented:
+  - New board roster: Alice, Roy, Jack, Missy, LLM, Script, Agent (Name matches Type).
+  - After-only Steps on a new board default to LLM.
+  - Oak Park After tiles read LLM/LLM and Script/Script.
+  - Manage actors still edits Name, Color, and Type on each robot.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning). Node 24.
+  - `npm run test:unit` — 38 files, 261 tests pass.
+  - `npm run test:e2e` — `e2e/improve-35-default-robots.spec.ts` (3), `e2e/inspector.spec.ts` (6) all pass (9). Chromium via `LD_LIBRARY_PATH` `~/.local/pw-libs`.
+- Evidence:
+  - `.docs/evidence/improve-35-default-robots/new-who-1440.png` — New board Who: LLM, Script, Agent (1440×900)
+  - `.docs/evidence/improve-35-default-robots/new-manage-actors-1440.png` — LLM selected; Name LLM, Type LLM (1440×900)
+  - `.docs/evidence/improve-35-default-robots/after-only-llm-1440.png` — After-only Step assigned LLM/LLM (1440×900)
+  - `.docs/evidence/improve-35-default-robots/oak-park-after-1440.png` — Oak Park After: LLM/LLM then Script/Script (1440×900)
+  - `.docs/evidence/improve-35-default-robots/new-who-1024.png` — New board Who at 1024×768
+- Earlier-slice defects fixed: inspector After Review Who expected Alice; YAML After Who is Roy.
+- Known limitations / follow-ups: Concurrent WIP remains in stash `concurrent-wip-aside-for-improve-35`. Untracked `CanvasHelper.test.tsx` moved aside for `tsc`.
+- Status: COMPLETE
+- Commit: `feat(improve-35): default LLM Script and Agent robots`
+
 

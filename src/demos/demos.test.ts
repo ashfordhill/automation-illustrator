@@ -39,7 +39,9 @@ test("Oak Park IDs are deterministic and both amount Paths are dotted (PC-06)", 
   const llm = a.actors.find((actor) => actor.id === OAK_PARK_IDS.llm);
   const script = a.actors.find((actor) => actor.id === OAK_PARK_IDS.robot);
   expect(llm && "robotKind" in llm && llm.robotKind).toBe(RobotKind.Llm);
+  expect(llm?.name).toBe("LLM");
   expect(script && "robotKind" in script && script.robotKind).toBe(RobotKind.Script);
+  expect(script?.name).toBe("Script");
 });
 
 test("Robot Mailroom matches Appendix A overlay", () => {
@@ -69,12 +71,17 @@ test("Robot Mailroom matches Appendix A overlay", () => {
 test("freshBoard is an empty roster board (WG-01)", () => {
   const doc = freshBoard();
   expect(isEmptyBoard(doc)).toBe(true);
-  expect(doc.actors).toHaveLength(5);
+  expect(doc.actors).toHaveLength(7);
   expect(doc.actors.filter((a) => a.kind === ActorKind.Human).map((a) => a.name)).toEqual([
     "Alice",
     "Roy",
     "Jack",
     "Missy",
+  ]);
+  expect(doc.actors.filter((a) => a.kind === ActorKind.Robot).map((a) => a.name)).toEqual([
+    "LLM",
+    "Script",
+    "Agent",
   ]);
   expect(validateWorkflow(doc)).toEqual([]);
 });

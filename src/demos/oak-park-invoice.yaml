@@ -24,7 +24,7 @@ actors:
     role: worker
   - id: r_script
     kind: robot
-    name: Robot
+    name: Script
     color: "#6ab0c8"
     robotKind: script
   - id: r_llm

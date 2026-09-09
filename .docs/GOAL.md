@@ -228,3 +228,5 @@ Append only, newest last. Format: `- YYYY-MM-DD — <clause IDs> — <decision a
 - 2026-09-08 — WG-07 — Each selected Tile has mirrored left and right `+` and Path-pull tabs. Left `+` creates a predecessor (Path new → this). Left Path-pull drop on X creates X → this. After left `+` is After-only Step only. — approved by user
 - 2026-09-08 — WG-05 — A Path may be removed when the remaining graph stays weakly connected. — approved by user
 - 2026-09-08 — NA-03 — A predecessor Step from left `+` / Q uses last-used Human, else Alice, else the first Human. It does not inherit Who from the successor. Right/child Step still inherits parent Who. After-only still defaults to Robot. — approved by user
+- 2026-09-09 — WG-01 — A brand-new board contains zero Nodes and the default actor roster (Alice, Roy, Jack, Missy, LLM, Script, Agent). Empty-state actions remain Add Step and Add Data. — approved by user
+- 2026-09-09 — NA-04 — The default Robot is the first Robot on the roster (LLM on a new board). If no Robot exists when After needs one, a Robot named "LLM" of Type LLM is created automatically inside the same undo step. — approved by user

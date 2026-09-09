@@ -48,7 +48,7 @@ test("Discard New loads an empty roster board and clears history (WG-01, SH-12)"
   useStore.getState().requestNew();
   useStore.getState().confirmReplaceDiscard();
   expect(isEmptyBoard(useStore.getState().workflow)).toBe(true);
-  expect(useStore.getState().workflow.actors).toHaveLength(5);
+  expect(useStore.getState().workflow.actors).toHaveLength(7);
   expect(useStore.getState().past).toEqual([]);
   expect(useStore.getState().future).toEqual([]);
   expect(useStore.getState().pendingReplace).toBeNull();

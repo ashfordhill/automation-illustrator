@@ -1,15 +1,19 @@
 import { expect, test } from "vitest";
-import { AssignmentLane, SplitKind, StepKind, WorkflowNodeKind } from "./catalogs";
+import { ActorKind, AssignmentLane, RobotKind, SplitKind, StepKind, WorkflowNodeKind } from "./catalogs";
 import {
   actorInUseMessage,
   actorUsages,
+  defaultActors,
   defaultHumanId,
+  defaultRobotId,
+  ensureDefaultRobot,
   HUMAN_PRESETS,
+  ROBOT_PRESETS,
   removeActor,
   whoForChildStep,
   whoForPredecessorStep,
 } from "./actors";
-import { emptyAfterOverlay, emptyWorkflow, type WorkflowDoc } from "./types";
+import { emptyAfterOverlay, emptyWorkflow, isRobot, type WorkflowDoc } from "./types";
 
 const doc: WorkflowDoc = {
   ...emptyWorkflow(),
@@ -49,6 +53,36 @@ const doc: WorkflowDoc = {
 
 test("Roy’s fill is honey-apricot, not Script-robot blue", () => {
   expect(HUMAN_PRESETS[1]).toEqual({ name: "Roy", color: "#f4c07a" });
+});
+
+test("default roster is Alice, Roy, Jack, Missy, then LLM, Script, Agent (WG-01, NA-04)", () => {
+  const actors = defaultActors();
+  expect(actors.filter((a) => a.kind === ActorKind.Human).map((a) => a.name)).toEqual([
+    "Alice",
+    "Roy",
+    "Jack",
+    "Missy",
+  ]);
+  const robots = actors.filter((a) => a.kind === ActorKind.Robot);
+  expect(robots.map((a) => a.name)).toEqual(["LLM", "Script", "Agent"]);
+  expect(robots.map((a) => (isRobot(a) ? a.robotKind : ""))).toEqual(
+    ROBOT_PRESETS.map((p) => p.robotKind),
+  );
+  expect(defaultRobotId(actors)).toBe(robots[0]?.id);
+});
+
+test("ensureDefaultRobot keeps the first Robot and otherwise creates LLM (NA-04)", () => {
+  const roster = defaultActors();
+  const kept = ensureDefaultRobot({ ...emptyWorkflow(), actors: roster });
+  expect(kept.robotId).toBe(defaultRobotId(roster));
+  expect(kept.doc.actors).toHaveLength(7);
+
+  const created = ensureDefaultRobot(emptyWorkflow());
+  expect(created.doc.actors).toHaveLength(1);
+  const robot = created.doc.actors[0];
+  expect(robot?.name).toBe("LLM");
+  expect(robot && isRobot(robot) && robot.robotKind).toBe(RobotKind.Llm);
+  expect(created.robotId).toBe(robot?.id);
 });
 
 test("whoForChildStep inherits a Step parent’s Who and walks Data to the upstream Step (NA-03)", () => {

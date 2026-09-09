@@ -133,11 +133,12 @@ test("inspector Type buttons are alphabetical with Other last; Who offers every 
     "Type Write",
   ]);
   expect(host.querySelector('[aria-label="Who Alice"]')).not.toBeNull();
-  expect(host.querySelector('[aria-label="Who Robot"]')).not.toBeNull();
+  expect(host.querySelector('[aria-label="Who LLM"]')).not.toBeNull();
+  expect(host.querySelector('[aria-label="Who Script"]')).not.toBeNull();
   expect(host.textContent).not.toMatch(/1 Path/);
   expect(host.textContent).not.toMatch(/All Paths/);
   act(() => {
-    host.querySelector<HTMLButtonElement>('[aria-label="Who Robot"]')?.click();
+    host.querySelector<HTMLButtonElement>('[aria-label="Who Script"]')?.click();
   });
   expect(useStore.getState().workflow.assignments[OAK_PARK_IDS.read]).toBe(OAK_PARK_IDS.robot);
 });

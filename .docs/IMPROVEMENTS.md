@@ -688,3 +688,18 @@ Append to `## Amendments` in `.docs/GOAL.md`: WG-02, WG-03, WG-04, WG-05, WG-06,
 Commit: `feat(improve-34): add Tiles and Paths to the left`.  
 Evidence: `.docs/evidence/improve-34-reverse-add/`.
 
+---
+
+# Improvement 35 — default LLM, Script, Agent robots
+
+Approved 2026-09-09. New boards ship three robots instead of one generic Robot/Script: **LLM / LLM**, **Script / Script**, **Agent / Agent**, in that order. LLM is the default Robot (first on the roster; After-only Steps). Name, Color, and Type stay independently editable. Oak Park’s Script actor is named Script (LLM was already LLM). Robot Mailroom is unchanged. Existing saved boards are not migrated.
+
+No new runtime dependency.
+
+## Contract
+
+Append to `## Amendments` in `.docs/GOAL.md`: WG-01, NA-04 as dated 2026-09-09.
+
+Commit: `feat(improve-35): default LLM Script and Agent robots`.  
+Evidence: `.docs/evidence/improve-35-default-robots/`.
+

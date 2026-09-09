@@ -20,7 +20,7 @@ function aside(page: Page) {
 }
 
 test.describe("slice 7 inspector and actors", () => {
-  test("Step inspector: Type, Who in both lanes, Robot in Before", async ({ page }) => {
+  test("Step inspector: Type, Who in both lanes, Script in Before", async ({ page }) => {
     await loadDemo(page);
     await page.getByText(DEMO_STEP).first().click();
     await expect(aside(page).getByRole("button", { name: "Type Read" })).toHaveAttribute(
@@ -33,12 +33,13 @@ test.describe("slice 7 inspector and actors", () => {
       "aria-pressed",
       "true",
     );
-    await expect(aside(page).getByRole("button", { name: "Who Robot" })).toBeVisible();
+    await expect(aside(page).getByRole("button", { name: "Who Script" })).toBeVisible();
+    await expect(aside(page).getByRole("button", { name: "Who LLM" })).toBeVisible();
     await expect(aside(page).getByRole("button", { name: "Manage actors" })).toBeVisible();
     await capturePage(page, `${EVIDENCE}/step-who-before-1440.png`);
 
-    await aside(page).getByRole("button", { name: "Who Robot" }).click();
-    await expect(aside(page).getByRole("button", { name: "Who Robot" })).toHaveAttribute(
+    await aside(page).getByRole("button", { name: "Who Script" }).click();
+    await expect(aside(page).getByRole("button", { name: "Who Script" })).toHaveAttribute(
       "aria-pressed",
       "true",
     );
@@ -46,12 +47,12 @@ test.describe("slice 7 inspector and actors", () => {
 
     await viewLabel(page, "After").click();
     await page.getByText("Review BS&A Software").first().click();
-    await expect(aside(page).getByRole("button", { name: "Who Alice" })).toHaveAttribute(
+    await expect(aside(page).getByRole("button", { name: "Who Roy" })).toHaveAttribute(
       "aria-pressed",
       "true",
     );
-    await aside(page).getByRole("button", { name: "Who Robot" }).click();
-    await expect(aside(page).getByRole("button", { name: "Who Robot" })).toHaveAttribute(
+    await aside(page).getByRole("button", { name: "Who Script" }).click();
+    await expect(aside(page).getByRole("button", { name: "Who Script" })).toHaveAttribute(
       "aria-pressed",
       "true",
     );
@@ -59,7 +60,7 @@ test.describe("slice 7 inspector and actors", () => {
 
     await viewLabel(page, "Before").click();
     await page.getByText(DEMO_STEP).first().click();
-    await expect(aside(page).getByRole("button", { name: "Who Robot" })).toHaveAttribute(
+    await expect(aside(page).getByRole("button", { name: "Who Script" })).toHaveAttribute(
       "aria-pressed",
       "true",
     );

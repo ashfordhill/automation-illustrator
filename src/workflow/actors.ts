@@ -26,6 +26,13 @@ export const ROBOT_COLORS = {
   [RobotKind.Script]: "#6ab0c8",
 } as const;
 
+/** New-board robots: Name matches Type (LLM/LLM, Script/Script, Agent/Agent). */
+export const ROBOT_PRESETS = [
+  { name: "LLM", robotKind: RobotKind.Llm },
+  { name: "Script", robotKind: RobotKind.Script },
+  { name: "Agent", robotKind: RobotKind.Agent },
+] as const;
+
 /** Stick-figure stroke on pastel actor fills (not theme ink, which goes light in dark mode). */
 export const FIGURE_INK_ON_PASTEL = "#122836";
 
@@ -38,7 +45,7 @@ export function randomPastel(): string {
   return `hsl(${h} ${s}% ${l}%)`;
 }
 
-/** Alice, Roy, Jack, Missy, plus one Script robot — also used by New board. */
+/** Alice, Roy, Jack, Missy, then LLM, Script, Agent — also used by New board (WG-01). */
 export function defaultActors(): ActorDto[] {
   const humans: ActorDto[] = HUMAN_PRESETS.map((p) => ({
     id: nid(IdPrefix.Human),
@@ -47,14 +54,14 @@ export function defaultActors(): ActorDto[] {
     color: p.color,
     role: DEFAULT_HUMAN_ROLE,
   }));
-  const robot: ActorDto = {
+  const robots: ActorDto[] = ROBOT_PRESETS.map((p) => ({
     id: nid(IdPrefix.Robot),
     kind: ActorKind.Robot,
-    name: "Robot",
-    color: ROBOT_COLORS[RobotKind.Script],
-    robotKind: RobotKind.Script,
-  };
-  return [...humans, robot];
+    name: p.name,
+    color: ROBOT_COLORS[p.robotKind],
+    robotKind: p.robotKind,
+  }));
+  return [...humans, ...robots];
 }
 
 /** Prefer Alice so new Steps match the demo’s default person. */
@@ -137,13 +144,14 @@ export function defaultRobotId(actors: ActorDto[]) {
 }
 
 /**
- * After merge / After-only Step: use the default Robot, creating a Script
- * Robot named "Robot" in the same undo step when the roster has none (NA-04).
+ * After-only Step: use the default Robot (first on the roster; LLM on a new
+ * board). If the roster has none, create LLM of Type LLM in the same undo
+ * step (NA-04).
  */
 export function ensureDefaultRobot(doc: WorkflowDoc): { doc: WorkflowDoc; robotId: string } {
   const existing = defaultRobotId(doc.actors);
   if (existing) return { doc, robotId: existing };
-  const robot = makeRobot("Robot", RobotKind.Script);
+  const robot = makeRobot("LLM", RobotKind.Llm);
   return { doc: { ...doc, actors: [...doc.actors, robot] }, robotId: robot.id };
 }
 
@@ -223,7 +231,7 @@ export function makeHuman(name?: string, color?: string): ActorDto {
   };
 }
 
-/** Inspector “Add robot”. Name stays “Robot”; kind drives fill. */
+/** Inspector “Add robot”. Extra robots start named “Robot”; kind drives fill. */
 export function makeRobot(
   name = "Robot",
   robotKind: RobotKindT = RobotKind.Script,
