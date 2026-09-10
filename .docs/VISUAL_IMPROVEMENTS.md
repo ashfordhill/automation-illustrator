@@ -44,147 +44,127 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 
 - Issue: Wedge `+` pull is worse than the old green taffy (keep the dim scrim). Empty-space release lags. Path-pull glyph still wrong. `+`/Path tabs sit on the tile instead of tucked behind. Delete X lifts on hover. Data preview in the `+` fan is smaller than Step. Double-click Path and inspector Dotted/Solid appear to do nothing.
 - Resolution: Planned for Improvement 08 (after merge removal). Do not mix into Improvement 07.
-- Attachments: [plus submenu](visual-improvements/2026-09-07-plus-submenu.gif)
+- Attachments: ![plus submenu](visual-improvements/2026-09-07-plus-submenu.gif)
 
 ## 2026-09-07 — plus and Path tabs sit on the tile
 
 - Issue: Selected-tile `+` and Path tabs overlap the right border on top of the tile instead of hanging behind it like `.docs/menu-tab-plus.png`.
 - Resolution: Planned for Improvement 08 (tuck both tabs under the tile face).
-- Attachments: [tabs overlap](visual-improvements/2026-09-07-plus-tabs-overlap.png)
+- Attachments: ![tabs overlap](visual-improvements/2026-09-07-plus-tabs-overlap.png)
 
 ## 2026-09-08 — tile tabs, select ring, taffy hole
 
 - Issue: `+` and Path tabs sit in the top-right instead of vertically centered on the right edge. Their icons should be slightly larger (X stays the same). The cyan select outline covers the X and the tabs. Pulled `+` taffy has a concave half-circle bite where it leaves the tile.
 - Resolution: Planned for Improvement 09 (center the tabs, larger `+`/Path glyphs, shadow selection instead of a ring, solid taffy join).
-- Attachments: [tabs and select](visual-improvements/2026-09-08-tile-tabs-select-x.png) · [taffy hole](visual-improvements/2026-09-08-plus-taffy-hole.png)
+- Attachments: ![tabs and select](visual-improvements/2026-09-08-tile-tabs-select-x.png) · ![taffy hole](visual-improvements/2026-09-08-plus-taffy-hole.png)
 
 ## 2026-09-08 — tabs on top, pull from under
 
 - Issue: `+` and Path tabs still sit under the tile border. Pulling them out shows a triangular twist and a hard left edge against the tile.
 - Resolution: Shipped in `feat(improve-09): sit plus Path tabs on the tile` (tabs on the right edge like X; taffy/string exit from under the face; ghost stays on top).
-- Attachments: [tabs under tile](visual-improvements/2026-09-08-tabs-under-tile.png) · [pull twist](visual-improvements/2026-09-08-plus-path-pull-twist.gif)
+- Attachments: ![tabs under tile](visual-improvements/2026-09-08-tabs-under-tile.png) · ![pull twist](visual-improvements/2026-09-08-plus-path-pull-twist.gif)
 
 ## 2026-09-08 — Path-adding tracks
 
 - Issue: Path-pull spindle does not read as “add a Path.” User wants a three-capsule staggered track mark.
 - Resolution: Path tab uses a chunky orthogonal fork of rounded capsules (trunk splitting into two Paths), so it reads as “pull a Path” and stays distinct from `+`.
-- Attachments: [path tracks motif](visual-improvements/2026-09-08-path-adding-tracks.png)
+- Attachments: ![path tracks motif](visual-improvements/2026-09-08-path-adding-tracks.png)
 
 ## 2026-09-08 — Path-adding connect / dotted
 
 - Issue: Fork still feels abstract. User wants a connecting-wires mark (circles or dotted ends, not plugs) or a plain dotted line.
 - Resolution: Path tab is a short dotted Path (three round dashes). Plug drawing is too busy at tab size; a row of dots read as an ellipsis.
-- Attachments: [connect wires](visual-improvements/2026-09-08-path-connect-wires.png)
+- Attachments: ![connect wires](visual-improvements/2026-09-08-path-connect-wires.png)
 
 ## 2026-09-08 — Path dash uneven
 
 - Issue: `stroke-dasharray` on the Path tab is uneven (long dash, then two stubs).
 - Resolution: Three equal capsule dashes, drawn as rects.
-- Attachments: [uneven dashes](visual-improvements/2026-09-08-path-dash-uneven.png)
+- Attachments: ![uneven dashes](visual-improvements/2026-09-08-path-dash-uneven.png)
 
 ## 2026-09-08 — tile-drag Path preview and move cursor
 
 - Issue: While dragging a tile, preview Paths sometimes draw as a big orthogonal box (shared trunk/spine plus stub jogs) instead of following the tile. The blue insert-band on the real ELK route is the good preview. Default tile cursor is a pointer hand; it should be a four-way move icon like Excalidraw.
 - Resolution: Shipped in `feat(improve-10): clean insert preview and move cursor`.
-- Attachments: [drag preview Paths](visual-improvements/2026-09-08-drag-preview-paths.gif)
+- Attachments: ![drag preview Paths](visual-improvements/2026-09-08-drag-preview-paths.gif)
 
 ## 2026-09-08 — Path delete hit and menu
 
 - Issue: Redundant Paths (either circled Path into Jack) cannot be removed. Path strokes are hard to click.
 - Resolution: Shipped in `feat(improve-11): delete redundant Paths from the context menu`.
-- Attachments: [path delete hit](visual-improvements/2026-09-08-path-delete-hit.png)
+- Attachments: ![path delete hit](visual-improvements/2026-09-08-path-delete-hit.png)
 
 ## 2026-09-08 — tile hover chrome
 
 - Issue: X, `+`, and Path only appear after a Tile is selected, so a hover is not enough to act on it.
 - Resolution: Shipped in `feat(improve-12): show tile chrome on hover`.
-- Attachments: [tile hover chrome](visual-improvements/2026-09-08-tile-hover-chrome.gif)
+- Attachments: ![tile hover chrome](visual-improvements/2026-09-08-tile-hover-chrome.gif)
 
 ## 2026-09-08 — taffy ink outline
 
 - Issue: Pulled `+` taffy is a flat green band with no outline, unlike the ink-bordered tiles it joins.
 - Resolution: Shipped in `feat(improve-08): outline the plus taffy`, then `feat(improve-08): make plus taffy outline chunky` — 3px `--line` band fully outside the green, like a tile border.
-- Attachments: [outline marks](visual-improvements/2026-09-08-taffy-outline-marks.png) · [no outline](visual-improvements/2026-09-08-taffy-no-outline.png)
+- Attachments: ![outline marks](visual-improvements/2026-09-08-taffy-outline-marks.png) · ![no outline](visual-improvements/2026-09-08-taffy-no-outline.png)
 
 ## 2026-09-08 — Other Task name and icon
 
 - Issue: New Other Steps show only a small circled exclamation and no Name, so the task half is blank.
 - Resolution: Shipped Name “Task” on first Other, with a larger clipboard icon instead of the exclamation.
-- Attachments: [other blank](visual-improvements/2026-09-08-other-task-blank.jpg)
+- Attachments: ![other blank](visual-improvements/2026-09-08-other-task-blank.jpg)
 
 ## 2026-09-08 — child Step defaults to Alice
 
 - Issue: Creating a Step from another Step (or from Data under that Step) assigned the default Alice instead of the parent’s actor.
 - Resolution: Child Steps inherit the parent Step’s Who; Data walks to the nearest upstream Step.
-- Attachments: [child defaults Alice](visual-improvements/2026-09-08-child-step-defaults-alice.jpg)
+- Attachments: ![child defaults Alice](visual-improvements/2026-09-08-child-step-defaults-alice.jpg)
 
 ## 2026-09-08 — tile create tabs too small
 
 - Issue: The Tile `+` and Path create tabs on a Tile are small and hard to grab.
 - Resolution: Shipped in `feat(improve-15): enlarge tile plus and Path tabs` — 44×44 tabs, 24px peek.
-- Attachments: [tile create tabs](visual-improvements/2026-09-08-tile-create-tabs.gif)
+- Attachments: ![tile create tabs](visual-improvements/2026-09-08-tile-create-tabs.gif)
 
 ## 2026-09-08 — insert onto sibling Path
 
 - Issue: Dragging a Tile onto a hovered Path that shares a trunk with the Tile’s current Path (root fan-out) does not insert.
 - Resolution: Unique segments after the split are drop targets; only Paths that touch the dragged Tile fade. Shared trunk still does not pick a Path.
-- Attachments: [sibling insert](visual-improvements/2026-09-08-insert-sibling-path.gif)
-
-
-## 2026-09-08 — Step/Data fan too far
-
-- Issue: The Step and Data boxes on the pulled `+` fan sit too far to the right of the tile.
-- Resolution: Shipped in `feat(improve-19): pull Step Data fan closer` — shorter arc, no extra outward offset.
-- Attachments: n/a
+- Attachments: ![sibling insert](visual-improvements/2026-09-08-insert-sibling-path.gif)
 
 ## 2026-09-08 — create tabs too far from tile
 
 - Issue: Selected-tile `+` (Step) and Path (Data-create sibling) tabs sit too far off the right edge; a paper gap shows between the tile and the icons.
 - Resolution: Shipped in `feat(improve-22): sit create tabs closer to the tile` — 14px peek, same hang as the X.
-- Attachments: [create tabs gap](visual-improvements/2026-09-08-create-tabs-gap.gif)
+- Attachments: ![create tabs gap](visual-improvements/2026-09-08-create-tabs-gap.gif)
 
 ## 2026-09-08 — Compare cyan outline
 
 - Issue: In Both, a cyan outline boxed the Before pane and not After, so the split looked unfinished. The switch still said Both.
 - Resolution: Shipped in `feat(improve-26): compare view without pan outline` — switch says Compare; no pan-target outline on either pane.
-- Attachments: [compare blue outline](visual-improvements/2026-09-08-compare-blue-outline.png)
+- Attachments: ![compare blue outline](visual-improvements/2026-09-08-compare-blue-outline.png)
 
 ## 2026-09-08 — Data create-mode gaps
 
 - Issue: Pulling `+` from Data leaves paper gaps between the cream fill and the ink border (Step-shaped scrim hole on a rounder Data tile).
 - Resolution: Shipped in `feat(improve-29): match Data radius in plus-pull scrim` — overlay holes use the tile’s own screen-scaled radius.
-- Attachments: [data create gaps](visual-improvements/2026-09-08-data-create-gaps.gif)
+- Attachments: ![data create gaps](visual-improvements/2026-09-08-data-create-gaps.gif)
 
 ## 2026-09-08 — Manage actors yellow highlight
 
 - Issue: Selected actor cards in Manage actors (and Who) use a mustard fill and yellow name bar that clash with pastel figures on dark chrome.
 - Resolution: Selected Who is cream with a chunky ink border, not yellow. Yellow stays on the view switch and Type / fat buttons.
-- Attachments: [manage actors yellow highlight](visual-improvements/2026-09-08-manage-actors-yellow-highlight.gif)
+- Attachments: ![manage actors yellow highlight](visual-improvements/2026-09-08-manage-actors-yellow-highlight.gif)
 
 ## 2026-09-08 — inspector fold chevron hover
 
 - Issue: Hovering the inspector › / ‹ strip fills the whole drawer edge mustard yellow.
 - Resolution: Hover is cream + ink, like the other chrome buttons. Not yellow.
-- Attachments: [manage actors yellow highlight](visual-improvements/2026-09-08-manage-actors-yellow-highlight.gif)
-
-
-## 2026-09-08 — drop status bar project name
-
-- Issue: Bottom-left project title is unreliable and not wanted.
-- Resolution: Status bar no longer shows the loaded project name. Right Click Delete and version remain.
-- Attachments: n/a
+- Attachments: ![manage actors yellow highlight](visual-improvements/2026-09-08-manage-actors-yellow-highlight.gif)
 
 ## 2026-09-08 — Right Click Delete on the left
 
 - Issue: Right Click Delete sits on the left of the bottom status bar; version is on the right.
 - Resolution: Shipped in `feat(improve-30): put Right Click Delete on the right` — toggle and version are a right-side cluster.
-- Attachments: [right click delete left](visual-improvements/2026-09-08-right-click-delete-left.gif)
-
-## 2026-09-08 — Present still shows the nav bar
-
-- Issue: Present hides the inspector and tile chrome but leaves the top bar (and status bar) on screen.
-- Resolution: Shipped in `feat(improve-31): hide the nav bar in Present` — full-bleed board; Escape exits.
-- Attachments: n/a
+- Attachments: ![right click delete left](visual-improvements/2026-09-08-right-click-delete-left.gif)
 
 ## 2026-09-09 — branch rows flip when a branch grows
 
