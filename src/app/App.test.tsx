@@ -340,7 +340,12 @@ test("Step Name uses a Type prefix and drops Name/Details captions", () => {
     useStore.getState().select({ type: SelectionKind.Node, id: OAK_PARK_IDS.read });
   });
   const rail = host.querySelector(".details-rail-body");
-  expect(rail?.querySelector(".inspector-field-prefix-label")?.textContent).toBe("Read");
+  const nameField = rail?.querySelector(".inspector-fields .inspector-field");
+  const nameBox = nameField?.querySelector(".inspector-field-box");
+  const prefix = nameField?.querySelector(".inspector-field-prefix");
+  expect(prefix?.querySelector(".inspector-field-prefix-label")?.textContent).toBe("Read");
+  expect(prefix?.classList.contains("has-chip")).toBe(true);
+  expect(nameBox?.nextElementSibling).toBe(prefix);
   const name = rail?.querySelector<HTMLInputElement>("#step-name-field");
   const details = rail?.querySelector<HTMLInputElement>("#step-details-field");
   expect(name?.getAttribute("aria-label")).toBe("Name");

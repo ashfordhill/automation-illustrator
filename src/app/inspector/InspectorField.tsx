@@ -1,5 +1,5 @@
 /**
- * Compact inspector text: reserved Type prefix + Name/Details in a rounded sub-box.
+ * Compact inspector text: Name/Details in a rounded sub-box, Type chip on the right.
  */
 import { LONGEST_STEP_KIND_LABEL } from "../../workflow/types";
 
@@ -21,14 +21,9 @@ export function InspectorField({
   disabled?: boolean;
   onChange: (value: string) => void;
 }) {
+  const chip = Boolean(prefix);
   return (
     <div className={`inspector-field${disabled ? " is-off" : ""}`}>
-      {prefixSlot ? (
-        <span className="inspector-field-prefix" aria-hidden="true">
-          <span className="inspector-field-prefix-sizer">{LONGEST_STEP_KIND_LABEL}</span>
-          <span className="inspector-field-prefix-label">{prefix ?? ""}</span>
-        </span>
-      ) : null}
       <div
         className="inspector-field-box"
         onClick={(e) => {
@@ -45,6 +40,12 @@ export function InspectorField({
           onChange={(e) => onChange(e.target.value)}
         />
       </div>
+      {prefixSlot ? (
+        <span className={`inspector-field-prefix${chip ? " has-chip" : ""}`} aria-hidden="true">
+          <span className="inspector-field-prefix-sizer">{LONGEST_STEP_KIND_LABEL}</span>
+          <span className="inspector-field-prefix-label">{prefix ?? ""}</span>
+        </span>
+      ) : null}
     </div>
   );
 }

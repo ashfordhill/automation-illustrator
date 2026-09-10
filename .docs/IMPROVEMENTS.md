@@ -1022,3 +1022,25 @@ Append to `## Amendments` in `.docs/GOAL.md`: P-06 as dated 2026-09-09.
 Commit: `feat(improve-49): hide the tile-drag hint strip`.  
 Evidence: `.docs/evidence/improve-49-drag-hint/`.
 
+---
+
+# Improvement 51 — Present expand panes
+
+Approved 2026-09-09. User request: Present should look like Compare, with a fullscreen control on each Before/After pane.
+
+## Locked decisions
+
+- Present opens as a stacked Before (top) / After (bottom) board, still full-bleed (no inspector, NodeToolbars, hints, top bar, or status bar) and still read-only.
+- Each pane has a Tabler expand icon (`IconArrowsMaximize`) at its top-right. Clicking it fills the window with that lane and tucks the other. The icon becomes collapse (`IconArrowsMinimize`). Collapse returns to split.
+- Space expands Before, then toggles Before/After. Escape returns to split when expanded, then exits Present.
+- Compare (the edit-mode switch) is unchanged and has no expand controls.
+- Present panes share pan/zoom like Compare (BA-05). Both Boards stay mounted so cameras persist.
+- No new runtime dependency.
+
+## Contract
+
+Append to `## Amendments` in `.docs/GOAL.md`: P-07, BA-05, AQ-01, AQ-02 as dated 2026-09-09.
+
+Commit: `feat(improve-51): expand Present Before After panes`.  
+Evidence: `.docs/evidence/improve-51-present-expand/`.
+

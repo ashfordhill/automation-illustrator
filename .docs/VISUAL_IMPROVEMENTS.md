@@ -331,3 +331,11 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 - Attachments:
   ![present icon no legs](.docs/visual-improvements/2026-09-09-present-icon-no-legs.png)
 
+## 2026-09-09 — Name caret clip and Type on the left
+
+- Issue: The Name caret is sliced by the cream box. Type (Search) sits as naked text on the left of the well, opposite the left-aligned title.
+- Resolution: Shipped in `feat(improve-50): lift Type chip and unclip Name caret` — Type is a cream chip on the right; Name stays left; caret has room.
+- Attachments:
+  ![name caret clip](.docs/visual-improvements/2026-09-09-name-caret-clip.gif)
+  ![type left of fields](.docs/visual-improvements/2026-09-09-type-left-of-fields.png)
+

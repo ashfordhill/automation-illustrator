@@ -1568,7 +1568,7 @@ body.is-tile-dragging * {
   align-items: center;
   min-width: 0;
   min-height: 36px;
-  padding: 6px 8px;
+  padding: 8px 10px;
   border: 2px solid var(--line);
   border-radius: 10px;
   background: var(--cream);
@@ -1576,6 +1576,7 @@ body.is-tile-dragging * {
   box-sizing: border-box;
   cursor: text;
   box-shadow: var(--chip-shadow);
+  overflow: visible;
 }
 
 .inspector-field-box:focus-within {
@@ -1586,30 +1587,52 @@ body.is-tile-dragging * {
 .inspector-field-prefix {
   position: relative;
   flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
   font-weight: 800;
   font-size: 13px;
-  line-height: 1.2;
-  color: var(--chrome-ink);
+  line-height: 20px;
+  color: var(--ink);
 }
 
 .inspector-field-prefix-sizer {
   visibility: hidden;
-  display: block;
+  display: flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 8px 10px;
+  border: 2px solid transparent;
+  box-sizing: border-box;
   white-space: nowrap;
   font-weight: 800;
   font-size: 13px;
-  line-height: 1.2;
+  line-height: 20px;
 }
 
 .inspector-field-prefix-label {
   position: absolute;
-  inset: 0;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
   display: flex;
   align-items: center;
+  justify-content: center;
   font-weight: 800;
   font-size: 13px;
-  line-height: 1.2;
+  line-height: 20px;
   white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.inspector-field-prefix.has-chip .inspector-field-prefix-label {
+  min-height: 36px;
+  padding: 8px 10px;
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  background: var(--cream);
+  color: var(--ink);
+  box-shadow: var(--chip-shadow);
 }
 
 .chrome-bar .inspector-field :is(input, textarea),
@@ -1617,8 +1640,10 @@ body.is-tile-dragging * {
   flex: 1 1 auto;
   min-width: 0;
   width: 100%;
+  height: auto;
+  min-height: 20px;
   margin: 0;
-  padding: 1px 0 2px;
+  padding: 2px 1px;
   border: none;
   border-radius: 8px;
   background: transparent !important;
@@ -1628,7 +1653,7 @@ body.is-tile-dragging * {
   font-family: inherit;
   font-weight: 700;
   font-size: 13px;
-  line-height: 1.2;
+  line-height: 20px;
   box-shadow: none;
 }
 

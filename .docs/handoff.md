@@ -2460,5 +2460,34 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(improve-48): restore presenter legs in front of slide`
 
+## Improvement 50 — Type chip on the right, unclip Name caret — 2026-09-09
+
+- Starting commit: `c3badeb59c0ea42d7cfde0296df2791f6dd6f0c0` (`feat(improve-48): restore presenter legs in front of slide`)
+- Working tree at start: HEAD matched improve-48 correction 2. Unrelated Present-expand WIP stayed unstaged (`App.tsx`, `store.ts`, keyboard files, `Board.tsx`, `PresentExpandButton.tsx`, lane-stack CSS).
+- GOAL clauses addressed: NA-07 (amendment dated 2026-09-09). Document version unchanged.
+- Library research and decisions: no new runtime dependency. Native inputs coerce `overflow` to `clip` in Chromium, so the caret is unclipped with box padding (8px) and a 20px line-height, not `overflow: visible`.
+- Files changed:
+  - Inspector: `src/app/inspector/InspectorField.tsx`, `src/app/styles/tokens.css` (Name/Details + Type chip only)
+  - Tests: `src/app/App.test.tsx`, `e2e/improve-50-type-chip.spec.ts`
+  - Docs: `.docs/GOAL.md`, `.docs/IMPROVEMENTS.md`, `.docs/VISUAL_IMPROVEMENTS.md`, this handoff entry
+  - Visual log: `.docs/visual-improvements/2026-09-09-name-caret-clip.gif`, `.docs/visual-improvements/2026-09-09-type-left-of-fields.png`
+  - Evidence: `.docs/evidence/improve-50-type-chip/`
+- Behavior implemented:
+  - Name stays left-aligned in its cream box. Type is a cream chip on the right (border + chip shadow). Other and Details leave the reserved column empty.
+  - Switching Type does not change Name length (column still sized to Approve).
+  - Name caret sits inside the box with padding above and below.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning). Node 24.
+  - `npm run test:unit` — 41 files, 310 tests pass.
+  - `npm run test:e2e` — `improve-50-type-chip` (2), `improve-46-inspector-cluster` (2), `improve-44-inspector-compact` (3), `inspector` (6) all pass (13). Chromium via `LD_LIBRARY_PATH` `/home/ash/.local/pw-libs/usr/lib/x86_64-linux-gnu`.
+- Evidence:
+  - `.docs/evidence/improve-50-type-chip/type-chip-1440.png` — Search chip to the right of Name (1440×900)
+  - `.docs/evidence/improve-50-type-chip/fields-search-1440.png` — Name/Details well close-up; Type chip lifted
+  - `.docs/evidence/improve-50-type-chip/type-chip-1024.png` — same at 1024×768
+- Earlier-slice defects fixed: none
+- Known limitations / follow-ups: Present-expand WIP in the working tree is not part of this commit. Path-end wobble is still a later improvement.
+- Status: COMPLETE
+- Commit: `feat(improve-50): lift Type chip and unclip Name caret`
+
 
 
