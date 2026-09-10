@@ -241,6 +241,7 @@ export const useStore = create<{
   capturing: KeyAction | null;
   lastHumanId: string | null;
   manageActorsOpen: boolean;
+  manageActorsSource: "empty" | "step" | null;
   manageActorId: string | null;
   manageActorsDeleteMode: boolean;
   focusId: string | null;
@@ -361,7 +362,7 @@ export const useStore = create<{
   helpOpen: false,
   capturing: null,
   lastHumanId: null,
-  manageActorsOpen: false,
+  manageActorsOpen: false, manageActorsSource: null,
   manageActorId: null,
   manageActorsDeleteMode: false,
   focusId: null,
@@ -410,7 +411,7 @@ export const useStore = create<{
       pendingReplace: null,
       importError: null,
       lastHumanId: null,
-      manageActorsOpen: false,
+      manageActorsOpen: false, manageActorsSource: null,
       manageActorsDeleteMode: false,
       manageActorId: null,
       view: ViewMode.Before,
@@ -514,7 +515,7 @@ export const useStore = create<{
         helpOpen: false,
         interaction: IDLE,
         departing: null,
-        manageActorsOpen: false,
+        manageActorsOpen: false, manageActorsSource: null,
       manageActorsDeleteMode: false,
         manageActorId: null,
         laneViewports,
@@ -573,7 +574,7 @@ export const useStore = create<{
     ) {
       set({
         selected,
-        manageActorsOpen: false,
+        manageActorsOpen: false, manageActorsSource: null,
         manageActorsDeleteMode: false,
         manageActorId: null,
         interaction: IDLE,
@@ -586,7 +587,7 @@ export const useStore = create<{
     ) {
       set({
         selected,
-        manageActorsOpen: false,
+        manageActorsOpen: false, manageActorsSource: null,
         manageActorsDeleteMode: false,
         manageActorId: null,
         interaction: IDLE,
@@ -595,7 +596,7 @@ export const useStore = create<{
     }
     set({
       selected,
-      manageActorsOpen: false,
+      manageActorsOpen: false, manageActorsSource: null,
       manageActorsDeleteMode: false,
       manageActorId: null,
     });
@@ -780,10 +781,22 @@ export const useStore = create<{
         : null) ??
       workflow.actors[0]?.id ??
       null;
-    set({ manageActorsOpen: true, manageActorId: nextId, manageActorsDeleteMode: false });
+    set({
+      manageActorsOpen: true,
+      manageActorId: nextId,
+      manageActorsDeleteMode: false,
+      manageActorsSource:
+        selected?.type === SelectionKind.Node &&
+        (() => {
+          const node = findNode(workflow, selected.id);
+          return Boolean(node && isStepNode(node));
+        })()
+          ? "step"
+          : "empty",
+    });
   },
   closeManageActors: (opts) => {
-    set({ manageActorsOpen: false, manageActorId: null, manageActorsDeleteMode: false });
+    set({ manageActorsOpen: false, manageActorsSource: null, manageActorId: null, manageActorsDeleteMode: false });
     if (opts?.restoreFocus === false) return;
     queueMicrotask(() => {
       (
@@ -1231,7 +1244,7 @@ export const useStore = create<{
     if (!found || !isStepNode(found)) return;
     set({
       selected: { type: SelectionKind.Node, id: nodeId },
-      manageActorsOpen: false,
+      manageActorsOpen: false, manageActorsSource: null,
       manageActorsDeleteMode: false,
       manageActorId: null,
       interaction: { kind: "tile-text-edit", nodeId, field },
@@ -1243,7 +1256,7 @@ export const useStore = create<{
     if (!found || !isStepNode(found)) return;
     set({
       selected: { type: SelectionKind.Node, id: nodeId },
-      manageActorsOpen: false,
+      manageActorsOpen: false, manageActorsSource: null,
       manageActorsDeleteMode: false,
       manageActorId: null,
       interaction: { kind: "tile-pie", nodeId, pie, x, y },
@@ -1255,7 +1268,7 @@ export const useStore = create<{
     const { workflow, view } = get();
     set({
       selected: { type: SelectionKind.Node, id: nodeId },
-      manageActorsOpen: false,
+      manageActorsOpen: false, manageActorsSource: null,
       manageActorsDeleteMode: false,
       manageActorId: null,
     });
@@ -1420,7 +1433,7 @@ export const useStore = create<{
       pendingReplace: null,
       importError: null,
       lastHumanId: null,
-      manageActorsOpen: false,
+      manageActorsOpen: false, manageActorsSource: null,
       manageActorsDeleteMode: false,
       manageActorId: null,
       view: ViewMode.Before,

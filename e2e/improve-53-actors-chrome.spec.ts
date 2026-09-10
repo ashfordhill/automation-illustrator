@@ -17,13 +17,21 @@ async function newBoardWithStep(page: import("@playwright/test").Page) {
   await waitForLayout(page);
 }
 
-test.describe("Improvement 53 — Actors chrome under Who", () => {
-  test("Type is above Who; Actors sits under the roster, not beside trash", async ({ page }) => {
+test.describe("Improvement 53 — Actors header text and headshot add", () => {
+  test("empty inspector has Actors; Data does not; Step puts it beside trash", async ({ page }) => {
     await loadOakPark(page);
+    const actors = aside(page).getByRole("button", { name: "Actors", exact: true });
+    await expect(actors).toBeVisible();
+    await expect(aside(page).locator(".inspector-header #manage-actors-btn")).toHaveCount(1);
+    await capturePage(page, `${EVIDENCE}/empty-actors-1440.png`);
+
+    await page.getByText("Account #").first().click();
+    await expect(aside(page).getByRole("button", { name: "Remove Data" })).toBeVisible();
+    await expect(actors).toHaveCount(0);
+
     await page.getByText("Read invoice.pdf").first().click();
     const who = aside(page).locator(".inspector-who-groups");
     const type = aside(page).locator(".inspector-type-grid");
-    const actors = aside(page).getByRole("button", { name: "Actors", exact: true });
     const trash = aside(page).getByRole("button", { name: "Remove Step" });
     await expect(who).toBeVisible();
     await expect(type.first()).toBeVisible();
@@ -35,20 +43,21 @@ test.describe("Improvement 53 — Actors chrome under Who", () => {
     const trashBox = await trash.boundingBox();
     expect(whoBox && typeBox && actorsBox && trashBox).toBeTruthy();
     expect(typeBox!.y).toBeLessThan(whoBox!.y);
-    expect(actorsBox!.y).toBeGreaterThan(whoBox!.y + whoBox!.height - 8);
-    expect(actorsBox!.x).toBeGreaterThan(whoBox!.x + whoBox!.width / 2);
-    expect(await aside(page).locator(".inspector-header #manage-actors-btn").count()).toBe(0);
+    expect(actorsBox!.y).toBeLessThan(whoBox!.y);
+    expect(Math.abs(actorsBox!.y - trashBox!.y)).toBeLessThan(8);
+    expect(actorsBox!.x).toBeLessThan(trashBox!.x);
     await capturePage(page, `${EVIDENCE}/step-who-bottom-1440.png`);
   });
 
-  test("Manage uses Who-key add, trash delete-mode, swatch and eyedropper", async ({ page }) => {
+  test("Manage from a Step shows Back; add keys share equal thirds", async ({ page }) => {
     await newBoardWithStep(page);
     await aside(page).getByRole("button", { name: "Actors", exact: true }).click();
-    await expect(aside(page).getByRole("button", { name: "Actors", exact: true })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
+    await expect(aside(page).getByRole("button", { name: "Back" })).toBeVisible();
+    await expect(aside(page).getByRole("button", { name: "Actors", exact: true })).toHaveCount(0);
+    await expect(aside(page).getByRole("button", { name: "Remove Step" })).toBeVisible();
     await expect(aside(page).getByRole("heading", { name: "Manage actors" })).toHaveCount(0);
+    await capturePage(page, `${EVIDENCE}/manage-from-step-back-1440.png`);
+
     const addHuman = aside(page).getByRole("button", { name: "Add human" });
     const addRobot = aside(page).getByRole("button", { name: "Add robot" });
     const del = aside(page).getByRole("button", { name: "Delete mode" });
@@ -56,11 +65,13 @@ test.describe("Improvement 53 — Actors chrome under Who", () => {
     await expect(addRobot).toBeVisible();
     await expect(del).toBeVisible();
     const humanBox = await addHuman.boundingBox();
-    const alice = aside(page).getByRole("option", { name: "Alice" });
-    const aliceBox = await alice.boundingBox();
-    expect(humanBox && aliceBox).toBeTruthy();
-    expect(Math.abs(humanBox!.width - aliceBox!.width)).toBeLessThan(4);
-    expect(Math.abs(humanBox!.height - aliceBox!.height)).toBeLessThan(8);
+    const robotBox = await addRobot.boundingBox();
+    const delBox = await del.boundingBox();
+    expect(humanBox && robotBox && delBox).toBeTruthy();
+    expect(Math.abs(humanBox!.width - robotBox!.width)).toBeLessThan(4);
+    expect(Math.abs(robotBox!.width - delBox!.width)).toBeLessThan(4);
+    expect(Math.abs(humanBox!.height - humanBox!.width)).toBeLessThan(8);
+    expect(Math.abs(humanBox!.y - delBox!.y)).toBeLessThan(4);
     await aside(page).getByRole("option", { name: "Robot LLM" }).click();
     await expect(aside(page).getByLabel("Name")).toHaveValue("Robot");
     await expect(aside(page).getByLabel("Role")).toHaveValue("LLM");
@@ -88,16 +99,28 @@ test.describe("Improvement 53 — Actors chrome under Who", () => {
     await expect(aside(page).getByRole("option", { name: "Human", exact: true })).toHaveCount(0);
     await capturePage(page, `${EVIDENCE}/delete-mode-1440.png`);
   });
+
+  test("Manage from empty keeps Actors and hides Back", async ({ page }) => {
+    await loadOakPark(page);
+    await aside(page).getByRole("button", { name: "Actors", exact: true }).click();
+    await expect(aside(page).getByRole("button", { name: "Actors", exact: true })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await expect(aside(page).getByRole("button", { name: "Back" })).toHaveCount(0);
+    await expect(aside(page).getByLabel("Name")).toBeVisible();
+  });
 });
 
 test.describe("Improvement 53 min-width", () => {
   test.use({ viewport: { width: 1024, height: 768 } });
 
-  test("Actors under Who still fits at 1024", async ({ page }) => {
+  test("header Actors and headshot add still fit at 1024", async ({ page }) => {
     await loadOakPark(page);
     await page.getByText("Read invoice.pdf").first().click();
     await expect(aside(page).getByRole("button", { name: "Actors", exact: true })).toBeVisible();
     await aside(page).getByRole("button", { name: "Actors", exact: true }).click();
+    await expect(aside(page).getByRole("button", { name: "Back" })).toBeVisible();
     await expect(aside(page).getByLabel("Name")).toBeVisible();
     await capturePage(page, `${EVIDENCE}/manage-1024.png`);
   });

@@ -1,8 +1,6 @@
 /**
- * Manage actors toggle: a Who-key (stickman + Actors) under the roster.
+ * Manage actors toggle (text) and Back when opened from a Step.
  */
-import { FIGURE_INK_ON_PASTEL } from "../../workflow/actors";
-import { HumanFigure } from "../../board/tiles/HumanFigure";
 import { useStore } from "../../state/store";
 
 export function ActorsButton() {
@@ -11,7 +9,7 @@ export function ActorsButton() {
     <button
       id="manage-actors-btn"
       type="button"
-      className={`inspector-who inspector-actors${open ? " is-on" : ""}`}
+      className={`inspector-actors${open ? " is-on" : ""}`}
       aria-label="Actors"
       aria-pressed={open}
       onClick={() => {
@@ -20,18 +18,20 @@ export function ActorsButton() {
         else s.openManageActors();
       }}
     >
-      <span className="inspector-who-fig inspector-actors-fig">
-        <HumanFigure size={26} color={FIGURE_INK_ON_PASTEL} />
-      </span>
-      <span className="inspector-who-name">Actors</span>
+      Actors
     </button>
   );
 }
 
-export function ActorsRow() {
+export function BackButton() {
   return (
-    <div className="inspector-actors-row">
-      <ActorsButton />
-    </div>
+    <button
+      type="button"
+      className="inspector-back"
+      aria-label="Back"
+      onClick={() => useStore.getState().closeManageActors({ restoreFocus: false })}
+    >
+      Back
+    </button>
   );
 }

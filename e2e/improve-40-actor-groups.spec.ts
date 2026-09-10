@@ -21,10 +21,6 @@ test.describe("Improvement 40 — Humans then Robots on their own row", () => {
   test("Add human sits with Humans; Robots start on the next row", async ({ page }) => {
     await newBoardWithStep(page);
     await aside(page).getByRole("button", { name: "Actors", exact: true }).click();
-    await expect(aside(page).getByRole("button", { name: "Actors", exact: true })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
     await aside(page).getByRole("button", { name: "Add human" }).click();
 
     const options = aside(page).getByRole("option");
@@ -57,7 +53,7 @@ test.describe("Improvement 40 — Humans then Robots on their own row", () => {
     await newBoardWithStep(page);
     await aside(page).getByRole("button", { name: "Actors", exact: true }).click();
     await aside(page).getByRole("button", { name: "Add human" }).click();
-    await aside(page).getByRole("button", { name: "Actors", exact: true }).click();
+    await aside(page).getByRole("button", { name: "Back" }).click();
 
     const person = aside(page).getByRole("button", { name: "Who Human" });
     const llm = aside(page).getByRole("button", { name: "Who Robot LLM" });

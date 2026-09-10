@@ -1511,21 +1511,39 @@ body.is-tile-dragging * {
   gap: 8px;
 }
 
-.inspector-actors-row {
-  display: flex;
-  justify-content: flex-end;
-  width: var(--inspector-cluster);
-  max-width: 100%;
-  margin-inline: auto;
+.inspector-actors,
+.inspector-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  min-height: 36px;
+  padding: 0 12px;
+  margin: 0;
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  background: var(--cream);
+  color: var(--ink);
+  font-family: inherit;
+  font-weight: 800;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: var(--chip-shadow);
+  box-sizing: border-box;
+  white-space: nowrap;
 }
 
-.inspector-actors-fig {
-  background: var(--paper);
+.inspector-actors.is-on {
+  background: var(--yellow);
+  color: var(--on-yellow);
+  border-color: var(--yellow);
+  box-shadow: none;
 }
 
 .inspector-actors:focus-visible,
-.inspector-actor-add:focus-visible,
-.inspector-actor-delete:focus-visible {
+.inspector-back:focus-visible,
+.inspector-actor-op:focus-visible {
   outline: 3px solid var(--blue);
   outline-offset: 2px;
 }
@@ -1786,6 +1804,7 @@ body.is-tile-dragging * {
   flex-direction: column;
   align-items: stretch;
   gap: 10px;
+  overflow: visible;
 }
 
 .inspector-manage > .inspector-actor-edit {
@@ -1793,38 +1812,72 @@ body.is-tile-dragging * {
 }
 
 .inspector-actor-ops {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
   align-items: stretch;
-  justify-content: flex-start;
   gap: var(--inspector-who-gap);
   width: var(--inspector-cluster);
   max-width: 100%;
   margin-inline: auto;
+  overflow: visible;
+}
+
+.inspector-actor-op {
+  position: relative;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  background: var(--cream);
+  color: var(--ink);
+  cursor: pointer;
+  box-shadow: var(--chip-shadow);
+  box-sizing: border-box;
+  overflow: visible;
+}
+
+.inspector-actor-op.is-on {
+  background: var(--yellow);
+  border-color: var(--yellow);
+  box-shadow: none;
+}
+
+.inspector-actor-head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 82%;
+  height: 82%;
+  pointer-events: none;
+}
+
+.inspector-actor-head svg {
+  display: block;
 }
 
 .inspector-actor-plus {
   position: absolute;
-  right: -5px;
-  bottom: -3px;
-  width: 16px;
-  height: 16px;
-  border-radius: 5px;
+  right: 3px;
+  bottom: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
   border: 2px solid var(--line);
   background: var(--plus);
   color: #f4fff6;
   font-family: inherit;
   font-weight: 800;
-  font-size: 13px;
-  line-height: 12px;
+  font-size: 14px;
+  line-height: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-}
-
-.inspector-actor-delete-fig {
-  background: var(--paper);
-  align-items: center;
+  pointer-events: none;
 }
 
 .inspector-who.is-delete {

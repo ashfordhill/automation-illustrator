@@ -11,10 +11,10 @@ import {
   WorkflowNodeKind,
 } from "../../workflow/catalogs";
 import { afterGraph, edgeIsDotted } from "../../workflow/graph";
-import { laneAssignments, STEP_KIND_META } from "../../workflow/types";
+import { laneAssignments, STEP_KIND_META, isStepNode } from "../../workflow/types";
 import { findEdge, findNode } from "../../workflow/selectors";
 import { useStore } from "../../state/store";
-import { ActorsRow } from "./ActorsButton";
+import { ActorsButton, BackButton } from "./ActorsButton";
 import { InspectorField } from "./InspectorField";
 import { ManageActorsPanel } from "./ManageActorsPanel";
 import { TypeButtons } from "./TypeButtons";
@@ -25,16 +25,22 @@ function InspectorHeader({
   title,
   removeLabel,
   onRemove,
+  showActors,
+  showBack,
 }: {
   title?: string;
   removeLabel?: string;
   onRemove?: () => void;
+  showActors?: boolean;
+  showBack?: boolean;
 }) {
-  if (!title && !(removeLabel && onRemove)) return null;
+  if (!title && !showActors && !showBack && !(removeLabel && onRemove)) return null;
   return (
     <div className={`inspector-header${title ? "" : " is-tools"}`}>
       {title ? <Text fw={800}>{title}</Text> : <span />}
       <div className="inspector-header-tools">
+        {showBack ? <BackButton /> : null}
+        {showActors ? <ActorsButton /> : null}
         {removeLabel && onRemove ? (
           <Tooltip label={removeLabel}>
             <ActionIcon
@@ -96,10 +102,14 @@ export function DetailsPanel() {
   const lane = useStore((s) => s.assignmentLane());
   const view = useStore((s) => s.view);
   const manageOpen = useStore((s) => s.manageActorsOpen);
+  const manageSource = useStore((s) => s.manageActorsSource);
   const readOnly = view === ViewMode.Both;
-  const showActors = !readOnly;
   const selectedNode =
     selected?.type === SelectionKind.Node ? findNode(workflow, selected.id) : undefined;
+  const selectedStep = Boolean(selectedNode && isStepNode(selectedNode));
+  const showActorsBtn =
+    !readOnly && (manageOpen ? manageSource !== "step" : !selected || selectedStep);
+  const showBack = manageOpen && manageSource === "step";
   const showRemove =
     !readOnly &&
     Boolean(selectedNode) &&
@@ -121,9 +131,10 @@ export function DetailsPanel() {
           ? () => useStore.getState().removeTarget(selectedNode.id)
           : undefined
       }
+      showActors={showActorsBtn}
+      showBack={showBack}
     />
   );
-  const actorsFooter = showActors && !manageOpen ? <ActorsRow /> : null;
 
   if (manageOpen) {
     return (
@@ -138,7 +149,6 @@ export function DetailsPanel() {
     return (
       <Stack gap="sm" p="sm" className="chrome-hide">
         {header}
-        {actorsFooter}
       </Stack>
     );
   }
@@ -157,7 +167,6 @@ export function DetailsPanel() {
             disabled={readOnly}
             onChange={(e) => useStore.getState().updateNode(n.id, { label: e.target.value })}
           />
-          {actorsFooter}
         </Stack>
       );
     }
@@ -195,7 +204,6 @@ export function DetailsPanel() {
           disabled={readOnly}
           onChange={(id) => useStore.getState().assignActor(n.id, id)}
         />
-        {actorsFooter}
       </Stack>
     );
   }
@@ -226,7 +234,6 @@ export function DetailsPanel() {
             { value: "solid", label: "Solid" },
           ]}
         />
-        {actorsFooter}
       </Stack>
     );
   }
@@ -234,7 +241,6 @@ export function DetailsPanel() {
   return (
     <Stack gap="sm" p="sm" className="chrome-hide">
       {header}
-      {actorsFooter}
     </Stack>
   );
 }

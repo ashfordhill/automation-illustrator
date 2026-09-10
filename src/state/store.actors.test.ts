@@ -267,11 +267,24 @@ test("Manage actors opens on the selected Step’s Who", () => {
   s.select({ type: SelectionKind.Node, id: fs });
   s.openManageActors();
   expect(useStore.getState().manageActorsOpen).toBe(true);
+  expect(useStore.getState().manageActorsSource).toBe("step");
   expect(useStore.getState().manageActorId).toBe(alice);
   s.closeManageActors({ restoreFocus: false });
+  expect(useStore.getState().manageActorsSource).toBe(null);
   s.select({ type: SelectionKind.Node, id: review });
   s.openManageActors();
   expect(useStore.getState().manageActorId).toBe(roy);
+});
+
+test("Manage actors source is empty when nothing is selected", () => {
+  const s = useStore.getState();
+  s.select(null);
+  s.openManageActors();
+  expect(useStore.getState().manageActorsSource).toBe("empty");
+  s.closeManageActors({ restoreFocus: false });
+  s.select({ type: SelectionKind.Node, id: OAK_PARK_IDS.acct });
+  s.openManageActors();
+  expect(useStore.getState().manageActorsSource).toBe("empty");
 });
 
 test("new Other Steps have an empty Name; choosing Other does not fill Task", () => {

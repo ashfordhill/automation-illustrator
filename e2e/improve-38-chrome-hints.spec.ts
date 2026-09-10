@@ -72,7 +72,7 @@ test.describe("Improvement 38 — chrome, hints, Type, Who", () => {
     const alice = page.locator("aside").getByRole("option", { name: "Alice" });
     await expect(alice).toHaveAttribute("aria-selected", "true");
     await capturePage(page, `${EVIDENCE}/manage-alice-1440.png`);
-    await page.locator("aside").getByRole("button", { name: "Actors", exact: true }).click();
+    await page.locator("aside").getByRole("button", { name: "Back" }).click();
 
     const pt = await pathScreenPoint(page, "e_web_acct", 0.22);
     await page.mouse.click(pt.x, pt.y);

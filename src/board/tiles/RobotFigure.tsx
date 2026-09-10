@@ -1,16 +1,24 @@
 /**
  * Antenna robot drawn on ActorColumn and the roster.
  * Pair with HumanFigure; fill color comes from ROBOT_COLORS[RobotKind].
+ * crop "head" is the inspector add-robot key.
  */
 type Fig = { size?: number; color?: string; className?: string };
 
-export function RobotFigure({ size = 44, color = "var(--ink)", className }: Fig) {
+export function RobotFigure({
+  size = 44,
+  color = "var(--ink)",
+  className,
+  crop = "full",
+}: Fig & { crop?: "full" | "head" }) {
+  const head = crop === "head";
   return (
     <svg
       className={className}
       width={size}
-      height={size * 1.55}
-      viewBox="0 0 40 64"
+      height={head ? size : size * 1.55}
+      viewBox={head ? "9 0 22 25" : "0 0 40 64"}
+      preserveAspectRatio="xMidYMid meet"
       fill="none"
       aria-hidden
     >
@@ -20,13 +28,15 @@ export function RobotFigure({ size = 44, color = "var(--ink)", className }: Fig)
       <rect x="11" y="8" width="18" height="16" rx="1.5" stroke={color} strokeWidth="2.4" />
       <circle cx="16.5" cy="15" r="1.4" fill={color} />
       <circle cx="23.5" cy="15" r="1.4" fill={color} />
-      <path
-        d="M20 24 V40 M8.5 30 H31.5 M20 40 L10 58 M20 40 L30 58"
-        stroke={color}
-        strokeWidth="2.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+      {head ? null : (
+        <path
+          d="M20 24 V40 M8.5 30 H31.5 M20 40 L10 58 M20 40 L30 58"
+          stroke={color}
+          strokeWidth="2.4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      )}
     </svg>
   );
 }

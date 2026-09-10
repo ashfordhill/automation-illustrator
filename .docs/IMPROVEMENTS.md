@@ -1109,6 +1109,7 @@ Approved 2026-09-09 (correction of Improvement 52 chrome). Who returns to the bo
 - Delete mode: trash key toggles; actor cards get a red border and X; click deletes (unused-only NA-02); Escape exits delete mode first.
 - Color is a 36px cream swatch that opens the 14-swatch wheel, plus a separate eyedropper (EyeDropper API; falls back to the wheel). Role stays one-line in the same Name/Details well.
 - Correction 1 (2026-09-09): Name over Role on the left; one tall card on the right (color fill / eyedropper). No outer well.
+- Correction 2 (2026-09-09): Actors is a text-only header button (Step: next to trash; empty inspector: alone). Hidden on Data and Path. Manage from a Step shows a cream Back next to trash; Manage from empty keeps Actors as the toggle. Add human / Add robot / delete-mode are three equal squares: headshots with a green plus, trash centered. No nested Who-cards.
 - No new runtime dependency.
 
 ## Contract
@@ -1117,4 +1118,6 @@ Append to `## Amendments` in `.docs/GOAL.md`: NA-05, NA-06 as dated 2026-09-09.
 
 Commit: `feat(improve-53): restyle Actors under Who`.  
 Evidence: `.docs/evidence/improve-53-actors-chrome/`.
+
+Correction 2 commit: `feat(improve-53): Actors text header and headshot add`.
 

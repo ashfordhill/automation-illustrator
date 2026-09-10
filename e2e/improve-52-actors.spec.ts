@@ -24,7 +24,7 @@ test.describe("Improvement 52 — Actors header and Manage polish", () => {
     const actors = aside(page).getByRole("button", { name: "Actors", exact: true });
     await expect(actors).toBeVisible();
     await actors.click();
-    await expect(actors).toHaveAttribute("aria-pressed", "true");
+    await expect(aside(page).getByRole("button", { name: "Back" })).toBeVisible();
     await expect(aside(page).getByRole("heading", { name: "Manage actors" })).toHaveCount(0);
     await capturePage(page, `${EVIDENCE}/step-who-first-1440.png`);
   });
@@ -32,10 +32,7 @@ test.describe("Improvement 52 — Actors header and Manage polish", () => {
   test("Manage uses icon add, Role, and minus delete-mode", async ({ page }) => {
     await newBoardWithStep(page);
     await aside(page).getByRole("button", { name: "Actors", exact: true }).click();
-    await expect(aside(page).getByRole("button", { name: "Actors", exact: true })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
+    await expect(aside(page).getByRole("button", { name: "Back" })).toBeVisible();
     await expect(aside(page).getByRole("heading", { name: "Manage actors" })).toHaveCount(0);
     await expect(aside(page).getByRole("button", { name: "Add human" })).toBeVisible();
     await expect(aside(page).getByRole("button", { name: "Add robot" })).toBeVisible();

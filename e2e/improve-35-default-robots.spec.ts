@@ -38,7 +38,7 @@ test.describe("Improvement 35 — default LLM Script Agent robots", () => {
     await expect(aside(page).getByLabel("Name")).toHaveValue("Robot");
     await expect(aside(page).getByLabel("Role")).toHaveValue("LLM");
     await capturePage(page, `${EVIDENCE}/new-manage-actors-1440.png`);
-    await aside(page).getByRole("button", { name: "Actors", exact: true }).click();
+    await aside(page).getByRole("button", { name: "Back" }).click();
 
     await viewLabel(page, "After").click();
     await waitForLayout(page);

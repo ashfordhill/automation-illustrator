@@ -2609,4 +2609,22 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(improve-53): stack Name Role beside color card`
 
+## Improvement 53 — correction 2 — 2026-09-09
+
+- Requested: Actors is a text-only button next to trash on the Step inspector (and on the empty inspector). Hidden on Data. Manage from a Step shows cream Back next to trash; from empty, Actors stays the toggle (no Back). Add human / Add robot / trash are equal-third headshot squares, not nested Who-cards.
+- Changed: Header tools host Actors and/or Back. `manageActorsSource` records empty vs Step. Add keys crop Human/Robot to heads with a green plus; trash is centered in its square. Tests cover Data has no Actors, Back only from Step, and equal-width ops.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2). Node 24.
+  - `npm run test:unit` — 41 files, 314 tests pass.
+  - `npm run test:e2e` — 210 passed (tracked `e2e/*.spec.ts`). Untracked leftover `e2e/inspector-trash-color.spec.ts` is not part of this commit. Chromium via `LD_LIBRARY_PATH` `/home/ash/.local/pw-libs/usr/lib/x86_64-linux-gnu`.
+- Evidence:
+  - `.docs/evidence/improve-53-actors-chrome/empty-actors-1440.png` — empty inspector, text Actors top-right (1440×900)
+  - `.docs/evidence/improve-53-actors-chrome/step-who-bottom-1440.png` — Step: Actors beside trash, Type then Who (1440×900)
+  - `.docs/evidence/improve-53-actors-chrome/manage-from-step-back-1440.png` — Manage from Step: Back + trash (1440×900)
+  - `.docs/evidence/improve-53-actors-chrome/manage-editor-1440.png` — headshot add / centered trash in equal thirds (1440×900)
+  - `.docs/evidence/improve-53-actors-chrome/delete-mode-1440.png` — delete-mode yellow trash; X on cards (1440×900)
+  - `.docs/evidence/improve-53-actors-chrome/manage-1024.png` — Back + headshot add at 1024×768
+- Status: COMPLETE
+- Commit: `feat(improve-53): Actors text header and headshot add`
+
 

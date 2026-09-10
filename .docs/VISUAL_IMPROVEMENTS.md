@@ -361,3 +361,10 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 - Attachments:
   ![actor edit name role color](.docs/visual-improvements/2026-09-09-actor-edit-name-role-color.png)
 
+## 2026-09-09 — Actors header text and headshot add
+
+- Issue: Actors sat under Who as a Who-key. Manage add/delete were nested figure cards; full bodies made Human and Robot look the same, and the trash sat off-center.
+- Resolution: Actors is a text-only header button (Step next to trash; empty inspector only; hidden on Data). Manage from a Step shows Back; from empty it stays a toggle. Add human / Add robot / trash share equal thirds as headshot squares.
+- Attachments:
+  ![actor add headshots](.docs/visual-improvements/2026-09-09-actor-add-headshots.png)
+
