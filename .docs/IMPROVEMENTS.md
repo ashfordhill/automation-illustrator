@@ -1024,6 +1024,27 @@ Evidence: `.docs/evidence/improve-49-drag-hint/`.
 
 ---
 
+# Improvement 50 — Type chip on the right, unclip Name caret
+
+Approved 2026-09-09. User request with caret GIF and Search alignment screenshot.
+
+## Locked decisions
+
+- Name stays left-aligned in its cream box. Details stays an empty cream box.
+- Type sits to the **right** of Name, in a cream chip (border + `--chip-shadow`) so it lifts off the dark well. Other and Details leave the reserved column empty (no empty chip).
+- Reserved column is still sized to the longest Type word (`Approve`) so switching Type does not change Name length.
+- Name caret is fully visible: taller line-height, padding, `overflow: visible` on the input and box.
+- No new runtime dependency.
+
+## Contract
+
+Append to `## Amendments` in `.docs/GOAL.md`: NA-07 as dated 2026-09-09 (Type chip on the right; caret unclipped).
+
+Commit: `feat(improve-50): lift Type chip and unclip Name caret`.  
+Evidence: `.docs/evidence/improve-50-type-chip/`.
+
+---
+
 # Improvement 51 — Present expand panes
 
 Approved 2026-09-09. User request: Present should look like Compare, with a fullscreen control on each Before/After pane.

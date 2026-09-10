@@ -69,7 +69,7 @@ export function useAppKeys() {
 
       if (s.present && action === KeyAction.ToggleView) {
         e.preventDefault();
-        s.setView(s.view === ViewMode.After ? ViewMode.Before : ViewMode.After);
+        s.togglePresentLane();
         return;
       }
 
@@ -95,6 +95,10 @@ export function useAppKeys() {
         }
         if (s.present) {
           e.preventDefault();
+          if (s.presentExpand) {
+            s.setPresentExpand(null);
+            return;
+          }
           s.setPresent(false);
           return;
         }

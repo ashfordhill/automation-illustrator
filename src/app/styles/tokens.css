@@ -211,6 +211,72 @@ body.is-tile-dragging * {
   display: none !important;
 }
 
+.lane-stack {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  position: relative;
+}
+
+.lane-pane {
+  flex: 1 1 0;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.lane-after {
+  border-top: 3px solid var(--line);
+}
+
+.lane-stack[data-present-expand="before"] .lane-after,
+.lane-stack[data-present-expand="after"] .lane-after {
+  border-top: none;
+}
+
+/* Keep the tucked pane in layout (and sized) so React Flow does not get a 0×0 host. */
+.lane-pane.is-tucked {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.lane-pane.is-expanded {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  flex: none;
+}
+
+.present-expand-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 40;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2.5px solid var(--line);
+  border-radius: 10px;
+  background: var(--cream);
+  color: var(--ink);
+  box-shadow: 0 3px 0 var(--btn-shadow);
+  cursor: pointer;
+}
+
+.present-expand-btn:hover,
+.present-expand-btn:focus-visible {
+  background: var(--yellow);
+}
+
+.present-expand-btn:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+}
+
 .chrome-bar {
   background: var(--chrome) !important;
   border-color: var(--chrome-line) !important;

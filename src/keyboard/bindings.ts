@@ -50,7 +50,7 @@ export const ACTION_LABELS: Record<KeyAction, string> = {
   [KeyAction.PanUp]: "Pan up",
   [KeyAction.PanDown]: "Pan down",
   [KeyAction.Help]: "Keybinds",
-  [KeyAction.ToggleView]: "Toggle Before/After (present)",
+  [KeyAction.ToggleView]: "Expand Before/After (present)",
   [KeyAction.Confirm]: "Confirm",
   [KeyAction.Delete]: "Remove selected Node",
   [KeyAction.AddPath]: "unused — pull the Path tab",

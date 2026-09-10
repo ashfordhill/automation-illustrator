@@ -37,17 +37,28 @@ export function applyViewport(lane: AssignmentLane, viewport: Viewport) {
   });
 }
 
-/** Best-effort shared camera: copy this viewport onto the other Both lane. */
+/** True when this Present pane is collapsed away from the split. */
+export function laneIsTucked(lane: AssignmentLane): boolean {
+  const s = useStore.getState();
+  return s.present && s.presentExpand !== null && s.presentExpand !== lane;
+}
+
+/** Compare and Present stack Before/After and share one pan/zoom camera (BA-05, P-07). */
+export function sharesCompareCamera(): boolean {
+  const s = useStore.getState();
+  return s.present || s.view === ViewMode.Both;
+}
+
+/** Best-effort shared camera: copy this viewport onto the other stacked lane. */
 export function syncBothViewports(source: AssignmentLane, viewport: Viewport) {
-  if (useStore.getState().view !== ViewMode.Both) return;
+  if (!sharesCompareCamera()) return;
   if (programmatic.has(source)) return;
   applyViewport(otherLane(source), viewport);
 }
 
-/** Nudge the camera — in Both, both lanes move together. */
+/** Nudge the camera — in Compare/Present, both lanes move together. */
 export function panBy(dx: number, dy: number, lane: AssignmentLane) {
-  const view = useStore.getState().view;
-  if (view === ViewMode.Both) {
+  if (sharesCompareCamera()) {
     const inst =
       insts[lane] ?? insts[AssignmentLane.Before] ?? insts[AssignmentLane.After];
     if (!inst) return;

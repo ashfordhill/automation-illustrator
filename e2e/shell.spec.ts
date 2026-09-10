@@ -44,8 +44,15 @@ test.describe("slice 8 shell, typography, and sound", () => {
 
     await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
     await page.keyboard.press("Space");
-    await expect(page.locator('.board-lane[data-lane="after"]')).toBeVisible();
-    await expect(page.locator('.board-lane[data-lane="before"]')).toHaveCount(0);
+    await expect(page.locator("[data-present-expand]")).toHaveAttribute(
+      "data-present-expand",
+      "before",
+    );
+    await page.keyboard.press("Escape");
+    await expect(page.locator("[data-present-expand]")).toHaveAttribute(
+      "data-present-expand",
+      "split",
+    );
 
     await page.keyboard.press("Escape");
     await expect(page.locator("aside")).toBeVisible();

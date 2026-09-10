@@ -2489,5 +2489,39 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(improve-50): lift Type chip and unclip Name caret`
 
+## Improvement 51 — Present expand panes — 2026-09-09
+
+- Starting commit: `d4ac2ce4f09c0f5eb8e6bcec143ed0da03b22c4f` (`feat(improve-50): lift Type chip and unclip Name caret`)
+- Working tree at start: HEAD was improve-50. Unrelated README / inspector-trash WIP was stashed. Improve-50 had already recorded this slice's P-07 GOAL line and Improvement 51 spec (parallel chat); this commit implements that behavior and records the missed NA-07 type-chip GOAL line.
+- GOAL clauses addressed: P-07, BA-05, AQ-01, AQ-02 (Present split + expand). NA-07 type-chip amendment appended because improve-50's GOAL/IMPROVEMENTS write landed on the Present draft. Document version unchanged.
+- Library research and decisions: no new runtime dependency. Tabler `IconArrowsMaximize` / `IconArrowsMinimize`. Expanded pane is `position: absolute; inset: 0` so the tucked Board keeps a size (avoids React Flow 0×0). Present shares Compare's pan/zoom via `sharesCompareCamera()`.
+- Files changed:
+  - Shell: `src/app/App.tsx`, `src/app/components/PresentExpandButton.tsx`, `src/app/styles/tokens.css`
+  - State: `src/state/store.ts` (`presentExpand`, `setPresentExpand`, `togglePresentLane`)
+  - Keys: `src/keyboard/useAppKeys.ts`, `src/keyboard/bindings.ts`, `src/keyboard/KeybindsModal.tsx`
+  - Board: `src/board/Board.tsx`, `src/board/reactFlowBridge.ts`
+  - Tests: `src/app/App.test.tsx`, `src/state/store.shell.test.ts`, `e2e/improve-51-present-expand.spec.ts`, `e2e/improve-31-present-nav.spec.ts`, `e2e/shell.spec.ts`, `e2e/ready.ts`
+  - Docs: `.docs/GOAL.md`, `.docs/IMPROVEMENTS.md`, this handoff entry
+  - Evidence: `.docs/evidence/improve-51-present-expand/` (and recaptured improve-31 Present shots)
+- Behavior implemented:
+  - Present is a Compare-style stacked Before (top) / After (bottom) board, still full-bleed and read-only.
+  - Each pane has an expand control at top-right. Expand fills the window with that lane and tucks the other; the control becomes collapse (show split).
+  - Space expands Before, then toggles Before/After. Escape returns to split when expanded, then exits Present.
+  - Compare is unchanged and has no expand controls. Present panes share pan/zoom.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning). Node 24.
+  - `npm run test:unit` — 41 files, 310 tests pass.
+  - `npm run test:e2e` — 203 passed. One untracked leftover spec (`e2e/inspector-trash-color.spec.ts`) failed and is not part of this slice. `improve-51-present-expand` (3), `improve-31-present-nav` (3), `shell` (5) pass. Chromium via `LD_LIBRARY_PATH` `/home/ash/.local/pw-libs/usr/lib/x86_64-linux-gnu`.
+- Evidence:
+  - `.docs/evidence/improve-51-present-expand/present-split-1440.png` — Present split with expand icons (1440×900)
+  - `.docs/evidence/improve-51-present-expand/present-before-expanded-1440.png` — Before fullscreen; squish icon
+  - `.docs/evidence/improve-51-present-expand/present-after-expanded-1440.png` — After fullscreen; squish icon
+  - `.docs/evidence/improve-51-present-expand/present-split-dark-1440.png` — split in dark
+  - `.docs/evidence/improve-51-present-expand/present-split-1024.png` — split at 1024×768
+- Earlier-slice defects fixed: Improve-50 committed this slice's GOAL/IMPROVEMENTS draft instead of the NA-07 type-chip amendment; NA-07 and the Improvement 50 spec section are recorded here.
+- Known limitations / follow-ups: Path-end wobble is still a later improvement.
+- Status: COMPLETE
+- Commit: `feat(improve-51): expand Present Before After panes`
+
 
 

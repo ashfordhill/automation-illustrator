@@ -16,6 +16,7 @@
  * setRightClickDelete — persisted Tile right-click remove (off by default)
  * setInspectorCollapsed — persisted right-inspector fold (P-05)
  * setPresent — saves and restores view + selection (P-07)
+ * presentExpand — Present split vs one fullscreen lane (P-07)
  */
 import { create } from "zustand";
 import { clearDockPosition, snapToGrid, vacantSpot, withDisplayedPositions } from "../board/layout/tileMetrics";
@@ -229,6 +230,8 @@ export const useStore = create<{
   laneViewports: Partial<Record<AssignmentLane, LaneViewport>>;
   canvasEpoch: number;
   present: boolean;
+  /** null = Compare-style split; otherwise that lane fills Present. */
+  presentExpand: AssignmentLane | null;
   presentResume: { view: ViewModeT; selected: Selection } | null;
   selected: Selection;
   soundEnabled: boolean;
@@ -264,6 +267,8 @@ export const useStore = create<{
   activePositions: () => PositionMap | undefined;
   canvasEditable: () => boolean;
   setPresent: (p: boolean) => void;
+  setPresentExpand: (lane: AssignmentLane | null) => void;
+  togglePresentLane: () => void;
   setSoundEnabled: (on: boolean) => void;
   setRightClickDelete: (on: boolean) => void;
   setInspectorCollapsed: (collapsed: boolean) => void;
@@ -345,6 +350,7 @@ export const useStore = create<{
   laneViewports: {},
   canvasEpoch: 0,
   present: false,
+  presentExpand: null,
   presentResume: null,
   selected: null,
   soundEnabled: loadSound(),
@@ -485,8 +491,21 @@ export const useStore = create<{
     const s = get();
     if (present) {
       if (s.present) return;
+      let laneViewports = s.laneViewports;
+      const seed =
+        laneViewports[s.focusedLane] ??
+        laneViewports[AssignmentLane.Before] ??
+        laneViewports[AssignmentLane.After];
+      if (seed) {
+        laneViewports = {
+          ...laneViewports,
+          [AssignmentLane.Before]: seed,
+          [AssignmentLane.After]: seed,
+        };
+      }
       set({
         present: true,
+        presentExpand: null,
         presentResume: { view: s.view, selected: s.selected },
         selected: null,
         helpOpen: false,
@@ -494,18 +513,36 @@ export const useStore = create<{
         departing: null,
         manageActorsOpen: false,
         manageActorId: null,
+        laneViewports,
       });
       return;
     }
     const resume = s.presentResume;
     set({
       present: false,
+      presentExpand: null,
       view: resume?.view ?? s.view,
       selected: resume?.selected ?? s.selected,
       presentResume: null,
       interaction: IDLE,
       departing: null,
     });
+  },
+  setPresentExpand: (lane) => {
+    if (!get().present) return;
+    if (get().presentExpand === lane) return;
+    set({
+      presentExpand: lane,
+      focusedLane: lane ?? get().focusedLane,
+    });
+  },
+  togglePresentLane: () => {
+    if (!get().present) return;
+    const next =
+      get().presentExpand === AssignmentLane.Before
+        ? AssignmentLane.After
+        : AssignmentLane.Before;
+    set({ presentExpand: next, focusedLane: next });
   },
   setSoundEnabled: (soundEnabled) => {
     saveSound(soundEnabled);

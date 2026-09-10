@@ -8,7 +8,7 @@ export const DEMO_STEP = "Read invoice.pdf";
 /** ELK lays each lane out on a worker; screenshots wait until every lane is `ready` (Improvement 01). */
 export async function waitForLayout(page: Page) {
   const hosts = page.locator("[data-layout]");
-  await expect(hosts.first()).toBeVisible({ timeout: 15_000 });
+  await expect(hosts.first()).toBeAttached({ timeout: 15_000 });
   const n = await hosts.count();
   for (let i = 0; i < n; i++) {
     await expect(hosts.nth(i)).toHaveAttribute("data-layout", "ready", {

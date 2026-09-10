@@ -54,7 +54,7 @@ export function KeybindsModal() {
           <Kbd>Esc</Kbd>
         </Group>
         <Group justify="space-between">
-          <Text size="sm">Exit present</Text>
+          <Text size="sm">Show split, then exit Present</Text>
           <Kbd>Esc</Kbd>
         </Group>
       </Stack>

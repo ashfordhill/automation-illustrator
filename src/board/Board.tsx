@@ -26,6 +26,8 @@ import {
   bindReactFlow,
   getReactFlow,
   isProgrammaticViewport,
+  laneIsTucked,
+  sharesCompareCamera,
   syncBothViewports,
 } from "./reactFlowBridge";
 import { projectLane } from "../state/projection";
@@ -175,7 +177,7 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
       return;
     }
     if (fitted.current || !canApplyFirstLayoutCamera(phase, nodeCount)) return;
-    if (useStore.getState().view === ViewMode.Both) {
+    if (sharesCompareCamera()) {
       const other = getReactFlow(otherLane(lane));
       if (other) {
         const v = other.getViewport();
@@ -207,7 +209,7 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
         applyViewport(lane, next);
         const s = useStore.getState();
         s.setLaneViewport(lane, next);
-        if (s.view === ViewMode.Both) {
+        if (sharesCompareCamera()) {
           s.setLaneViewport(otherLane(lane), next);
           applyViewport(otherLane(lane), next);
         }
@@ -221,7 +223,7 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
         const v = rf.getViewport();
         const s = useStore.getState();
         s.setLaneViewport(lane, v);
-        if (s.view === ViewMode.Both) {
+        if (sharesCompareCamera()) {
           s.setLaneViewport(otherLane(lane), v);
           applyViewport(otherLane(lane), v);
         }
@@ -250,6 +252,7 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
     const host = hostRef.current;
     if (!host) return;
     const onWheel = (e: WheelEvent) => {
+      if (laneIsTucked(lane)) return;
       if (e.ctrlKey) return;
       if (e.deltaY === 0) return;
       e.preventDefault();
@@ -286,12 +289,13 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
         flowY: flowFocal.y,
         nextZoom,
       });
-      /* Copy onto the other Both lane before marking this instance programmatic. */
+      /* Copy onto the other stacked lane before marking this instance programmatic. */
       syncBothViewports(lane, next);
       applyViewport(lane, next);
       const s = useStore.getState();
+      if (laneIsTucked(lane)) return;
       s.setLaneViewport(lane, next);
-      if (s.view === ViewMode.Both) s.setLaneViewport(otherLane(lane), next);
+      if (sharesCompareCamera()) s.setLaneViewport(otherLane(lane), next);
     };
     host.addEventListener("wheel", onWheel, { passive: false });
     return () => host.removeEventListener("wheel", onWheel);
@@ -508,13 +512,15 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
           defaultViewport={initialViewport.current}
           onMove={(_, viewport) => {
             if (isProgrammaticViewport(lane)) return;
+            if (laneIsTucked(lane)) return;
             syncBothViewports(lane, viewport);
           }}
           onMoveEnd={(_, viewport) => {
             if (isProgrammaticViewport(lane)) return;
+            if (laneIsTucked(lane)) return;
             const s = useStore.getState();
             s.setLaneViewport(lane, viewport);
-            if (s.view === ViewMode.Both) s.setLaneViewport(otherLane(lane), viewport);
+            if (sharesCompareCamera()) s.setLaneViewport(otherLane(lane), viewport);
           }}
           proOptions={{ hideAttribution: true }}
           onPaneClick={() => {

@@ -82,3 +82,18 @@ test("exiting Present restores the previous view and selection (P-07)", () => {
     id: OAK_PARK_IDS.read,
   });
 });
+
+test("Present expand starts split; Space swaps fullscreen lanes; exit clears expand (P-07)", () => {
+  useStore.getState().setView(ViewMode.After);
+  useStore.getState().setPresent(true);
+  expect(useStore.getState().presentExpand).toBeNull();
+  useStore.getState().togglePresentLane();
+  expect(useStore.getState().presentExpand).toBe("before");
+  useStore.getState().togglePresentLane();
+  expect(useStore.getState().presentExpand).toBe("after");
+  useStore.getState().setPresentExpand(null);
+  expect(useStore.getState().presentExpand).toBeNull();
+  useStore.getState().setPresent(false);
+  expect(useStore.getState().view).toBe(ViewMode.After);
+  expect(useStore.getState().presentExpand).toBeNull();
+});

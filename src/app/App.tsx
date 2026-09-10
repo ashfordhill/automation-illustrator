@@ -18,6 +18,7 @@ import { ImportErrorModal } from "./components/ImportErrorModal";
 import { RecoveryModal } from "./components/RecoveryModal";
 import { RemovePickerHud } from "./components/RemovePickerHud";
 import { ReplaceDocumentModal } from "./components/ReplaceDocumentModal";
+import { PresentExpandButton } from "./components/PresentExpandButton";
 import { StatusBar } from "./components/StatusBar";
 import { Toolbar } from "./components/Toolbar";
 import { TransientNotice } from "./components/TransientNotice";
@@ -45,25 +46,51 @@ const theme = createTheme({
   },
 });
 
-/** One Board, or stacked Before/After when view is Both. View name lives only on the switch (SH-02). */
+function LanePane({
+  lane,
+  present,
+}: {
+  lane: typeof AssignmentLane.Before | typeof AssignmentLane.After;
+  present: boolean;
+}) {
+  const presentExpand = useStore((s) => s.presentExpand);
+  const tucked = present && presentExpand !== null && presentExpand !== lane;
+  const expanded = present && presentExpand === lane;
+  const isAfter = lane === AssignmentLane.After;
+  return (
+    <div
+      className={[
+        "lane-pane",
+        isAfter ? "lane-after" : "lane-before",
+        tucked ? "is-tucked" : undefined,
+        expanded ? "is-expanded" : undefined,
+      ]
+        .filter(Boolean)
+        .join(" ")}
+      data-present-pane={present ? lane : undefined}
+      data-tucked={present ? (tucked ? "true" : "false") : undefined}
+      inert={tucked ? true : undefined}
+      aria-hidden={tucked || undefined}
+    >
+      {present ? <PresentExpandButton lane={lane} /> : null}
+      <Board lane={lane} />
+    </div>
+  );
+}
+
+/** One Board, or stacked Before/After for Compare and for Present (P-07). */
 function CanvasArea() {
   const view = useStore((s) => s.view);
-  if (view === ViewMode.Both) {
+  const present = useStore((s) => s.present);
+  const presentExpand = useStore((s) => s.presentExpand);
+  if (present || view === ViewMode.Both) {
     return (
-      <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}>
-        <div
-          style={{
-            flex: 1,
-            minHeight: 0,
-            position: "relative",
-            borderBottom: "3px solid var(--line)",
-          }}
-        >
-          <Board lane={AssignmentLane.Before} />
-        </div>
-        <div style={{ flex: 1, minHeight: 0, position: "relative" }}>
-          <Board lane={AssignmentLane.After} />
-        </div>
+      <div
+        className="lane-stack"
+        data-present-expand={present ? (presentExpand ?? "split") : undefined}
+      >
+        <LanePane lane={AssignmentLane.Before} present={present} />
+        <LanePane lane={AssignmentLane.After} present={present} />
       </div>
     );
   }

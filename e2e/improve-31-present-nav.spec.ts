@@ -19,16 +19,31 @@ test.describe("Improvement 31 — Present hides the nav bar", () => {
     await expect(page.locator("footer.status-bar")).toHaveCount(0);
     await expect(page.locator("aside")).toHaveCount(0);
     await expect(page.locator(".board-lane[data-lane='before']")).toBeVisible();
+    await expect(page.locator(".board-lane[data-lane='after']")).toBeVisible();
     await expectAxeClean(page);
     await capturePage(page, `${EVIDENCE}/present-light-1440.png`);
 
     await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
     await page.keyboard.press("Space");
     await waitForLayout(page);
-    await expect(page.locator(".board-lane[data-lane='after']")).toBeVisible();
-    await expect(page.locator(".board-lane[data-lane='before']")).toHaveCount(0);
+    await expect(page.locator("[data-present-expand]")).toHaveAttribute(
+      "data-present-expand",
+      "before",
+    );
+    await expect(page.locator('[data-present-pane="after"]')).toHaveAttribute("data-tucked", "true");
+    await page.keyboard.press("Space");
+    await waitForLayout(page);
+    await expect(page.locator("[data-present-expand]")).toHaveAttribute(
+      "data-present-expand",
+      "after",
+    );
     await capturePage(page, `${EVIDENCE}/present-after-1440.png`);
 
+    await page.keyboard.press("Escape");
+    await expect(page.locator("[data-present-expand]")).toHaveAttribute(
+      "data-present-expand",
+      "split",
+    );
     await page.keyboard.press("Escape");
     await expect(page.getByRole("button", { name: "Menu" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Present" })).toBeVisible();

@@ -214,6 +214,53 @@ test("sound toggle is off by default and Present restores the inspector", () => 
   expect(useStore.getState().selected?.id).toBe(OAK_PARK_IDS.read);
 });
 
+test("Present stacks Before and After; expand fills one lane (P-07)", () => {
+  act(() => {
+    useStore.getState().setPresent(true);
+  });
+  expect(host.querySelectorAll(".board-lane")).toHaveLength(2);
+  expect(host.querySelector('[aria-label="Expand Before"]')).not.toBeNull();
+  expect(host.querySelector('[aria-label="Expand After"]')).not.toBeNull();
+  expect(host.querySelector("[data-present-expand]")?.getAttribute("data-present-expand")).toBe(
+    "split",
+  );
+
+  act(() => {
+    host.querySelector<HTMLButtonElement>('[aria-label="Expand Before"]')?.click();
+  });
+  expect(useStore.getState().presentExpand).toBe("before");
+  expect(host.querySelector('[data-present-pane="after"]')?.getAttribute("data-tucked")).toBe(
+    "true",
+  );
+  expect(host.querySelector('[aria-label="Show Before and After"]')).not.toBeNull();
+
+  act(() => {
+    host.querySelector<HTMLButtonElement>('[aria-label="Show Before and After"]')?.click();
+  });
+  expect(useStore.getState().presentExpand).toBeNull();
+
+  act(() => {
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true }));
+  });
+  expect(useStore.getState().presentExpand).toBe("before");
+
+  act(() => {
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true }));
+  });
+  expect(useStore.getState().presentExpand).toBe("after");
+
+  act(() => {
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+  });
+  expect(useStore.getState().present).toBe(true);
+  expect(useStore.getState().presentExpand).toBeNull();
+
+  act(() => {
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+  });
+  expect(useStore.getState().present).toBe(false);
+});
+
 test("inspector folds to a Show strip and selecting a tile does not reopen it", () => {
   act(() => {
     useStore.getState().select({ type: SelectionKind.Node, id: OAK_PARK_IDS.read });
@@ -254,6 +301,7 @@ test("view switching has no BEFORE/AFTER corner chips", () => {
   expect(host.querySelector('[role="radio"][aria-checked="true"]')?.textContent).toBe("Compare");
   expect(host.querySelectorAll(".board-lane")).toHaveLength(2);
   expect(host.querySelectorAll(".board-lane.is-pan-target")).toHaveLength(0);
+  expect(host.querySelector("[data-present-expand-btn]")).toBeNull();
   expect(host.textContent).not.toMatch(/\bBEFORE\b/);
 });
 
