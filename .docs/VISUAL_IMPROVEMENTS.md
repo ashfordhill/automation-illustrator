@@ -229,149 +229,156 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 - Issue: Inspector Type keys are oversized squares with empty pad. Other’s clipboard shows writing lines and Name seeds “Task”.
 - Resolution: Shipped in `feat(improve-39): pack Type keypad and blank Other` — packed centered keys, blank clipboard, empty Name.
 - Attachments:
-  ![type keypad whitespace](.docs/visual-improvements/2026-09-09-type-keypad-whitespace.png)
+  ![type keypad whitespace](visual-improvements/2026-09-09-type-keypad-whitespace.png)
 
 ## 2026-09-09 — Who actors off-center
 
 - Issue: Inspector Who keys sit left, with extra rail space on the right of Missy / Person.
 - Resolution: Shipped in `feat(improve-41): center Who keys in the inspector` — the Human/Robot cluster is centered; columns still line up.
 - Attachments:
-  ![who actors off center](.docs/visual-improvements/2026-09-09-who-actors-off-center.png)
+  ![who actors off center](visual-improvements/2026-09-09-who-actors-off-center.png)
 
 ## 2026-09-09 — Other Type key still says Other
 
 - Issue: Inspector Type Other is a yellow key with a clipboard and the word Other.
 - Resolution: Shipped in `feat(improve-42): hide Other on the Type keypad` — clipboard only; name row kept empty so spacing matches the other keys.
 - Attachments:
-  ![other type key label](.docs/visual-improvements/2026-09-09-other-type-key-label.png)
+  ![other type key label](visual-improvements/2026-09-09-other-type-key-label.png)
 
 ## 2026-09-09 — spawn hint compass
 
 - Issue: The Q/E · A/D spawn diagram’s arrows and dividers read as CAD geometry, not the app’s chunky / quiet-sketch language.
 - Resolution: Shipped in `feat(improve-43): restyle spawn hint compass` — chunky filled heads, a slightly bowed round-cap shaft, and one tilted tick; the `|` pipes are gone.
 - Attachments:
-  ![spawn hint arrows](.docs/visual-improvements/2026-09-09-spawn-hint-arrows.png)
+  ![spawn hint arrows](visual-improvements/2026-09-09-spawn-hint-arrows.png)
 
 ## 2026-09-09 — compact Name/Details and Human
 
 - Issue: New Humans spawn as Person plus a random number. Inspector Name and Details each have a caption above the field, which wastes rail space.
 - Resolution: Shipped in `feat(improve-44): compact inspector Name and default Human`. Name is Type plus an underline in one box; Details is an empty box; no captions. New Humans are named Human.
 - Attachments:
-  ![inspector name details compact](.docs/visual-improvements/2026-09-09-inspector-name-details-compact.png)
+  ![inspector name details compact](visual-improvements/2026-09-09-inspector-name-details-compact.png)
 
 ## 2026-09-09 — inspector Step Type Who labels
 
 - Issue: Step, Type, and Who captions still sit above the keypad and actor keys.
 - Resolution: Shipped in `feat(improve-44): drop Step Type Who captions` — those words are gone; the keypad, fields, Who keys, and trash remain.
 - Attachments:
-  ![inspector step type who labels](.docs/visual-improvements/2026-09-09-inspector-step-type-who-labels.png)
+  ![inspector step type who labels](visual-improvements/2026-09-09-inspector-step-type-who-labels.png)
 
 ## 2026-09-09 — Delete should keep a parent selected
 
 - Issue: Deleting a Tile clears selection, so Delete cannot walk a row.
 - Resolution: Shipped in `feat(improve-45): select parent after deleting a Tile` — after remove, the parent stays selected (last Tile still clears).
 - Attachments:
-  ![delete selects parent](.docs/visual-improvements/2026-09-09-delete-selects-parent.gif)
+  ![delete selects parent](visual-improvements/2026-09-09-delete-selects-parent.gif)
 
 ## 2026-09-09 — inspector cluster, Scan, tall Other
 
 - Issue: Name/Details were wider than Type and Who, the Name underline felt busy, and Other sat in a ninth small key instead of filling the right.
 - Resolution: Shipped in `feat(improve-46): cluster Type Who and Scan` — Scan in the 3×3, tall Other on the right, Name/Details in a rounded well matching Who width, reserved Type prefix, no underline.
 - Attachments:
-  ![inspector field balance](.docs/visual-improvements/2026-09-09-inspector-field-balance.png)
-  ![type other tall](.docs/visual-improvements/2026-09-09-type-other-tall.png)
+  ![inspector field balance](visual-improvements/2026-09-09-inspector-field-balance.png)
+  ![type other tall](visual-improvements/2026-09-09-type-other-tall.png)
 
 ## 2026-09-09 — spawn compass was wiggly
 
 - Issue: The Q/E · A/D compass shaft bowed and the center tick leaned, so it read as a shaky sketch.
 - Resolution: Correction — straight shaft, vertical tick, symmetric heads. Same quiet ink.
 - Attachments:
-  ![spawn compass wobbly](.docs/visual-improvements/2026-09-09-spawn-compass-wobbly.png)
+  ![spawn compass wobbly](visual-improvements/2026-09-09-spawn-compass-wobbly.png)
 
 ## 2026-09-09 — spawn hint keys and tick
 
 - Issue: Hotkey boxes are not one size (Q/E taller, minus wider) and the compass tick is a stub.
 - Resolution: Uniform 20px-tall keycaps (single-character keys are square); the center tick is a full-height cross.
 - Attachments:
-  ![spawn hint keys](.docs/visual-improvements/2026-09-09-spawn-hint-keys.png)
+  ![spawn hint keys](visual-improvements/2026-09-09-spawn-hint-keys.png)
 
 ## 2026-09-09 — Present as a person-in-a-box button
 
 - Issue: Present was a hamburger item. The presenter glyph should become a top-right button: person overlapping a rounded rect, white figure, complementary light-blue box, no white scribbles on the legs.
 - Resolution: Shipped in `feat(improve-48): present icon menu left and Z remove` — Present is a top-right icon (white figure in front of a light-blue slide). Menu moved leftmost. Dark and Actors left the hamburger. Remove default is Z.
 - Attachments:
-  ![presenter](.docs/visual-improvements/2026-09-09-presenter.svg)
-  ![presenter button mock](.docs/visual-improvements/2026-09-09-presenter-edited.svg)
+  ![presenter](visual-improvements/2026-09-09-presenter.svg)
+  ![presenter button mock](visual-improvements/2026-09-09-presenter-edited.svg)
 
 ## 2026-09-09 — insert into a merge fork (shipped)
 
 - Issue: Dropping a Tile on the shared merge T did not make it the new merge target; unique segments still insert only one Path.
 - Resolution: Shipped in `feat(improve-47): insert on merge and split trunks` — bundle drop on the shared trunk; unique segments stay single-Path insert; incident trunks stay a dead zone.
 - Attachments:
-  ![insert into fork](.docs/visual-improvements/2026-09-09-insert-into-fork.gif)
+  ![insert into fork](visual-improvements/2026-09-09-insert-into-fork.gif)
 
 ## 2026-09-09 — drag-and-drop hotkey tip
 
 - Issue: Dragging a Tile shows a Drop keycap plus Esc Cancel, which reads as a hotkey row for a mouse gesture.
 - Resolution: Shipped in `feat(improve-49): hide the tile-drag hint strip` — no chips and no copy while dragging.
 - Attachments:
-  ![drag drop hotkey tip](.docs/visual-improvements/2026-09-09-drag-drop-hotkey-tip.gif)
+  ![drag drop hotkey tip](visual-improvements/2026-09-09-drag-drop-hotkey-tip.gif)
 
 ## 2026-09-09 — Present icon clip and foot blob
 
 - Issue: The presenter was flush right, so the trailing arm was sliced off, and a white half-circle sat under the feet (knockout cap).
 - Resolution: Shifted the figure left onto a slightly narrower slide, clipped the plump hem (the white half-circle under the feet), and added a hanging arm so the trailing side is not a flat cut.
 - Attachments:
-  ![present icon clip](.docs/visual-improvements/2026-09-09-present-icon-clip.png)
+  ![present icon clip](visual-improvements/2026-09-09-present-icon-clip.png)
 
 ## 2026-09-09 — Present icon lost its legs
 
 - Issue: Clipping the plump hem removed the legs and left a stray stick under the slide.
 - Resolution: Restored the full Streamline figure (plump body + stick leg), no torso clip and no knockout. Figure sits left of the right edge so the trailing side is not cut, with feet overlapping the slide.
 - Attachments:
-  ![present icon no legs](.docs/visual-improvements/2026-09-09-present-icon-no-legs.png)
+  ![present icon no legs](visual-improvements/2026-09-09-present-icon-no-legs.png)
 
 ## 2026-09-09 — Name caret clip and Type on the left
 
 - Issue: The Name caret is sliced by the cream box. Type (Search) sits as naked text on the left of the well, opposite the left-aligned title.
 - Resolution: Shipped in `feat(improve-50): lift Type chip and unclip Name caret` — Type is a cream chip on the right; Name stays left; caret has room.
 - Attachments:
-  ![name caret clip](.docs/visual-improvements/2026-09-09-name-caret-clip.gif)
-  ![type left of fields](.docs/visual-improvements/2026-09-09-type-left-of-fields.png)
+  ![name caret clip](visual-improvements/2026-09-09-name-caret-clip.gif)
+  ![type left of fields](visual-improvements/2026-09-09-type-left-of-fields.png)
 
 ## 2026-09-09 — Manage actors editor
 
 - Issue: Actors sit below Type; Manage actors is a text button. The editor is a wide Color field, a two-line Role, Add human/Add robot text, and an ugly Delete actor button. Robot Type presets (LLM / Agent / Script) get in the way.
 - Resolution: Shipped in Improvement 52 — Who above Type, header Actors control, compact color + Role, icon add, minus delete-mode, robots use Role.
 - Attachments:
-  ![manage actors editor](.docs/visual-improvements/2026-09-09-manage-actors-editor.png)
+  ![manage actors editor](visual-improvements/2026-09-09-manage-actors-editor.png)
 
 ## 2026-09-09 — Actors chrome is off-theme
 
 - Issue: Actors is a stubby header pill next to trash. Who sits above Type. Manage add/delete are tiny mismatched keys; Color is an empty cream pill with a pencil.
 - Resolution: Shipped in Improvement 53 — Who under Type; Actors Who-key under the roster, bottom right; same-icon add keys; trash delete-mode; swatch + eyedropper.
 - Attachments:
-  ![cramped add](.docs/visual-improvements/2026-09-09-actors-add-cramped.png)
-  ![ugly manage](.docs/visual-improvements/2026-09-09-actors-manage-ugly.png)
+  ![cramped add](visual-improvements/2026-09-09-actors-add-cramped.png)
+  ![ugly manage](visual-improvements/2026-09-09-actors-manage-ugly.png)
 
 ## 2026-09-09 — Name / Role beside color card
 
 - Issue: Manage Name, Color, and Role were stacked in a well: a full-width name, a tiny swatch + eyedropper, then role.
 - Resolution: Shipped in Improvement 53 correction — Name over Role on the left; one tall card on the right with color fill on top and eyedropper below.
 - Attachments:
-  ![actor edit name role color](.docs/visual-improvements/2026-09-09-actor-edit-name-role-color.png)
+  ![actor edit name role color](visual-improvements/2026-09-09-actor-edit-name-role-color.png)
 
 ## 2026-09-09 — Actors header text and headshot add
 
 - Issue: Actors sat under Who as a Who-key. Manage add/delete were nested figure cards; full bodies made Human and Robot look the same, and the trash sat off-center.
 - Resolution: Actors is a text-only header button (Step next to trash; empty inspector only; hidden on Data). Manage from a Step shows Back; from empty it stays a toggle. Add human / Add robot / trash share equal thirds as headshot squares.
 - Attachments:
-  ![actor add headshots](.docs/visual-improvements/2026-09-09-actor-add-headshots.png)
+  ![actor add headshots](visual-improvements/2026-09-09-actor-add-headshots.png)
 
 ## 2026-09-09 — Actors header trash and row shift
 
 - Issue: Manage actors still showed the Step trash next to Back. Adding a fifth Actor wrapped a row and slid every card left.
 - Resolution: Shipped in Improvement 53 correction 3 — Back only (no Step trash). Roster stays a fixed 4-column cluster so wrapping does not move existing cards.
 - Attachments:
-  ![actors row shift](.docs/visual-improvements/2026-09-09-actors-row-shift.gif)
+  ![actors row shift](visual-improvements/2026-09-09-actors-row-shift.gif)
+
+## 2026-09-09 — README TOC squished by image
+
+- Issue: Giving the Zelda image the rest of the row made it steal width from the table of contents, so the links wrapped.
+- Resolution: TOC column is a fixed 260px and does not wrap; the image still fills whatever width is left.
+- Attachments:
+  ![readme toc squished](visual-improvements/2026-09-09-readme-toc-image-squish.png)
 
