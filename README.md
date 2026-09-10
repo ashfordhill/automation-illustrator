@@ -9,32 +9,18 @@ Goal is to be both **easy to use and easy to understand**.
 Intended to help engineers and non-engineers get on the same page about what work steps can be automated.
 
 <!-- TOC -->
-<table width="100%">
-<tr>
-<td valign="middle" nowrap width="260">
-<ul>
-<li><a href="#usage">Usage</a></li>
-<li><a href="#motivation">Motivation</a></li>
-<li><a href="#agent-development-strategy">Agent Development Strategy</a>
-<ul>
-<li><a href="#visual-improvements">Visual improvements</a></li>
-<li><a href="#third-party-leveraging">Third-Party Leveraging</a></li>
-</ul>
-</li>
-<li><a href="#future-ideastodos">Future Ideas/TODOs</a>
-<ul>
-<li><a href="#features">Features</a></li>
-<li><a href="#visual-improvements">Visual Improvements</a></li>
-<li><a href="#anti-features">Anti-Features</a></li>
-</ul>
-</li>
-</ul>
-</td>
-<td valign="middle">
-<img src=".docs/readme/its-dangerous-to-go-alone.png" alt="It's dangerous to go alone! Take this." width="100%" />
-</td>
-</tr>
-</table>
+
+- [Automation Workflow Illustrator](#automation-workflow-illustrator)
+    - [Usage](#usage)
+    - [Motivation](#motivation)
+    - [Agent Development Strategy](#agent-development-strategy)
+      - [Visual improvements](#visual-improvements)
+      - [Third-Party Leveraging](#third-party-leveraging)
+    - [Future Ideas/TODOs](#future-ideastodos)
+      - [Features](#features)
+      - [Visual Improvements](#visual-improvements)
+      - [Anti-Features](#anti-features)
+
 <!-- /TOC -->
 
 ---
@@ -45,8 +31,8 @@ Intended to help engineers and non-engineers get on the same page about what wor
 The **sound is off by default** but turning it on for the sound effects can make using the software more enjoyable.
 
 ```bash
-docker pull ghcr.io/ashfordhill/automation-pitch:latest
-docker run -p 8080:80 ghcr.io/ashfordhill/automation-pitch:latest
+docker pull ghcr.io/ashfordhill/automation-illustrator:latest
+docker run -p 8080:80 ghcr.io/ashfordhill/automation-illustrator:latest
 ```
 
 <img src=".docs/readme/drag-create.gif" alt="Dragging from a Node handle to create a new Step" width="49%" />&nbsp;<img src=".docs/readme/path-add-delete.gif" alt="Adding and deleting Paths on the workflow board" width="49%" />
