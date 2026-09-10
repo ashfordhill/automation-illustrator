@@ -192,8 +192,8 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 - Issue: `+` / Path tabs sit on the tile face; X looks off-center; Right-click Delete hint shows while the toggle is off; Data purple is too dark; Type names are clipped; selected Who still has a chunky ink outline; spawn hints are a long single row.
 - Resolution: Shipped in `feat(improve-38): polish tile chrome hints and Type` — 40px tabs with 18px peek, centered X, gated hint, lighter Data mark, unclipped Type names, yellow Who, two-line Q/E A/D helpers.
 - Attachments:
-  ![tile chrome tabs and X](.docs/visual-improvements/2026-09-09-tile-chrome-tabs-x.png)
-  ![hints and status](.docs/visual-improvements/2026-09-09-hints-and-status.png)
+  ![tile chrome tabs and X](visual-improvements/2026-09-09-tile-chrome-tabs-x.png)
+  ![hints and status](visual-improvements/2026-09-09-hints-and-status.png)
   ![type picker squished](visual-improvements/2026-09-09-type-picker-squished.png)
 
 
