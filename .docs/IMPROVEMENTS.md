@@ -1108,6 +1108,7 @@ Approved 2026-09-09 (correction of Improvement 52 chrome). Who returns to the bo
 - Manage ops row is four Who-keys: Add human, Add robot, trash delete-mode, Actors. Add keys use the same figures as the roster with a green plus badge and no name.
 - Delete mode: trash key toggles; actor cards get a red border and X; click deletes (unused-only NA-02); Escape exits delete mode first.
 - Color is a 36px cream swatch that opens the 14-swatch wheel, plus a separate eyedropper (EyeDropper API; falls back to the wheel). Role stays one-line in the same Name/Details well.
+- Correction 1 (2026-09-09): Name over Role on the left; one tall card on the right (color fill / eyedropper). No outer well.
 - No new runtime dependency.
 
 ## Contract

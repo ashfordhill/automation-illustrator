@@ -1,5 +1,5 @@
 /**
- * Compact actor Color: a short cream swatch plus a separate eyedropper (NA-01).
+ * Compact actor Color: a tall card — fill on top, eyedropper below (NA-01).
  */
 import { useState } from "react";
 import { ColorPicker, Popover } from "@mantine/core";
@@ -32,7 +32,7 @@ export function ActorColorField({
   }
 
   return (
-    <div className="inspector-color-row">
+    <div className="inspector-color-card">
       <Popover
         opened={opened}
         onChange={setOpened}
@@ -44,12 +44,11 @@ export function ActorColorField({
         <Popover.Target>
           <button
             type="button"
-            className="inspector-color-chip"
+            className="inspector-color-fill"
             aria-label="Color"
             aria-expanded={opened}
-          >
-            <span className="inspector-color-chip-fill" style={{ background: value }} />
-          </button>
+            style={{ background: value }}
+          />
         </Popover.Target>
         <Popover.Dropdown className="inspector-color-pop">
           <ColorPicker

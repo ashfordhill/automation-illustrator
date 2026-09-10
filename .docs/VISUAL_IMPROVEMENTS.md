@@ -354,3 +354,10 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
   ![cramped add](.docs/visual-improvements/2026-09-09-actors-add-cramped.png)
   ![ugly manage](.docs/visual-improvements/2026-09-09-actors-manage-ugly.png)
 
+## 2026-09-09 — Name / Role beside color card
+
+- Issue: Manage Name, Color, and Role were stacked in a well: a full-width name, a tiny swatch + eyedropper, then role.
+- Resolution: Shipped in Improvement 53 correction — Name over Role on the left; one tall card on the right with color fill on top and eyedropper below.
+- Attachments:
+  ![actor edit name role color](.docs/visual-improvements/2026-09-09-actor-edit-name-role-color.png)
+

@@ -66,6 +66,14 @@ test.describe("Improvement 53 — Actors chrome under Who", () => {
     await expect(aside(page).getByLabel("Role")).toHaveValue("LLM");
     await expect(aside(page).getByRole("button", { name: "Color" })).toBeVisible();
     await expect(aside(page).getByRole("button", { name: "Eyedropper" })).toBeVisible();
+    const nameBox = await aside(page).getByLabel("Name").boundingBox();
+    const roleBox = await aside(page).getByLabel("Role").boundingBox();
+    const colorBox = await aside(page).getByRole("button", { name: "Color" }).boundingBox();
+    const dropBox = await aside(page).getByRole("button", { name: "Eyedropper" }).boundingBox();
+    expect(nameBox && roleBox && colorBox && dropBox).toBeTruthy();
+    expect(colorBox!.x).toBeGreaterThan(nameBox!.x + nameBox!.width - 2);
+    expect(dropBox!.y).toBeGreaterThan(colorBox!.y + 8);
+    expect(roleBox!.y).toBeGreaterThan(nameBox!.y + nameBox!.height - 2);
     await capturePage(page, `${EVIDENCE}/manage-editor-1440.png`);
 
     await aside(page).getByRole("button", { name: "Add human" }).click();

@@ -84,28 +84,30 @@ export function ManageActorsPanel() {
         <ActorsButton />
       </div>
       {actor && !deleteMode ? (
-        <div className="inspector-fields">
-          <InspectorField
-            id="actor-name-field"
-            ariaLabel="Name"
-            value={actor.name}
-            onChange={(name) => useStore.getState().updateActor(actor.id, { name })}
-          />
+        <div className="inspector-actor-edit">
+          <div className="inspector-actor-edit-text">
+            <InspectorField
+              id="actor-name-field"
+              ariaLabel="Name"
+              value={actor.name}
+              onChange={(name) => useStore.getState().updateActor(actor.id, { name })}
+            />
+            <InspectorField
+              id="actor-role-field"
+              ariaLabel="Role"
+              value={
+                isHuman(actor)
+                  ? (actor.role ?? DEFAULT_HUMAN_ROLE)
+                  : isRobot(actor)
+                    ? actor.role
+                    : ""
+              }
+              onChange={(role) => useStore.getState().updateActor(actor.id, { role })}
+            />
+          </div>
           <ActorColorField
             value={actor.color}
             onChange={(color) => useStore.getState().updateActor(actor.id, { color })}
-          />
-          <InspectorField
-            id="actor-role-field"
-            ariaLabel="Role"
-            value={
-              isHuman(actor)
-                ? (actor.role ?? DEFAULT_HUMAN_ROLE)
-                : isRobot(actor)
-                  ? actor.role
-                  : ""
-            }
-            onChange={(role) => useStore.getState().updateActor(actor.id, { role })}
           />
         </div>
       ) : null}

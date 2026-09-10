@@ -2598,4 +2598,15 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(improve-53): restyle Actors under Who`
 
+## Improvement 53 — correction 1 — 2026-09-09
+
+- Requested: Name / Role / Color should match the sketch — Name over Role on the left, one tall color card on the right (fill on top, eyedropper below).
+- Changed: Manage editor drops the outer well. `inspector-actor-edit` is Name + Role stacked, with `ActorColorField` as a 56px card (swatch opens the wheel; eyedropper samples). Tests assert Color sits to the right of Name and Eyedropper under Color.
+- Tests and exact results:
+  - `npm run build` — pass (Vite 8.2.2). Node 24.
+  - `npm run test:unit` — 41 files, 313 tests pass.
+  - `npm run test:e2e` — improve-53 (3), improve-52 (3), inspector (6), improve-40 (3), improve-41 (3) pass. 18 tracked actor specs.
+- Status: COMPLETE
+- Commit: `feat(improve-53): stack Name Role beside color card`
+
 

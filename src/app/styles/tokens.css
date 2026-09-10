@@ -1525,9 +1525,7 @@ body.is-tile-dragging * {
 
 .inspector-actors:focus-visible,
 .inspector-actor-add:focus-visible,
-.inspector-actor-delete:focus-visible,
-.inspector-color-chip:focus-visible,
-.inspector-color-dropper:focus-visible {
+.inspector-actor-delete:focus-visible {
   outline: 3px solid var(--blue);
   outline-offset: 2px;
 }
@@ -1790,7 +1788,7 @@ body.is-tile-dragging * {
   gap: 10px;
 }
 
-.inspector-manage > .inspector-fields {
+.inspector-manage > .inspector-actor-edit {
   align-self: center;
 }
 
@@ -1833,44 +1831,73 @@ body.is-tile-dragging * {
   border-color: var(--minus);
 }
 
-.inspector-color-row {
+.inspector-actor-edit {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   gap: 8px;
+  width: var(--inspector-cluster);
+  max-width: 100%;
+  margin-inline: auto;
 }
 
-.inspector-color-chip,
+.inspector-actor-edit-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.inspector-color-card {
+  flex: 0 0 56px;
+  width: 56px;
+  display: flex;
+  flex-direction: column;
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  background: var(--cream);
+  box-shadow: var(--chip-shadow);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.inspector-color-card > :first-child {
+  flex: 1 1 50%;
+  min-height: 0;
+  display: flex;
+}
+
+.inspector-color-fill,
 .inspector-color-dropper {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex: 1 1 50%;
+  min-height: 28px;
+  width: 100%;
   margin: 0;
-  padding: 4px;
-  border: 2px solid var(--line);
-  border-radius: 10px;
-  background: var(--cream);
+  padding: 0;
+  border: none;
   color: var(--ink);
   cursor: pointer;
-  box-shadow: var(--chip-shadow);
   box-sizing: border-box;
 }
 
-.inspector-color-chip {
-  width: 36px;
-  height: 36px;
-}
-
-.inspector-color-chip-fill {
-  width: 100%;
-  height: 100%;
-  border-radius: 6px;
-  border: 1.5px solid var(--line);
+.inspector-color-fill {
+  background: transparent;
 }
 
 .inspector-color-dropper {
-  width: 36px;
-  height: 36px;
-  padding: 0;
+  background: var(--cream);
+  border-top: 2px solid var(--line);
+}
+
+.inspector-color-fill:focus-visible,
+.inspector-color-dropper:focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: -3px;
+  position: relative;
+  z-index: 1;
 }
 
 .inspector-color-pop {
