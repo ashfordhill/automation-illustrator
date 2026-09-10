@@ -91,6 +91,10 @@ For visual improvements I would have the agent read screenshots, sketches and GI
 
 - This can be seen best in [.docs/VISUAL_IMPROVEMENTS.md](.docs/VISUAL_IMPROVEMENTS.md)
 
+The **first ever** picture I sent to start this project was an Excalidraw diagram:
+
+![](.docs/visual-guide-for-ai.svg)
+
 #### Third-Party Leveraging
 
 I instructed the agents to search and look for third-party solutions where necessary. 
