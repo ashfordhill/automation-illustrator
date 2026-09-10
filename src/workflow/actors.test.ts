@@ -1,9 +1,11 @@
 import { expect, test } from "vitest";
 import { ActorKind, AssignmentLane, RobotKind, SplitKind, StepKind, WorkflowNodeKind } from "./catalogs";
 import {
+  ACTOR_COLOR_SWATCHES,
   actorInUseMessage,
   actorUsages,
   defaultActors,
+  restoreBlankActorFills,
   defaultHumanId,
   defaultRobotId,
   ensureDefaultRobot,
@@ -12,6 +14,7 @@ import {
   insertActor,
   makeHuman,
   makeRobot,
+  ROBOT_COLORS,
   ROBOT_PRESETS,
   robotsOf,
   removeActor,
@@ -58,6 +61,41 @@ const doc: WorkflowDoc = {
 
 test("Roy’s fill is honey-apricot, not Script-robot blue", () => {
   expect(HUMAN_PRESETS[1]).toEqual({ name: "Roy", color: "#f4c07a" });
+});
+
+test("Missy’s default fill stays pastel purple", () => {
+  expect(HUMAN_PRESETS[3]).toEqual({ name: "Missy", color: "#c89bf5" });
+  expect(defaultActors().find((a) => a.name === "Missy")?.color).toBe("#c89bf5");
+});
+
+test("a picker-white Missy is restored to her purple preset", () => {
+  const actors = defaultActors().map((a) =>
+    a.name === "Missy" ? { ...a, color: "#ffffff" } : a,
+  );
+  const healed = restoreBlankActorFills(actors);
+  expect(healed.find((a) => a.name === "Missy")?.color).toBe("#c89bf5");
+});
+
+test("color picker presets are not default Human or Robot fills", () => {
+  const roster = [
+    ...HUMAN_PRESETS.map((p) => p.color.toLowerCase()),
+    ...Object.values(ROBOT_COLORS).map((c) => c.toLowerCase()),
+  ];
+  function rgb(hex: string): [number, number, number] {
+    const n = parseInt(hex.replace("#", ""), 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+  function dist(a: string, b: string) {
+    const [ar, ag, ab] = rgb(a);
+    const [br, bg, bb] = rgb(b);
+    return Math.hypot(ar - br, ag - bg, ab - bb);
+  }
+  expect(ACTOR_COLOR_SWATCHES.length).toBeGreaterThanOrEqual(6);
+  for (const swatch of ACTOR_COLOR_SWATCHES) {
+    expect(roster).not.toContain(swatch.toLowerCase());
+    const nearest = Math.min(...roster.map((r) => dist(swatch, r)));
+    expect(nearest).toBeGreaterThan(60);
+  }
 });
 
 test("default roster is Alice, Roy, Jack, Missy, then three Robots named Robot (WG-01, NA-04)", () => {

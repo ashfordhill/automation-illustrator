@@ -173,6 +173,18 @@ test("Actors is a header text button on empty and Step, hidden on Data", () => {
   expect(rail?.querySelector("#manage-actors-btn")).toBeNull();
   expect(rail?.querySelector(".inspector-back")?.textContent).toBe("Back");
   expect(rail?.querySelector('[aria-label="Remove Step"]')).toBeNull();
+  const ops = rail?.querySelector(".inspector-actor-ops");
+  const edit = rail?.querySelector(".inspector-actor-edit");
+  const cards = rail?.querySelector(".inspector-who-groups");
+  expect(ops && edit && cards).toBeTruthy();
+  expect(ops!.compareDocumentPosition(edit!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(edit!.compareDocumentPosition(cards!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  const colorBtn = rail?.querySelector<HTMLButtonElement>('[aria-label="Color"]');
+  expect(colorBtn).not.toBeNull();
+  act(() => {
+    colorBtn!.click();
+  });
+  expect(colorBtn!.getAttribute("aria-expanded")).toBe("true");
 
   act(() => {
     useStore.getState().closeManageActors({ restoreFocus: false });

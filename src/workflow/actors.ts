@@ -8,6 +8,7 @@ import {
   DEFAULT_HUMAN_ROLE,
   DEFAULT_ROBOT_NAME,
   DEFAULT_ROBOT_ROLE,
+  isRobot,
   isStepNode,
   ROBOT_KIND_LABEL,
   stepDisplayLabel,
@@ -36,21 +37,45 @@ export const ROBOT_PRESETS = [
   { name: DEFAULT_ROBOT_NAME, role: "Agent", robotKind: RobotKind.Agent },
 ] as const;
 
-/** Color wheel swatches: the 7 roster fills plus 7 more quiet pastels. */
+/** Color wheel presets. Kept away from default Human / Robot roster fills. */
 export const ACTOR_COLOR_SWATCHES = [
-  ...HUMAN_PRESETS.map((p) => p.color),
-  ...Object.values(ROBOT_COLORS),
-  "#f4a06a",
-  "#7eb6f5",
-  "#e8a0c8",
-  "#9ad47a",
-  "#d4c05e",
-  "#a08ae0",
-  "#7ec8b0",
+  "#f26b6b",
+  "#ff7a59",
+  "#fbbf24",
+  "#bef264",
+  "#9ccc65",
+  "#6b8cff",
+  "#6366f1",
+  "#d65db1",
 ] as const;
 
 /** Stick-figure stroke on pastel actor fills (not theme ink, which goes light in dark mode). */
 export const FIGURE_INK_ON_PASTEL = "#122836";
+
+/** True for empty or picker-default white fills (not a usable Actor color). */
+export function isBlankActorFill(color: string | undefined): boolean {
+  const c = (color ?? "").trim().toLowerCase();
+  return c === "" || c === "white" || c === "#fff" || c === "#ffffff" || c === "#ffffffff";
+}
+
+/** Put named roster Actors back on their preset fill if a picker wiped them to white. */
+export function restoreBlankActorFills(actors: ActorDto[]): ActorDto[] {
+  let changed = false;
+  const next = actors.map((actor) => {
+    if (!isBlankActorFill(actor.color)) return actor;
+    const human = HUMAN_PRESETS.find((p) => p.name === actor.name);
+    if (human) {
+      changed = true;
+      return { ...actor, color: human.color };
+    }
+    if (isRobot(actor)) {
+      changed = true;
+      return { ...actor, color: ROBOT_COLORS[actor.robotKind] };
+    }
+    return actor;
+  });
+  return changed ? next : actors;
+}
 
 /** Random human fill that stays in a quiet HSL band (skips lime/chartreuse). */
 export function randomPastel(): string {

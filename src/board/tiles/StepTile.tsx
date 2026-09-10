@@ -22,7 +22,7 @@ function TaskCard({
   const trimmedDetail = detail.trim();
   return (
     <div className="task-card">
-      <StepKindIcon kind={kind} size={kind === StepKind.Other ? 60 : 52} />
+      <StepKindIcon kind={kind} size={52} />
       {headline ? (
         <div className="task-card-title">
           <FitLabel text={headline} maxFontSizePx={14} mode="box" maxLines={3} />

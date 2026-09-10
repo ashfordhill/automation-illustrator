@@ -19,21 +19,6 @@ export function ManageActorsPanel() {
 
   return (
     <div className="inspector-manage">
-      <ActorWhoGrid
-        actors={workflow.actors}
-        selectedId={deleteMode ? null : actorId}
-        listbox
-        deleteMode={deleteMode}
-        ariaLabel="Actors"
-        onPick={(id) => {
-          const s = useStore.getState();
-          if (s.manageActorsDeleteMode) {
-            s.removeActor(id);
-            return;
-          }
-          s.setManageActorId(id);
-        }}
-      />
       <div className="inspector-actor-ops" role="group" aria-label="Add or remove actors">
         <button
           type="button"
@@ -68,7 +53,7 @@ export function ManageActorsPanel() {
           aria-pressed={deleteMode}
           onClick={() => useStore.getState().setManageActorsDeleteMode(!deleteMode)}
         >
-          <IconTrash size={26} color="var(--minus)" stroke={2.2} aria-hidden />
+          <IconTrash size={48} color="var(--minus)" stroke={2.2} aria-hidden />
         </button>
       </div>
       {actor && !deleteMode ? (
@@ -99,6 +84,21 @@ export function ManageActorsPanel() {
           />
         </div>
       ) : null}
+      <ActorWhoGrid
+        actors={workflow.actors}
+        selectedId={deleteMode ? null : actorId}
+        listbox
+        deleteMode={deleteMode}
+        ariaLabel="Actors"
+        onPick={(id) => {
+          const s = useStore.getState();
+          if (s.manageActorsDeleteMode) {
+            s.removeActor(id);
+            return;
+          }
+          s.setManageActorId(id);
+        }}
+      />
     </div>
   );
 }

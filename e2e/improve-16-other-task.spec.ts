@@ -39,4 +39,41 @@ test.describe("Improvement 16 Other clipboard (Name no longer Task)", () => {
     await expect(aside(page).locator("#step-name-field")).toHaveValue("invoice.pdf");
     await expect(page.getByText("Other invoice.pdf")).toHaveCount(0);
   });
+
+  test("Other tile icon matches default Type size; keypad Other stays larger", async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("button", { name: "Menu" }).click();
+    await page.getByRole("menuitem", { name: "New" }).click();
+    await page.getByRole("button", { name: "Discard" }).click();
+    await page.getByRole("button", { name: "Add Step" }).click();
+    await waitForLayout(page);
+
+    await aside(page).locator("#step-name-field").fill("abcdefgh");
+    await aside(page).locator("#step-details-field").fill("abcdefgh");
+
+    const tileCard = page.locator(".task-card").first();
+    const tileIcon = tileCard.locator("svg").first();
+    const title = tileCard.locator(".task-card-title");
+    const otherKey = aside(page).getByRole("button", { name: "Type Other" });
+    const reviewKey = aside(page).getByRole("button", { name: "Type Review" });
+
+    const otherTile = await tileIcon.boundingBox();
+    const otherTitle = await title.boundingBox();
+    const otherKeyIcon = await otherKey.locator("svg").boundingBox();
+    const reviewKeyIcon = await reviewKey.locator("svg").boundingBox();
+    expect(otherTile && otherTitle && otherKeyIcon && reviewKeyIcon).toBeTruthy();
+    expect(otherTile!.width).toBe(52);
+    expect(otherTile!.height).toBe(52);
+    expect(otherKeyIcon!.height).toBeGreaterThan(reviewKeyIcon!.height + 8);
+
+    await reviewKey.click();
+    await expect(reviewKey).toHaveAttribute("aria-pressed", "true");
+
+    const reviewTile = await tileIcon.boundingBox();
+    const reviewTitle = await title.boundingBox();
+    expect(reviewTile && reviewTitle).toBeTruthy();
+    expect(reviewTile!.width).toBe(52);
+    expect(reviewTile!.height).toBe(52);
+    expect(Math.abs(reviewTitle!.y - otherTitle!.y)).toBeLessThan(2);
+  });
 });

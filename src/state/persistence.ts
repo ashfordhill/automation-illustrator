@@ -6,6 +6,7 @@
  * payloads stay under LS_WORKFLOW until the user downloads or starts fresh (SH-10).
  * localStorage is pretty JSON. Export and Save copy download YAML (SH-13).
  */
+import { restoreBlankActorFills } from "../workflow/actors";
 import { ColorScheme } from "../workflow/catalogs";
 import { parseDocument } from "../workflow/migrate";
 import type { GraphViolation } from "../workflow/graph";
@@ -146,9 +147,11 @@ export function hydratePersistedWorkflow(
     };
   }
 
+  const actors = restoreBlankActorFills(parsed.doc.actors);
+  const workflow = actors === parsed.doc.actors ? parsed.doc : { ...parsed.doc, actors };
   return {
-    workflow: parsed.doc,
-    persistStatus: writeWorkflow(parsed.doc, storage),
+    workflow,
+    persistStatus: writeWorkflow(workflow, storage),
     recovery: null,
     unfolded: parsed.unfolded,
   };

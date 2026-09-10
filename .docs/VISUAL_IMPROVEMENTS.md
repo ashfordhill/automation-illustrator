@@ -14,6 +14,8 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 - Attachments: [label](visual-improvements/YYYY-MM-DD-slug.ext)
 ```
 
+Do *NOT* put `.docs/` in the image links! It will break the markdown image rendering.
+
 ---
 
 ## 2026-09-07 — selected-only X
@@ -361,4 +363,25 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 - Resolution: TOC column is a fixed 260px and does not wrap; the image still fills whatever width is left.
 - Attachments:
   ![readme toc squished](visual-improvements/2026-09-09-readme-toc-image-squish.png)
+
+## 2026-09-09 — Actor editor below roster
+
+- Issue: Add/remove, Name, Role, and Color sat under the Actor cards, so the editing controls were pushed down as the roster grew.
+- Resolution: Those controls sit above the Actor cards.
+- Attachments:
+  ![actor edit on top](visual-improvements/2026-09-09-actor-edit-on-top.png)
+
+## 2026-09-09 — Other icon jumps on the tile
+
+- Issue: Switching Type from Other to Review (or any default) makes the Name and Details lines jump because Other’s tile icon is 60px and the others are 52px.
+- Resolution: Other stays enlarged on the Type keypad; on the tile it uses the same 52px as the other icons.
+- Attachments:
+  ![other icon tile jump](visual-improvements/2026-09-09-other-icon-tile-jump.gif)
+
+## 2026-09-09 — Actor delete trash too small
+
+- Issue: The Actor editor trash sat in a large add-key square but used a 26px can, so it looked lost next to the Human and Robot heads.
+- Resolution: Actor delete-mode trash is 48px. The Step Remove trash stays 16px on its smaller header button.
+- Attachments:
+  ![actor trash small](visual-improvements/2026-09-09-actor-trash-small.png)
 

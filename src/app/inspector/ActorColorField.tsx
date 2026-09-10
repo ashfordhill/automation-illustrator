@@ -1,10 +1,11 @@
 /**
  * Compact actor Color: a tall card — fill on top, eyedropper below (NA-01).
+ * The fill opens a wheel plus presets that are not the default roster colors.
  */
 import { useState } from "react";
 import { ColorPicker, Popover } from "@mantine/core";
 import { IconColorPicker } from "@tabler/icons-react";
-import { ACTOR_COLOR_SWATCHES } from "../../workflow/actors";
+import { ACTOR_COLOR_SWATCHES, isBlankActorFill } from "../../workflow/actors";
 
 type EyeDropperCtor = new () => { open: () => Promise<{ sRGBHex: string }> };
 
@@ -16,6 +17,13 @@ export function ActorColorField({
   onChange: (color: string) => void;
 }) {
   const [opened, setOpened] = useState(false);
+
+  function commitColor(color: string) {
+    const next = color.trim();
+    if (!next || isBlankActorFill(next)) return;
+    if (next.toLowerCase() === value.trim().toLowerCase()) return;
+    onChange(next);
+  }
 
   async function pickFromScreen() {
     const Ctor = (window as unknown as { EyeDropper?: EyeDropperCtor }).EyeDropper;
@@ -33,37 +41,43 @@ export function ActorColorField({
 
   return (
     <div className="inspector-color-card">
-      <Popover
-        opened={opened}
-        onChange={setOpened}
-        position="bottom-start"
-        shadow="md"
-        withArrow
-        withinPortal
-      >
-        <Popover.Target>
-          <button
-            type="button"
-            className="inspector-color-fill"
-            aria-label="Color"
-            aria-expanded={opened}
-            style={{ background: value }}
-          />
-        </Popover.Target>
-        <Popover.Dropdown className="inspector-color-pop">
+      <div className="inspector-color-fill-hit" style={{ background: value }}>
+        <Popover
+          opened={opened}
+          onChange={setOpened}
+          position="left-start"
+          shadow="md"
+          withArrow
+          withinPortal
+          hideDetached={false}
+          middlewares={{ flip: true, shift: true, inline: false }}
+          transitionProps={{ duration: 0 }}
+          zIndex={400}
+        >
+          <Popover.Target>
+            <button
+              type="button"
+              className="inspector-color-fill"
+              aria-label="Color"
+              aria-haspopup="dialog"
+              aria-expanded={opened}
+              style={{ background: value }}
+              onClick={() => setOpened((o) => !o)}
+            />
+          </Popover.Target>
+          <Popover.Dropdown className="inspector-color-pop">
           <ColorPicker
             format="hex"
             value={value}
-            onChange={(color) => {
-              if (!color.trim()) return;
-              onChange(color);
-            }}
+            onChangeEnd={commitColor}
+            onColorSwatchClick={commitColor}
             swatches={[...ACTOR_COLOR_SWATCHES]}
-            swatchesPerRow={7}
+            swatchesPerRow={4}
             withPicker
           />
-        </Popover.Dropdown>
-      </Popover>
+          </Popover.Dropdown>
+        </Popover>
+      </div>
       <button
         type="button"
         className="inspector-color-dropper"

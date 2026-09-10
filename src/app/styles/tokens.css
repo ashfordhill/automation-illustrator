@@ -1944,10 +1944,11 @@ body.is-tile-dragging * {
   box-sizing: border-box;
 }
 
-.inspector-color-card > :first-child {
+.inspector-color-fill-hit {
   flex: 1 1 50%;
-  min-height: 0;
+  min-height: 36px;
   display: flex;
+  min-width: 0;
 }
 
 .inspector-color-fill,
@@ -1955,7 +1956,6 @@ body.is-tile-dragging * {
   display: flex;
   align-items: center;
   justify-content: center;
-  flex: 1 1 50%;
   min-height: 28px;
   width: 100%;
   margin: 0;
@@ -1966,11 +1966,20 @@ body.is-tile-dragging * {
   box-sizing: border-box;
 }
 
+.inspector-color-fill-hit .inspector-color-fill,
+.inspector-color-fill-hit > * {
+  flex: 1 1 auto;
+  width: 100%;
+  height: 100%;
+  min-height: 36px;
+}
+
 .inspector-color-fill {
   background: transparent;
 }
 
 .inspector-color-dropper {
+  flex: 1 1 50%;
   background: var(--cream);
   border-top: 2px solid var(--line);
 }

@@ -20,6 +20,7 @@ import {
   writeWorkflow,
   type StorageLike,
 } from "./persistence";
+import { oakParkInvoice } from "../demos/oakParkInvoice";
 import { robotMailroom, MAILROOM_IDS } from "../demos/robotMailroom";
 import { ColorScheme, SplitKind, StepKind, WorkflowNodeKind } from "../workflow/catalogs";
 import { emptyAfterOverlay, emptyWorkflow, type WorkflowDoc } from "../workflow/types";
@@ -88,6 +89,20 @@ const validV1 = JSON.stringify({
   ],
   edges: [],
   assignments: { before: {}, after: {} },
+});
+
+test("hydrate restores a picker-white Missy to her purple preset", () => {
+  const storage = new MemoryStorage();
+  const washed = oakParkInvoice();
+  storage.setItem(
+    LS_WORKFLOW,
+    JSON.stringify({
+      ...washed,
+      actors: washed.actors.map((a) => (a.name === "Missy" ? { ...a, color: "#ffffff" } : a)),
+    }),
+  );
+  const result = hydratePersistedWorkflow(fallback, storage);
+  expect(result.workflow.actors.find((a) => a.name === "Missy")?.color).toBe("#c89bf5");
 });
 
 test("empty storage writes the fallback and reports saved", () => {
