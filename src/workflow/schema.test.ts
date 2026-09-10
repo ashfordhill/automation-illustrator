@@ -70,6 +70,35 @@ test("v2 documents may omit name; demos keep their titles", () => {
   if (mail.ok) expect(mail.doc.name).toBe("Robot Mailroom");
 });
 
+test("empty or missing Robot role becomes the Type word", () => {
+  const parsed = parseCodes({
+    version: 2,
+    actors: [{ id: "r1", kind: "robot", name: "Bot", color: "#5ec4d8", robotKind: "ai" }],
+    nodes: [step("a")],
+    edges: [],
+    assignments: {},
+    after: emptyAfterOverlay(),
+  });
+  expect(parsed.ok).toBe(true);
+  if (parsed.ok) {
+    const bot = parsed.doc.actors[0];
+    expect(bot && "role" in bot && bot.role).toBe("LLM");
+  }
+  const blank = parseCodes({
+    version: 2,
+    actors: [{ id: "r1", kind: "robot", name: "Bot", color: "#6ab0c8", robotKind: "script", role: "" }],
+    nodes: [step("a")],
+    edges: [],
+    assignments: {},
+    after: emptyAfterOverlay(),
+  });
+  expect(blank.ok).toBe(true);
+  if (blank.ok) {
+    const bot = blank.doc.actors[0];
+    expect(bot && "role" in bot && bot.role).toBe("Script");
+  }
+});
+
 test("empty Human role becomes worker", () => {
   const parsed = parseCodes({
     version: 2,

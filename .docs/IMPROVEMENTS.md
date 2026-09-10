@@ -1071,3 +1071,27 @@ Append to `## Amendments` in `.docs/GOAL.md`: P-07, BA-05, AQ-01, AQ-02 as dated
 Commit: `feat(improve-51): expand Present Before After panes`.  
 Evidence: `.docs/evidence/improve-51-present-expand/`.
 
+---
+
+# Improvement 52 — Actors up top and Manage polish
+
+Approved 2026-09-09. Who moves above Type. Manage actors is a header stickman+Actors control. The actor editor matches the Step form: compact color, single-line Role, icon add, minus delete-mode. Robots drop the Type picker and gain Role.
+
+## Locked decisions
+
+- Step inspector order: Who, then Type / Name / Details.
+- Header Actors control (HumanFigure + “Actors”, ~2× trash width) on every editable inspector. Toggle; no Back heading. Hidden in Compare and Present.
+- Add is Human/Robot icons with a plus. Minus toggles delete mode (click actor deletes; unused-only NA-02; Escape exits delete mode first).
+- Color is a compact cream chip plus Tabler eyedropper that opens a 14-swatch wheel. Role is one-line InspectorField.
+- Robots store Role; hidden robotKind remains. No document version bump. Missing role fills from the Type word.
+- New-board presets: Robot / LLM, Robot / Script, Robot / Agent. Add robot and auto-create: Robot / Script.
+- Robot Who keys show Role. Tile second chip uses Role. Robot Type pie is gone.
+- No new runtime dependency.
+
+## Contract
+
+Append to `## Amendments` in `.docs/GOAL.md`: NA-01, NA-04, NA-05, NA-06, NA-08, WG-01 as dated 2026-09-09.
+
+Commit: `feat(improve-52): polish Actors header and Manage panel`.  
+Evidence: `.docs/evidence/improve-52-actors/`.
+

@@ -24,31 +24,28 @@ test.describe("Improvement 35 — default LLM Script Agent robots", () => {
     await newBoard(page);
     await page.getByRole("button", { name: "Add Step" }).click();
     await waitForLayout(page);
-    await expect(aside(page).getByRole("button", { name: "Who LLM" })).toBeVisible();
-    await expect(aside(page).getByRole("button", { name: "Who Script" })).toBeVisible();
-    await expect(aside(page).getByRole("button", { name: "Who Agent" })).toBeVisible();
-    await expect(aside(page).getByRole("button", { name: "Who Robot" })).toHaveCount(0);
+    await expect(aside(page).getByRole("button", { name: "Who Robot LLM" })).toBeVisible();
+    await expect(aside(page).getByRole("button", { name: "Who Robot Script" })).toBeVisible();
+    await expect(aside(page).getByRole("button", { name: "Who Robot Agent" })).toBeVisible();
+    await expect(aside(page).getByRole("button", { name: "Who Robot", exact: true })).toHaveCount(0);
     await capturePage(page, `${EVIDENCE}/new-who-1440.png`);
 
-    await aside(page).getByRole("button", { name: "Manage actors" }).click();
-    await expect(aside(page).getByRole("option", { name: "LLM" })).toBeVisible();
-    await expect(aside(page).getByRole("option", { name: "Script" })).toBeVisible();
-    await expect(aside(page).getByRole("option", { name: "Agent" })).toBeVisible();
-    await aside(page).getByRole("option", { name: "LLM" }).click();
-    await expect(aside(page).getByLabel("Name")).toHaveValue("LLM");
-    await expect(aside(page).getByRole("button", { name: "LLM", exact: true })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
+    await aside(page).getByRole("button", { name: "Actors", exact: true }).click();
+    await expect(aside(page).getByRole("option", { name: "Robot LLM" })).toBeVisible();
+    await expect(aside(page).getByRole("option", { name: "Robot Script" })).toBeVisible();
+    await expect(aside(page).getByRole("option", { name: "Robot Agent" })).toBeVisible();
+    await aside(page).getByRole("option", { name: "Robot LLM" }).click();
+    await expect(aside(page).getByLabel("Name")).toHaveValue("Robot");
+    await expect(aside(page).getByLabel("Role")).toHaveValue("LLM");
     await capturePage(page, `${EVIDENCE}/new-manage-actors-1440.png`);
-    await aside(page).getByRole("button", { name: "Back" }).click();
+    await aside(page).getByRole("button", { name: "Actors", exact: true }).click();
 
     await viewLabel(page, "After").click();
     await waitForLayout(page);
     await page.locator(".react-flow__node.selected").click();
     await page.keyboard.press("e");
     await waitForLayout(page);
-    await expect(aside(page).getByRole("button", { name: "Who LLM" })).toHaveAttribute(
+    await expect(aside(page).getByRole("button", { name: "Who Robot LLM" })).toHaveAttribute(
       "aria-pressed",
       "true",
     );
@@ -88,9 +85,9 @@ test.describe("Improvement 35 min-width", () => {
     await newBoard(page);
     await page.getByRole("button", { name: "Add Step" }).click();
     await waitForLayout(page);
-    await expect(aside(page).getByRole("button", { name: "Who LLM" })).toBeVisible();
-    await expect(aside(page).getByRole("button", { name: "Who Script" })).toBeVisible();
-    await expect(aside(page).getByRole("button", { name: "Who Agent" })).toBeVisible();
+    await expect(aside(page).getByRole("button", { name: "Who Robot LLM" })).toBeVisible();
+    await expect(aside(page).getByRole("button", { name: "Who Robot Script" })).toBeVisible();
+    await expect(aside(page).getByRole("button", { name: "Who Robot Agent" })).toBeVisible();
     await capturePage(page, `${EVIDENCE}/new-who-1024.png`);
   });
 });

@@ -66,6 +66,7 @@ test("Who lists Humans then Robots even when document order is mixed", () => {
       name: "LLM",
       color: "#5ec4d8",
       robotKind: RobotKind.Llm,
+      role: "LLM",
     },
     ACTORS[1],
   ];

@@ -89,7 +89,6 @@ import {
 import { nid } from "../workflow/ids";
 import {
   isHuman,
-  isRobot,
   isStepNode,
   STEP_KIND_META,
   titleForStepKindChange,
@@ -243,6 +242,7 @@ export const useStore = create<{
   lastHumanId: string | null;
   manageActorsOpen: boolean;
   manageActorId: string | null;
+  manageActorsDeleteMode: boolean;
   focusId: string | null;
   interaction: Interaction;
   departing: DepartingTile | null;
@@ -291,6 +291,7 @@ export const useStore = create<{
   openManageActors: () => void;
   closeManageActors: (opts?: { restoreFocus?: boolean }) => void;
   setManageActorId: (id: string | null) => void;
+  setManageActorsDeleteMode: (on: boolean) => void;
   updateNode: (id: string, patch: Partial<NodeDto>) => void;
   updateEdge: (id: string, patch: { label?: string; dashed?: boolean }) => void;
   updateActor: (id: string, patch: Partial<ActorDto>) => void;
@@ -362,6 +363,7 @@ export const useStore = create<{
   lastHumanId: null,
   manageActorsOpen: false,
   manageActorId: null,
+  manageActorsDeleteMode: false,
   focusId: null,
   interaction: IDLE,
   departing: null,
@@ -409,6 +411,7 @@ export const useStore = create<{
       importError: null,
       lastHumanId: null,
       manageActorsOpen: false,
+      manageActorsDeleteMode: false,
       manageActorId: null,
       view: ViewMode.Before,
       focusedLane: AssignmentLane.Before,
@@ -512,6 +515,7 @@ export const useStore = create<{
         interaction: IDLE,
         departing: null,
         manageActorsOpen: false,
+      manageActorsDeleteMode: false,
         manageActorId: null,
         laneViewports,
       });
@@ -567,17 +571,34 @@ export const useStore = create<{
       interaction.kind === "path-label-edit" &&
       (selected?.type !== SelectionKind.Edge || selected.id !== interaction.edgeId)
     ) {
-      set({ selected, manageActorsOpen: false, manageActorId: null, interaction: IDLE });
+      set({
+        selected,
+        manageActorsOpen: false,
+        manageActorsDeleteMode: false,
+        manageActorId: null,
+        interaction: IDLE,
+      });
       return;
     }
     if (
       (interaction.kind === "tile-text-edit" || interaction.kind === "tile-pie") &&
       (selected?.type !== SelectionKind.Node || selected.id !== interaction.nodeId)
     ) {
-      set({ selected, manageActorsOpen: false, manageActorId: null, interaction: IDLE });
+      set({
+        selected,
+        manageActorsOpen: false,
+        manageActorsDeleteMode: false,
+        manageActorId: null,
+        interaction: IDLE,
+      });
       return;
     }
-    set({ selected, manageActorsOpen: false, manageActorId: null });
+    set({
+      selected,
+      manageActorsOpen: false,
+      manageActorsDeleteMode: false,
+      manageActorId: null,
+    });
   },
   setHelp: (helpOpen) => {
     set({ helpOpen, capturing: helpOpen ? get().capturing : null });
@@ -759,10 +780,10 @@ export const useStore = create<{
         : null) ??
       workflow.actors[0]?.id ??
       null;
-    set({ manageActorsOpen: true, manageActorId: nextId });
+    set({ manageActorsOpen: true, manageActorId: nextId, manageActorsDeleteMode: false });
   },
   closeManageActors: (opts) => {
-    set({ manageActorsOpen: false, manageActorId: null });
+    set({ manageActorsOpen: false, manageActorId: null, manageActorsDeleteMode: false });
     if (opts?.restoreFocus === false) return;
     queueMicrotask(() => {
       (
@@ -772,6 +793,7 @@ export const useStore = create<{
     });
   },
   setManageActorId: (manageActorId) => set({ manageActorId }),
+  setManageActorsDeleteMode: (manageActorsDeleteMode) => set({ manageActorsDeleteMode }),
   updateNode: (id, patch) => {
     if (get().present || get().view === ViewMode.Both) return;
     const { workflow, commit } = get();
@@ -1210,6 +1232,7 @@ export const useStore = create<{
     set({
       selected: { type: SelectionKind.Node, id: nodeId },
       manageActorsOpen: false,
+      manageActorsDeleteMode: false,
       manageActorId: null,
       interaction: { kind: "tile-text-edit", nodeId, field },
     });
@@ -1218,13 +1241,10 @@ export const useStore = create<{
     if (!get().canvasEditable()) return;
     const found = findNode(get().workflow, nodeId);
     if (!found || !isStepNode(found)) return;
-    if (pie === "robot-kind") {
-      const actor = get().actorFor(nodeId);
-      if (!isRobot(actor)) return;
-    }
     set({
       selected: { type: SelectionKind.Node, id: nodeId },
       manageActorsOpen: false,
+      manageActorsDeleteMode: false,
       manageActorId: null,
       interaction: { kind: "tile-pie", nodeId, pie, x, y },
     });
@@ -1236,6 +1256,7 @@ export const useStore = create<{
     set({
       selected: { type: SelectionKind.Node, id: nodeId },
       manageActorsOpen: false,
+      manageActorsDeleteMode: false,
       manageActorId: null,
     });
     const positions = get().activePositions();
@@ -1400,6 +1421,7 @@ export const useStore = create<{
       importError: null,
       lastHumanId: null,
       manageActorsOpen: false,
+      manageActorsDeleteMode: false,
       manageActorId: null,
       view: ViewMode.Before,
       focusedLane: AssignmentLane.Before,

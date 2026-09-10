@@ -3,7 +3,7 @@
  * centered as one cluster in the inspector (NA-05, NA-06).
  */
 import { FIGURE_INK_ON_PASTEL, humansOf, robotsOf } from "../../workflow/actors";
-import { isHuman, type ActorDto } from "../../workflow/types";
+import { actorWhoAria, actorWhoCaption, isHuman, type ActorDto } from "../../workflow/types";
 import { HumanFigure } from "../../board/tiles/HumanFigure";
 import { RobotFigure } from "../../board/tiles/RobotFigure";
 
@@ -11,6 +11,7 @@ function ActorWhoButton({
   actor,
   on,
   disabled,
+  deleteMode,
   ariaLabel,
   option,
   onClick,
@@ -18,6 +19,7 @@ function ActorWhoButton({
   actor: ActorDto;
   on: boolean;
   disabled?: boolean;
+  deleteMode?: boolean;
   ariaLabel: string;
   option?: boolean;
   onClick: () => void;
@@ -29,7 +31,7 @@ function ActorWhoButton({
       role={option ? "option" : undefined}
       aria-selected={option ? on : undefined}
       aria-pressed={option ? undefined : on}
-      className={`inspector-who${on ? " is-on" : ""}`}
+      className={`inspector-who${on ? " is-on" : ""}${deleteMode ? " is-delete" : ""}`}
       aria-label={ariaLabel}
       disabled={disabled}
       onClick={onClick}
@@ -41,7 +43,7 @@ function ActorWhoButton({
           <RobotFigure size={26} color={FIGURE_INK_ON_PASTEL} />
         )}
       </span>
-      <span className="inspector-who-name">{actor.name}</span>
+      <span className="inspector-who-name">{actorWhoCaption(actor)}</span>
     </button>
   );
 }
@@ -51,6 +53,7 @@ function KindRow({
   actors,
   selectedId,
   disabled,
+  deleteMode,
   option,
   whoPrefix,
   onPick,
@@ -59,6 +62,7 @@ function KindRow({
   actors: ActorDto[];
   selectedId: string | null;
   disabled?: boolean;
+  deleteMode?: boolean;
   option?: boolean;
   whoPrefix: boolean;
   onPick: (id: string) => void;
@@ -70,10 +74,11 @@ function KindRow({
         <ActorWhoButton
           key={actor.id}
           actor={actor}
-          on={actor.id === selectedId}
+          on={!deleteMode && actor.id === selectedId}
           disabled={disabled}
+          deleteMode={deleteMode}
           option={option}
-          ariaLabel={whoPrefix ? `Who ${actor.name}` : actor.name}
+          ariaLabel={actorWhoAria(actor, whoPrefix)}
           onClick={() => onPick(actor.id)}
         />
       ))}
@@ -86,6 +91,7 @@ export function ActorWhoGrid({
   selectedId,
   onPick,
   disabled,
+  deleteMode,
   listbox,
   ariaLabel,
 }: {
@@ -93,6 +99,7 @@ export function ActorWhoGrid({
   selectedId: string | null;
   onPick: (id: string) => void;
   disabled?: boolean;
+  deleteMode?: boolean;
   listbox?: boolean;
   ariaLabel: string;
 }) {
@@ -107,6 +114,7 @@ export function ActorWhoGrid({
         actors={humansOf(actors)}
         selectedId={selectedId}
         disabled={disabled}
+        deleteMode={deleteMode}
         option={listbox}
         whoPrefix={!listbox}
         onPick={onPick}
@@ -116,6 +124,7 @@ export function ActorWhoGrid({
         actors={robotsOf(actors)}
         selectedId={selectedId}
         disabled={disabled}
+        deleteMode={deleteMode}
         option={listbox}
         whoPrefix={!listbox}
         onPick={onPick}

@@ -39,7 +39,7 @@ test.describe("Improvement 44 — Human name and compact Name/Details", () => {
 
   test("Add human is named Human with no number", async ({ page }) => {
     await newBoardWithStep(page);
-    await aside(page).getByRole("button", { name: "Manage actors" }).click();
+    await aside(page).getByRole("button", { name: "Actors", exact: true }).click();
     await aside(page).getByRole("button", { name: "Add human" }).click();
 
     await expect(aside(page).getByRole("option", { name: "Human", exact: true })).toBeVisible();

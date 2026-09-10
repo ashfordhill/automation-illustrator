@@ -12,7 +12,13 @@ import {
   WORKFLOW_VERSION_V1,
 } from "./catalogs";
 import { validateWorkflow, validateWorkflowV1, type GraphViolation } from "./graph";
-import { DEFAULT_HUMAN_ROLE, STEP_KINDS, type WorkflowDoc, type WorkflowDocV1 } from "./types";
+import {
+  DEFAULT_HUMAN_ROLE,
+  ROBOT_KIND_LABEL,
+  STEP_KINDS,
+  type WorkflowDoc,
+  type WorkflowDocV1,
+} from "./types";
 
 const idSchema = z.string().min(1);
 const colorSchema = z.string().min(1);
@@ -45,16 +51,36 @@ const humanV2Schema = z.object({
   ),
 });
 
-const robotSchema = z.object({
+const robotFields = {
   id: idSchema,
   kind: z.literal(ActorKind.Robot),
   name: z.string(),
   color: colorSchema,
   robotKind: robotKindSchema,
+};
+
+const robotV1Schema = z.object({
+  ...robotFields,
+  role: z.string().optional(),
 });
 
-const actorV1Schema = z.discriminatedUnion("kind", [humanV1Schema, robotSchema]);
-const actorV2Schema = z.discriminatedUnion("kind", [humanV2Schema, robotSchema]);
+const robotV2Schema = z.preprocess((raw) => {
+  if (!raw || typeof raw !== "object") return raw;
+  const value = raw as { robotKind?: string; role?: unknown };
+  const kind = value.robotKind;
+  const fallback =
+    kind === RobotKind.Llm || kind === RobotKind.Agent || kind === RobotKind.Script
+      ? ROBOT_KIND_LABEL[kind]
+      : "Script";
+  const role = typeof value.role === "string" && value.role.trim() ? value.role.trim() : fallback;
+  return { ...value, role };
+}, z.object({
+  ...robotFields,
+  role: z.string().min(1),
+}));
+
+const actorV1Schema = z.discriminatedUnion("kind", [humanV1Schema, robotV1Schema]);
+const actorV2Schema = z.union([humanV2Schema, robotV2Schema]);
 
 const stepFields = {
   id: idSchema,

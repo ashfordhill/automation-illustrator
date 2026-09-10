@@ -27,11 +27,13 @@ actors:
     name: Script
     color: "#6ab0c8"
     robotKind: script
+    role: Script
   - id: r_llm
     kind: robot
     name: LLM
     color: "#5ec4d8"
     robotKind: ai
+    role: LLM
 nodes:
   - id: s_read
     type: step

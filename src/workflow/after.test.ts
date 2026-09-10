@@ -41,6 +41,7 @@ function robot(id = "r1") {
     name: "Robot",
     color: "#8aa8b8",
     robotKind: RobotKind.Script,
+    role: "Script",
   };
 }
 

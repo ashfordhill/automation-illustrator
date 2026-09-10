@@ -68,11 +68,11 @@ test.describe("Improvement 38 — chrome, hints, Type, Who", () => {
   test("Manage actors selects the Step’s Who; Right-click Delete hint follows the toggle", async ({ page }) => {
     await loadOakPark(page);
     await page.getByText("Search filesystem").first().click();
-    await page.locator("aside").getByRole("button", { name: "Manage actors" }).click();
+    await page.locator("aside").getByRole("button", { name: "Actors", exact: true }).click();
     const alice = page.locator("aside").getByRole("option", { name: "Alice" });
     await expect(alice).toHaveAttribute("aria-selected", "true");
     await capturePage(page, `${EVIDENCE}/manage-alice-1440.png`);
-    await page.locator("aside").getByRole("button", { name: "Back" }).click();
+    await page.locator("aside").getByRole("button", { name: "Actors", exact: true }).click();
 
     const pt = await pathScreenPoint(page, "e_web_acct", 0.22);
     await page.mouse.click(pt.x, pt.y);

@@ -142,9 +142,12 @@ test("exported YAML quotes hex colors and keeps actor edits", () => {
     alice.name = "Alicia";
     alice.role = "";
   }
+  const llm = doc.actors.find((a) => a.id === "r_llm");
+  if (llm && "role" in llm) llm.role = "";
   const yaml = workflowToYaml(doc);
   expect(yaml).toMatch(/name: Alicia/);
   expect(yaml).toMatch(/role: worker/);
+  expect(yaml).toMatch(/role: LLM/);
   expect(yaml).toMatch(/color: ["']#/);
   expect(yaml).not.toMatch(/color: #/);
   const parsed = parseDocument(yaml);
@@ -152,6 +155,7 @@ test("exported YAML quotes hex colors and keeps actor edits", () => {
   if (!parsed.ok) return;
   const round = parsed.doc.actors.find((a) => a.id === "h_alice");
   expect(round).toMatchObject({ name: "Alicia", color: "#ff9fbf", role: "worker" });
+  expect(parsed.doc.actors.find((a) => a.id === "r_llm")).toMatchObject({ role: "LLM" });
 });
 
 test("export filename slugs the project name", () => {

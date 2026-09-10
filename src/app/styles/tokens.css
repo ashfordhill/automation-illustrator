@@ -1505,8 +1505,57 @@ body.is-tile-dragging * {
   margin: 0;
 }
 
+.inspector-header-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.inspector-actors {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 72px;
+  height: 36px;
+  min-width: 72px;
+  min-height: 36px;
+  margin: 0;
+  padding: 0 8px;
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  background: var(--cream);
+  color: var(--ink);
+  font-family: inherit;
+  font-weight: 800;
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: var(--chip-shadow);
+  box-sizing: border-box;
+}
+
+.inspector-actors.is-on {
+  background: var(--yellow);
+  color: var(--on-yellow);
+  border-color: var(--yellow);
+  box-shadow: none;
+}
+
+.inspector-actors:focus-visible,
+.inspector-actor-add:focus-visible,
+.inspector-actor-minus:focus-visible,
+.inspector-color:focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: 2px;
+}
+
 .inspector-trash {
   flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
   /* Idle tile-X red (--minus). Hover uses the darker --minus-active. */
   --ai-color: var(--minus);
   --ai-hover: var(--minus-active);
@@ -1634,6 +1683,10 @@ body.is-tile-dragging * {
 }
 
 .inspector-field.is-off {
+  opacity: 1;
+}
+
+.inspector-field.is-off .inspector-field-box {
   opacity: 0.55;
 }
 
@@ -1703,7 +1756,7 @@ body.is-tile-dragging * {
   border: 2px solid var(--blue-deep);
   border-radius: 10px;
   background: var(--blue);
-  color: var(--chrome-ink);
+  color: #071c28;
   box-shadow: var(--chip-shadow);
 }
 
@@ -1737,11 +1790,121 @@ body.is-tile-dragging * {
   cursor: default;
 }
 
+.inspector-manage {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+}
+
 .inspector-manage > .inspector-field {
   width: var(--inspector-cluster);
   max-width: 100%;
   align-self: center;
   margin-inline: auto;
+}
+
+.inspector-manage > .inspector-color {
+  align-self: center;
+  margin-inline: auto;
+}
+
+.inspector-actor-ops {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: var(--inspector-cluster);
+  max-width: 100%;
+  margin-inline: auto;
+}
+
+.inspector-actor-add,
+.inspector-actor-minus {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  background: var(--cream);
+  color: var(--ink);
+  cursor: pointer;
+  box-shadow: var(--chip-shadow);
+  box-sizing: border-box;
+}
+
+.inspector-actor-add {
+  width: 56px;
+  height: 56px;
+}
+
+.inspector-actor-add-fig {
+  width: 36px;
+  height: 44px;
+  border-radius: 8px;
+  border: 1.5px solid var(--line);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  overflow: visible;
+}
+
+.inspector-actor-add-plus {
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  color: var(--ink);
+}
+
+.inspector-actor-minus {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+}
+
+.inspector-actor-minus.is-on {
+  background: var(--yellow);
+  color: var(--on-yellow);
+  border-color: var(--yellow);
+  box-shadow: none;
+}
+
+.inspector-who.is-delete {
+  border-color: var(--minus);
+}
+
+.inspector-color {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 148px;
+  max-width: 100%;
+  min-height: 36px;
+  padding: 4px 8px;
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  background: var(--cream);
+  color: var(--ink);
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: var(--chip-shadow);
+  box-sizing: border-box;
+}
+
+.inspector-color-swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 1.5px solid var(--line);
+  flex: 0 0 auto;
+}
+
+.inspector-color-pop {
+  padding: 8px;
 }
 
 @media (prefers-reduced-motion: reduce) {

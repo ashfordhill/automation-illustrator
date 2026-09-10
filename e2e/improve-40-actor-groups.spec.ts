@@ -20,19 +20,22 @@ async function newBoardWithStep(page: import("@playwright/test").Page) {
 test.describe("Improvement 40 — Humans then Robots on their own row", () => {
   test("Add human sits with Humans; Robots start on the next row", async ({ page }) => {
     await newBoardWithStep(page);
-    await aside(page).getByRole("button", { name: "Manage actors" }).click();
-    await expect(page.getByRole("heading", { name: "Manage actors" })).toBeVisible();
+    await aside(page).getByRole("button", { name: "Actors", exact: true }).click();
+    await expect(aside(page).getByRole("button", { name: "Actors", exact: true })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
     await aside(page).getByRole("button", { name: "Add human" }).click();
 
     const options = aside(page).getByRole("option");
     await expect(options).toHaveCount(8);
     await expect(options.nth(0)).toHaveAttribute("aria-label", "Alice");
     await expect(options.nth(4)).toHaveAttribute("aria-label", "Human");
-    await expect(options.nth(5)).toHaveAttribute("aria-label", "LLM");
-    await expect(options.nth(7)).toHaveAttribute("aria-label", "Agent");
+    await expect(options.nth(5)).toHaveAttribute("aria-label", "Robot LLM");
+    await expect(options.nth(7)).toHaveAttribute("aria-label", "Robot Agent");
 
     const person = options.nth(4);
-    const llm = aside(page).getByRole("option", { name: "LLM", exact: true });
+    const llm = aside(page).getByRole("option", { name: "Robot LLM", exact: true });
     const personBox = await person.boundingBox();
     const llmBox = await llm.boundingBox();
     expect(personBox && llmBox).toBeTruthy();
@@ -43,18 +46,21 @@ test.describe("Improvement 40 — Humans then Robots on their own row", () => {
 
     await aside(page).getByRole("button", { name: "Add robot" }).click();
     await expect(aside(page).getByRole("option")).toHaveCount(9);
-    await expect(aside(page).getByRole("option").nth(8)).toHaveAttribute("aria-label", "Robot");
+    await expect(aside(page).getByRole("option").nth(8)).toHaveAttribute(
+      "aria-label",
+      "Robot Script",
+    );
     await capturePage(page, `${EVIDENCE}/manage-robot-end-1440.png`);
   });
 
   test("Who picker also keeps Robots on their own row", async ({ page }) => {
     await newBoardWithStep(page);
-    await aside(page).getByRole("button", { name: "Manage actors" }).click();
+    await aside(page).getByRole("button", { name: "Actors", exact: true }).click();
     await aside(page).getByRole("button", { name: "Add human" }).click();
-    await aside(page).getByRole("button", { name: "Back" }).click();
+    await aside(page).getByRole("button", { name: "Actors", exact: true }).click();
 
     const person = aside(page).getByRole("button", { name: "Who Human" });
-    const llm = aside(page).getByRole("button", { name: "Who LLM" });
+    const llm = aside(page).getByRole("button", { name: "Who Robot LLM" });
     await expect(person).toBeVisible();
     const personBox = await person.boundingBox();
     const llmBox = await llm.boundingBox();
@@ -69,10 +75,10 @@ test.describe("Improvement 40 min-width", () => {
 
   test("Robots still start on a new row at 1024", async ({ page }) => {
     await newBoardWithStep(page);
-    await aside(page).getByRole("button", { name: "Manage actors" }).click();
+    await aside(page).getByRole("button", { name: "Actors", exact: true }).click();
     await aside(page).getByRole("button", { name: "Add human" }).click();
     const person = aside(page).getByRole("option").nth(4);
-    const llm = aside(page).getByRole("option", { name: "LLM", exact: true });
+    const llm = aside(page).getByRole("option", { name: "Robot LLM", exact: true });
     const personBox = await person.boundingBox();
     const llmBox = await llm.boundingBox();
     expect(personBox && llmBox).toBeTruthy();

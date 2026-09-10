@@ -37,7 +37,7 @@ test.describe("After-only Steps (merge withdrawn)", () => {
     await expect(page.locator("aside").getByRole("button", { name: "Type Other" })).toBeVisible();
     await page.locator("aside").getByRole("button", { name: "Remove Step" }).click();
     await waitForLayout(page);
-    await expect(page.locator("aside").getByRole("button", { name: "Manage actors" })).toBeVisible();
+    await expect(page.locator("aside").getByRole("button", { name: "Actors", exact: true })).toBeVisible();
     await screenshotBoard(page, `${EVIDENCE}/after-only-removed-1440.png`);
   });
 });

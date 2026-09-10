@@ -65,9 +65,10 @@ test("After-only Step on a New board uses LLM (NA-04)", () => {
   s.confirmReplaceDiscard();
   const root = useStore.getState().addStep();
   expect(root).toBeTruthy();
-  const llm = useStore.getState().workflow.actors.find((a) => a.name === "LLM")?.id;
+  const llm = defaultRobotId(useStore.getState().workflow.actors);
   expect(llm).toBeTruthy();
-  expect(defaultRobotId(useStore.getState().workflow.actors)).toBe(llm);
+  const first = useStore.getState().workflow.actors.find((a) => a.id === llm);
+  expect(first && "role" in first && first.role).toBe("LLM");
 
   s.setView(ViewMode.After);
   const extra = useStore.getState().spawnBranch(root, WorkflowNodeKind.Step);
@@ -234,9 +235,9 @@ test("addHuman inserts before robots; addRobot appends after robots", () => {
     "Jack",
     "Missy",
     "Pat",
-    "LLM",
-    "Script",
-    "Agent",
+    "Robot",
+    "Robot",
+    "Robot",
   ]);
   expect(useStore.getState().workflow.actors.find((a) => a.id === hid)?.name).toBe("Pat");
 
@@ -244,7 +245,20 @@ test("addHuman inserts before robots; addRobot appends after robots", () => {
   const names = useStore.getState().workflow.actors.map((a) => a.name);
   expect(names.at(-1)).toBe("Robot");
   expect(names.indexOf("Pat")).toBe(4);
-  expect(useStore.getState().workflow.actors.find((a) => a.id === rid)?.name).toBe("Robot");
+  const added = useStore.getState().workflow.actors.find((a) => a.id === rid);
+  expect(added?.name).toBe("Robot");
+  expect(added && "role" in added && added.role).toBe("Script");
+});
+
+test("Manage actors delete mode stays on after a blocked delete", () => {
+  const s = useStore.getState();
+  s.openManageActors();
+  s.setManageActorsDeleteMode(true);
+  expect(s.removeActor(OAK_PARK_IDS.alice)).toBe(false);
+  expect(useStore.getState().manageActorsDeleteMode).toBe(true);
+  expect(useStore.getState().manageActorsOpen).toBe(true);
+  s.setManageActorsDeleteMode(false);
+  expect(useStore.getState().manageActorsOpen).toBe(true);
 });
 
 test("Manage actors opens on the selected Step’s Who", () => {

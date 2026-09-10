@@ -6,8 +6,11 @@ const YELLOW_LIGHT = "rgb(232, 193, 74)";
 const YELLOW_DARK = "rgb(226, 184, 74)";
 
 async function openManageActors(page: import("@playwright/test").Page) {
-  await page.locator("aside").getByRole("button", { name: "Manage actors" }).click();
-  await expect(page.getByRole("heading", { name: "Manage actors" })).toBeVisible();
+  await page.locator("aside").getByRole("button", { name: "Actors", exact: true }).click();
+  await expect(page.locator("aside").getByRole("button", { name: "Actors", exact: true })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
 }
 
 test.describe("Improvement 28 — Who select is yellow", () => {

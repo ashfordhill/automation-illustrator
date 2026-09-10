@@ -50,6 +50,8 @@ test("migration drops stub and fills missing Human role with worker", () => {
   expect(JSON.stringify(read)).not.toContain("stub");
   const alice = v2.actors.find((a) => a.id === "h_alice");
   expect(alice && "role" in alice ? alice.role : undefined).toBe("worker");
+  const robot = v2.actors.find((a) => a.id === "r_script");
+  expect(robot && "role" in robot ? robot.role : undefined).toBe("Script");
 });
 
 test("parseDocument migrates valid v1 and rejects an invalid v1 graph without migrating", () => {

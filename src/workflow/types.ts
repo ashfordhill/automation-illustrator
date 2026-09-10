@@ -83,6 +83,12 @@ export type PositionMap = Record<string, Point>;
 /** Default HumanDto.role — the people equivalent of robot LLM / Agent / Script. */
 export const DEFAULT_HUMAN_ROLE = "worker";
 
+/** Default Role for a newly added Robot (NA-01). */
+export const DEFAULT_ROBOT_ROLE = "Script";
+
+/** Default Name for roster Robots and Add robot (WG-01, NA-01). */
+export const DEFAULT_ROBOT_NAME = "Robot";
+
 export type HumanDto = {
   id: string;
   kind: typeof ActorKind.Human;
@@ -97,6 +103,7 @@ export type RobotDto = {
   name: string;
   color: string;
   robotKind: RobotKind;
+  role: string;
 };
 
 export type ActorDto = HumanDto | RobotDto;
@@ -182,10 +189,10 @@ export function unfoldMergeGroups(doc: WorkflowDoc): { doc: WorkflowDoc; unfolde
   };
 }
 
-/** Version 1 on-disk shape before migrate.ts (lane maps, optional Human role, optional stub). */
+/** Version 1 on-disk shape before migrate.ts (lane maps, optional Human/Robot role, optional stub). */
 export type WorkflowDocV1 = {
   version: typeof WORKFLOW_VERSION_V1;
-  actors: Array<RobotDto | (Omit<HumanDto, "role"> & { role?: string })>;
+  actors: Array<(Omit<RobotDto, "role"> & { role?: string }) | (Omit<HumanDto, "role"> & { role?: string })>;
   nodes: Array<NodeDto | (StepNodeDto & { stub?: boolean })>;
   edges: EdgeDto[];
   assignments: Record<AssignmentLane, Assignments>;
@@ -233,9 +240,30 @@ export function isHuman(a: ActorDto | undefined): a is HumanDto {
   return a?.kind === ActorKind.Human;
 }
 
-/** Automation actor — robotKind is LLM / Agent / Script. */
+/** Automation actor — robotKind is LLM / Agent / Script (hidden; Role is the user field). */
 export function isRobot(a: ActorDto | undefined): a is RobotDto {
   return a?.kind === ActorKind.Robot;
+}
+
+/** Displayed Role for a Robot (stored role, else the hidden Type word). */
+export function robotRole(actor: RobotDto): string {
+  const role = actor.role?.trim();
+  return role || ROBOT_KIND_LABEL[actor.robotKind];
+}
+
+/** Who / Manage key caption: Role for Robots, Name for Humans (NA-05). */
+export function actorWhoCaption(actor: ActorDto): string {
+  return isRobot(actor) ? robotRole(actor) : actor.name;
+}
+
+/** Accessible Who / Manage name. Robots include Name and Role when they differ. */
+export function actorWhoAria(actor: ActorDto, whoPrefix = false): string {
+  const label = isRobot(actor)
+    ? actor.name === robotRole(actor)
+      ? actor.name
+      : `${actor.name} ${robotRole(actor)}`
+    : actor.name;
+  return whoPrefix ? `Who ${label}` : label;
 }
 
 /** Empty document used by history tests and as a valid zero-Node board (WG-01). */

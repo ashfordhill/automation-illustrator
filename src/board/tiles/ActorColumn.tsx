@@ -9,9 +9,9 @@ import { FIGURE_INK_ON_PASTEL } from "../../workflow/actors";
 import { ActorKind } from "../../workflow/catalogs";
 import {
   DEFAULT_HUMAN_ROLE,
-  ROBOT_KIND_LABEL,
   isHuman,
   isRobot,
+  robotRole,
   type ActorDto,
 } from "../../workflow/types";
 import { FitLabel } from "./FitLabel";
@@ -51,7 +51,7 @@ export function ActorColumn({ actor }: { actor: ActorDto | undefined }) {
   const role = isHuman(actor)
     ? (actor.role ?? "").trim() || DEFAULT_HUMAN_ROLE
     : isRobot(actor)
-      ? ROBOT_KIND_LABEL[actor.robotKind]
+      ? robotRole(actor)
       : "";
   return (
     <div

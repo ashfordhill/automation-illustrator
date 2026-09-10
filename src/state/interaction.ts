@@ -9,8 +9,8 @@ import type { RemovalPlan } from "../workflow/commands";
 /** On-canvas Step field opened by double-click (Name, Details, actor name, Human role). */
 export type TileTextField = "actor-name" | "actor-role" | "title" | "detail";
 
-/** Pie around a Step icon: Type, Who, or Robot Type (LLM / Agent / Script). */
-export type TilePieKind = "type" | "who" | "robot-kind";
+/** Pie around a Step icon: Type or Who. Robot Role is the actor-role text overlay. */
+export type TilePieKind = "type" | "who";
 
 export type InsertHover =
   | { kind: "path"; edgeId: string }

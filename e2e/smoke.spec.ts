@@ -19,7 +19,7 @@ test.describe("baseline smoke", () => {
   test("app mounts with the Oak Park demo", async ({ page }) => {
     await loadDemo(page);
     await expect(page.getByRole("button", { name: "Menu" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Manage actors" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Actors", exact: true })).toBeVisible();
     await capturePage(page, ".docs/evidence/01-harness/before-light-1440.png");
   });
 

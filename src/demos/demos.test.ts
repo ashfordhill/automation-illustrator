@@ -79,10 +79,13 @@ test("freshBoard is an empty roster board (WG-01)", () => {
     "Missy",
   ]);
   expect(doc.actors.filter((a) => a.kind === ActorKind.Robot).map((a) => a.name)).toEqual([
-    "LLM",
-    "Script",
-    "Agent",
+    "Robot",
+    "Robot",
+    "Robot",
   ]);
+  expect(
+    doc.actors.filter((a) => a.kind === ActorKind.Robot).map((a) => ("role" in a ? a.role : "")),
+  ).toEqual(["LLM", "Script", "Agent"]);
   expect(validateWorkflow(doc)).toEqual([]);
 });
 

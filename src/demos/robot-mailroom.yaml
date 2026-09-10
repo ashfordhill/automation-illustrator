@@ -22,11 +22,13 @@ actors:
     name: Mailbot
     color: "#6ab0c8"
     robotKind: script
+    role: Script
   - id: r_reader
     kind: robot
     name: Reader
     color: "#5ec4d8"
     robotKind: ai
+    role: LLM
 nodes:
   - id: s_mail_open
     type: step

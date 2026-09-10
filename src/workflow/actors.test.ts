@@ -25,7 +25,7 @@ const doc: WorkflowDoc = {
   actors: [
     { id: "h_ada", kind: "human", name: "Ada", color: "#f4c6d4", role: "clerk" },
     { id: "h_priya", kind: "human", name: "Priya", color: "#d5c6e6", role: "ap" },
-    { id: "r1", kind: "robot", name: "Bot", color: "#8aa8b8", robotKind: "script" },
+    { id: "r1", kind: "robot", name: "Bot", color: "#8aa8b8", robotKind: "script", role: "Script" },
   ],
   nodes: [
     {
@@ -60,7 +60,7 @@ test("Roy’s fill is honey-apricot, not Script-robot blue", () => {
   expect(HUMAN_PRESETS[1]).toEqual({ name: "Roy", color: "#f4c07a" });
 });
 
-test("default roster is Alice, Roy, Jack, Missy, then LLM, Script, Agent (WG-01, NA-04)", () => {
+test("default roster is Alice, Roy, Jack, Missy, then three Robots named Robot (WG-01, NA-04)", () => {
   const actors = defaultActors();
   expect(actors.filter((a) => a.kind === ActorKind.Human).map((a) => a.name)).toEqual([
     "Alice",
@@ -69,7 +69,8 @@ test("default roster is Alice, Roy, Jack, Missy, then LLM, Script, Agent (WG-01,
     "Missy",
   ]);
   const robots = actors.filter((a) => a.kind === ActorKind.Robot);
-  expect(robots.map((a) => a.name)).toEqual(["LLM", "Script", "Agent"]);
+  expect(robots.map((a) => a.name)).toEqual(["Robot", "Robot", "Robot"]);
+  expect(robots.map((a) => (isRobot(a) ? a.role : ""))).toEqual(["LLM", "Script", "Agent"]);
   expect(robots.map((a) => (isRobot(a) ? a.robotKind : ""))).toEqual(
     ROBOT_PRESETS.map((p) => p.robotKind),
   );
@@ -108,7 +109,7 @@ test("insertActor puts the first Human at the front and the first Robot at the e
   expect(insertActor([ada], llm).map((a) => a.kind)).toEqual([ActorKind.Human, ActorKind.Robot]);
 });
 
-test("ensureDefaultRobot keeps the first Robot and otherwise creates LLM (NA-04)", () => {
+test("ensureDefaultRobot keeps the first Robot and otherwise creates Robot / Script (NA-04)", () => {
   const roster = defaultActors();
   const kept = ensureDefaultRobot({ ...emptyWorkflow(), actors: roster });
   expect(kept.robotId).toBe(defaultRobotId(roster));
@@ -117,8 +118,9 @@ test("ensureDefaultRobot keeps the first Robot and otherwise creates LLM (NA-04)
   const created = ensureDefaultRobot(emptyWorkflow());
   expect(created.doc.actors).toHaveLength(1);
   const robot = created.doc.actors[0];
-  expect(robot?.name).toBe("LLM");
-  expect(robot && isRobot(robot) && robot.robotKind).toBe(RobotKind.Llm);
+  expect(robot?.name).toBe("Robot");
+  expect(robot && isRobot(robot) && robot.robotKind).toBe(RobotKind.Script);
+  expect(robot && isRobot(robot) && robot.role).toBe("Script");
   expect(created.robotId).toBe(robot?.id);
 });
 

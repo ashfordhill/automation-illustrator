@@ -2534,5 +2534,37 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(improve-50): blue Type chip on the left`
 
+## Improvement 52 — Actors up top and Manage polish — 2026-09-09
+
+- Starting commit: `e1e7a38907f0d5077a3f59b3977c503a911848ac` (`feat(improve-50): blue Type chip on the left`)
+- Working tree at start: not clean. Unrelated tile-dock WIP was stashed (`wip tests before improve-52` / `wip unrelated before improve-52 tile dock`). Leftover untracked specs and extra Playwright configs stay out of this commit.
+- GOAL clauses addressed: NA-01, NA-04, NA-05, NA-06, NA-08, WG-01 (amendments dated 2026-09-09). Document version unchanged.
+- Library research and decisions: no new runtime dependency. Tabler has no `IconEyedropper` in this version; Color uses `IconColorPicker` plus Mantine `ColorPicker` (14 swatches). Header stickman is `HumanFigure`. Robot Role is a stored field; hidden `robotKind` stays for fills and auto-create. Zod preprocess fills missing/empty robot role from the Type word (same pattern as empty Human role → worker).
+- Files changed:
+  - Inspector: `src/app/inspector/SelectedItemForm.tsx`, `ManageActorsPanel.tsx`, `ActorWhoGrid.tsx`, `ActorColorField.tsx` (new), `whoSelect.test.tsx`
+  - Store / keys / tiles: `src/state/store.ts`, `src/state/interaction.ts` (drop `robot-kind` pie), `src/keyboard/useAppKeys.ts`, `src/board/tiles/ActorColumn.tsx`
+  - Document: `src/workflow/types.ts`, `schema.ts`, `actors.ts`, `migrate.ts`, `serialize.ts`, `src/demos/*.yaml`
+  - Chrome: `src/app/styles/tokens.css` (Actors header, add/minus, color chip; Type chip ink `#071c28`; Compare greys field boxes not the Type chip)
+  - Tests: unit (schema, serialize, migrate, actors, store); `e2e/improve-52-actors.spec.ts`; locators in inspector / smoke / merge / improve-21/28/33/35/38/40/41/44
+  - Docs: `.docs/GOAL.md`, `.docs/IMPROVEMENTS.md`, `.docs/VISUAL_IMPROVEMENTS.md`, this handoff entry
+  - Evidence: `.docs/evidence/improve-52-actors/`; recaptures for updated inspector/Who specs
+- Behavior implemented:
+  - Step inspector order is Who, then Type / Name / Details.
+  - Persistent header Actors control (stickman + Actors, ~2× trash) on every editable inspector. Toggle Manage; no Back heading. Hidden in Compare and Present.
+  - Manage: icon Add human / Add robot, minus Delete mode (click actor deletes; unused-only NA-02; Escape exits delete mode first), compact color + eyedropper, one-line Role.
+  - Robots edit Name, Color, and Role. New-board robots are named Robot with roles LLM, Script, Agent. Add robot and After auto-create are Robot / Script. Who keys show Role for robots; tiles use Role. Robot Type pie is gone.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning). Node 24.
+  - `npm run test:unit` — 41 files, 312 tests pass.
+  - `npm run test:e2e` — 206 passed (tracked `e2e/*.spec.ts` plus `improve-52-actors`). Untracked leftover `e2e/inspector-trash-color.spec.ts` was not run. Chromium via `LD_LIBRARY_PATH` `/home/ash/.local/pw-libs/usr/lib/x86_64-linux-gnu`.
+- Evidence:
+  - `.docs/evidence/improve-52-actors/step-who-first-1440.png` — Who above Type; Actors next to trash (1440×900)
+  - `.docs/evidence/improve-52-actors/manage-editor-1440.png` — Manage: roster, icon add, Role LLM on Robot (1440×900)
+  - `.docs/evidence/improve-52-actors/delete-mode-1440.png` — minus delete-mode; edit fields hidden (1440×900)
+  - `.docs/evidence/improve-52-actors/manage-1024.png` — Actors header and Manage at 1024×768
+- Earlier-slice defects fixed: Compare axe failed on the Type chip after dark ink on `--blue` because `.inspector-field.is-off` faded the chip. Greying now applies to the Name/Details boxes only. Chip label is `#071c28` so AA holds on `--blue`.
+- Known limitations / follow-ups: Tile-dock stash remains for a later improvement number. On-canvas tile-pie UI was never wired; `robot-kind` is removed from the type so it cannot open. Dark theme stays withdrawn.
+- Status: COMPLETE
+- Commit: `feat(improve-52): polish Actors header and Manage panel`
 
 

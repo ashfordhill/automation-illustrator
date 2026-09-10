@@ -2,7 +2,7 @@
  * Right inspector: Step / Data / Path forms, Who, Manage actors (NA-01..12, PC-02..03).
  * Both is read-only comparison (BA-05). After-only Nodes/Paths resolve from the overlay.
  */
-import { ActionIcon, Button, Stack, Text, TextInput, Tooltip } from "@mantine/core";
+import { ActionIcon, Stack, Text, TextInput, Tooltip } from "@mantine/core";
 import { IconTrash } from "@tabler/icons-react";
 import {
   SelectionKind,
@@ -14,51 +14,69 @@ import { afterGraph, edgeIsDotted } from "../../workflow/graph";
 import { laneAssignments, STEP_KIND_META } from "../../workflow/types";
 import { findEdge, findNode } from "../../workflow/selectors";
 import { useStore } from "../../state/store";
+import { HumanFigure } from "../../board/tiles/HumanFigure";
 import { InspectorField } from "./InspectorField";
 import { ManageActorsPanel } from "./ManageActorsPanel";
 import { TypeButtons } from "./TypeButtons";
 import { WhoButtons } from "./WhoButtons";
 import "./compareDisabled.css";
 
+function ActorsButton() {
+  const open = useStore((s) => s.manageActorsOpen);
+  return (
+    <button
+      id="manage-actors-btn"
+      type="button"
+      className={`inspector-actors${open ? " is-on" : ""}`}
+      aria-label="Actors"
+      aria-pressed={open}
+      onClick={() => {
+        const s = useStore.getState();
+        if (s.manageActorsOpen) s.closeManageActors({ restoreFocus: false });
+        else s.openManageActors();
+      }}
+    >
+      <HumanFigure size={16} color="var(--ink)" />
+      <span>Actors</span>
+    </button>
+  );
+}
+
 function InspectorHeader({
   title,
   removeLabel,
   onRemove,
+  showActors,
 }: {
   title?: string;
   removeLabel?: string;
   onRemove?: () => void;
+  showActors?: boolean;
 }) {
-  if (!title && !(removeLabel && onRemove)) return null;
+  if (!title && !showActors && !(removeLabel && onRemove)) return null;
   return (
     <div className={`inspector-header${title ? "" : " is-tools"}`}>
-      {title ? <Text fw={800}>{title}</Text> : null}
-      {removeLabel && onRemove ? (
-        <Tooltip label={removeLabel}>
-          <ActionIcon
-            className="inspector-trash"
-            variant="default"
-            aria-label={removeLabel}
-            onClick={onRemove}
-          >
-            <IconTrash size={16} />
-          </ActionIcon>
-        </Tooltip>
-      ) : null}
+      {title ? <Text fw={800}>{title}</Text> : <span />}
+      <div className="inspector-header-tools">
+        {showActors ? <ActorsButton /> : null}
+        {removeLabel && onRemove ? (
+          <Tooltip label={removeLabel}>
+            <ActionIcon
+              className="inspector-trash"
+              variant="default"
+              aria-label={removeLabel}
+              onClick={onRemove}
+              styles={{
+                root: { color: "var(--minus-active)" },
+                icon: { color: "var(--minus-active)" },
+              }}
+            >
+              <IconTrash size={16} color="var(--minus-active)" stroke={2.2} />
+            </ActionIcon>
+          </Tooltip>
+        ) : null}
+      </div>
     </div>
-  );
-}
-
-function ManageActorsButton() {
-  return (
-    <Button
-      id="manage-actors-btn"
-      size="xs"
-      variant="light"
-      onClick={() => useStore.getState().openManageActors()}
-    >
-      Manage actors
-    </Button>
   );
 }
 
@@ -103,29 +121,58 @@ export function DetailsPanel() {
   const view = useStore((s) => s.view);
   const manageOpen = useStore((s) => s.manageActorsOpen);
   const readOnly = view === ViewMode.Both;
+  const showActors = !readOnly;
+  const selectedNode =
+    selected?.type === SelectionKind.Node ? findNode(workflow, selected.id) : undefined;
+  const showRemove =
+    !readOnly &&
+    Boolean(selectedNode) &&
+    (view === ViewMode.Before || view === ViewMode.After);
+  const removeLabel = selectedNode
+    ? selectedNode.type === WorkflowNodeKind.DataField
+      ? "Remove Data"
+      : "Remove Step"
+    : undefined;
 
-  if (manageOpen) return <ManageActorsPanel />;
+  const header = (
+    <InspectorHeader
+      title={
+        !manageOpen && selectedNode?.type === WorkflowNodeKind.DataField ? "Data" : undefined
+      }
+      removeLabel={showRemove ? removeLabel : undefined}
+      onRemove={
+        showRemove && selectedNode
+          ? () => useStore.getState().removeTarget(selectedNode.id)
+          : undefined
+      }
+      showActors={showActors}
+    />
+  );
+
+  if (manageOpen) {
+    return (
+      <Stack gap="xs" p="sm" className="chrome-hide">
+        {header}
+        <ManageActorsPanel />
+      </Stack>
+    );
+  }
 
   if (!selected) {
     return (
       <Stack gap="sm" p="sm" className="chrome-hide">
-        {readOnly ? null : <ManageActorsButton />}
+        {header}
       </Stack>
     );
   }
 
   if (selected.type === SelectionKind.Node) {
-    const n = findNode(workflow, selected.id);
+    const n = selectedNode;
     if (!n) return null;
-    const showRemove = !readOnly && (view === ViewMode.Before || view === ViewMode.After);
     if (n.type === WorkflowNodeKind.DataField) {
       return (
         <Stack gap="xs" p="sm" className="chrome-hide">
-          <InspectorHeader
-            title="Data"
-            removeLabel={showRemove ? "Remove Data" : undefined}
-            onRemove={showRemove ? () => useStore.getState().removeTarget(n.id) : undefined}
-          />
+          {header}
           <TextInput
             id="data-label-field"
             label="Label"
@@ -139,9 +186,12 @@ export function DetailsPanel() {
     const actorId = laneAssignments(workflow, lane)[n.id] ?? "";
     return (
       <Stack gap="xs" p="sm" className="chrome-hide">
-        <InspectorHeader
-          removeLabel={showRemove ? "Remove Step" : undefined}
-          onRemove={showRemove ? () => useStore.getState().removeTarget(n.id) : undefined}
+        {header}
+        <WhoButtons
+          actors={workflow.actors}
+          value={actorId}
+          disabled={readOnly}
+          onChange={(id) => useStore.getState().assignActor(n.id, id)}
         />
         <TypeButtons
           value={n.stepKind}
@@ -167,13 +217,6 @@ export function DetailsPanel() {
             onChange={(detail) => useStore.getState().updateNode(n.id, { detail })}
           />
         </div>
-        <WhoButtons
-          actors={workflow.actors}
-          value={actorId}
-          disabled={readOnly}
-          onChange={(id) => useStore.getState().assignActor(n.id, id)}
-        />
-        {readOnly ? null : <ManageActorsButton />}
       </Stack>
     );
   }
@@ -186,6 +229,7 @@ export function DetailsPanel() {
     const dotted = edgeIsDotted(graph.nodes, graph.edges, e);
     return (
       <Stack gap="xs" p="sm" className="chrome-hide">
+        {header}
         <TextInput
           id="path-condition-field"
           label="label"
@@ -209,7 +253,7 @@ export function DetailsPanel() {
 
   return (
     <Stack gap="sm" p="sm" className="chrome-hide">
-      {readOnly ? null : <ManageActorsButton />}
+      {header}
     </Stack>
   );
 }

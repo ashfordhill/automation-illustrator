@@ -39,7 +39,7 @@ test.describe("Improvement 41 — center Who keys", () => {
     await expect(cluster).toBeVisible();
     await assertKeysCenteredOn(
       cluster,
-      aside(page).getByRole("button", { name: "Manage actors" }),
+      aside(page).locator("#details-rail-body"),
     );
     await assertColumnsLineUp(cluster);
     await capturePage(page, `${EVIDENCE}/who-center-1440.png`);
@@ -48,7 +48,7 @@ test.describe("Improvement 41 — center Who keys", () => {
   test("Manage actors cluster is centered too", async ({ page }) => {
     await loadOakPark(page);
     await page.getByText(DEMO_STEP).first().click();
-    await aside(page).getByRole("button", { name: "Manage actors" }).click();
+    await aside(page).getByRole("button", { name: "Actors", exact: true }).click();
     const cluster = aside(page).locator(".inspector-who-groups");
     await expect(cluster).toBeVisible();
     await assertKeysCenteredOn(cluster, aside(page).locator(".inspector-manage"));
@@ -66,7 +66,7 @@ test.describe("Improvement 41 — min width", () => {
     const cluster = aside(page).locator(".inspector-who-groups");
     await assertKeysCenteredOn(
       cluster,
-      aside(page).getByRole("button", { name: "Manage actors" }),
+      aside(page).locator("#details-rail-body"),
     );
     await capturePage(page, `${EVIDENCE}/who-center-1024.png`);
   });

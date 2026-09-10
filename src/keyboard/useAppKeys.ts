@@ -87,6 +87,10 @@ export function useAppKeys() {
         }
         if (s.manageActorsOpen) {
           e.preventDefault();
+          if (s.manageActorsDeleteMode) {
+            s.setManageActorsDeleteMode(false);
+            return;
+          }
           s.closeManageActors();
           return;
         }

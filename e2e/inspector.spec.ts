@@ -35,7 +35,7 @@ test.describe("slice 7 inspector and actors", () => {
     );
     await expect(aside(page).getByRole("button", { name: "Who Script" })).toBeVisible();
     await expect(aside(page).getByRole("button", { name: "Who LLM" })).toBeVisible();
-    await expect(aside(page).getByRole("button", { name: "Manage actors" })).toBeVisible();
+    await expect(aside(page).getByRole("button", { name: "Actors", exact: true })).toBeVisible();
     await capturePage(page, `${EVIDENCE}/step-who-before-1440.png`);
 
     await aside(page).getByRole("button", { name: "Who Script" }).click();
@@ -98,10 +98,13 @@ test.describe("slice 7 inspector and actors", () => {
 
   test("Manage actors deletion blockers; unused Priya can be deleted", async ({ page }) => {
     await loadDemo(page);
-    await aside(page).getByRole("button", { name: "Manage actors" }).click();
-    await expect(page.getByRole("heading", { name: "Manage actors" })).toBeVisible();
+    await aside(page).getByRole("button", { name: "Actors", exact: true }).click();
+    await expect(aside(page).getByRole("button", { name: "Actors", exact: true })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await aside(page).getByRole("button", { name: "Delete mode" }).click();
     await aside(page).getByRole("option", { name: "Alice" }).click();
-    await aside(page).getByRole("button", { name: "Delete actor" }).click();
     await expect(page.getByText(/Alice is assigned to/)).toBeVisible();
     await expect(aside(page).getByRole("option", { name: "Alice" })).toBeVisible();
     await capturePage(page, `${EVIDENCE}/delete-blocked-1440.png`);
@@ -110,10 +113,10 @@ test.describe("slice 7 inspector and actors", () => {
     await page.getByRole("menuitem", { name: "Robot Mailroom" }).click();
     await page.getByRole("button", { name: "Discard" }).click();
     await expect(page.getByText("Read incoming mail").first()).toBeVisible({ timeout: 15_000 });
-    await aside(page).getByRole("button", { name: "Manage actors" }).click();
-    await aside(page).getByRole("option", { name: "Priya" }).click();
+    await aside(page).getByRole("button", { name: "Actors", exact: true }).click();
+    await aside(page).getByRole("button", { name: "Delete mode" }).click();
     await capturePage(page, `${EVIDENCE}/manage-actors-1440.png`);
-    await aside(page).getByRole("button", { name: "Delete actor" }).click();
+    await aside(page).getByRole("option", { name: "Priya" }).click();
     await expect(aside(page).getByRole("option", { name: "Priya" })).toHaveCount(0);
   });
 

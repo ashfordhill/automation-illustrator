@@ -1,68 +1,73 @@
 /**
  * Add / edit / delete humans and robots in the right inspector (NA-01, NA-02, NA-06).
  */
-import { useEffect, useRef } from "react";
-import { Button, ColorInput, Stack, Text, Textarea } from "@mantine/core";
+import { IconMinus, IconPlus } from "@tabler/icons-react";
+import { ActorColorField } from "./ActorColorField";
 import { InspectorField } from "./InspectorField";
-import { HUMAN_PRESETS, ROBOT_COLORS } from "../../workflow/actors";
-import { ActorKind, RobotKind } from "../../workflow/catalogs";
-import {
-  DEFAULT_HUMAN_ROLE,
-  ROBOT_KIND_LABEL,
-  isRobot,
-  type RobotKind as RobotKindT,
-} from "../../workflow/types";
+import { FIGURE_INK_ON_PASTEL } from "../../workflow/actors";
+import { DEFAULT_HUMAN_ROLE, isHuman, isRobot } from "../../workflow/types";
+import { HumanFigure } from "../../board/tiles/HumanFigure";
+import { RobotFigure } from "../../board/tiles/RobotFigure";
 import { useStore } from "../../state/store";
 import { ActorWhoGrid } from "./ActorWhoGrid";
-
-const ROBOT_KINDS: RobotKindT[] = [RobotKind.Llm, RobotKind.Agent, RobotKind.Script];
 
 export function ManageActorsPanel() {
   const workflow = useStore((s) => s.workflow);
   const actorId = useStore((s) => s.manageActorId);
-  const headingRef = useRef<HTMLHeadingElement>(null);
+  const deleteMode = useStore((s) => s.manageActorsDeleteMode);
   const actor = workflow.actors.find((a) => a.id === actorId) ?? null;
 
-  useEffect(() => {
-    headingRef.current?.focus();
-  }, []);
-
   return (
-    <Stack gap="xs" p="sm" className="chrome-hide inspector-manage">
-      <h2 ref={headingRef} tabIndex={-1} className="inspector-heading">
-        Manage actors
-      </h2>
-      <Button
-        size="xs"
-        variant="light"
-        onClick={() => useStore.getState().closeManageActors()}
-      >
-        Back
-      </Button>
+    <div className="inspector-manage">
       <ActorWhoGrid
         actors={workflow.actors}
-        selectedId={actorId}
+        selectedId={deleteMode ? null : actorId}
         listbox
+        deleteMode={deleteMode}
         ariaLabel="Actors"
-        onPick={(id) => useStore.getState().setManageActorId(id)}
+        onPick={(id) => {
+          const s = useStore.getState();
+          if (s.manageActorsDeleteMode) {
+            s.removeActor(id);
+            return;
+          }
+          s.setManageActorId(id);
+        }}
       />
-      <div className="inspector-fat-row">
-        <Button
-          size="xs"
-          variant="light"
+      <div className="inspector-actor-ops" role="group" aria-label="Add or remove actors">
+        <button
+          type="button"
+          className="inspector-actor-add"
+          aria-label="Add human"
           onClick={() => useStore.getState().addHuman()}
         >
-          Add human
-        </Button>
-        <Button
-          size="xs"
-          variant="light"
+          <span className="inspector-actor-add-fig" style={{ background: "#ff9fbf" }}>
+            <HumanFigure size={22} color={FIGURE_INK_ON_PASTEL} />
+          </span>
+          <IconPlus className="inspector-actor-add-plus" size={14} stroke={2.6} aria-hidden />
+        </button>
+        <button
+          type="button"
+          className="inspector-actor-add"
+          aria-label="Add robot"
           onClick={() => useStore.getState().addRobot()}
         >
-          Add robot
-        </Button>
+          <span className="inspector-actor-add-fig" style={{ background: "#6ab0c8" }}>
+            <RobotFigure size={22} color={FIGURE_INK_ON_PASTEL} />
+          </span>
+          <IconPlus className="inspector-actor-add-plus" size={14} stroke={2.6} aria-hidden />
+        </button>
+        <button
+          type="button"
+          className={`inspector-actor-minus${deleteMode ? " is-on" : ""}`}
+          aria-label="Delete mode"
+          aria-pressed={deleteMode}
+          onClick={() => useStore.getState().setManageActorsDeleteMode(!deleteMode)}
+        >
+          <IconMinus size={18} stroke={2.6} aria-hidden />
+        </button>
       </div>
-      {actor ? (
+      {actor && !deleteMode ? (
         <>
           <InspectorField
             id="actor-name-field"
@@ -70,68 +75,24 @@ export function ManageActorsPanel() {
             value={actor.name}
             onChange={(name) => useStore.getState().updateActor(actor.id, { name })}
           />
-          <ColorInput
-            label="Color"
+          <ActorColorField
             value={actor.color}
-            format="hex"
-            swatches={[
-              ...HUMAN_PRESETS.map((p) => p.color),
-              ...Object.values(ROBOT_COLORS),
-            ]}
-            onChange={(color) => {
-              if (!color.trim()) return;
-              useStore.getState().updateActor(actor.id, { color });
-            }}
+            onChange={(color) => useStore.getState().updateActor(actor.id, { color })}
           />
-          {actor.kind === ActorKind.Human ? (
-            <Textarea
-              label="Role"
-              value={actor.role ?? DEFAULT_HUMAN_ROLE}
-              placeholder={DEFAULT_HUMAN_ROLE}
-              autosize
-              minRows={2}
-              maxRows={4}
-              onChange={(e) =>
-                useStore.getState().updateActor(actor.id, { role: e.target.value })
-              }
-            />
-          ) : (
-            <div className="inspector-fat-row" role="group" aria-label="Type">
-              {ROBOT_KINDS.map((kind) => {
-                const on = isRobot(actor) && actor.robotKind === kind;
-                return (
-                  <button
-                    key={kind}
-                    type="button"
-                    className={`inspector-fat${on ? " is-on" : ""}`}
-                    aria-pressed={on}
-                    onClick={() =>
-                      useStore.getState().updateActor(actor.id, {
-                        robotKind: kind,
-                        color: ROBOT_COLORS[kind],
-                      })
-                    }
-                  >
-                    {ROBOT_KIND_LABEL[kind]}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-          <Button
-            color="red"
-            variant="light"
-            size="xs"
-            onClick={() => useStore.getState().removeActor(actor.id)}
-          >
-            Delete actor
-          </Button>
+          <InspectorField
+            id="actor-role-field"
+            ariaLabel="Role"
+            value={
+              isHuman(actor)
+                ? (actor.role ?? DEFAULT_HUMAN_ROLE)
+                : isRobot(actor)
+                  ? actor.role
+                  : ""
+            }
+            onChange={(role) => useStore.getState().updateActor(actor.id, { role })}
+          />
         </>
-      ) : (
-        <Text size="sm" className="hint-copy">
-          Add a Human or Robot, or pick one to edit.
-        </Text>
-      )}
-    </Stack>
+      ) : null}
+    </div>
   );
 }

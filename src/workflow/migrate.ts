@@ -9,10 +9,12 @@ import { shapeViolations, workflowDocV1Shape, workflowDocV2Shape } from "./schem
 import {
   DEFAULT_HUMAN_ROLE,
   emptyAfterOverlay,
+  ROBOT_KIND_LABEL,
   unfoldMergeGroups,
   type ActorDto,
   type HumanDto,
   type NodeDto,
+  type RobotDto,
   type StepNodeDto,
   type WorkflowDoc,
   type WorkflowDocV1,
@@ -48,8 +50,22 @@ function summarize(violations: GraphViolation[]): string {
   return violations.map((item, i) => `${i + 1}. ${item.message}`).join(" ");
 }
 
-function withHumanRole(actor: WorkflowDocV1["actors"][number]): ActorDto {
-  if (actor.kind === ActorKind.Robot) return actor;
+function withActorRole(actor: WorkflowDocV1["actors"][number]): ActorDto {
+  if (actor.kind === ActorKind.Robot) {
+    const role =
+      typeof actor.role === "string" && actor.role.trim()
+        ? actor.role.trim()
+        : ROBOT_KIND_LABEL[actor.robotKind];
+    const robot: RobotDto = {
+      id: actor.id,
+      kind: ActorKind.Robot,
+      name: actor.name,
+      color: actor.color,
+      robotKind: actor.robotKind,
+      role,
+    };
+    return robot;
+  }
   const role =
     typeof actor.role === "string" && actor.role.trim()
       ? actor.role.trim()
@@ -74,7 +90,7 @@ function stripStub(node: WorkflowDocV1["nodes"][number]): NodeDto {
 export function migrateV1ToV2(doc: WorkflowDocV1): WorkflowDoc {
   return {
     version: WORKFLOW_VERSION,
-    actors: doc.actors.map(withHumanRole),
+    actors: doc.actors.map(withActorRole),
     nodes: doc.nodes.map(stripStub),
     edges: doc.edges,
     assignments: { ...doc.assignments.before },

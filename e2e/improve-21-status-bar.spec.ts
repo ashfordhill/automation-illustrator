@@ -12,7 +12,7 @@ test.describe("Improvement 21 — bottom status bar", () => {
     const bar = page.locator("footer.status-bar");
     await expect(bar).toBeVisible();
     await expect(bar.getByText("Oak Park Invoice")).toHaveCount(0);
-    await expect(page.getByRole("button", { name: "Actors", exact: true })).toHaveCount(0);
+    await expect(bar.getByRole("button", { name: "Actors", exact: true })).toHaveCount(0);
     const toggle = page.locator("footer.status-bar .status-toggle");
     await expect(toggle).toHaveAttribute("aria-pressed", "false");
     await expect(toggle).toHaveText("Right Click Delete");
@@ -51,13 +51,16 @@ test.describe("Improvement 21 — bottom status bar", () => {
     page,
   }) => {
     await loadOakPark(page);
-    await page.getByRole("button", { name: "Manage actors" }).click();
-    await expect(page.getByRole("heading", { name: "Manage actors" })).toBeVisible();
+    await page.getByRole("button", { name: "Actors", exact: true }).click();
+    await expect(page.getByRole("button", { name: "Actors", exact: true })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
     await capturePage(page, `${EVIDENCE}/actors-1440.png`);
 
     await enterPresent(page);
     await expect(page.getByRole("button", { name: "Menu" })).toHaveCount(0);
-    await expect(page.getByRole("heading", { name: "Manage actors" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Actors", exact: true })).toHaveCount(0);
     await page.keyboard.press("Escape");
   });
 
