@@ -4,6 +4,12 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  paths-ignore:
+    - .docs/**
+    - .github/workflows/render-excalidraw.yml
+    - *.md
+    - .gitignore
+    - .cursor/**
 
 permissions:
   contents: read
