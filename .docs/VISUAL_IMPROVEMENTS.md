@@ -171,21 +171,21 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 - Issue: Left `+` / `Q` on Roy (top Search) created a parent fork and swapped that whole row with Alice’s bottom branch.
 - Resolution: Shipped in `feat(improve-36): keep branch rows when forking`. Left/right `+` still forks; displayed rows stay put.
 - Attachments:
-  ![branch row flip](.docs/visual-improvements/2026-09-09-branch-row-flip.gif)
+  ![branch row flip](visual-improvements/2026-09-09-branch-row-flip.gif)
 
 ## 2026-09-09 — left plus should be a parent
 
 - Issue: Left `+` / `Q` on Roy still forked a second inbound Path (`new → Roy` plus `Read → Roy`) and assigned Alice instead of Roy.
 - Resolution: Shipped in `feat(improve-37): insert left spawn as parent`. Left always inserts a parent in the chain and inherits Who from the successor. Forks are right-only.
 - Attachments:
-  ![left plus should be parent](.docs/visual-improvements/2026-09-09-left-plus-should-be-parent.gif)
+  ![left plus should be parent](visual-improvements/2026-09-09-left-plus-should-be-parent.gif)
 
 ## 2026-09-09 — insert into a merge fork
 
 - Issue: Dragging a Data tile onto the T-junction where two Paths merge into a Step does not insert it as the new merge target; both incoming Paths keep going to the Step.
 - Resolution: Planned — treat the shared merge (and the dual shared split trunk) as a bundle drop, so one drop retargets every Path in that junction.
 - Attachments:
-  ![insert into fork](.docs/visual-improvements/2026-09-09-insert-into-fork.gif)
+  ![insert into fork](visual-improvements/2026-09-09-insert-into-fork.gif)
 
 ## 2026-09-09 — tile chrome, hints, Type keypad
 
@@ -194,7 +194,7 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 - Attachments:
   ![tile chrome tabs and X](.docs/visual-improvements/2026-09-09-tile-chrome-tabs-x.png)
   ![hints and status](.docs/visual-improvements/2026-09-09-hints-and-status.png)
-  ![type picker squished](.docs/visual-improvements/2026-09-09-type-picker-squished.png)
+  ![type picker squished](visual-improvements/2026-09-09-type-picker-squished.png)
 
 
 ## 2026-09-09 — Humans and Robots split in Manage actors
@@ -202,7 +202,7 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 - Issue: A new Human (Person…) sat after LLM / Script / Agent and shared the Robots’ row.
 - Resolution: Shipped in `feat(improve-40): group Humans then Robots on their own row` — Humans wrap first; Robots always start on the next row. Add human / Add robot append to their own kind.
 - Attachments:
-  ![manage actors human after robots](.docs/visual-improvements/2026-09-09-manage-actors-human-after-robots.png)
+  ![manage actors human after robots](visual-improvements/2026-09-09-manage-actors-human-after-robots.png)
 
 ## 2026-09-09 — Type keypad whitespace and Other Task
 
