@@ -2627,4 +2627,18 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(improve-53): Actors text header and headshot add`
 
+## Improvement 53 — correction 3 — 2026-09-09
+
+- Requested: Manage actors must not show the top-right Step trash. Adding an Actor that wraps a new row must not slide the existing cards left.
+- Changed: Header hides Remove Step / Remove Data while Manage is open (Back only from a Step). Who / Manage grids are a fixed 4-column cluster (`--inspector-cluster`), so a fifth card wraps in place. Visual log GIF copied.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2). Node 24.
+  - `npm run test:unit` — 41 files, 314 tests pass.
+  - `npm run test:e2e` — 210 passed (tracked `e2e/*.spec.ts`). Untracked leftover `e2e/inspector-trash-color.spec.ts` failed and is not part of this commit. Chromium via `LD_LIBRARY_PATH` `/home/ash/.local/pw-libs/usr/lib/x86_64-linux-gnu`.
+- Evidence:
+  - `.docs/evidence/improve-53-actors-chrome/manage-from-step-back-1440.png` — Manage from Step: Back only, no header trash (1440×900)
+  - `.docs/evidence/improve-53-actors-chrome/manage-wrap-stable-1440.png` — fifth Human wraps; Alice/Roy/Jack/Missy stay put (1440×900)
+- Status: COMPLETE
+- Commit: `feat(improve-53): hide Step trash and pin actor grid`
+
 

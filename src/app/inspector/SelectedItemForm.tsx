@@ -112,6 +112,7 @@ export function DetailsPanel() {
   const showBack = manageOpen && manageSource === "step";
   const showRemove =
     !readOnly &&
+    !manageOpen &&
     Boolean(selectedNode) &&
     (view === ViewMode.Before || view === ViewMode.After);
   const removeLabel = selectedNode

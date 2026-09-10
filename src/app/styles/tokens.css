@@ -1599,7 +1599,7 @@ body.is-tile-dragging * {
   align-items: stretch;
   gap: 10px;
   box-sizing: border-box;
-  width: fit-content;
+  width: var(--inspector-cluster);
   max-width: 100%;
   min-width: 0;
   flex: 0 0 auto;
@@ -1608,9 +1608,9 @@ body.is-tile-dragging * {
 }
 
 .inspector-who-grid {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-start;
+  display: grid;
+  grid-template-columns: repeat(4, var(--inspector-who-key));
+  justify-content: start;
   gap: var(--inspector-who-gap);
 }
 

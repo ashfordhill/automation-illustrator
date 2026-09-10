@@ -1,6 +1,6 @@
 /**
  * Who / Manage actors keys: Humans first, Robots on their own row,
- * centered as one cluster in the inspector (NA-05, NA-06).
+ * centered as a fixed 4-column cluster so wrapping does not shift cards (NA-05, NA-06).
  */
 import { IconX } from "@tabler/icons-react";
 import { FIGURE_INK_ON_PASTEL, humansOf, robotsOf } from "../../workflow/actors";

@@ -172,7 +172,7 @@ test("Actors is a header text button on empty and Step, hidden on Data", () => {
   expect(useStore.getState().manageActorsSource).toBe("step");
   expect(rail?.querySelector("#manage-actors-btn")).toBeNull();
   expect(rail?.querySelector(".inspector-back")?.textContent).toBe("Back");
-  expect(rail?.querySelector('[aria-label="Remove Step"]')).not.toBeNull();
+  expect(rail?.querySelector('[aria-label="Remove Step"]')).toBeNull();
 
   act(() => {
     useStore.getState().closeManageActors({ restoreFocus: false });

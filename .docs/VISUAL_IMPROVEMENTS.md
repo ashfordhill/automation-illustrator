@@ -368,3 +368,10 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 - Attachments:
   ![actor add headshots](.docs/visual-improvements/2026-09-09-actor-add-headshots.png)
 
+## 2026-09-09 — Actors header trash and row shift
+
+- Issue: Manage actors still showed the Step trash next to Back. Adding a fifth Actor wrapped a row and slid every card left.
+- Resolution: Shipped in Improvement 53 correction 3 — Back only (no Step trash). Roster stays a fixed 4-column cluster so wrapping does not move existing cards.
+- Attachments:
+  ![actors row shift](.docs/visual-improvements/2026-09-09-actors-row-shift.gif)
+

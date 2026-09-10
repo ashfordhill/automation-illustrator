@@ -54,9 +54,13 @@ test.describe("Improvement 53 — Actors header text and headshot add", () => {
     await aside(page).getByRole("button", { name: "Actors", exact: true }).click();
     await expect(aside(page).getByRole("button", { name: "Back" })).toBeVisible();
     await expect(aside(page).getByRole("button", { name: "Actors", exact: true })).toHaveCount(0);
-    await expect(aside(page).getByRole("button", { name: "Remove Step" })).toBeVisible();
+    await expect(aside(page).getByRole("button", { name: "Remove Step" })).toHaveCount(0);
     await expect(aside(page).getByRole("heading", { name: "Manage actors" })).toHaveCount(0);
     await capturePage(page, `${EVIDENCE}/manage-from-step-back-1440.png`);
+
+    const alice = aside(page).getByRole("option", { name: "Alice", exact: true });
+    const aliceBefore = await alice.boundingBox();
+    expect(aliceBefore).toBeTruthy();
 
     const addHuman = aside(page).getByRole("button", { name: "Add human" });
     const addRobot = aside(page).getByRole("button", { name: "Add robot" });
@@ -87,7 +91,16 @@ test.describe("Improvement 53 — Actors header text and headshot add", () => {
     expect(roleBox!.y).toBeGreaterThan(nameBox!.y + nameBox!.height - 2);
     await capturePage(page, `${EVIDENCE}/manage-editor-1440.png`);
 
-    await aside(page).getByRole("button", { name: "Add human" }).click();
+    await addHuman.click();
+    const aliceAfter = await alice.boundingBox();
+    const newHuman = aside(page).getByRole("option", { name: "Human", exact: true });
+    const newHumanBox = await newHuman.boundingBox();
+    expect(aliceAfter && newHumanBox).toBeTruthy();
+    expect(Math.abs(aliceAfter!.x - aliceBefore!.x)).toBeLessThan(2);
+    expect(Math.abs(aliceAfter!.y - aliceBefore!.y)).toBeLessThan(2);
+    expect(newHumanBox!.y).toBeGreaterThan(aliceAfter!.y + aliceAfter!.height - 2);
+    await capturePage(page, `${EVIDENCE}/manage-wrap-stable-1440.png`);
+
     await aside(page).getByRole("button", { name: "Delete mode" }).click();
     await expect(aside(page).getByRole("button", { name: "Delete mode" })).toHaveAttribute(
       "aria-pressed",
