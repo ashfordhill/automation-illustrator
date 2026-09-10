@@ -393,7 +393,7 @@ test("Step Name uses a Type prefix and drops Name/Details captions", () => {
   const prefix = nameField?.querySelector(".inspector-field-prefix");
   expect(prefix?.querySelector(".inspector-field-prefix-label")?.textContent).toBe("Read");
   expect(prefix?.classList.contains("has-chip")).toBe(true);
-  expect(nameBox?.nextElementSibling).toBe(prefix);
+  expect(prefix?.nextElementSibling).toBe(nameBox);
   const name = rail?.querySelector<HTMLInputElement>("#step-name-field");
   const details = rail?.querySelector<HTMLInputElement>("#step-details-field");
   expect(name?.getAttribute("aria-label")).toBe("Name");

@@ -2523,5 +2523,16 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(improve-51): expand Present Before After panes`
 
+## Improvement 50 — correction 1 — 2026-09-09
+
+- Requested: Type chip should stay on the left of Name (not after the Name box), use a blue fill instead of cream, and stay one width for every Type so Name/Details do not jump.
+- Changed: `InspectorField.tsx` puts the chip before the Name box. Chip is `--blue` / ice text, sized to Approve, Type word right-aligned. Tests and NA-07 amendment updated.
+- Tests and exact results:
+  - `npm run build` — pass (Vite 8.2.2). Node 24.
+  - `npm run test:unit` — App.test 21 pass; full suite was 310 before this correction.
+  - `npm run test:e2e` — `e2e/improve-50-type-chip.spec.ts` (2) pass.
+- Status: COMPLETE
+- Commit: `feat(improve-50): blue Type chip on the left`
+
 
 

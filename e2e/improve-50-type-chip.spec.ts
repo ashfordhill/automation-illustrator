@@ -9,15 +9,17 @@ function aside(page: import("@playwright/test").Page) {
   return page.locator("aside");
 }
 
-test.describe("Improvement 50 — Type chip on the right, Name caret room", () => {
-  test("Type chip sits right of Name; Name length stays put; caret is not clipped", async ({
+test.describe("Improvement 50 — Type chip on the left, Name caret room", () => {
+  test("Type chip sits left of Name; chip and Name stay put; caret is not clipped", async ({
     page,
   }) => {
     await loadOakPark(page);
     await page.getByText(DEMO_STEP).first().click();
 
     const nameField = aside(page).locator(".inspector-fields .inspector-field").first();
+    const detailsField = aside(page).locator(".inspector-fields .inspector-field").nth(1);
     const nameBox = nameField.locator(".inspector-field-box");
+    const detailsBox = detailsField.locator(".inspector-field-box");
     const prefix = nameField.locator(".inspector-field-prefix");
     const name = aside(page).locator("#step-name-field");
 
@@ -27,13 +29,23 @@ test.describe("Improvement 50 — Type chip on the right, Name caret room", () =
     const boxHit = await nameBox.boundingBox();
     const prefixHit = await prefix.boundingBox();
     expect(boxHit && prefixHit).toBeTruthy();
-    expect(prefixHit!.x).toBeGreaterThan(boxHit!.x + boxHit!.width - 2);
+    expect(prefixHit!.x + prefixHit!.width).toBeLessThanOrEqual(boxHit!.x + 2);
 
-    const readWidth = boxHit!.width;
+    const readName = boxHit!.width;
+    const readChip = prefixHit!.width;
+    const readDetailsX = (await detailsBox.boundingBox())!.x;
     await aside(page).getByRole("button", { name: "Type Search" }).click();
     await expect(prefix.locator(".inspector-field-prefix-label")).toHaveText("Search");
-    const searchWidth = (await nameBox.boundingBox())!.width;
-    expect(Math.abs(searchWidth - readWidth)).toBeLessThan(2);
+    const searchChip = (await prefix.boundingBox())!.width;
+    const searchName = (await nameBox.boundingBox())!.width;
+    const searchDetailsX = (await detailsBox.boundingBox())!.x;
+    expect(Math.abs(searchChip - readChip)).toBeLessThan(2);
+    expect(Math.abs(searchName - readName)).toBeLessThan(2);
+    expect(Math.abs(searchDetailsX - readDetailsX)).toBeLessThan(2);
+    const chipColor = await prefix
+      .locator(".inspector-field-prefix-label")
+      .evaluate((el) => getComputedStyle(el).backgroundColor);
+    expect(chipColor).toBe("rgb(26, 143, 212)");
 
     await name.click();
     await expect(name).toBeFocused();
@@ -55,7 +67,7 @@ test.describe("Improvement 50 — Type chip on the right, Name caret room", () =
 test.describe("Improvement 50 min-width", () => {
   test.use({ viewport: { width: 1024, height: 768 } });
 
-  test("Type chip still sits right of Name at 1024", async ({ page }) => {
+  test("Type chip still sits left of Name at 1024", async ({ page }) => {
     await loadOakPark(page);
     await page.getByText(DEMO_STEP).first().click();
     await waitForLayout(page);
@@ -64,7 +76,7 @@ test.describe("Improvement 50 min-width", () => {
     const boxHit = await nameField.locator(".inspector-field-box").boundingBox();
     const prefixHit = await nameField.locator(".inspector-field-prefix").boundingBox();
     expect(boxHit && prefixHit).toBeTruthy();
-    expect(prefixHit!.x).toBeGreaterThan(boxHit!.x + boxHit!.width - 2);
+    expect(prefixHit!.x + prefixHit!.width).toBeLessThanOrEqual(boxHit!.x + 2);
     await expect(nameField.locator(".inspector-field-prefix-label")).toHaveText("Read");
 
     await capturePage(page, `${EVIDENCE}/type-chip-1024.png`);

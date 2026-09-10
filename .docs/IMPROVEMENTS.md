@@ -1043,6 +1043,12 @@ Append to `## Amendments` in `.docs/GOAL.md`: NA-07 as dated 2026-09-09 (Type ch
 Commit: `feat(improve-50): lift Type chip and unclip Name caret`.  
 Evidence: `.docs/evidence/improve-50-type-chip/`.
 
+## Correction 1 — 2026-09-09
+
+Type stays on the **left** of Name (not after the Name box). Chip fill is `--blue` with ice text, not cream. The chip is always the Approve-width column so clicking through Types does not move Name or Details. The Type word is right-aligned in that chip.
+
+Commit: `feat(improve-50): blue Type chip on the left`.
+
 ---
 
 # Improvement 51 — Present expand panes

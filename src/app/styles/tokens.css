@@ -1507,6 +1507,15 @@ body.is-tile-dragging * {
 
 .inspector-trash {
   flex: 0 0 auto;
+  /* Idle tile-X red (--minus). Hover uses the darker --minus-active. */
+  --ai-color: var(--minus);
+  --ai-hover: var(--minus-active);
+  color: var(--minus) !important;
+}
+
+.inspector-trash:hover,
+.inspector-trash:focus-visible {
+  color: var(--minus-active) !important;
 }
 
 .inspector-type:focus-visible,
@@ -1659,7 +1668,7 @@ body.is-tile-dragging * {
   font-weight: 800;
   font-size: 13px;
   line-height: 20px;
-  color: var(--ink);
+  color: var(--chrome-ink);
 }
 
 .inspector-field-prefix-sizer {
@@ -1678,12 +1687,10 @@ body.is-tile-dragging * {
 
 .inspector-field-prefix-label {
   position: absolute;
-  top: 50%;
-  right: 0;
-  transform: translateY(-50%);
+  inset: 0;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   font-weight: 800;
   font-size: 13px;
   line-height: 20px;
@@ -1692,12 +1699,11 @@ body.is-tile-dragging * {
 }
 
 .inspector-field-prefix.has-chip .inspector-field-prefix-label {
-  min-height: 36px;
   padding: 8px 10px;
-  border: 2px solid var(--line);
+  border: 2px solid var(--blue-deep);
   border-radius: 10px;
-  background: var(--cream);
-  color: var(--ink);
+  background: var(--blue);
+  color: var(--chrome-ink);
   box-shadow: var(--chip-shadow);
 }
 
