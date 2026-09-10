@@ -11,7 +11,7 @@ Intended to help engineers and non-engineers get on the same page about what wor
 <!-- TOC -->
 <table width="100%">
 <tr>
-<td valign="middle">
+<td valign="middle" nowrap width="260">
 <ul>
 <li><a href="#usage">Usage</a></li>
 <li><a href="#motivation">Motivation</a></li>
@@ -30,7 +30,7 @@ Intended to help engineers and non-engineers get on the same page about what wor
 </li>
 </ul>
 </td>
-<td valign="middle" width="100%">
+<td valign="middle">
 <img src=".docs/readme/its-dangerous-to-go-alone.png" alt="It's dangerous to go alone! Take this." width="100%" />
 </td>
 </tr>
