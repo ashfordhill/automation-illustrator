@@ -6,7 +6,7 @@ on:
     paths-ignore:
       - .docs/**
       - .github/workflows/render-excalidraw.yml
-      - *.md
+      - '**.md'
       - .gitignore
       - .cursor/**
   workflow_dispatch:
