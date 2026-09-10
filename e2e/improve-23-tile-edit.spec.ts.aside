@@ -1,0 +1,50 @@
+import { expect, test } from "@playwright/test";
+import { loadOakPark, screenshotBoard, waitForLayout } from "./ready";
+
+const EVIDENCE = ".docs/evidence/improve-23-tile-edit";
+
+function aside(page: import("@playwright/test").Page) {
+  return page.locator("aside");
+}
+
+test.describe("Improvement 23 on-canvas tile edit", () => {
+  test("double-click Name edits on the tile and in the inspector", async ({ page }) => {
+    await loadOakPark(page);
+    await page.getByText("Read invoice.pdf").first().dblclick();
+    const editor = page.locator("#tile-field-editor");
+    await expect(editor).toBeVisible();
+    await screenshotBoard(page, `${EVIDENCE}/name-edit-1440.png`);
+    await editor.fill("receipt.pdf");
+    await editor.press("Enter");
+    await expect(aside(page).locator("#step-name-field")).toHaveValue("receipt.pdf");
+    await expect(page.getByText("Read receipt.pdf").first()).toBeVisible();
+  });
+
+  test("double-click Type icon opens a pie; Email assigns", async ({ page }) => {
+    await loadOakPark(page);
+    const read = page.locator(".react-flow__node").filter({ hasText: "Read invoice.pdf" }).first();
+    await read.locator('[data-tile-hit="type"]').dblclick();
+    await expect(page.locator('[data-testid="tile-pie"][data-tile-pie="type"]')).toBeVisible();
+    await screenshotBoard(page, `${EVIDENCE}/type-pie-1440.png`);
+    await page.getByRole("menuitem", { name: "Type Email" }).click();
+    await expect(page.locator('[data-testid="tile-pie"]')).toHaveCount(0);
+    await expect(aside(page).getByRole("button", { name: "Type Email" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+  });
+
+  test("double-click Who figure opens a pie; Roy assigns", async ({ page }) => {
+    await loadOakPark(page);
+    const read = page.locator(".react-flow__node").filter({ hasText: "Read invoice.pdf" }).first();
+    await read.locator('[data-tile-hit="who"]').dblclick();
+    await expect(page.locator('[data-testid="tile-pie"][data-tile-pie="who"]')).toBeVisible();
+    await screenshotBoard(page, `${EVIDENCE}/who-pie-1440.png`);
+    await page.getByRole("menuitem", { name: "Who Roy" }).click();
+    await expect(page.locator('[data-testid="tile-pie"]')).toHaveCount(0);
+    await expect(aside(page).getByRole("button", { name: "Who Roy" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+  });
+});
