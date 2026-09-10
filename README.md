@@ -9,9 +9,9 @@ Goal is to be both **easy to use and easy to understand**.
 Intended to help engineers and non-engineers get on the same page about what work steps can be automated.
 
 <!-- TOC -->
-<table>
+<table width="100%">
 <tr>
-<td valign="middle" width="42%">
+<td valign="middle">
 <ul>
 <li><a href="#usage">Usage</a></li>
 <li><a href="#motivation">Motivation</a></li>
@@ -30,8 +30,8 @@ Intended to help engineers and non-engineers get on the same page about what wor
 </li>
 </ul>
 </td>
-<td align="center" valign="middle">
-<img src=".docs/readme/its-dangerous-to-go-alone.png" alt="It's dangerous to go alone! Take this." width="280" />
+<td valign="middle" width="100%">
+<img src=".docs/readme/its-dangerous-to-go-alone.png" alt="It's dangerous to go alone! Take this." width="100%" />
 </td>
 </tr>
 </table>
