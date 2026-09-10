@@ -1,5 +1,6 @@
 /**
  * Manage actors toggle (text) and Back when opened from a Step.
+ * Back fills the Actors + trash footprint so the pointer stays put.
  */
 import { useStore } from "../../state/store";
 

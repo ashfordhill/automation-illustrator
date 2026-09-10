@@ -38,7 +38,7 @@ function InspectorHeader({
   return (
     <div className={`inspector-header${title ? "" : " is-tools"}`}>
       {title ? <Text fw={800}>{title}</Text> : <span />}
-      <div className="inspector-header-tools">
+      <div className={`inspector-header-tools${showBack ? " is-back" : ""}`}>
         {showBack ? <BackButton /> : null}
         {showActors ? <ActorsButton /> : null}
         {removeLabel && onRemove ? (
@@ -56,6 +56,12 @@ function InspectorHeader({
               <IconTrash size={16} color="var(--minus-active)" stroke={2.2} />
             </ActionIcon>
           </Tooltip>
+        ) : null}
+        {showBack ? (
+          <span className="inspector-header-sizer" aria-hidden>
+            <span className="inspector-actors">Actors</span>
+            <span className="inspector-header-sizer-trash" />
+          </span>
         ) : null}
       </div>
     </div>

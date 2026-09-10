@@ -2641,4 +2641,18 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(improve-53): hide Step trash and pin actor grid`
 
+## Improvement 53 — correction 4 — 2026-09-09
+
+- Requested: When Back is present, make it as wide as the Step header Actors + trash cluster so the pointer does not need to move after clicking Actors.
+- Changed: Manage-from-Step Back fills a hidden Actors + trash sizer (same left and right edges). E2E asserts that match. No document/schema change.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning). Node 24.
+  - `npm run test:unit` — 41 files, 314 tests pass.
+  - `npm run test:e2e` — 210 passed (tracked suite). Leftover `e2e/inspector-trash-color.spec.ts` failed and is not part of this commit. Chromium via `LD_LIBRARY_PATH` `/home/ash/.local/pw-libs/usr/lib/x86_64-linux-gnu`.
+- Evidence:
+  - `.docs/evidence/improve-53-actors-chrome/manage-from-step-back-1440.png` — Manage from Step: Back matches Actors + trash width (1440×900)
+  - `.docs/evidence/improve-53-actors-chrome/manage-1024.png` — same Back width at 1024×768
+- Status: COMPLETE
+- Commit: `feat(improve-53): widen Back to Actors plus trash`
+
 

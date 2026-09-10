@@ -51,10 +51,19 @@ test.describe("Improvement 53 — Actors header text and headshot add", () => {
 
   test("Manage from a Step shows Back; add keys share equal thirds", async ({ page }) => {
     await newBoardWithStep(page);
-    await aside(page).getByRole("button", { name: "Actors", exact: true }).click();
+    const actors = aside(page).getByRole("button", { name: "Actors", exact: true });
+    const trash = aside(page).getByRole("button", { name: "Remove Step" });
+    const actorsBox = await actors.boundingBox();
+    const trashBox = await trash.boundingBox();
+    expect(actorsBox && trashBox).toBeTruthy();
+    await actors.click();
     await expect(aside(page).getByRole("button", { name: "Back" })).toBeVisible();
     await expect(aside(page).getByRole("button", { name: "Actors", exact: true })).toHaveCount(0);
     await expect(aside(page).getByRole("button", { name: "Remove Step" })).toHaveCount(0);
+    const backBox = await aside(page).getByRole("button", { name: "Back" }).boundingBox();
+    expect(backBox).toBeTruthy();
+    expect(Math.abs(backBox!.x - actorsBox!.x)).toBeLessThan(2);
+    expect(Math.abs(backBox!.x + backBox!.width - (trashBox!.x + trashBox!.width))).toBeLessThan(2);
     await expect(aside(page).getByRole("heading", { name: "Manage actors" })).toHaveCount(0);
     await capturePage(page, `${EVIDENCE}/manage-from-step-back-1440.png`);
 
