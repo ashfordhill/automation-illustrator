@@ -146,6 +146,21 @@ test("inspector Type buttons are alphabetical with Other last; Who offers every 
   expect(useStore.getState().workflow.assignments[OAK_PARK_IDS.read]).toBe(OAK_PARK_IDS.robot);
 });
 
+test("Type sits above Who; Actors sits under Who, not in the header", () => {
+  act(() => {
+    useStore.getState().select({ type: SelectionKind.Node, id: OAK_PARK_IDS.read });
+  });
+  const rail = host.querySelector(".details-rail-body");
+  const type = rail?.querySelector(".inspector-type-grid");
+  const who = rail?.querySelector(".inspector-who-groups");
+  const actors = rail?.querySelector("#manage-actors-btn");
+  const header = rail?.querySelector(".inspector-header");
+  expect(type && who && actors).toBeTruthy();
+  expect(header?.contains(actors!)).toBe(false);
+  expect(type!.compareDocumentPosition(who!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(who!.compareDocumentPosition(actors!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+});
+
 test("selected Path hints omit Right-click Delete while the toggle is off", () => {
   act(() => {
     useStore.getState().select({ type: SelectionKind.Edge, id: OAK_PARK_IDS.webAcct });

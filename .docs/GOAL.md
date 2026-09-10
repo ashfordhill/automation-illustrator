@@ -263,3 +263,4 @@ Append only, newest last. Format: `- YYYY-MM-DD — <clause IDs> — <decision a
 - 2026-09-09 — NA-05 — Robot Who keys display Role; Human keys display Name. — approved by user
 - 2026-09-09 — NA-08 — Double-click Robot Type pie is removed. Double-click robot role edits Role. — approved by user
 - 2026-09-09 — WG-01 — A brand-new board contains zero Nodes and the default roster: Alice, Roy, Jack, Missy, plus three Robots named Robot (roles LLM, Script, Agent). — approved by user
+- 2026-09-09 — NA-05, NA-06 — Step inspector order is Type / Name / Details, then Who. The Actors control is a Who-key under the roster, bottom right (not a header pill). Manage add Human/Robot use the same Who keys with a plus; deletion is a trash delete-mode key. Color is a compact swatch plus a separate eyedropper. — approved by user

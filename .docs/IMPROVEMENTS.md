@@ -1095,3 +1095,25 @@ Append to `## Amendments` in `.docs/GOAL.md`: NA-01, NA-04, NA-05, NA-06, NA-08,
 Commit: `feat(improve-52): polish Actors header and Manage panel`.  
 Evidence: `.docs/evidence/improve-52-actors/`.
 
+---
+
+# Improvement 53 — Actors back under Who, Manage restyle
+
+Approved 2026-09-09 (correction of Improvement 52 chrome). Who returns to the bottom of the Step inspector. The Actors control is a Who-key under the roster, bottom right. Manage add/delete and Color match the Type keypad language.
+
+## Locked decisions
+
+- Step inspector order: Type / Name / Details, then Who, then Actors (right-aligned under Who). Trash stays top-right.
+- Actors is the same Who-key chrome (HumanFigure in a paper well + “Actors”). Yellow when Manage is open. Hidden in Compare and Present.
+- Manage ops row is four Who-keys: Add human, Add robot, trash delete-mode, Actors. Add keys use the same figures as the roster with a green plus badge and no name.
+- Delete mode: trash key toggles; actor cards get a red border and X; click deletes (unused-only NA-02); Escape exits delete mode first.
+- Color is a 36px cream swatch that opens the 14-swatch wheel, plus a separate eyedropper (EyeDropper API; falls back to the wheel). Role stays one-line in the same Name/Details well.
+- No new runtime dependency.
+
+## Contract
+
+Append to `## Amendments` in `.docs/GOAL.md`: NA-05, NA-06 as dated 2026-09-09.
+
+Commit: `feat(improve-53): restyle Actors under Who`.  
+Evidence: `.docs/evidence/improve-53-actors-chrome/`.
+

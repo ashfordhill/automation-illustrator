@@ -2567,4 +2567,35 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(improve-52): polish Actors header and Manage panel`
 
+## Improvement 53 — Actors back under Who, Manage restyle — 2026-09-09
+
+- Starting commit: `68b63e622118ea9e64a8f64a4f0357c73aec12c3` (`feat(improve-52): polish Actors header and Manage panel`)
+- Working tree at start: not clean. Unrelated Present-expand overlap WIP was stashed (`wip present-expand overlap (unrelated to actors)`). Untracked leftover specs and extra Playwright configs stay out of this commit.
+- GOAL clauses addressed: NA-05, NA-06 (amendment dated 2026-09-09). Document version unchanged.
+- Library research and decisions: no new runtime dependency. Color swatch opens Mantine ColorPicker (14 swatches). Eyedropper is Tabler `IconColorPicker` and uses the Chromium EyeDropper API when present (falls back to the wheel). Delete mode uses the same trash as Step remove, not a minus.
+- Files changed:
+  - Inspector: `src/app/inspector/SelectedItemForm.tsx`, `ManageActorsPanel.tsx`, `ActorsButton.tsx` (new), `ActorColorField.tsx`, `ActorWhoGrid.tsx`
+  - Chrome: `src/app/styles/tokens.css` (Actors Who-key, add/delete keys, compact color row)
+  - Tests: `src/app/App.test.tsx`; `e2e/improve-53-actors-chrome.spec.ts`; layout assertions in `e2e/improve-52-actors.spec.ts`
+  - Docs: `.docs/GOAL.md`, `.docs/IMPROVEMENTS.md`, `.docs/VISUAL_IMPROVEMENTS.md`, this handoff entry
+  - Evidence: `.docs/evidence/improve-53-actors-chrome/`
+- Behavior implemented:
+  - Step inspector order is Type / Name / Details, then Who. Actors is a Who-key under the roster, bottom right. Trash stays top-right. Hidden in Compare and Present.
+  - Manage ops row is four Who-keys: Add human, Add robot, trash delete-mode, Actors. Add keys use the same figures as the roster with a green plus badge.
+  - Delete mode: trash key toggles; actor cards get a red border and X; click deletes (unused-only NA-02); Escape exits delete mode first.
+  - Color is a 36px cream swatch plus a separate eyedropper. Name / Color / Role sit in the same well as Step Name/Details.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning). Node 24.
+  - `npm run test:unit` — 41 files, 313 tests pass.
+  - `npm run test:e2e` — 209 passed (tracked `e2e/*.spec.ts` plus `improve-53-actors-chrome`). Untracked leftover `e2e/inspector-trash-color.spec.ts` failed and is not part of this slice. Chromium via `LD_LIBRARY_PATH` `/home/ash/.local/pw-libs/usr/lib/x86_64-linux-gnu`.
+- Evidence:
+  - `.docs/evidence/improve-53-actors-chrome/step-who-bottom-1440.png` — Type then Who; Actors under the roster, bottom right (1440×900)
+  - `.docs/evidence/improve-53-actors-chrome/manage-editor-1440.png` — Who-key add, trash delete-mode, swatch + eyedropper (1440×900)
+  - `.docs/evidence/improve-53-actors-chrome/delete-mode-1440.png` — delete-mode X on cards; fields hidden (1440×900)
+  - `.docs/evidence/improve-53-actors-chrome/manage-1024.png` — same chrome at 1024×768
+- Earlier-slice defects fixed: Improvement 52 put Who above Type and used a stubby header pill, nested add squares, and a minus. This restores bottom Who and matches Type-key chrome.
+- Known limitations / follow-ups: Present-expand overlap stash remains. Dark theme stays withdrawn.
+- Status: COMPLETE
+- Commit: `feat(improve-53): restyle Actors under Who`
+
 

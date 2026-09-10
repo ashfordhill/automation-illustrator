@@ -14,51 +14,27 @@ import { afterGraph, edgeIsDotted } from "../../workflow/graph";
 import { laneAssignments, STEP_KIND_META } from "../../workflow/types";
 import { findEdge, findNode } from "../../workflow/selectors";
 import { useStore } from "../../state/store";
-import { HumanFigure } from "../../board/tiles/HumanFigure";
+import { ActorsRow } from "./ActorsButton";
 import { InspectorField } from "./InspectorField";
 import { ManageActorsPanel } from "./ManageActorsPanel";
 import { TypeButtons } from "./TypeButtons";
 import { WhoButtons } from "./WhoButtons";
 import "./compareDisabled.css";
 
-function ActorsButton() {
-  const open = useStore((s) => s.manageActorsOpen);
-  return (
-    <button
-      id="manage-actors-btn"
-      type="button"
-      className={`inspector-actors${open ? " is-on" : ""}`}
-      aria-label="Actors"
-      aria-pressed={open}
-      onClick={() => {
-        const s = useStore.getState();
-        if (s.manageActorsOpen) s.closeManageActors({ restoreFocus: false });
-        else s.openManageActors();
-      }}
-    >
-      <HumanFigure size={16} color="var(--ink)" />
-      <span>Actors</span>
-    </button>
-  );
-}
-
 function InspectorHeader({
   title,
   removeLabel,
   onRemove,
-  showActors,
 }: {
   title?: string;
   removeLabel?: string;
   onRemove?: () => void;
-  showActors?: boolean;
 }) {
-  if (!title && !showActors && !(removeLabel && onRemove)) return null;
+  if (!title && !(removeLabel && onRemove)) return null;
   return (
     <div className={`inspector-header${title ? "" : " is-tools"}`}>
       {title ? <Text fw={800}>{title}</Text> : <span />}
       <div className="inspector-header-tools">
-        {showActors ? <ActorsButton /> : null}
         {removeLabel && onRemove ? (
           <Tooltip label={removeLabel}>
             <ActionIcon
@@ -145,9 +121,9 @@ export function DetailsPanel() {
           ? () => useStore.getState().removeTarget(selectedNode.id)
           : undefined
       }
-      showActors={showActors}
     />
   );
+  const actorsFooter = showActors && !manageOpen ? <ActorsRow /> : null;
 
   if (manageOpen) {
     return (
@@ -162,6 +138,7 @@ export function DetailsPanel() {
     return (
       <Stack gap="sm" p="sm" className="chrome-hide">
         {header}
+        {actorsFooter}
       </Stack>
     );
   }
@@ -180,6 +157,7 @@ export function DetailsPanel() {
             disabled={readOnly}
             onChange={(e) => useStore.getState().updateNode(n.id, { label: e.target.value })}
           />
+          {actorsFooter}
         </Stack>
       );
     }
@@ -187,12 +165,6 @@ export function DetailsPanel() {
     return (
       <Stack gap="xs" p="sm" className="chrome-hide">
         {header}
-        <WhoButtons
-          actors={workflow.actors}
-          value={actorId}
-          disabled={readOnly}
-          onChange={(id) => useStore.getState().assignActor(n.id, id)}
-        />
         <TypeButtons
           value={n.stepKind}
           disabled={readOnly}
@@ -217,6 +189,13 @@ export function DetailsPanel() {
             onChange={(detail) => useStore.getState().updateNode(n.id, { detail })}
           />
         </div>
+        <WhoButtons
+          actors={workflow.actors}
+          value={actorId}
+          disabled={readOnly}
+          onChange={(id) => useStore.getState().assignActor(n.id, id)}
+        />
+        {actorsFooter}
       </Stack>
     );
   }
@@ -247,6 +226,7 @@ export function DetailsPanel() {
             { value: "solid", label: "Solid" },
           ]}
         />
+        {actorsFooter}
       </Stack>
     );
   }
@@ -254,6 +234,7 @@ export function DetailsPanel() {
   return (
     <Stack gap="sm" p="sm" className="chrome-hide">
       {header}
+      {actorsFooter}
     </Stack>
   );
 }

@@ -2,6 +2,7 @@
  * Who / Manage actors keys: Humans first, Robots on their own row,
  * centered as one cluster in the inspector (NA-05, NA-06).
  */
+import { IconX } from "@tabler/icons-react";
 import { FIGURE_INK_ON_PASTEL, humansOf, robotsOf } from "../../workflow/actors";
 import { actorWhoAria, actorWhoCaption, isHuman, type ActorDto } from "../../workflow/types";
 import { HumanFigure } from "../../board/tiles/HumanFigure";
@@ -44,6 +45,11 @@ function ActorWhoButton({
         )}
       </span>
       <span className="inspector-who-name">{actorWhoCaption(actor)}</span>
+      {deleteMode ? (
+        <span className="inspector-who-x" aria-hidden>
+          <IconX size={14} stroke={3} />
+        </span>
+      ) : null}
     </button>
   );
 }

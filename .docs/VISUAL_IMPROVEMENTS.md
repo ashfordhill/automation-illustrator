@@ -346,3 +346,11 @@ Newest last. Issue and resolution stay short. No after-screenshots for gestures.
 - Attachments:
   ![manage actors editor](.docs/visual-improvements/2026-09-09-manage-actors-editor.png)
 
+## 2026-09-09 — Actors chrome is off-theme
+
+- Issue: Actors is a stubby header pill next to trash. Who sits above Type. Manage add/delete are tiny mismatched keys; Color is an empty cream pill with a pencil.
+- Resolution: Shipped in Improvement 53 — Who under Type; Actors Who-key under the roster, bottom right; same-icon add keys; trash delete-mode; swatch + eyedropper.
+- Attachments:
+  ![cramped add](.docs/visual-improvements/2026-09-09-actors-add-cramped.png)
+  ![ugly manage](.docs/visual-improvements/2026-09-09-actors-manage-ugly.png)
+
