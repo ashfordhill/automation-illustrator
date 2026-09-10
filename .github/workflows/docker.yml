@@ -3,13 +3,13 @@ name: Docker
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - .docs/**
+      - .github/workflows/render-excalidraw.yml
+      - *.md
+      - .gitignore
+      - .cursor/**
   workflow_dispatch:
-  paths-ignore:
-    - .docs/**
-    - .github/workflows/render-excalidraw.yml
-    - *.md
-    - .gitignore
-    - .cursor/**
 
 permissions:
   contents: read
