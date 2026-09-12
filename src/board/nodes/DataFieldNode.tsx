@@ -2,7 +2,7 @@
  * React Flow node for a Data-field tile.
  * Same PathHostFrame as StepNode so + / Path-pull / X chrome works on fields too.
  */
-import { Handle, Position, type NodeProps } from "@xyflow/react";
+import { Handle, type NodeProps } from "@xyflow/react";
 import { SelectionKind, WorkflowNodeKind } from "../../workflow/catalogs";
 import { useStore } from "../../state/store";
 import { DataTile } from "../tiles/DataTile";
@@ -11,6 +11,8 @@ import { PathHostFrame } from "../controls/PathHostFrame";
 import { findNode } from "../../workflow/selectors";
 import { useSimplifyView } from "../simplify/SimplifyContext";
 import { simplifyHeadline } from "../simplify/headline";
+import { flowProfile } from "../flow/flowProfile";
+import { rfHandle } from "../flow/rfHandle";
 
 export function DataFieldNode({ id, selected, dragging }: NodeProps) {
   const departing = useStore((s) => s.departing?.node.id === id);
@@ -25,11 +27,12 @@ export function DataFieldNode({ id, selected, dragging }: NodeProps) {
     (s) => s.selected?.type === SelectionKind.Node && s.selected.id === id,
   );
   const { simplified } = useSimplifyView();
+  const profile = flowProfile(useStore((s) => s.boardOrientation));
   if (!node || node.type !== WorkflowNodeKind.DataField) return null;
   const on = !!(storeOn || selected || focusId === id);
   return (
     <PathHostFrame id={id} selected={on} departing={departing}>
-      <Handle type="target" position={Position.Left} />
+      <Handle type="target" position={rfHandle(profile.handleIn)} />
       {simplified ? (
         <SimplifiedTile
           kind="data"
@@ -40,7 +43,7 @@ export function DataFieldNode({ id, selected, dragging }: NodeProps) {
       ) : (
         <DataTile label={node.label} selected={on && !departing} lifted={dragging} />
       )}
-      <Handle type="source" position={Position.Right} />
+      <Handle type="source" position={rfHandle(profile.handleOut)} />
     </PathHostFrame>
   );
 }

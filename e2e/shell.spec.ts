@@ -49,12 +49,6 @@ test.describe("slice 8 shell, typography, and sound", () => {
       "before",
     );
     await page.keyboard.press("Escape");
-    await expect(page.locator("[data-present-expand]")).toHaveAttribute(
-      "data-present-expand",
-      "split",
-    );
-
-    await page.keyboard.press("Escape");
     await expect(page.locator("aside")).toBeVisible();
     await expect(page.getByRole("button", { name: "Menu" })).toBeVisible();
     await expect(viewRadio(page, "Before")).toHaveAttribute("aria-checked", "true");

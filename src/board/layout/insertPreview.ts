@@ -6,6 +6,7 @@ import type { Point } from "../../workflow/types";
 import type { LaneLayout, Rect } from "./laneLayout";
 import { bundleTrunkPolyline, longestMidSegment } from "./pathHit";
 import { FIELD_H, FIELD_W, STEP_H, STEP_W, TILE_GAP } from "./tileMetrics";
+import { flowProfile, layoutKeyOrientation, type FlowAxis, type FlowProfile } from "../flow/flowProfile";
 
 export type InsertPreviewGeom = {
   gap: Rect;
@@ -42,8 +43,8 @@ function dedupe(points: Point[]): Point[] {
   return out;
 }
 
-/** Keep stubs orthogonal; jog horizontally first (elk.direction RIGHT). */
-export function ensureOrthogonal(points: Point[]): Point[] {
+/** Keep stubs orthogonal; jog along the flow axis first. */
+export function ensureOrthogonal(points: Point[], along: FlowAxis = "x"): Point[] {
   const src = dedupe(points);
   if (src.length < 2) return src;
   const out: Point[] = [src[0]!];
@@ -53,7 +54,8 @@ export function ensureOrthogonal(points: Point[]): Point[] {
     if (a.x === b.x || a.y === b.y) {
       out.push(b);
     } else {
-      out.push({ x: b.x, y: a.y });
+      if (along === "y") out.push({ x: a.x, y: b.y });
+      else out.push({ x: b.x, y: a.y });
       out.push(b);
     }
   }
@@ -75,7 +77,7 @@ function plausibleSize(w: number, h: number): boolean {
 }
 
 /** Infer displayed tile boxes from ELK positions and Path ports. */
-function inferNodeRects(layout: LaneLayout): Record<string, Rect> {
+function inferNodeRects(layout: LaneLayout, profile: FlowProfile): Record<string, Rect> {
   const rects: Record<string, Rect> = {};
   for (const [id, pos] of Object.entries(layout.positions)) {
     let w: number | undefined;
@@ -84,23 +86,43 @@ function inferNodeRects(layout: LaneLayout): Record<string, Rect> {
       if (route.length < 2) continue;
       const start = route[0]!;
       const end = route[route.length - 1]!;
-      const outW = start.x - pos.x;
-      const outH = 2 * (start.y - pos.y);
-      if (plausibleSize(outW, outH) && start.y > pos.y) {
-        if (w === undefined || outW < w) {
-          w = outW;
-          h = outH;
+      if (profile.along === "x") {
+        const outW = start.x - pos.x;
+        const outH = 2 * (start.y - pos.y);
+        if (plausibleSize(outW, outH) && start.y > pos.y) {
+          if (w === undefined || outW < w) {
+            w = outW;
+            h = outH;
+          }
         }
-      }
-      if (Math.abs(end.x - pos.x) <= 1 && end.y > pos.y) {
-        const inH = 2 * (end.y - pos.y);
-        if (inH >= 40 && inH <= 640) h = h ?? inH;
+        if (Math.abs(end.x - pos.x) <= 1 && end.y > pos.y) {
+          const inH = 2 * (end.y - pos.y);
+          if (inH >= 40 && inH <= 640) h = h ?? inH;
+        }
+      } else {
+        const outH = start.y - pos.y;
+        const outW = 2 * (start.x - pos.x);
+        if (plausibleSize(outW, outH) && start.x > pos.x) {
+          if (h === undefined || outH < h) {
+            w = outW;
+            h = outH;
+          }
+        }
+        if (Math.abs(end.y - pos.y) <= 1 && end.x > pos.x) {
+          const inW = 2 * (end.x - pos.x);
+          if (inW >= 48 && inW <= 640) w = w ?? inW;
+        }
       }
     }
     if (w === undefined && h !== undefined) {
       if (Math.abs(h - STEP_H) <= 1) w = STEP_W;
       else if (Math.abs(h - FIELD_H) <= 1) w = FIELD_W;
       else w = STEP_W;
+    }
+    if (h === undefined && w !== undefined) {
+      if (Math.abs(w - STEP_W) <= 1) h = STEP_H;
+      else if (Math.abs(w - FIELD_W) <= 1) h = FIELD_H;
+      else h = STEP_H;
     }
     rects[id] = {
       x: pos.x,
@@ -115,13 +137,15 @@ function inferNodeRects(layout: LaneLayout): Record<string, Rect> {
 function nearestPort(
   rects: Record<string, Rect>,
   port: Point,
-  side: "east" | "west",
+  profile: FlowProfile,
+  which: "out" | "in",
 ): string | null {
   let best: string | null = null;
   let bestD = Infinity;
   for (const [id, r] of Object.entries(rects)) {
-    const p = side === "east" ? { x: r.x + r.w, y: r.y + r.h / 2 } : { x: r.x, y: r.y + r.h / 2 };
-    const d = Math.hypot(p.x - port.x, p.y - port.y);
+    const p = which === "out" ? profile.portOut(r.w, r.h) : profile.portIn(r.w, r.h);
+    const abs = { x: r.x + p.x, y: r.y + p.y };
+    const d = Math.hypot(abs.x - port.x, abs.y - port.y);
     if (d < bestD) {
       bestD = d;
       best = id;
@@ -181,6 +205,7 @@ export function insertPreviewOnRoute(
   tileGap: number = TILE_GAP,
 ): InsertPreviewGeom | null {
   if (route.length < 2) return null;
+  const profile = flowProfile(layoutKeyOrientation(layout.key));
   const mid = longestMidSegment(route);
   if (!mid) return null;
   const i = segmentIndex(route, mid.a, mid.b);
@@ -195,16 +220,16 @@ export function insertPreviewOnRoute(
     h: tile.h,
   });
   const { entry, exit } = gapFaces(gap, a, b);
-  const leftStub = ensureOrthogonal([...route.slice(0, i + 1), entry]);
-  const rightStub = ensureOrthogonal([exit, ...route.slice(i + 1)]);
+  const leftStub = ensureOrthogonal([...route.slice(0, i + 1), entry], profile.along);
+  const rightStub = ensureOrthogonal([exit, ...route.slice(i + 1)], profile.along);
   if (leftStub.length < 2 || rightStub.length < 2) return null;
 
-  const rects = inferNodeRects(layout);
+  const rects = inferNodeRects(layout, profile);
   const start = route[0]!;
   const end = route[route.length - 1]!;
-  const sId = nearestPort(rects, start, "east");
-  const uId = nearestPort(rects, end, "west");
-  const mag = Math.round(tile.w / 2 + tileGap / 2);
+  const sId = nearestPort(rects, start, profile, "out");
+  const uId = nearestPort(rects, end, profile, "in");
+  const mag = Math.round((profile.along === "y" ? tile.h : tile.w) / 2 + tileGap / 2);
   let shiftS: Point = { x: 0, y: 0 };
   let shiftU: Point = { x: 0, y: 0 };
   if (sId && uId && rects[sId] && rects[uId]) {
@@ -221,9 +246,15 @@ export function insertPreviewOnRoute(
       shiftU = maxShift(uId, { x: 0, y: sAbove ? mag : -mag }, rects);
     }
   } else if (sId && rects[sId]) {
-    shiftS = maxShift(sId, { x: -mag, y: 0 }, rects);
+    shiftS =
+      profile.along === "y"
+        ? maxShift(sId, { x: 0, y: -mag }, rects)
+        : maxShift(sId, { x: -mag, y: 0 }, rects);
   } else if (uId && rects[uId]) {
-    shiftU = maxShift(uId, { x: mag, y: 0 }, rects);
+    shiftU =
+      profile.along === "y"
+        ? maxShift(uId, { x: 0, y: mag }, rects)
+        : maxShift(uId, { x: mag, y: 0 }, rects);
   }
 
   return { gap, leftStub, rightStub, shiftS, shiftU };

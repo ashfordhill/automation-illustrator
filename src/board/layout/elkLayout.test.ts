@@ -9,6 +9,7 @@ import { robotMailroom } from "../../demos/robotMailroom";
 import { projectAfter, projectBefore, type LaneProjection } from "../../state/projection";
 import { IdPrefix, SplitKind, StepKind, WorkflowNodeKind } from "../../workflow/catalogs";
 import type { EdgeDto, NodeDto, WorkflowDoc } from "../../workflow/types";
+import { flowProfile, type BoardOrientation } from "../flow/flowProfile";
 import { buildElkGraph, laneGraphKey, usedOptionIds } from "./elkGraph";
 import { emptyLayout, toLaneLayout } from "./elkLayout";
 import { measureLabelBox, type LabelBox } from "./labelBox";
@@ -23,10 +24,15 @@ function boxesFor(projection: LaneProjection): Record<string, LabelBox> {
   return boxes;
 }
 
-async function layoutOf(projection: LaneProjection): Promise<LaneLayout> {
+async function layoutOf(
+  projection: LaneProjection,
+  orientation: BoardOrientation = "horizontal",
+): Promise<LaneLayout> {
   const boxes = boxesFor(projection);
-  const key = laneGraphKey(projection, boxes);
-  const laidOut = await elk.layout(buildElkGraph(projection, boxes));
+  const key = laneGraphKey(projection, boxes, undefined, "tile", orientation);
+  const laidOut = await elk.layout(
+    buildElkGraph(projection, boxes, undefined, undefined, "tile", orientation),
+  );
   return toLaneLayout(key, laidOut);
 }
 
@@ -65,7 +71,12 @@ function distanceToPolyline(points: { x: number; y: number }[], p: { x: number; 
   return best;
 }
 
-function expectInvariants(projection: LaneProjection, layout: LaneLayout) {
+function expectInvariants(
+  projection: LaneProjection,
+  layout: LaneLayout,
+  orientation: BoardOrientation = "horizontal",
+) {
+  const profile = flowProfile(orientation);
   const rects = projection.nodes.map((n) => ({ id: n.id, rect: nodeRect(projection, layout, n.id) }));
   for (const { rect } of rects) {
     expect(Number.isInteger(rect.x)).toBe(true);
@@ -83,10 +94,12 @@ function expectInvariants(projection: LaneProjection, layout: LaneLayout) {
     const t = nodeRect(projection, layout, e.target);
     const first = route[0]!;
     const last = route[route.length - 1]!;
-    expect(Math.abs(first.x - (s.x + s.w))).toBeLessThanOrEqual(1);
-    expect(Math.abs(first.y - (s.y + s.h / 2))).toBeLessThanOrEqual(1);
-    expect(Math.abs(last.x - t.x)).toBeLessThanOrEqual(1);
-    expect(Math.abs(last.y - (t.y + t.h / 2))).toBeLessThanOrEqual(1);
+    const out = profile.portOut(s.w, s.h);
+    const inn = profile.portIn(t.w, t.h);
+    expect(Math.abs(first.x - (s.x + out.x))).toBeLessThanOrEqual(1);
+    expect(Math.abs(first.y - (s.y + out.y))).toBeLessThanOrEqual(1);
+    expect(Math.abs(last.x - (t.x + inn.x))).toBeLessThanOrEqual(1);
+    expect(Math.abs(last.y - (t.y + inn.y))).toBeLessThanOrEqual(1);
     for (let i = 0; i + 1 < route.length; i++) {
       const a = route[i]!;
       const b = route[i + 1]!;
@@ -198,8 +211,43 @@ describe("Oak Park (Before)", () => {
   test("Before and After share a layout cache key", () => {
     const after = projectAfter(doc);
     expect(laneGraphKey(after, boxesFor(after))).toBe(laneGraphKey(projection, boxesFor(projection)));
+    expect(
+      laneGraphKey(after, boxesFor(after), undefined, "tile", "vertical"),
+    ).toBe(laneGraphKey(projection, boxesFor(projection), undefined, "tile", "vertical"));
+    expect(laneGraphKey(projection, boxesFor(projection), undefined, "tile", "vertical")).not.toBe(
+      laneGraphKey(projection, boxesFor(projection)),
+    );
   });
 });
+
+describe("Oak Park (Before) vertical", () => {
+  const doc = oakParkInvoice();
+  const projection = projectBefore(doc);
+
+  test("nodes do not overlap, routes are orthogonal and glued to north/south ports", async () => {
+    const layout = await layoutOf(projection, "vertical");
+    expectInvariants(projection, layout, "vertical");
+  });
+
+  test("fan-out Paths share a trunk and first-bend y; 1:1 chains keep constant x", async () => {
+    const layout = await layoutOf(projection, "vertical");
+    const gt = layout.routes[OAK_PARK_IDS.gt]!;
+    const lt = layout.routes[OAK_PARK_IDS.lt]!;
+    expect(gt[0]).toEqual(lt[0]);
+    expect(gt[1]!.y).toBe(lt[1]!.y);
+    for (const id of [OAK_PARK_IDS.acctEnter, OAK_PARK_IDS.enterReview]) {
+      const route = layout.routes[id]!;
+      const xs = new Set(route.map((p) => p.x));
+      expect(xs.size, `${id} should be straight`).toBe(1);
+    }
+    const read = layout.positions[OAK_PARK_IDS.read]!;
+    const web = layout.positions[OAK_PARK_IDS.web]!;
+    const fs = layout.positions[OAK_PARK_IDS.fs]!;
+    expect(Math.abs(read.x - (web.x + fs.x) / 2)).toBeLessThanOrEqual(1);
+    expect(web.x).toBeLessThan(fs.x);
+  });
+});
+
 
 describe("Robot Mailroom (After) and stress", () => {
   test("After projection satisfies the layout invariants", async () => {

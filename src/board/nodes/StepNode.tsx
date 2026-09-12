@@ -3,7 +3,7 @@
  * Lane in node.data chooses Before vs After assignment (actorFor).
  * After Who is lane-specific; the graph is shared with Before.
  */
-import { Handle, Position, type NodeProps } from "@xyflow/react";
+import { Handle, type NodeProps } from "@xyflow/react";
 import { AssignmentLane, SelectionKind } from "../../workflow/catalogs";
 import { useStore } from "../../state/store";
 import { StepTile } from "../tiles/StepTile";
@@ -13,6 +13,8 @@ import { findNode } from "../../workflow/selectors";
 import { isStepNode, laneAssignments, type StepNodeDto } from "../../workflow/types";
 import { useSimplifyView } from "../simplify/SimplifyContext";
 import { simplifyHeadline } from "../simplify/headline";
+import { flowProfile } from "../flow/flowProfile";
+import { rfHandle } from "../flow/rfHandle";
 
 export type StepNodeData = {
   lane?: AssignmentLane;
@@ -43,11 +45,12 @@ export function StepNode({ id, selected, dragging, data }: NodeProps) {
   );
   const node = live && isStepNode(live) ? live : payload.node;
   const { simplified } = useSimplifyView();
+  const profile = flowProfile(useStore((s) => s.boardOrientation));
   if (!node || !isStepNode(node)) return null;
   const on = !!(storeOn || selected || focusId === id);
   return (
     <PathHostFrame id={id} selected={on} departing={!!departing}>
-      <Handle type="target" position={Position.Left} />
+      <Handle type="target" position={rfHandle(profile.handleIn)} />
       {simplified ? (
         <SimplifiedTile
           kind="step"
@@ -65,7 +68,7 @@ export function StepNode({ id, selected, dragging, data }: NodeProps) {
           lifted={dragging}
         />
       )}
-      <Handle type="source" position={Position.Right} />
+      <Handle type="source" position={rfHandle(profile.handleOut)} />
     </PathHostFrame>
   );
 }

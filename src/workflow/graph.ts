@@ -94,9 +94,9 @@ export function edgeIsDotted(
   return splitDefaultDashed(src.split, outs.length);
 }
 
-/** True when source already has an outgoing Path (a new one is an extra branch). */
-export function defaultDashed(edges: EdgeDto[], sourceId: string) {
-  return edges.some((e) => e.source === sourceId);
+/** New Paths are always solid. Split only restamps strokes when the user changes it (PC-03). */
+export function defaultDashed(_edges: EdgeDto[], _sourceId: string) {
+  return false;
 }
 
 /** PC-03: changing Split re-applies the PC-02 default to every outgoing Path. */
@@ -113,25 +113,17 @@ export function applyDashForSplit(
 }
 
 /**
- * Stroke for a newly connected Path. Crossing from one outgoing to two
- * applies Split defaults to every outgoing Path (PC-02). Extra branches
- * after that keep existing overrides and only stamp the new Path.
+ * Newly created Paths stay solid. Existing sibling strokes are left alone.
+ * Changing Split still re-applies defaults via applyDashForSplit (PC-03).
  */
 export function applyConnectStroke(
-  nodes: NodeDto[],
+  _nodes: NodeDto[],
   edges: EdgeDto[],
-  sourceId: string,
+  _sourceId: string,
   newEdgeId: string,
-  previousOutgoingCount: number,
+  _previousOutgoingCount: number,
 ): EdgeDto[] {
-  if (previousOutgoingCount < 2) {
-    return applyDashForSplit(nodes, edges, sourceId);
-  }
-  const src = nodeOf(nodes, sourceId);
-  const split =
-    src && src.type === WorkflowNodeKind.Step ? src.split : SplitKind.Parallel;
-  const dashed = splitDefaultDashed(split, previousOutgoingCount + 1);
-  return edges.map((e) => (e.id === newEdgeId ? { ...e, dashed } : e));
+  return edges.map((e) => (e.id === newEdgeId ? { ...e, dashed: false } : e));
 }
 
 /**

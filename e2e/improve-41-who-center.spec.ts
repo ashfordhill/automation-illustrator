@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { DEMO_STEP, capturePage, loadOakPark } from "./ready";
+import { DEMO_STEP, capturePage, loadOakPark, showActorsHome } from "./ready";
 
 const EVIDENCE = ".docs/evidence/improve-41-who-center";
 
@@ -48,7 +48,7 @@ test.describe("Improvement 41 — center Who keys", () => {
   test("Manage actors cluster is centered too", async ({ page }) => {
     await loadOakPark(page);
     await page.getByText(DEMO_STEP).first().click();
-    await aside(page).getByRole("button", { name: "Actors", exact: true }).click();
+    await showActorsHome(page);
     const cluster = aside(page).locator(".inspector-who-groups");
     await expect(cluster).toBeVisible();
     await assertKeysCenteredOn(cluster, aside(page).locator(".inspector-manage"));

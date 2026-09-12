@@ -17,7 +17,8 @@ test.describe("Improvement 05 Step stay-put and chunky view switch", () => {
     await expect(viewRadio(page, "After")).toHaveAttribute("aria-checked", "false");
     await expect(viewRadio(page, "Compare")).toHaveAttribute("aria-checked", "false");
 
-    const frame = await page.locator(".view-switch").evaluate((el) => {
+    const viewSwitch = page.getByRole("radiogroup", { name: "Before, After, or Compare" });
+    const frame = await viewSwitch.evaluate((el) => {
       const cs = getComputedStyle(el);
       return {
         borderColor: cs.borderTopColor,
@@ -27,7 +28,7 @@ test.describe("Improvement 05 Step stay-put and chunky view switch", () => {
     expect(frame.borderColor).not.toBe(CYAN_LINE);
     expect(parseFloat(frame.borderWidth)).toBeGreaterThanOrEqual(3);
 
-    const selectedFill = await page.locator(".view-switch-btn.is-on").evaluate((el) => {
+    const selectedFill = await viewSwitch.locator(".view-switch-btn.is-on").evaluate((el) => {
       const cs = getComputedStyle(el);
       return { background: cs.backgroundColor, boxShadow: cs.boxShadow };
     });

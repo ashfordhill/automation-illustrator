@@ -26,6 +26,19 @@ export async function loadOakPark(page: Page) {
   await expect(page.getByText(DEMO_STEP).first()).toBeVisible({ timeout: 15_000 });
 }
 
+/** Idle inspector is the Actors roster. Click empty canvas if a Tile or Path is selected. */
+export async function showActorsHome(page: Page) {
+  const add = page.locator("aside").getByRole("button", { name: "Add human" });
+  if (await add.isVisible()) return;
+  await page.locator(".react-flow__pane").first().click({ position: { x: 16, y: 16 } });
+  await expect(add).toBeVisible();
+}
+
+/** Top-bar Before / After / Compare radios (icon faces; name is the accessible label). */
+export function viewSwitchRadio(page: Page, name: "Before" | "After" | "Compare") {
+  return page.locator("header").getByRole("radio", { name, exact: true });
+}
+
 /** Present is a top-right icon, not a hamburger item. */
 export async function enterPresent(page: Page) {
   await page.getByRole("button", { name: "Present" }).click();
@@ -107,10 +120,16 @@ export async function pullPlusPreview(
   const box = await plus.boundingBox();
   if (!box) throw new Error("plus tab has no box");
   const grab = tabPeekPoint(box);
-  const dx = side === "in" ? -140 : 140;
+  const orientation = await page
+    .locator("[data-board-orientation]")
+    .first()
+    .getAttribute("data-board-orientation");
+  const vertical = orientation === "vertical";
+  const dx = vertical ? 0 : side === "in" ? -140 : 140;
+  const dy = vertical ? (side === "in" ? -140 : 140) : 0;
   await page.mouse.move(grab.x, grab.y);
   await page.mouse.down();
-  await page.mouse.move(grab.x + dx, grab.y, { steps: 12 });
+  await page.mouse.move(grab.x + dx, grab.y + dy, { steps: 12 });
   const previewBtn = page.getByRole("button", { name: preview });
   await expect(previewBtn).toBeVisible();
   const pb = await previewBtn.boundingBox();

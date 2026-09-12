@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { DEMO_STEP, capturePage, loadOakPark, pathScreenPoint } from "./ready";
+import { DEMO_STEP, capturePage, loadOakPark, pathScreenPoint, showActorsHome } from "./ready";
 
 const EVIDENCE = ".docs/evidence/improve-38-chrome-hints";
 
@@ -68,11 +68,10 @@ test.describe("Improvement 38 — chrome, hints, Type, Who", () => {
   test("Manage actors selects the Step’s Who; Path hints always show Right-click delete", async ({ page }) => {
     await loadOakPark(page);
     await page.getByText("Search filesystem").first().click();
-    await page.locator("aside").getByRole("button", { name: "Actors", exact: true }).click();
+    await showActorsHome(page);
     const alice = page.locator("aside").getByRole("option", { name: "Alice" });
     await expect(alice).toHaveAttribute("aria-selected", "true");
     await capturePage(page, `${EVIDENCE}/manage-alice-1440.png`);
-    await page.locator("aside").getByRole("button", { name: "Back" }).click();
 
     const pt = await pathScreenPoint(page, "e_web_acct", 0.22);
     await page.mouse.click(pt.x, pt.y);

@@ -1,6 +1,6 @@
 /**
  * Global keydown handler for undo, pan, help, Present Space/Escape,
- * selected-tile Q/E Step and A/D Data spawn, and Delete/Remove. Mounted once from app/App.tsx.
+ * selected-tile spawn keys (Q/E/A/D; Vertical remaps Step vs Data), and Delete/Remove. Mounted once from app/App.tsx.
  */
 import { useEffect } from "react";
 import { panBy } from "../board/reactFlowBridge";
@@ -8,6 +8,7 @@ import { KeyAction, SelectionKind, ViewMode, WorkflowNodeKind } from "../workflo
 import { useStore } from "../state/store";
 import { isTransient } from "../state/interaction";
 import { actionFor, eventKey, keyIs, type KeyAction as KeyActionT } from "./bindings";
+import { spawnForAction } from "./spawnHotkeys";
 
 /** True when Delete/Backspace should edit the field instead of the board. */
 function isEditingText(el: EventTarget | null): boolean {
@@ -104,13 +105,9 @@ export function useAppKeys() {
           s.closeBoardModes();
           return;
         }
-        if (s.manageActorsOpen) {
+        if (s.manageActorsDeleteMode) {
           e.preventDefault();
-          if (s.manageActorsDeleteMode) {
-            s.setManageActorsDeleteMode(false);
-            return;
-          }
-          s.closeManageActors();
+          s.setManageActorsDeleteMode(false);
           return;
         }
       }
@@ -178,25 +175,13 @@ export function useAppKeys() {
           s.focusDataLabel();
           return;
         }
-        if (keyIs(map, KeyAction.AddStepOut, e)) {
-          e.preventDefault();
-          s.spawnBranch(s.selected.id, WorkflowNodeKind.Step, "out");
-          return;
-        }
-        if (keyIs(map, KeyAction.AddStepIn, e)) {
-          e.preventDefault();
-          s.spawnBranch(s.selected.id, WorkflowNodeKind.Step, "in");
-          return;
-        }
-        if (keyIs(map, KeyAction.AddDataOut, e)) {
-          e.preventDefault();
-          s.spawnBranch(s.selected.id, WorkflowNodeKind.DataField, "out");
-          return;
-        }
-        if (keyIs(map, KeyAction.AddDataIn, e)) {
-          e.preventDefault();
-          s.spawnBranch(s.selected.id, WorkflowNodeKind.DataField, "in");
-          return;
+        if (action) {
+          const spawn = spawnForAction(s.boardOrientation, action);
+          if (spawn) {
+            e.preventDefault();
+            s.spawnBranch(s.selected.id, spawn.type, spawn.side);
+            return;
+          }
         }
         if (keyIs(map, KeyAction.AddPath, e) || keyIs(map, KeyAction.LinkExisting, e)) {
           e.preventDefault();

@@ -4,6 +4,7 @@
  */
 import { WorkflowNodeKind, type WorkflowNodeKind as WorkflowNodeKindT } from "../../workflow/catalogs";
 import type { Point, PositionMap } from "../../workflow/types";
+import { flowProfile, type BoardOrientation } from "../flow/flowProfile";
 
 export const STEP_W = 256;
 export const STEP_H = 160;
@@ -68,18 +69,32 @@ function dockStride(sourceType: WorkflowNodeKindT, targetType: WorkflowNodeKindT
 }
 
 /**
- * Where a newly linked tile should sit: to the right (or left) of `source`.
- * Same row first (port 0). Stride uses the taller of source/target so a Step
- * never overlaps another Step when both hang off a shorter Data tile.
+ * Where a newly linked tile should sit: along the flow from `source`.
+ * Same across-flow slot first (port 0). Stride uses the taller/wider of
+ * source/target so a Step never overlaps another Step when both hang off a
+ * shorter Data tile.
  */
 export function dockPosition(
   source: Placed,
   targetType: WorkflowNodeKindT,
   portIndex: number,
   side: "out" | "in" = "out",
+  orientation: BoardOrientation = "horizontal",
 ): Point {
   const src = nodeSize(source.type);
   const tgt = nodeSize(targetType);
+  const profile = flowProfile(orientation);
+  if (profile.along === "y") {
+    const stride = Math.max(src.w, tgt.w) + BRANCH_GAP;
+    const y =
+      side === "in"
+        ? snapToGrid(source.position.y - TILE_GAP - tgt.h)
+        : snapToGrid(source.position.y + src.h + TILE_GAP);
+    return {
+      x: snapToGrid(source.position.x + src.w / 2 + portIndex * stride - tgt.w / 2),
+      y,
+    };
+  }
   const stride = dockStride(source.type, targetType);
   const x =
     side === "in"
@@ -104,8 +119,9 @@ export function withDisplayedPositions(nodes: Placed[], positions?: PositionMap)
 }
 
 /**
- * Same row as `source`, walking further along the dock axis if that slot is
- * taken; then stack down from `portIndex`. Used by store.spawnBranch.
+ * Same across-flow slot as `source`, walking further along the dock axis if
+ * that slot is taken; then stack on the sibling axis from `portIndex`.
+ * Used by store.spawnBranch.
  */
 export function clearDockPosition(
   source: Placed,
@@ -113,9 +129,32 @@ export function clearDockPosition(
   portIndex: number,
   others: Placed[],
   side: "out" | "in" = "out",
+  orientation: BoardOrientation = "horizontal",
 ): Point {
   const src = nodeSize(source.type);
   const tgt = nodeSize(targetType);
+  const profile = flowProfile(orientation);
+  if (profile.along === "y") {
+    const sameX = snapToGrid(source.position.x + src.w / 2 - tgt.w / 2);
+    const strideY = tgt.h + TILE_GAP;
+    const baseY =
+      side === "in"
+        ? snapToGrid(source.position.y - TILE_GAP - tgt.h)
+        : snapToGrid(source.position.y + src.h + TILE_GAP);
+    const dir = side === "in" ? -1 : 1;
+    for (let col = 0; col < 40; col++) {
+      const pos = { x: sameX, y: snapToGrid(baseY + dir * col * strideY) };
+      if (!overlapsAny(pos, targetType, others)) return pos;
+    }
+    const start = Math.max(1, portIndex);
+    for (let i = start; i < start + 40; i++) {
+      const pos = dockPosition(source, targetType, i, side, orientation);
+      if (!overlapsAny(pos, targetType, others)) return pos;
+    }
+    const y = dockPosition(source, targetType, 0, side, orientation).y;
+    const maxX = Math.max(0, ...others.map((n) => n.position.x + nodeSize(n.type).w));
+    return { x: snapToGrid(maxX + TILE_GAP), y };
+  }
   const sameY = snapToGrid(source.position.y + src.h / 2 - tgt.h / 2);
   const strideX = tgt.w + TILE_GAP;
   const baseX =
@@ -129,23 +168,36 @@ export function clearDockPosition(
   }
   const start = Math.max(1, portIndex);
   for (let i = start; i < start + 40; i++) {
-    const pos = dockPosition(source, targetType, i, side);
+    const pos = dockPosition(source, targetType, i, side, orientation);
     if (!overlapsAny(pos, targetType, others)) return pos;
   }
-  const x = dockPosition(source, targetType, 0, side).x;
+  const x = dockPosition(source, targetType, 0, side, orientation).x;
   const maxY = Math.max(0, ...others.map((n) => n.position.y + nodeSize(n.type).h));
   return { x, y: snapToGrid(maxY + TILE_GAP) };
 }
 
-/** First empty column to the right of existing tiles — palette Data (and the first Step). */
+/** First empty slot past existing tiles along the flow. */
 export function vacantSpot(
   nodes: Placed[],
   type: WorkflowNodeKindT = WorkflowNodeKind.Step,
+  orientation: BoardOrientation = "horizontal",
 ): Point {
   if (!nodes.length) return { x: GRID, y: GRID * 5 };
+  const { w, h } = nodeSize(type);
+  if (flowProfile(orientation).along === "y") {
+    const maxY = Math.max(...nodes.map((n) => n.position.y + nodeSize(n.type).h));
+    const y = snapToGrid(maxY + TILE_GAP);
+    let x = snapToGrid(Math.min(...nodes.map((n) => n.position.x)));
+    for (let n = 0; n < 40; n++) {
+      const pos = { x, y };
+      if (!overlapsAny(pos, type, nodes)) return pos;
+      x = snapToGrid(x + w + BRANCH_GAP);
+    }
+    const maxX = Math.max(...nodes.map((n) => n.position.x + nodeSize(n.type).w));
+    return { x: snapToGrid(maxX + TILE_GAP), y };
+  }
   const maxX = Math.max(...nodes.map((n) => n.position.x + nodeSize(n.type).w));
   const x = snapToGrid(maxX + TILE_GAP);
-  const { h } = nodeSize(type);
   let y = snapToGrid(Math.min(...nodes.map((n) => n.position.y)));
   for (let n = 0; n < 40; n++) {
     const pos = { x, y };

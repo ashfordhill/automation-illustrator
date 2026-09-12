@@ -8,6 +8,7 @@ import {
   WorkflowNodeKind,
 } from "../../workflow/catalogs";
 import type { WorkflowDoc } from "../../workflow/types";
+import { layoutKeyMode } from "../flow/flowProfile";
 import { buildElkGraph, laneGraphKey, WEB_LAYER_GAP } from "../layout/elkGraph";
 import { toLaneLayout } from "../layout/elkLayout";
 import { wordWebNodeSize } from "./headline";
@@ -48,9 +49,12 @@ test("laneGraphKey includes web mode so tile and web caches do not collide", () 
   const projection = projectBefore(twoStepDoc());
   const tile = laneGraphKey(projection, {});
   const web = laneGraphKey(projection, {}, undefined, "web");
-  expect(tile.startsWith("tile|")).toBe(true);
-  expect(web.startsWith("web|")).toBe(true);
+  expect(layoutKeyMode(tile)).toBe("tile");
+  expect(layoutKeyMode(web)).toBe("web");
+  expect(tile.startsWith("horizontal|tile|")).toBe(true);
+  expect(web.startsWith("horizontal|web|")).toBe(true);
   expect(web).not.toBe(tile);
+  expect(laneGraphKey(projection, {}, undefined, "web", "vertical")).not.toBe(web);
 });
 
 test("two-node word-web chain keeps a layer gap of at least 160", async () => {

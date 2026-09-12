@@ -3,7 +3,7 @@
  * Merge groups are unfolded on load and are not created at runtime.
  */
 import { ensureDefaultRobot } from "./actors";
-import { IdPrefix, SplitKind } from "./catalogs";
+import { IdPrefix } from "./catalogs";
 import {
   MSG,
   collapseStroke,
@@ -28,7 +28,6 @@ import {
   outgoingSorted,
   removalCandidateIds,
   retargetIncoming,
-  splitDefaultDashed,
   wouldCreateCycle,
 } from "./graph";
 import { nid } from "./ids";
@@ -41,12 +40,6 @@ import {
   type StepNodeDto,
   type WorkflowDoc,
 } from "./types";
-
-function extraDashed(doc: WorkflowDoc, sourceId: string, previousOutgoing: number): boolean {
-  const src = findNode(doc, sourceId);
-  const split = src && isStepNode(src) ? src.split : undefined;
-  return splitDefaultDashed(split ?? SplitKind.Exclusive, previousOutgoing + 1);
-}
 
 function resolveAfterEndpoint(doc: WorkflowDoc, visibleId: string): CommandResult<string> {
   if (findNode(doc, visibleId)) return ok(visibleId);
@@ -90,7 +83,7 @@ export function connectAfter(
     source,
     target,
     label: options?.label ?? "",
-    dashed: extraDashed(doc, source, previousOutgoing),
+    dashed: false,
   };
   let extraNodes = doc.after.extraNodes;
   let extraEdges = [...doc.after.extraEdges, extraEdge];
@@ -139,7 +132,7 @@ export function addAfterStep(
     source: pathSource,
     target: pathTarget,
     label: options?.label ?? "",
-    dashed: extraDashed(withRobot.doc, pathSource, previousOutgoing),
+    dashed: false,
   };
   let extraNodes = [...withRobot.doc.after.extraNodes, node];
   const extraExisting = inbound

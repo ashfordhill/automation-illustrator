@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { capturePage, loadOakPark, waitForLayout } from "./ready";
+import { capturePage, loadOakPark, waitForLayout, showActorsHome } from "./ready";
 
 const EVIDENCE = ".docs/evidence/improve-52-actors";
 
@@ -18,21 +18,21 @@ async function newBoardWithStep(page: import("@playwright/test").Page) {
 }
 
 test.describe("Improvement 52 — Actors header and Manage polish", () => {
-  test("Actors toggle still opens Manage with Role and Color", async ({ page }) => {
+  test("deselecting a Step shows the Actors roster with Role and Color", async ({ page }) => {
     await loadOakPark(page);
     await page.getByText("Read invoice.pdf").first().click();
-    const actors = aside(page).getByRole("button", { name: "Actors", exact: true });
-    await expect(actors).toBeVisible();
-    await actors.click();
-    await expect(aside(page).getByRole("button", { name: "Back" })).toBeVisible();
+    await showActorsHome(page);
+    await expect(aside(page).getByRole("button", { name: "Actors", exact: true })).toHaveCount(0);
+    await expect(aside(page).getByRole("button", { name: "Back" })).toHaveCount(0);
     await expect(aside(page).getByRole("heading", { name: "Manage actors" })).toHaveCount(0);
+    await expect(aside(page).getByLabel("Name")).toBeVisible();
     await capturePage(page, `${EVIDENCE}/step-who-first-1440.png`);
   });
 
   test("Manage uses icon add, Role, and minus delete-mode", async ({ page }) => {
     await newBoardWithStep(page);
-    await aside(page).getByRole("button", { name: "Actors", exact: true }).click();
-    await expect(aside(page).getByRole("button", { name: "Back" })).toBeVisible();
+    await showActorsHome(page);
+    await expect(aside(page).getByRole("button", { name: "Back" })).toHaveCount(0);
     await expect(aside(page).getByRole("heading", { name: "Manage actors" })).toHaveCount(0);
     await expect(aside(page).getByRole("button", { name: "Add human" })).toBeVisible();
     await expect(aside(page).getByRole("button", { name: "Add robot" })).toBeVisible();
@@ -59,11 +59,10 @@ test.describe("Improvement 52 — Actors header and Manage polish", () => {
 test.describe("Improvement 52 min-width", () => {
   test.use({ viewport: { width: 1024, height: 768 } });
 
-  test("Actors header still fits at 1024", async ({ page }) => {
+  test("Actors roster still fits at 1024", async ({ page }) => {
     await loadOakPark(page);
     await page.getByText("Read invoice.pdf").first().click();
-    await expect(aside(page).getByRole("button", { name: "Actors", exact: true })).toBeVisible();
-    await aside(page).getByRole("button", { name: "Actors", exact: true }).click();
+    await showActorsHome(page);
     await expect(aside(page).getByLabel("Name")).toBeVisible();
     await capturePage(page, `${EVIDENCE}/manage-1024.png`);
   });

@@ -18,6 +18,7 @@ function resetSession() {
   s.select(null);
   s.closeBoardModes();
   s.setRightClickDelete(false);
+  s.setBoardOrientation("horizontal");
 }
 
 beforeEach(() => {
@@ -53,6 +54,9 @@ test("selected Tile spawn hints are Q/E Step and A/D Data with direction arrows"
   expect(text).not.toMatch(/\+ Step/);
   expect(text).not.toMatch(/\+ Data/);
   expect(host.querySelector("[data-spawn-compass]")).not.toBeNull();
+  expect(host.querySelector(".canvas-helper")?.getAttribute("data-helper-dock")).toBe(
+    "bottom-left",
+  );
   expect(spawn?.querySelector("[data-spawn-tile]")).not.toBeNull();
   expect(spawn?.querySelector("[data-spawn-arrow='left']")).not.toBeNull();
   expect(spawn?.querySelector("[data-spawn-arrow='right']")).not.toBeNull();
@@ -85,6 +89,8 @@ test("selected Path always shows stroke samples, Edit text, and Right-click dele
   const helper = host.querySelector(".canvas-helper");
   expect(helper?.textContent ?? "").toMatch(/S/);
   expect(helper?.querySelector("[data-stroke-toggle]")).not.toBeNull();
+  expect(helper?.querySelector("[data-stroke-sample='dotted']")?.getAttribute("width")).toBe("22");
+  expect(helper?.querySelector("[data-stroke-sample='solid']")?.getAttribute("width")).toBe("22");
   expect(helper?.textContent ?? "").not.toMatch(/Dotted \/ Solid/);
   expect(helper?.textContent ?? "").toMatch(/Edit text/);
   expect(helper?.textContent ?? "").not.toMatch(/Edit label/);
@@ -117,4 +123,28 @@ test("After spawn hints include Step and Data", () => {
   expect(spawn?.querySelector(".canvas-helper-spawn-kind-step")?.textContent).toBe("step");
   expect(spawn?.querySelector(".canvas-helper-spawn-kind-data")?.textContent).toBe("data");
   expect(spawn?.textContent ?? "").not.toMatch(/After-only/);
+});
+
+test("vertical spawn compass points up and down", () => {
+  act(() => {
+    useStore.getState().setBoardOrientation("vertical");
+    useStore.getState().select({ type: SelectionKind.Node, id: OAK_PARK_IDS.read });
+  });
+  const spawn = host.querySelector("[data-spawn-hints]");
+  expect(spawn?.getAttribute("data-orientation")).toBe("vertical");
+  const up = spawn?.querySelector("[data-spawn-arrow='up']");
+  const down = spawn?.querySelector("[data-spawn-arrow='down']");
+  expect(up).not.toBeNull();
+  expect(down).not.toBeNull();
+  expect(up?.getAttribute("height")).toBe("12");
+  expect(down?.getAttribute("height")).toBe("12");
+  expect(spawn?.querySelector("[data-spawn-arrow='left']")).toBeNull();
+  expect(spawn?.querySelector("[data-spawn-arrow='right']")).toBeNull();
+  expect(spawn?.textContent ?? "").toMatch(/Q/);
+  expect(spawn?.textContent ?? "").toMatch(/E/);
+  expect(spawn?.textContent ?? "").toMatch(/A/);
+  expect(spawn?.textContent ?? "").toMatch(/D/);
+  expect(spawn?.querySelector(".canvas-helper-spawn-kind-step")?.textContent).toBe("step");
+  expect(spawn?.querySelector(".canvas-helper-spawn-kind-data")?.textContent).toBe("data");
+  expect(spawn?.getAttribute("aria-label")).toMatch(/Step above or below/);
 });

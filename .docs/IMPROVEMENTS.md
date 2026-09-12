@@ -1286,3 +1286,88 @@ Append to `## Amendments` in `.docs/GOAL.md`: P-05, CX-02, NA-10 as dated 2026-0
 Commit: `feat(improve-60): rename Simplify to View and drop Hide data`  
 Evidence: `.docs/evidence/improve-60-view-toggle/`
 
+---
+
+# Improvement 61 — Vertical board orientation
+
+Requested 2026-09-12. One top-bar control switches the board between **Horizontal** (ELK left-to-right; Compare / Present stacked) and **Vertical** (ELK top-to-bottom tree; Compare / Present side-by-side). Graph create/connect/remove stays inbound/outbound. Tile faces do not rotate.
+
+## Locked decisions
+
+- Preference only: `boardOrientation` in the store, persisted as `automation-pitch.board-orientation`. Default Horizontal. Not YAML, not undo, not per-document.
+- One toggle drives both graph layout and the Compare / Present split. Before stays first (top or left).
+- Tabs follow flow: vertical inbound = top edge, outbound = bottom.
+- Spawn keys: Horizontal Q/E Step left/right and A/D Data left/right. Vertical Q/A Step up/down and E/D Data up/down. Compass keycaps and the center tile stay put; **step** / **data** and the arrows rotate. Vertical arrows stay in the same 15px keycap row as Horizontal so the helper does not jump.
+- Vertical `+` fan: Data left, Step right. Horizontal stays Step above Data.
+- Contextual hotkey hints dock at the bottom-left of the canvas.
+- On each flow edge, Path sits before `+`. Tile X is top-center when Horizontal and left-center when Vertical (not on the create tabs).
+- First pass in a new orientation is a cold layout (no row-stability hints from the other orientation, no 200 ms lerp, skip the 60 ms ELK debounce). Camera fits the new bounds.
+- Present still hides the top bar. Word-web uses the same orientation. No new runtime dependency.
+
+## Contract
+
+Append to `## Amendments` in `.docs/GOAL.md`: CX-03, CX-05, CX-01, BA-05, P-07, SH-02, P-05 as dated 2026-09-12.
+
+Commit: `feat(improve-61): add vertical board orientation`  
+Evidence: `.docs/evidence/improve-61-orientation/`
+
+---
+
+# Improvement 62 — Idle Actors inspector and orientation trees
+
+Requested 2026-09-12. The idle right inspector is the Actors roster (no nested Actors/Back navigation). Horizontal / Vertical moves to the status bar as two highlighted three-tile tree icons.
+
+## Locked decisions
+
+- Nothing selected (Before / After) → Actors roster with add human, add robot, and delete-mode. No Actors text button, no Back.
+- Selecting a Step / Data / Path shows that item’s form (Who stays on the Step). Deselecting a Step parks that Who on the roster.
+- Compare idle inspector stays empty (read-only). Present still hides the inspector.
+- Orientation radios live on the left of the status bar. Each face is a three-node tree of rounded Step rectangles (LTR vs top-down). Yellow means the active orientation. Same persisted pref as Improvement 61. Paths in the icons are straight lines with no arrowheads.
+
+## Contract
+
+Append to `## Amendments` in `.docs/GOAL.md`: NA-06, P-05 as dated 2026-09-12.
+
+Commit: `feat(improve-62): idle Actors inspector and orientation tree icons`  
+Evidence: `.docs/evidence/improve-62-idle-actors-orientation/`
+
+---
+
+# Improvement 63 — new Paths start solid; shorter Path stroke hints
+
+Requested 2026-09-12. Creating a Path (spawn, connect, After-only) always stores a solid stroke. Split still restamps every outgoing Path when the user changes One of / Every. Path helper samples lose one dotted dash; the solid tick matches.
+
+## Locked decisions
+
+- New Paths are `dashed: false`. Existing sibling strokes are not rewritten on create.
+- `applyDashForSplit` / inspector Split still apply PC-03 defaults.
+- Oak Park amount Paths stay explicit dotted (PC-06).
+- Helper samples are 22px wide (were 28px).
+
+## Contract
+
+Append to `## Amendments` in `.docs/GOAL.md`: PC-02, P-06 as dated 2026-09-12.
+
+Commit: `feat(improve-63): new Paths start solid; shrink Path stroke hints`  
+Evidence: `.docs/evidence/improve-63-solid-paths/`
+
+---
+
+# Improvement 64 — icon Before / After / Compare
+
+Requested 2026-09-12. The top-bar word switch becomes compact SVG radios. Before is the Human figure, After is the Robot figure, and Compare is a minimalist split card (circle vs square) that matches the Compare pane axis.
+
+## Locked decisions
+
+- Artwork lives in `.svg` files (`human-figure.svg`, `robot-figure.svg`, `compare-stacked.svg`, `compare-side.svg`). Thin React wrappers set size, crop, and `currentColor`.
+- Horizontal Compare icon is the stacked mark (Human over Robot). Vertical uses the side-by-side mark. Same axis as the Compare panes (BA-05).
+- Compare marks are outline-only (`currentColor`, no fill) so the switch well or yellow selected fill shows through. Divider lines stop at the rounded rect.
+- Accessible names and `title` stay Before / After / Compare. No new runtime dependency.
+
+## Contract
+
+Append to `## Amendments` in `.docs/GOAL.md`: SH-02, AQ-02, P-10 as dated 2026-09-12.
+
+Commit: `feat(improve-64): icon Before After Compare switch`  
+Evidence: `.docs/evidence/improve-64-view-icons/`
+

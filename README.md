@@ -97,9 +97,6 @@ The [elkJS](https://github.com/kieler/elkjs) library did a lot of heavy lifting 
   - PNG, maybe SVG down the line. 
   - Support exporting before/after or compare view
 
-- **Vertical Mode**
-  - Comparison would also be left/right instead of top/bottom
-
 - **Schema for Workflow Data**: Could use exported data format to build scaffolding in some sort of app creation software - to actually build the automation out for this. **Ideally leverage 3rd party solutions** instead of maintaining a custom solution from scratch.
   - E.g. - 'Read' task would align to a 'read' skill/script instead of creating over and over. 
   - E.g. - Could be simple and generate interfaces (TS prob) to implement. 

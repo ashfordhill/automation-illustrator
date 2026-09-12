@@ -4,7 +4,7 @@ import { loadOakPark, screenshotBoard, waitForLayout, tabPeekPoint } from "./rea
 const EVIDENCE = ".docs/evidence/11-merge";
 
 function viewLabel(page: Page, name: "Before" | "After" | "Compare") {
-  return page.locator("header").getByText(name, { exact: true });
+  return page.locator("header").getByRole("radio", { name, exact: true });
 }
 
 test.describe("After spawn (merge withdrawn)", () => {
@@ -37,7 +37,7 @@ test.describe("After spawn (merge withdrawn)", () => {
     await expect(page.locator("aside").getByRole("button", { name: "Type Other" })).toBeVisible();
     await page.locator("aside").getByRole("button", { name: "Remove Step" }).click();
     await waitForLayout(page);
-    await expect(page.locator("aside").getByRole("button", { name: "Actors", exact: true })).toBeVisible();
+    await expect(page.locator("aside").getByRole("button", { name: "Add human" })).toBeVisible();
     await screenshotBoard(page, `${EVIDENCE}/after-only-removed-1440.png`);
   });
 });

@@ -3,6 +3,7 @@
  */
 import type { Point } from "../../workflow/types";
 import type { LaneLayout } from "./laneLayout";
+import { alongOf, type FlowAxis } from "../flow/flowProfile";
 
 function distToSegment(p: Point, a: Point, b: Point): number {
   const dx = b.x - a.x;
@@ -87,19 +88,19 @@ export function incidentPathIds(
   return ids;
 }
 
-/** Shared ELK trunk (same start + same first-bend x) or shared inbound merge. */
-export function routesShareBundle(a: Point[], b: Point[]): boolean {
+/** Shared ELK trunk (same start + same first-bend along the flow axis) or shared inbound merge. */
+export function routesShareBundle(a: Point[], b: Point[], along: FlowAxis = "x"): boolean {
   if (a.length < 2 || b.length < 2) return false;
   if (samePt(a[0]!, b[0]!)) {
     const a1 = a[1]!, b1 = b[1]!;
-    if (Math.abs(a1.x - b1.x) <= BUNDLE_EPS) return true;
+    if (Math.abs(alongOf(a1, along) - alongOf(b1, along)) <= BUNDLE_EPS) return true;
   }
   const ae = a[a.length - 1]!;
   const be = b[b.length - 1]!;
   if (samePt(ae, be) && a.length >= 2 && b.length >= 2) {
     const a2 = a[a.length - 2]!;
     const b2 = b[b.length - 2]!;
-    if (Math.abs(a2.x - b2.x) <= BUNDLE_EPS) return true;
+    if (Math.abs(alongOf(a2, along) - alongOf(b2, along)) <= BUNDLE_EPS) return true;
   }
   return false;
 }

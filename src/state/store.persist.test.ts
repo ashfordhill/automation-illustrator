@@ -18,6 +18,7 @@ function resetSession() {
   s.setSoundEnabled(false);
   s.setInspectorCollapsed(false);
   if (s.recovery) s.clearRecoveryHold();
+  s.setBoardOrientation("horizontal");
 }
 
 beforeEach(() => {

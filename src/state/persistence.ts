@@ -17,6 +17,10 @@ import {
   workflowToYaml,
 } from "../workflow/serialize";
 import {
+  parseBoardOrientation,
+  type BoardOrientation,
+} from "../board/flow/flowProfile";
+import {
   DEFAULT_SIMPLIFY_PREFS,
   parseSimplifyPrefs,
   type SimplifyPrefs,
@@ -62,6 +66,7 @@ export const LS_SOUND = "automation-pitch.sound";
 export const LS_RIGHT_CLICK_DELETE = "automation-pitch.right-click-delete";
 export const LS_INSPECTOR_COLLAPSED = "automation-pitch.inspectorCollapsed";
 export const LS_SIMPLIFY = "automation-pitch.simplify";
+export const LS_BOARD_ORIENTATION = "automation-pitch.board-orientation";
 export const SAVE_COPY_FILENAME = "untitled.yaml";
 export const RECOVERY_COPY_FILENAME = "automation-pitch.recovery.json";
 
@@ -230,6 +235,23 @@ export function loadSimplifyPrefs(): SimplifyPrefs {
 export function saveSimplifyPrefs(prefs: SimplifyPrefs) {
   try {
     localStorage.setItem(LS_SIMPLIFY, JSON.stringify(prefs));
+  } catch {
+    /* preference is session-only if storage is denied */
+  }
+}
+
+/** Board orientation. Missing or unknown values are horizontal. */
+export function loadBoardOrientation(): BoardOrientation {
+  try {
+    return parseBoardOrientation(localStorage.getItem(LS_BOARD_ORIENTATION));
+  } catch {
+    return "horizontal";
+  }
+}
+
+export function saveBoardOrientation(orientation: BoardOrientation) {
+  try {
+    localStorage.setItem(LS_BOARD_ORIENTATION, orientation);
   } catch {
     /* preference is session-only if storage is denied */
   }

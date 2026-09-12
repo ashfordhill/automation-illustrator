@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { capturePage, loadOakPark, waitForLayout } from "./ready";
+import { capturePage, loadOakPark, waitForLayout, showActorsHome } from "./ready";
 
 const EVIDENCE = ".docs/evidence/improve-53-actors-chrome";
 
@@ -18,16 +18,16 @@ async function newBoardWithStep(page: import("@playwright/test").Page) {
 }
 
 test.describe("Improvement 53 — Actors header text and headshot add", () => {
-  test("empty inspector has Actors; Data does not; Step puts it beside trash", async ({ page }) => {
+  test("idle inspector is the Actors roster; Data and Step have no Actors/Back", async ({ page }) => {
     await loadOakPark(page);
-    const actors = aside(page).getByRole("button", { name: "Actors", exact: true });
-    await expect(actors).toBeVisible();
-    await expect(aside(page).locator(".inspector-header #manage-actors-btn")).toHaveCount(1);
+    await expect(aside(page).getByRole("button", { name: "Add human" })).toBeVisible();
+    await expect(aside(page).getByRole("button", { name: "Actors", exact: true })).toHaveCount(0);
+    await expect(aside(page).getByRole("button", { name: "Back" })).toHaveCount(0);
     await capturePage(page, `${EVIDENCE}/empty-actors-1440.png`);
 
     await page.getByText("Account #").first().click();
     await expect(aside(page).getByRole("button", { name: "Remove Data" })).toBeVisible();
-    await expect(actors).toHaveCount(0);
+    await expect(aside(page).getByRole("button", { name: "Actors", exact: true })).toHaveCount(0);
 
     await page.getByText("Read invoice.pdf").first().click();
     const who = aside(page).locator(".inspector-who-groups");
@@ -35,35 +35,22 @@ test.describe("Improvement 53 — Actors header text and headshot add", () => {
     const trash = aside(page).getByRole("button", { name: "Remove Step" });
     await expect(who).toBeVisible();
     await expect(type.first()).toBeVisible();
-    await expect(actors).toBeVisible();
+    await expect(aside(page).getByRole("button", { name: "Actors", exact: true })).toHaveCount(0);
     await expect(trash).toBeVisible();
     const whoBox = await who.boundingBox();
     const typeBox = await type.first().boundingBox();
-    const actorsBox = await actors.boundingBox();
     const trashBox = await trash.boundingBox();
-    expect(whoBox && typeBox && actorsBox && trashBox).toBeTruthy();
+    expect(whoBox && typeBox && trashBox).toBeTruthy();
     expect(typeBox!.y).toBeLessThan(whoBox!.y);
-    expect(actorsBox!.y).toBeLessThan(whoBox!.y);
-    expect(Math.abs(actorsBox!.y - trashBox!.y)).toBeLessThan(8);
-    expect(actorsBox!.x).toBeLessThan(trashBox!.x);
     await capturePage(page, `${EVIDENCE}/step-who-bottom-1440.png`);
   });
 
-  test("Manage from a Step shows Back; add keys share equal thirds", async ({ page }) => {
+  test("Actors roster has no Back; add keys share equal thirds", async ({ page }) => {
     await newBoardWithStep(page);
-    const actors = aside(page).getByRole("button", { name: "Actors", exact: true });
-    const trash = aside(page).getByRole("button", { name: "Remove Step" });
-    const actorsBox = await actors.boundingBox();
-    const trashBox = await trash.boundingBox();
-    expect(actorsBox && trashBox).toBeTruthy();
-    await actors.click();
-    await expect(aside(page).getByRole("button", { name: "Back" })).toBeVisible();
+    await showActorsHome(page);
+    await expect(aside(page).getByRole("button", { name: "Back" })).toHaveCount(0);
     await expect(aside(page).getByRole("button", { name: "Actors", exact: true })).toHaveCount(0);
     await expect(aside(page).getByRole("button", { name: "Remove Step" })).toHaveCount(0);
-    const backBox = await aside(page).getByRole("button", { name: "Back" }).boundingBox();
-    expect(backBox).toBeTruthy();
-    expect(Math.abs(backBox!.x - actorsBox!.x)).toBeLessThan(2);
-    expect(Math.abs(backBox!.x + backBox!.width - (trashBox!.x + trashBox!.width))).toBeLessThan(2);
     await expect(aside(page).getByRole("heading", { name: "Manage actors" })).toHaveCount(0);
     await capturePage(page, `${EVIDENCE}/manage-from-step-back-1440.png`);
 
@@ -122,13 +109,10 @@ test.describe("Improvement 53 — Actors header text and headshot add", () => {
     await capturePage(page, `${EVIDENCE}/delete-mode-1440.png`);
   });
 
-  test("Manage from empty keeps Actors and hides Back", async ({ page }) => {
+  test("idle Actors roster has no Back", async ({ page }) => {
     await loadOakPark(page);
-    await aside(page).getByRole("button", { name: "Actors", exact: true }).click();
-    await expect(aside(page).getByRole("button", { name: "Actors", exact: true })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
+    await expect(aside(page).getByRole("button", { name: "Add human" })).toBeVisible();
+    await expect(aside(page).getByRole("button", { name: "Actors", exact: true })).toHaveCount(0);
     await expect(aside(page).getByRole("button", { name: "Back" })).toHaveCount(0);
     await expect(aside(page).getByLabel("Name")).toBeVisible();
   });
@@ -137,12 +121,11 @@ test.describe("Improvement 53 — Actors header text and headshot add", () => {
 test.describe("Improvement 53 min-width", () => {
   test.use({ viewport: { width: 1024, height: 768 } });
 
-  test("header Actors and headshot add still fit at 1024", async ({ page }) => {
+  test("Actors roster still fits at 1024", async ({ page }) => {
     await loadOakPark(page);
     await page.getByText("Read invoice.pdf").first().click();
-    await expect(aside(page).getByRole("button", { name: "Actors", exact: true })).toBeVisible();
-    await aside(page).getByRole("button", { name: "Actors", exact: true }).click();
-    await expect(aside(page).getByRole("button", { name: "Back" })).toBeVisible();
+    await showActorsHome(page);
+    await expect(aside(page).getByRole("button", { name: "Back" })).toHaveCount(0);
     await expect(aside(page).getByLabel("Name")).toBeVisible();
     await capturePage(page, `${EVIDENCE}/manage-1024.png`);
   });

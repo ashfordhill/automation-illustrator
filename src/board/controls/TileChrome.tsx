@@ -24,8 +24,9 @@ import { FIELD_RX, STEP_RX, nodeRadius, nodeSize } from "../layout/tileMetrics";
 import { polylineToSvg } from "../routing/polyline";
 import { PathKnotIcon } from "./PathKnotIcon";
 import { DataChip } from "../tiles/DataChip";
-import { previewCenters } from "./plusPreviewLayout";
+import { plusPreviewKinds, previewCenters } from "./plusPreviewLayout";
 import { fallbackTileRect, scaleCornerRadius, type TileRect } from "./tileOverlay";
+import type { BoardOrientation } from "../flow/flowProfile";
 
 const PULL_THRESHOLD = 36;
 const SPRING_MS = 200;
@@ -87,7 +88,19 @@ function overlayTileRect(nodeId: string, rest: { right: number; top: number }): 
   return nodeScreenRect(nodeId) ?? fallbackTileRect(rest, node?.type);
 }
 
-function underTileOrigin(tile: TileRect, restY: number, inbound: boolean): { x: number; y: number } {
+function underTileOrigin(
+  tile: TileRect,
+  restX: number,
+  restY: number,
+  inbound: boolean,
+  orientation: BoardOrientation,
+): { x: number; y: number } {
+  if (orientation === "vertical") {
+    return {
+      x: Math.min(Math.max(restX, tile.x + tile.rx + 8), tile.x + tile.w - tile.rx - 8),
+      y: inbound ? tile.y + 22 : tile.y + tile.h - 22,
+    };
+  }
   return {
     x: inbound ? tile.x + 22 : tile.x + tile.w - 22,
     y: Math.min(Math.max(restY, tile.y + tile.rx + 8), tile.y + tile.h - tile.rx - 8),
@@ -186,12 +199,12 @@ export function TileChrome({
       {showChrome ? (
         <div className="tile-chrome-actions">
           <div className="tile-side-tabs is-out">
-            <PlusPullTab nodeId={id} inbound={false} />
             <PathPullTab nodeId={id} inbound={false} />
+            <PlusPullTab nodeId={id} inbound={false} />
           </div>
           <div className="tile-side-tabs is-in">
-            <PlusPullTab nodeId={id} inbound />
             <PathPullTab nodeId={id} inbound />
+            <PlusPullTab nodeId={id} inbound />
           </div>
           <button
             type="button"
@@ -214,6 +227,7 @@ export function TileChrome({
 
 function PlusPullTab({ nodeId, inbound }: { nodeId: string; inbound: boolean }) {
   const interaction = useStore((s) => s.interaction);
+  const orientation = useStore((s) => s.boardOrientation);
   const restRef = useRef<HTMLButtonElement>(null);
   const [drag, setDrag] = useState<{
     x: number;
@@ -224,7 +238,7 @@ function PlusPullTab({ nodeId, inbound }: { nodeId: string; inbound: boolean }) 
     live: boolean;
     tile: TileRect;
   } | null>(null);
-  const items = ["step", "data"] as const;
+  const items = plusPreviewKinds(orientation);
   const stretched = drag
     ? Math.hypot(drag.x - drag.restX, drag.y - drag.restY) >= PULL_THRESHOLD
     : false;
@@ -288,8 +302,10 @@ function PlusPullTab({ nodeId, inbound }: { nodeId: string; inbound: boolean }) 
 
   const tabX = drag?.live ? drag.x : drag ? drag.restX : 0;
   const tabY = drag?.live ? drag.y : drag ? drag.restY : 0;
-  const centers = drag ? previewCenters(drag.restX, drag.restY, items.length, inbound) : [];
-  const plusOrigin = drag ? underTileOrigin(drag.tile, drag.restY, inbound) : { x: 0, y: 0 };
+  const centers = drag ? previewCenters(drag.restX, drag.restY, items.length, inbound, orientation) : [];
+  const plusOrigin = drag
+    ? underTileOrigin(drag.tile, drag.restX, drag.restY, inbound, orientation)
+    : { x: 0, y: 0 };
   const ribbon = drag ? taffyRibbon(plusOrigin.x, plusOrigin.y, tabX, tabY) : null;
   const overlay =
     drag && typeof document !== "undefined"
@@ -376,6 +392,7 @@ function PlusPullTab({ nodeId, inbound }: { nodeId: string; inbound: boolean }) 
 function PathPullTab({ nodeId, inbound }: { nodeId: string; inbound: boolean }) {
   const restRef = useRef<HTMLButtonElement>(null);
   const interaction = useStore((s) => s.interaction);
+  const orientation = useStore((s) => s.boardOrientation);
   const [drag, setDrag] = useState<{
     x: number;
     y: number;
@@ -445,7 +462,9 @@ function PathPullTab({ nodeId, inbound }: { nodeId: string; inbound: boolean }) 
 
   const endX = drag?.live ? drag.x : drag?.restX ?? 0;
   const endY = drag?.live ? drag.y : drag?.restY ?? 0;
-  const pathOrigin = drag ? underTileOrigin(drag.tile, drag.restY, inbound) : { x: 0, y: 0 };
+  const pathOrigin = drag
+    ? underTileOrigin(drag.tile, drag.restX, drag.restY, inbound, orientation)
+    : { x: 0, y: 0 };
   const pathMid = (() => {
     const dx = endX - pathOrigin.x;
     const dy = endY - pathOrigin.y;

@@ -33,6 +33,7 @@ function resetSession() {
     hideVisuals: false,
   });
   s.setInspectorCollapsed(false);
+  s.setBoardOrientation("horizontal");
 }
 
 beforeEach(() => {
@@ -53,11 +54,18 @@ afterEach(() => {
 });
 
 test("app mounts the shell and view switcher", () => {
-  expect(host.textContent).toContain("Before");
-  expect(host.textContent).toContain("After");
-  expect(host.textContent).toContain("Compare");
+  const lanes = host.querySelector('[aria-label="Before, After, or Compare"]');
+  expect(lanes?.querySelector('[data-view-icon="before"][aria-label="Before"] svg')).not.toBeNull();
+  expect(lanes?.querySelector('[data-view-icon="after"][aria-label="After"] svg')).not.toBeNull();
+  expect(lanes?.querySelector('[data-view-icon="both"][aria-label="Compare"] svg')).not.toBeNull();
+  expect(lanes?.querySelector('[data-compare-layout="stacked"]')).not.toBeNull();
   expect(host.querySelector('[aria-label="Menu"]')).not.toBeNull();
   expect(host.querySelector('[aria-label="Present"]')).not.toBeNull();
+  const orientation = host.querySelector("footer [aria-label='Board orientation']");
+  expect(orientation).not.toBeNull();
+  expect(orientation?.querySelector('[aria-checked="true"]')?.getAttribute("aria-label")).toBe(
+    "Horizontal",
+  );
   expect(host.querySelector("[data-unsupported-viewport]")).toBeNull();
   expect(host.textContent).not.toMatch(/will become automated/);
 });
@@ -76,10 +84,16 @@ test("View button is yellow when the word-web is on", () => {
   expect(host.querySelector('[data-status="simplify"]')?.classList.contains("is-on")).toBe(true);
 });
 
-test("status bar shows text-only, Right-click delete, sound, and package version", () => {
+test("status bar shows orientation trees, text-only, Right-click delete, sound, and package version", () => {
   const bar = host.querySelector("footer.status-bar");
   expect(bar).not.toBeNull();
   expect(host.querySelector(".status-project")).toBeNull();
+  const orientation = bar?.querySelector('[aria-label="Board orientation"]');
+  expect(orientation).not.toBeNull();
+  expect(orientation?.querySelector('[data-orientation-icon="horizontal"]')?.getAttribute("aria-checked")).toBe(
+    "true",
+  );
+  expect(orientation?.querySelector('svg path[fill="currentColor"]')).toBeNull();
   const end = host.querySelector(".status-end");
   expect(end).not.toBeNull();
   expect(end?.lastElementChild?.classList.contains("status-version")).toBe(true);
@@ -99,20 +113,14 @@ test("status bar shows text-only, Right-click delete, sound, and package version
   expect(sound?.classList.contains("is-on")).toBe(true);
   expect(sound && end && (sound.compareDocumentPosition(end.lastElementChild!) & Node.DOCUMENT_POSITION_FOLLOWING)).toBeTruthy();
   expect(host.querySelector(".status-version")?.textContent).toBe(`v${APP_VERSION}`);
-  expect(APP_VERSION).toBe("1.0.0");
 });
 
-test("inspector Manage actors opens the panel", () => {
-  const btn = host.querySelector<HTMLButtonElement>("#manage-actors-btn");
-  expect(btn).not.toBeNull();
-  try {
-    act(() => {
-      btn?.click();
-    });
-  } catch {
-    /* Manage actors Textarea autosize is unsupported in jsdom; e2e covers the panel. */
-  }
-  expect(useStore.getState().manageActorsOpen).toBe(true);
+test("idle inspector is the Actors roster", () => {
+  expect(host.querySelector("#manage-actors-btn")).toBeNull();
+  expect(host.querySelector(".inspector-back")).toBeNull();
+  expect(host.querySelector('[aria-label="Add human"]')).not.toBeNull();
+  expect(host.querySelector('[aria-label="Add robot"]')).not.toBeNull();
+  expect(host.querySelector('[aria-label="Delete mode"]')).not.toBeNull();
 });
 
 test("New discard shows the on-canvas Add Step and Add Data empty state", () => {
@@ -169,10 +177,9 @@ test("inspector Type buttons are alphabetical with Other last; Who offers every 
   expect(useStore.getState().workflow.assignments[OAK_PARK_IDS.read]).toBe(OAK_PARK_IDS.robot);
 });
 
-test("Actors is a header text button on empty and Step, hidden on Data", () => {
-  const emptyActors = host.querySelector(".inspector-header #manage-actors-btn");
-  expect(emptyActors).not.toBeNull();
-  expect(emptyActors?.textContent).toBe("Actors");
+test("idle inspector is Actors; Step has trash and no Actors/Back", () => {
+  expect(host.querySelector(".inspector-header #manage-actors-btn")).toBeNull();
+  expect(host.querySelector('[aria-label="Add human"]')).not.toBeNull();
 
   act(() => {
     useStore.getState().select({ type: SelectionKind.Node, id: OAK_PARK_IDS.read });
@@ -180,21 +187,20 @@ test("Actors is a header text button on empty and Step, hidden on Data", () => {
   const rail = host.querySelector(".details-rail-body");
   const type = rail?.querySelector(".inspector-type-grid");
   const who = rail?.querySelector(".inspector-who-groups");
-  const actors = rail?.querySelector("#manage-actors-btn");
-  const header = rail?.querySelector(".inspector-header");
   const trash = rail?.querySelector('[aria-label="Remove Step"]');
-  expect(type && who && actors && trash).toBeTruthy();
-  expect(header?.contains(actors!)).toBe(true);
-  expect(header?.contains(trash!)).toBe(true);
+  expect(type && who && trash).toBeTruthy();
+  expect(rail?.querySelector("#manage-actors-btn")).toBeNull();
+  expect(rail?.querySelector(".inspector-back")).toBeNull();
   expect(type!.compareDocumentPosition(who!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-  expect(actors!.compareDocumentPosition(who!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 
   act(() => {
     useStore.getState().openManageActors();
   });
+  expect(useStore.getState().selected).toBeNull();
   expect(useStore.getState().manageActorsSource).toBe("step");
+  expect(useStore.getState().manageActorId).toBe(OAK_PARK_IDS.alice);
   expect(rail?.querySelector("#manage-actors-btn")).toBeNull();
-  expect(rail?.querySelector(".inspector-back")?.textContent).toBe("Back");
+  expect(rail?.querySelector(".inspector-back")).toBeNull();
   expect(rail?.querySelector('[aria-label="Remove Step"]')).toBeNull();
   const ops = rail?.querySelector(".inspector-actor-ops");
   const edit = rail?.querySelector(".inspector-actor-edit");
@@ -217,8 +223,9 @@ test("Actors is a header text button on empty and Step, hidden on Data", () => {
     useStore.getState().openManageActors();
   });
   expect(useStore.getState().manageActorsSource).toBe("empty");
-  expect(host.querySelector("#manage-actors-btn")?.classList.contains("is-on")).toBe(true);
+  expect(host.querySelector("#manage-actors-btn")).toBeNull();
   expect(host.querySelector(".inspector-back")).toBeNull();
+  expect(host.querySelector('[aria-label="Add human"]')).not.toBeNull();
 
   act(() => {
     useStore.getState().closeManageActors({ restoreFocus: false });
@@ -415,16 +422,28 @@ test("inspector folds to a Show strip and selecting a tile does not reopen it", 
 test("view switching has no BEFORE/AFTER corner chips", () => {
   expect(host.textContent).not.toMatch(/\bBEFORE\b/);
   expect(host.textContent).not.toMatch(/\bAFTER\b/);
-  expect(host.querySelector('[role="radio"][aria-checked="true"]')?.textContent).toBe("Before");
+  expect(host.querySelector('[role="radio"][aria-checked="true"]')?.getAttribute("aria-label")).toBe(
+    "Before",
+  );
   act(() => {
     useStore.getState().setView(ViewMode.After);
   });
-  expect(host.querySelector('[role="radio"][aria-checked="true"]')?.textContent).toBe("After");
+  expect(host.querySelector('[role="radio"][aria-checked="true"]')?.getAttribute("aria-label")).toBe(
+    "After",
+  );
   expect(host.textContent).not.toMatch(/\bAFTER\b/);
   act(() => {
     useStore.getState().setView(ViewMode.Both);
   });
-  expect(host.querySelector('[role="radio"][aria-checked="true"]')?.textContent).toBe("Compare");
+  expect(host.querySelector('[role="radio"][aria-checked="true"]')?.getAttribute("aria-label")).toBe(
+    "Compare",
+  );
+  expect(host.querySelector('[data-compare-layout="stacked"]')).not.toBeNull();
+  act(() => {
+    useStore.getState().setBoardOrientation("vertical");
+  });
+  expect(host.querySelector('[data-compare-layout="side"]')).not.toBeNull();
+  expect(host.querySelector('[data-compare-layout="stacked"]')).toBeNull();
   expect(host.querySelectorAll(".board-lane")).toHaveLength(2);
   expect(host.querySelectorAll(".board-lane.is-pan-target")).toHaveLength(0);
   expect(host.querySelector("[data-present-expand-btn]")).toBeNull();
@@ -549,4 +568,31 @@ test("hamburger omits Present, Actors, and Dark mode; Present is a toolbar butto
   expect(host.querySelector('[data-present-btn="true"] svg .present-figure')).not.toBeNull();
   expect(host.textContent).not.toMatch(/Dark mode/);
   expect(host.textContent).not.toMatch(/Light mode/);
+});
+
+test("Compare is a column stack until Vertical, then a Before|After row", () => {
+  act(() => {
+    useStore.getState().setView(ViewMode.Both);
+  });
+  const stack = host.querySelector(".lane-stack");
+  expect(stack?.getAttribute("data-orientation")).toBe("horizontal");
+  expect(stack?.getAttribute("data-stack")).toBe("column");
+  act(() => {
+    useStore.getState().setBoardOrientation("vertical");
+  });
+  expect(stack?.getAttribute("data-orientation")).toBe("vertical");
+  expect(stack?.getAttribute("data-stack")).toBe("row");
+});
+
+test("Present panes sit side-by-side when the board is Vertical", () => {
+  act(() => {
+    useStore.getState().setBoardOrientation("vertical");
+    useStore.getState().setPresent(true);
+  });
+  expect(host.querySelector('[aria-label="Board orientation"]')).toBeNull();
+  const stack = host.querySelector(".lane-stack");
+  expect(stack?.getAttribute("data-orientation")).toBe("vertical");
+  expect(stack?.getAttribute("data-stack")).toBe("row");
+  expect(host.querySelectorAll(".board-lane")).toHaveLength(2);
+  expect(host.querySelector('[aria-label="Expand Before"]')).not.toBeNull();
 });

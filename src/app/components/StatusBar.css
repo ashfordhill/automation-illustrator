@@ -1,7 +1,7 @@
 /**
  * Bottom status bar chrome.
- * On/off for toggles is `.is-on` / aria-pressed, not copy.
- * text-only, Right-click delete (mouse icon), sound, and version sit on the right.
+ * Orientation tree radios sit on the left; text-only, Right-click delete,
+ * sound, and version sit on the right.
  */
 :root {
   --status-bar-height: 36px;
@@ -17,13 +17,39 @@
   height: var(--status-bar-height);
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: 12px;
   padding: 0 12px;
   border-top: 3px solid var(--chrome-line) !important;
   box-shadow: 0 -3px 0 rgba(0, 0, 0, 0.2);
   font-size: 13px;
   font-weight: 700;
+}
+
+.status-bar .orientation-switch {
+  flex: 0 0 auto;
+  border-width: 2.5px;
+  border-radius: 9px;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.22);
+}
+
+.status-bar .orientation-switch .view-switch-track {
+  border-radius: 7px;
+  height: 26px;
+}
+
+.status-bar .orientation-switch .view-switch-btn {
+  min-width: 0;
+  height: 26px;
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-right-width: 2.5px;
+}
+
+.status-bar .orientation-switch .view-switch-btn svg {
+  display: block;
 }
 
 .status-end {

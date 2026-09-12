@@ -7,7 +7,7 @@ const RECEIPT = "Email delivery receipt to sender";
 const SCAN = "Scan letter to PDF";
 
 function viewLabel(page: Page, name: "Before" | "After" | "Compare") {
-  return page.locator("header").getByText(name, { exact: true });
+  return page.locator("header").getByRole("radio", { name, exact: true });
 }
 
 async function loadMailroom(page: Page) {

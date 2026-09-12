@@ -214,7 +214,7 @@ test("connectNodes accepts a fan-in Path between existing Tiles", () => {
   expect(fan.value.edges.some((e) => e.source === "b" && e.target === "data")).toBe(true);
 });
 
-test("addConnectedNode applies One of stroke to every outgoing Path (PC-02)", () => {
+test("addConnectedNode keeps every new Path solid", () => {
   const board = doc(
     [step("r"), step("a", 0, 40)],
     [path("e1", "r", "a", "", false)],
@@ -222,7 +222,7 @@ test("addConnectedNode applies One of stroke to every outgoing Path (PC-02)", ()
   const added = addConnectedNode(board, "r", step("b", 80, 40));
   expect(added.ok).toBe(true);
   if (!added.ok) return;
-  expect(added.value.edges.map((e) => e.dashed)).toEqual([true, true]);
+  expect(added.value.edges.map((e) => e.dashed)).toEqual([false, false]);
 });
 
 test("connectNodes accepts a legal reconvergence Path", () => {

@@ -499,3 +499,46 @@ Do *NOT* put `.docs/` in the image links! It will break the markdown image rende
 - Attachments:
   ![tile right-click hint shift](visual-improvements/2026-09-12-tile-right-click-hint-shift.gif)
 
+## 2026-09-12 — vertical spawn compass
+
+- Issue: Vertical orientation still used the Horizontal compass (step/data above/below, left/right arrows) and Q/E Step with A/D Data.
+- Resolution: Keycaps and the mini tile stay in place. Vertical puts **step** left and **data** right with up/down arrows; Q/A add Step above/below and E/D add Data above/below.
+- Attachments:
+  ![vertical spawn compass sketch](visual-improvements/2026-09-12-vertical-spawn-compass.png)
+  ![horizontal spawn compass](visual-improvements/2026-09-12-horizontal-spawn-compass.png)
+
+## 2026-09-12 — orientation tree toggle
+
+- Issue: Horizontal | Vertical is wordy in the top bar; the control should read as two tiny three-tile trees.
+- Resolution: Move the switch to the status bar as icon radios (LTR tree vs top-down tree). Yellow means the active orientation.
+- Attachments:
+  ![orientation tree toggle sketch](.docs/visual-improvements/2026-09-12-orientation-tree-toggle.png)
+
+## 2026-09-12 — vertical spawn arrow jump
+
+- Issue: Switching Horizontal / Vertical makes the spawn compass jump because Vertical’s up/down arrows are a full extra row tall.
+- Resolution: Vertical arrows match the 15px keycap row (same box as Horizontal) so the helper stays put.
+- Attachments:
+  ![vertical spawn arrow jump](.docs/visual-improvements/2026-09-12-vertical-spawn-arrow-jump.gif)
+
+## 2026-09-12 — orientation tree arrows
+
+- Issue: Tiny arrowheads on the Horizontal / Vertical tree icons cut into the little Step rectangles.
+- Resolution: Drop the arrowheads; the trees are straight-line forks only.
+- Attachments:
+  ![orientation tree arrows](visual-improvements/2026-09-12-orientation-tree-arrows.png)
+
+## 2026-09-12 — path helper stroke samples
+
+- Issue: The Path helper’s dotted / solid ticks are longer than they need to be.
+- Resolution: Drop one dotted dash and shorten the solid sample to match.
+- Attachments:
+  ![path helper stroke samples](visual-improvements/2026-09-12-path-helper-stroke-samples.png)
+
+## 2026-09-12 — Compare view icons
+
+- Issue: Before / After / Compare is a wordy segmented control. Compare should read as a stacked or side-by-side split (Human circle vs Robot square) matching board orientation.
+- Resolution: Shipped in Improvement 64 — icon radios: Human figure, Robot figure, and the attached Compare marks (left = Horizontal / stacked, right = Vertical / side-by-side).
+- Attachments:
+  ![compare view icons](visual-improvements/2026-09-12-compare-view-icons.png)
+

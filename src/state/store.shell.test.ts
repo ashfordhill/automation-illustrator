@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, expect, test } from "vitest";
 import { ColorScheme, SelectionKind, ViewMode } from "../workflow/catalogs";
 import { OAK_PARK_IDS } from "../demos/oakParkInvoice";
+import { LS_BOARD_ORIENTATION } from "./persistence";
 import { useStore } from "./store";
 
 function resetSession() {
@@ -19,6 +20,7 @@ function resetSession() {
     hideVisuals: false,
   });
   s.setInspectorCollapsed(false);
+  s.setBoardOrientation("horizontal");
 }
 
 beforeEach(() => {
@@ -109,4 +111,18 @@ test("Present expand starts split; Space swaps fullscreen lanes; exit clears exp
   useStore.getState().setPresent(false);
   expect(useStore.getState().view).toBe(ViewMode.After);
   expect(useStore.getState().presentExpand).toBeNull();
+});
+
+test("board orientation persists and is not an undo entry", () => {
+  expect(useStore.getState().boardOrientation).toBe("horizontal");
+  const past = useStore.getState().past.length;
+  const epoch = useStore.getState().canvasEpoch;
+  useStore.getState().setBoardOrientation("vertical");
+  expect(useStore.getState().boardOrientation).toBe("vertical");
+  expect(localStorage.getItem(LS_BOARD_ORIENTATION)).toBe("vertical");
+  expect(useStore.getState().past.length).toBe(past);
+  expect(useStore.getState().canvasEpoch).toBe(epoch);
+  useStore.getState().setBoardOrientation("horizontal");
+  expect(useStore.getState().boardOrientation).toBe("horizontal");
+  expect(localStorage.getItem(LS_BOARD_ORIENTATION)).toBe("horizontal");
 });

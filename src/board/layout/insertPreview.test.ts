@@ -7,7 +7,7 @@ import { buildElkGraph, laneGraphKey } from "./elkGraph";
 import { toLaneLayout } from "./elkLayout";
 import { measureLabelBox, type LabelBox } from "./labelBox";
 import type { LaneLayout, Rect } from "./laneLayout";
-import { bundleInsertPreviewGeom, insertPreviewGeom, stubsWithNeighborShift } from "./insertPreview";
+import { bundleInsertPreviewGeom, ensureOrthogonal, insertPreviewGeom, stubsWithNeighborShift } from "./insertPreview";
 import { nodeSize, STEP_H, STEP_W, TILE_GAP } from "./tileMetrics";
 
 const elk = new ELK();
@@ -136,4 +136,19 @@ test("bundleInsertPreviewGeom sits on the shared inbound merge, not a unique bra
   expect(midX).toBeLessThan(400);
   expect(orthogonal(geom.leftStub)).toBe(true);
   expect(orthogonal(geom.rightStub)).toBe(true);
+});
+
+test("ensureOrthogonal jogs in y when flow is vertical", () => {
+  const pts = ensureOrthogonal(
+    [
+      { x: 10, y: 0 },
+      { x: 40, y: 80 },
+    ],
+    "y",
+  );
+  expect(pts).toEqual([
+    { x: 10, y: 0 },
+    { x: 10, y: 80 },
+    { x: 40, y: 80 },
+  ]);
 });

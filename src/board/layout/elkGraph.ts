@@ -1,12 +1,20 @@
 /**
- * Build the ELK input graph for one lane projection (Improvement 01 / 36).
+ * Build the ELK input graph for one lane projection (Improvement 01 / 36 / 61).
  * First layout uses projection array order. When a previous derived layout is
- * supplied, Nodes and Paths are ordered by those y values so forks keep their rows.
+ * supplied, Nodes and Paths are ordered by the across-flow axis so forks keep
+ * their rows (horizontal) or columns (vertical).
  */
 import type { ElkExtendedEdge, ElkNode } from "elkjs/lib/elk-api";
 import type { LaneProjection } from "../../state/projection";
 import { WorkflowNodeKind } from "../../workflow/catalogs";
 import type { Point, PositionMap } from "../../workflow/types";
+import {
+  acrossOf,
+  flowProfile,
+  type BoardOrientation,
+  type FlowAxis,
+  type FlowProfile,
+} from "../flow/flowProfile";
 import type { LabelBox } from "./labelBox";
 import { BRANCH_GAP, GRID, TILE_GAP, nodeSize } from "./tileMetrics";
 
@@ -20,7 +28,7 @@ export const WEB_LAYER_GAP = 160;
 /** Sibling air while simplified (tile BRANCH_GAP is 32). */
 export const WEB_NODE_GAP = 80;
 
-/** Layered, left-to-right, orthogonal, hyperedges bundled at shared ports. */
+/** Layered, orthogonal, hyperedges bundled at shared ports. Direction comes from FlowProfile. */
 export const ROOT_OPTIONS: Record<string, string> = {
   "elk.algorithm": "layered",
   "elk.direction": "RIGHT",
@@ -57,9 +65,18 @@ export function wordWebRootOptions(): Record<string, string> {
   };
 }
 
+function rootOptionsFor(profile: FlowProfile, mode: LayoutMode): Record<string, string> {
+  const base = mode === "web" ? wordWebRootOptions() : ROOT_OPTIONS;
+  return {
+    ...base,
+    "elk.direction": profile.elkDirection,
+    "elk.aspectRatio": profile.aspectRatio,
+  };
+}
+
 /**
- * After the first layout: keep source-rank columns and the y-order we just
- * seeded from displayed positions (Improvement 36).
+ * After the first layout: keep source-rank layers and the across-flow order we
+ * seeded from displayed positions (Improvement 36 / 61).
  */
 export const STABILITY_OPTIONS: Record<string, string> = {
   "elk.layered.layering.strategy": "LONGEST_PATH_SOURCE",
@@ -115,9 +132,12 @@ function hintOf(projection: LaneProjection, id: string, previous: PositionMap | 
   return n?.position ?? { x: 0, y: 0 };
 }
 
-function byHint(a: Point & { id: string }, b: Point & { id: string }): number {
-  if (a.y !== b.y) return a.y - b.y;
-  if (a.x !== b.x) return a.x - b.x;
+function byHint(a: Point & { id: string }, b: Point & { id: string }, across: FlowAxis): number {
+  const ac = acrossOf(a, across) - acrossOf(b, across);
+  if (ac !== 0) return ac;
+  const along: FlowAxis = across === "y" ? "x" : "y";
+  const al = acrossOf(a, along) - acrossOf(b, along);
+  if (al !== 0) return al;
   return a.id.localeCompare(b.id);
 }
 
@@ -126,9 +146,9 @@ function hasPreviousHints(projection: LaneProjection, previous: PositionMap | un
 }
 
 /**
- * Flat root graph: one child per projected Node with fixed WEST/EAST ports at
- * mid-height (matching the React Flow handles), one edge per projected Path,
- * one inline center label per labeled Path sized by the wrapped chip box.
+ * Flat root graph: one child per projected Node with fixed in/out ports
+ * (west/east or north/south), one edge per projected Path, one inline center
+ * label per labeled Path sized by the wrapped chip box.
  */
 export function buildElkGraph(
   projection: LaneProjection,
@@ -136,38 +156,61 @@ export function buildElkGraph(
   sizes?: TileSizes,
   previous?: PositionMap,
   mode: LayoutMode = "tile",
+  orientation: BoardOrientation = "horizontal",
 ): ElkNode {
+  const profile = flowProfile(orientation);
   const chipBoxes = mode === "web" ? {} : boxes;
-  const rootOptions = mode === "web" ? wordWebRootOptions() : ROOT_OPTIONS;
+  const rootOptions = rootOptionsFor(profile, mode);
   const stable = mode !== "web" && hasPreviousHints(projection, previous);
   const nodes = stable
     ? [...projection.nodes].sort((a, b) =>
-        byHint({ id: a.id, ...hintOf(projection, a.id, previous) }, { id: b.id, ...hintOf(projection, b.id, previous) }),
+        byHint(
+          { id: a.id, ...hintOf(projection, a.id, previous) },
+          { id: b.id, ...hintOf(projection, b.id, previous) },
+          profile.across,
+        ),
       )
     : projection.nodes;
   const edgesIn = stable
     ? [...projection.edges].sort((a, b) => {
         const ta = { id: a.target, ...hintOf(projection, a.target, previous) };
         const tb = { id: b.target, ...hintOf(projection, b.target, previous) };
-        const byTarget = byHint(ta, tb);
+        const byTarget = byHint(ta, tb, profile.across);
         if (byTarget) return byTarget;
         return byHint(
           { id: a.source, ...hintOf(projection, a.source, previous) },
           { id: b.source, ...hintOf(projection, b.source, previous) },
+          profile.across,
         );
       })
     : projection.edges;
 
   const children: ElkNode[] = nodes.map((n) => {
     const { w, h } = sizeOf(projection, n.id, sizes);
+    const inn = profile.portIn(w, h);
+    const out = profile.portOut(w, h);
     return {
       id: n.id,
       width: w,
       height: h,
       layoutOptions: { ...NODE_OPTIONS },
       ports: [
-        { id: inPortId(n.id), x: 0, y: h / 2, width: 0, height: 0, layoutOptions: { ...PORT_OPTIONS_IN } },
-        { id: outPortId(n.id), x: w, y: h / 2, width: 0, height: 0, layoutOptions: { ...PORT_OPTIONS_OUT } },
+        {
+          id: inPortId(n.id),
+          x: inn.x,
+          y: inn.y,
+          width: 0,
+          height: 0,
+          layoutOptions: { "elk.port.side": profile.inSide },
+        },
+        {
+          id: outPortId(n.id),
+          x: out.x,
+          y: out.y,
+          width: 0,
+          height: 0,
+          layoutOptions: { "elk.port.side": profile.outSide },
+        },
       ],
     };
   });
@@ -200,7 +243,7 @@ export function buildElkGraph(
 }
 
 /**
- * Cache key for one graph. Changes with Node ids/types/sizes, Path
+ * Cache key for one graph. Changes with orientation, Node ids/types/sizes, Path
  * endpoints, chip boxes, and tile vs word-web mode. Not titles, details,
  * actors, or Before vs After — those lanes share one derived layout.
  */
@@ -209,6 +252,7 @@ export function laneGraphKey(
   boxes: Record<string, LabelBox>,
   sizes?: TileSizes,
   mode: LayoutMode = "tile",
+  orientation: BoardOrientation = "horizontal",
 ): string {
   const nodes = projection.nodes
     .map((n) => {
@@ -225,5 +269,5 @@ export function laneGraphKey(
       return `${e.id}:${e.source}>${e.target}:${bw}x${bh}`;
     })
     .join(",");
-  return `${mode}|${nodes}|${edges}`;
+  return `${orientation}|${mode}|${nodes}|${edges}`;
 }

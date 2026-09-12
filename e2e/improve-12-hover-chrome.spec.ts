@@ -83,7 +83,7 @@ test.describe("Improvement 12 — tile chrome on hover", () => {
 
   test("Compare hides chrome on hover", async ({ page }) => {
     await loadOakPark(page);
-    await page.locator("header").getByText("Compare", { exact: true }).click();
+    await page.locator("header").getByRole("radio", { name: "Compare", exact: true }).click();
     await waitForLayout(page);
     await reviewNode(page).first().locator(".step-piece").hover();
     await expect(page.getByRole("button", { name: "Add Step or Data" })).toHaveCount(0);

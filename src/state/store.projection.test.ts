@@ -22,6 +22,7 @@ function resetSession() {
   s.setColorScheme(ColorScheme.Light);
   s.setSoundEnabled(false);
   s.setInspectorCollapsed(false);
+  s.setBoardOrientation("horizontal");
 }
 
 beforeEach(() => {

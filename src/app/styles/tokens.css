@@ -187,6 +187,20 @@ body.is-tile-dragging * {
   border-radius: 8px 3px 3px 8px;
 }
 
+.react-flow__handle-top {
+  top: -7px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 8px 8px 3px 3px;
+}
+
+.react-flow__handle-bottom {
+  bottom: -7px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 3px 3px 8px 8px;
+}
+
 .react-flow__edge-path {
   stroke: var(--line) !important;
 }
@@ -221,9 +235,14 @@ body.is-tile-dragging * {
   position: relative;
 }
 
+.lane-stack[data-orientation="vertical"] {
+  flex-direction: row;
+}
+
 .lane-pane {
   flex: 1 1 0;
   min-height: 0;
+  min-width: 0;
   position: relative;
   overflow: hidden;
 }
@@ -232,9 +251,19 @@ body.is-tile-dragging * {
   border-top: 3px solid var(--line);
 }
 
+.lane-stack[data-orientation="vertical"] .lane-after {
+  border-top: none;
+  border-left: 3px solid var(--line);
+}
+
 .lane-stack[data-present-expand="before"] .lane-after,
 .lane-stack[data-present-expand="after"] .lane-after {
   border-top: none;
+}
+
+.lane-stack[data-orientation="vertical"][data-present-expand="before"] .lane-after,
+.lane-stack[data-orientation="vertical"][data-present-expand="after"] .lane-after {
+  border-left: none;
 }
 
 /* Keep the tucked pane in layout (and sized) so React Flow does not get a 0×0 host. */
@@ -481,6 +510,20 @@ body.is-tile-dragging * {
   color: var(--chrome-ink);
   cursor: pointer;
   min-width: 5.4rem;
+}
+
+.chrome-bar .lane-switch .view-switch-btn {
+  min-width: 0;
+  width: 48px;
+  height: 38px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chrome-bar .lane-switch .view-switch-btn svg {
+  display: block;
 }
 
 .view-switch-btn:first-child {
@@ -735,12 +778,11 @@ body.is-tile-dragging * {
 .canvas-helper {
   position: absolute;
   bottom: calc(14px + var(--status-bar-height));
-  left: 50%;
-  transform: translateX(-50%);
+  left: 14px;
   z-index: 8;
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   gap: 7px 9px;
   max-width: min(720px, calc(100% - 48px));
@@ -845,6 +887,7 @@ body.is-tile-dragging * {
   font-size: 9px;
   line-height: 1;
   letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 
 .canvas-helper-spawn-kind-step {
@@ -861,6 +904,21 @@ body.is-tile-dragging * {
 
 .canvas-helper-spawn [data-spawn-arrow="right"] {
   grid-area: arr-r;
+}
+
+.canvas-helper-spawn[data-orientation="vertical"] {
+  grid-template-areas:
+    "q arr-up e"
+    "kind-step tile kind-data"
+    "a arr-down d";
+}
+
+.canvas-helper-spawn [data-spawn-arrow="up"] {
+  grid-area: arr-up;
+}
+
+.canvas-helper-spawn [data-spawn-arrow="down"] {
+  grid-area: arr-down;
 }
 
 .canvas-helper-spawn-arrow {
@@ -1152,6 +1210,14 @@ body.is-tile-dragging * {
   pointer-events: auto;
 }
 
+.board-lane[data-orientation="vertical"] .tile-remove-x {
+  top: 50%;
+  left: -14px;
+  right: auto;
+  margin: 0;
+  transform: translateY(-50%);
+}
+
 .tile-chrome-host:not(.is-selected):not(:hover):not(.is-pulling) .tile-chrome-actions {
   visibility: hidden;
   pointer-events: none;
@@ -1249,6 +1315,26 @@ body.is-tile-dragging * {
 .tile-side-tabs.is-in {
   right: auto;
   left: calc(-1 * var(--tile-tab-peek));
+}
+
+.board-lane[data-orientation="vertical"] .tile-side-tabs {
+  left: 50%;
+  right: auto;
+  top: auto;
+  transform: translateX(-50%);
+  flex-direction: row;
+  gap: 16px;
+}
+
+.board-lane[data-orientation="vertical"] .tile-side-tabs.is-out {
+  bottom: calc(-1 * var(--tile-tab-peek));
+  top: auto;
+}
+
+.board-lane[data-orientation="vertical"] .tile-side-tabs.is-in {
+  top: calc(-1 * var(--tile-tab-peek));
+  bottom: auto;
+  left: 50%;
 }
 
 .plus-tab,

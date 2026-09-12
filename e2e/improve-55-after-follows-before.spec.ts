@@ -10,7 +10,7 @@ import {
 const EVIDENCE = ".docs/evidence/improve-55-after-follows-before";
 
 function viewLabel(page: Page, name: "Before" | "After" | "Compare") {
-  return page.locator("header").getByText(name, { exact: true });
+  return page.locator("header").getByRole("radio", { name, exact: true });
 }
 
 async function panBoard(page: Page, dx: number, dy: number) {

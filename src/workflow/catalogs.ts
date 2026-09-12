@@ -85,7 +85,7 @@ export const ViewMode = {
 } as const;
 export type ViewMode = (typeof ViewMode)[keyof typeof ViewMode];
 
-/** Visible names on the top-bar switch. Stored view `both` is labeled Compare. */
+/** Accessible names on the top-bar icon switch. Stored view `both` is labeled Compare. */
 export const VIEW_SWITCH_LABEL: Record<ViewMode, string> = {
   [ViewMode.Before]: "Before",
   [ViewMode.After]: "After",

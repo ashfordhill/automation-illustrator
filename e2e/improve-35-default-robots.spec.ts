@@ -1,10 +1,10 @@
 import { expect, test } from "@playwright/test";
-import { capturePage, loadOakPark, waitForLayout } from "./ready";
+import { capturePage, loadOakPark, waitForLayout, showActorsHome } from "./ready";
 
 const EVIDENCE = ".docs/evidence/improve-35-default-robots";
 
 function viewLabel(page: import("@playwright/test").Page, name: "Before" | "After" | "Compare") {
-  return page.locator("header").getByText(name, { exact: true });
+  return page.locator("header").getByRole("radio", { name, exact: true });
 }
 
 function aside(page: import("@playwright/test").Page) {
@@ -30,7 +30,7 @@ test.describe("Improvement 35 — default LLM Script Agent robots", () => {
     await expect(aside(page).getByRole("button", { name: "Who Robot", exact: true })).toHaveCount(0);
     await capturePage(page, `${EVIDENCE}/new-who-1440.png`);
 
-    await aside(page).getByRole("button", { name: "Actors", exact: true }).click();
+    await showActorsHome(page);
     await expect(aside(page).getByRole("option", { name: "Robot LLM" })).toBeVisible();
     await expect(aside(page).getByRole("option", { name: "Robot Script" })).toBeVisible();
     await expect(aside(page).getByRole("option", { name: "Robot Agent" })).toBeVisible();
@@ -38,11 +38,10 @@ test.describe("Improvement 35 — default LLM Script Agent robots", () => {
     await expect(aside(page).getByLabel("Name")).toHaveValue("Robot");
     await expect(aside(page).getByLabel("Role")).toHaveValue("LLM");
     await capturePage(page, `${EVIDENCE}/new-manage-actors-1440.png`);
-    await aside(page).getByRole("button", { name: "Back" }).click();
 
     await viewLabel(page, "After").click();
     await waitForLayout(page);
-    await page.locator(".react-flow__node.selected").click();
+    await page.locator(".react-flow__node").first().click();
     await page.keyboard.press("e");
     await waitForLayout(page);
     await expect(aside(page).getByRole("button", { name: "Who Alice" })).toHaveAttribute(

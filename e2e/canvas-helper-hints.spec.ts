@@ -6,9 +6,14 @@ test.describe("canvas helper hints", () => {
     await loadOakPark(page);
     await page.getByText("Read invoice.pdf").first().click();
     const spawn = page.locator("[data-spawn-hints]");
+    const helper = page.locator(".canvas-helper");
+    await expect(helper).toHaveAttribute("data-helper-dock", "bottom-left");
     await expect(spawn.locator(".canvas-helper-spawn-kind-step")).toHaveText("step");
     await expect(spawn.locator(".canvas-helper-spawn-kind-data")).toHaveText("data");
-    await expect(page.locator(".canvas-helper")).not.toContainText("Right-click");
+    await expect(helper).not.toContainText("Right-click");
+    const helperBox = await helper.boundingBox();
+    expect(helperBox).toBeTruthy();
+    expect(helperBox!.x).toBeLessThan(40);
   });
 
   test("selected Tile does not show Z Remove Step", async ({ page }) => {

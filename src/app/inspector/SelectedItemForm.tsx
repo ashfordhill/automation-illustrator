@@ -1,5 +1,5 @@
 /**
- * Right inspector: Step / Data / Path forms, Who, Manage actors (NA-01..12, PC-02..03).
+ * Right inspector: idle Actors roster, or the selected Step / Data / Path form.
  * Both is read-only comparison (BA-05). After edits the shared base graph.
  */
 import { ActionIcon, Stack, Text, TextInput, Tooltip } from "@mantine/core";
@@ -11,10 +11,9 @@ import {
   WorkflowNodeKind,
 } from "../../workflow/catalogs";
 import { edgeIsDotted } from "../../workflow/graph";
-import { laneAssignments, STEP_KIND_META, isStepNode } from "../../workflow/types";
+import { laneAssignments, STEP_KIND_META } from "../../workflow/types";
 import { findEdge, findNode } from "../../workflow/selectors";
 import { useStore } from "../../state/store";
-import { ActorsButton, BackButton } from "./ActorsButton";
 import { InspectorField } from "./InspectorField";
 import { ManageActorsPanel } from "./ManageActorsPanel";
 import { TypeButtons } from "./TypeButtons";
@@ -25,22 +24,16 @@ function InspectorHeader({
   title,
   removeLabel,
   onRemove,
-  showActors,
-  showBack,
 }: {
   title?: string;
   removeLabel?: string;
   onRemove?: () => void;
-  showActors?: boolean;
-  showBack?: boolean;
 }) {
-  if (!title && !showActors && !showBack && !(removeLabel && onRemove)) return null;
+  if (!title && !(removeLabel && onRemove)) return null;
   return (
     <div className={`inspector-header${title ? "" : " is-tools"}`}>
       {title ? <Text fw={800}>{title}</Text> : <span />}
-      <div className={`inspector-header-tools${showBack ? " is-back" : ""}`}>
-        {showBack ? <BackButton /> : null}
-        {showActors ? <ActorsButton /> : null}
+      <div className="inspector-header-tools">
         {removeLabel && onRemove ? (
           <Tooltip label={removeLabel}>
             <ActionIcon
@@ -56,12 +49,6 @@ function InspectorHeader({
               <IconTrash size={22} color="var(--trash)" stroke={2.2} />
             </ActionIcon>
           </Tooltip>
-        ) : null}
-        {showBack ? (
-          <span className="inspector-header-sizer" aria-hidden>
-            <span className="inspector-actors">Actors</span>
-            <span className="inspector-header-sizer-trash" />
-          </span>
         ) : null}
       </div>
     </div>
@@ -107,18 +94,11 @@ export function DetailsPanel() {
   const workflow = useStore((s) => s.workflow);
   const lane = useStore((s) => s.assignmentLane());
   const view = useStore((s) => s.view);
-  const manageOpen = useStore((s) => s.manageActorsOpen);
-  const manageSource = useStore((s) => s.manageActorsSource);
   const readOnly = view === ViewMode.Both;
   const selectedNode =
     selected?.type === SelectionKind.Node ? findNode(workflow, selected.id) : undefined;
-  const selectedStep = Boolean(selectedNode && isStepNode(selectedNode));
-  const showActorsBtn =
-    !readOnly && (manageOpen ? manageSource !== "step" : !selected || selectedStep);
-  const showBack = manageOpen && manageSource === "step";
   const showRemove =
     !readOnly &&
-    !manageOpen &&
     Boolean(selectedNode) &&
     (view === ViewMode.Before || view === ViewMode.After);
   const removeLabel = selectedNode
@@ -129,33 +109,27 @@ export function DetailsPanel() {
 
   const header = (
     <InspectorHeader
-      title={
-        !manageOpen && selectedNode?.type === WorkflowNodeKind.DataField ? "Data" : undefined
-      }
+      title={selectedNode?.type === WorkflowNodeKind.DataField ? "Data" : undefined}
       removeLabel={showRemove ? removeLabel : undefined}
       onRemove={
         showRemove && selectedNode
           ? () => useStore.getState().removeTarget(selectedNode.id)
           : undefined
       }
-      showActors={showActorsBtn}
-      showBack={showBack}
     />
   );
 
-  if (manageOpen) {
+  if (!selected) {
+    if (readOnly) {
+      return (
+        <Stack gap="sm" p="sm" className="chrome-hide">
+          {header}
+        </Stack>
+      );
+    }
     return (
       <Stack gap="xs" p="sm" className="chrome-hide">
-        {header}
         <ManageActorsPanel />
-      </Stack>
-    );
-  }
-
-  if (!selected) {
-    return (
-      <Stack gap="sm" p="sm" className="chrome-hide">
-        {header}
       </Stack>
     );
   }

@@ -1,10 +1,12 @@
 /**
  * Full-width bottom status bar. Overlaps the inspector (P-05 amendment).
- * text-only, Right-click delete, sound, and package.json version sit on the right.
+ * Orientation trees sit on the left; text-only, Right-click delete, sound,
+ * and package.json version sit on the right.
  */
 import { useStore } from "../../state/store";
 import { simplifyMenuActive } from "../../board/simplify/prefs";
 import { APP_VERSION } from "../version";
+import { OrientationSwitch } from "./OrientationSwitch";
 import { RightClickDeleteToggle } from "./RightClickDeleteToggle";
 import { SoundToggle } from "./SoundToggle";
 import "./StatusBar.css";
@@ -17,6 +19,7 @@ export function StatusBar() {
 
   return (
     <footer className="status-bar chrome-bar" role="contentinfo" aria-label="Status">
+      <OrientationSwitch />
       <div className="status-end">
         <button
           type="button"

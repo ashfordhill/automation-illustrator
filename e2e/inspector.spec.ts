@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
-import { waitForLayout, capturePage } from "./ready";
+import { waitForLayout, capturePage, showActorsHome } from "./ready";
 
 const DEMO_STEP = "Read invoice.pdf";
 const EVIDENCE = ".docs/evidence/07-inspector";
@@ -12,7 +12,7 @@ async function loadDemo(page: Page) {
 }
 
 function viewLabel(page: Page, name: "Before" | "After" | "Compare") {
-  return page.locator("header").getByText(name, { exact: true });
+  return page.locator("header").getByRole("radio", { name, exact: true });
 }
 
 function aside(page: Page) {
@@ -35,7 +35,7 @@ test.describe("slice 7 inspector and actors", () => {
     );
     await expect(aside(page).getByRole("button", { name: "Who Script" })).toBeVisible();
     await expect(aside(page).getByRole("button", { name: "Who LLM" })).toBeVisible();
-    await expect(aside(page).getByRole("button", { name: "Actors", exact: true })).toBeVisible();
+    await expect(aside(page).getByRole("button", { name: "Actors", exact: true })).toHaveCount(0);
     await capturePage(page, `${EVIDENCE}/step-who-before-1440.png`);
 
     await aside(page).getByRole("button", { name: "Who Script" }).click();
@@ -98,11 +98,7 @@ test.describe("slice 7 inspector and actors", () => {
 
   test("Manage actors deletion blockers; unused Priya can be deleted", async ({ page }) => {
     await loadDemo(page);
-    await aside(page).getByRole("button", { name: "Actors", exact: true }).click();
-    await expect(aside(page).getByRole("button", { name: "Actors", exact: true })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
+    await showActorsHome(page);
     await aside(page).getByRole("button", { name: "Delete mode" }).click();
     await aside(page).getByRole("option", { name: "Alice" }).click();
     await expect(page.getByText(/Alice is assigned to/)).toBeVisible();
@@ -113,7 +109,6 @@ test.describe("slice 7 inspector and actors", () => {
     await page.getByRole("menuitem", { name: "Robot Mailroom" }).click();
     await page.getByRole("button", { name: "Discard" }).click();
     await expect(page.getByText("Read incoming mail").first()).toBeVisible({ timeout: 15_000 });
-    await aside(page).getByRole("button", { name: "Actors", exact: true }).click();
     await aside(page).getByRole("button", { name: "Delete mode" }).click();
     await capturePage(page, `${EVIDENCE}/manage-actors-1440.png`);
     await aside(page).getByRole("option", { name: "Priya" }).click();

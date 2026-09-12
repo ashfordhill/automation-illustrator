@@ -12,14 +12,14 @@ async function loadDemo(page: Page) {
 
 /** Mantine hides the radio inputs; the visible labels live in the header. */
 function viewLabel(page: Page, name: "Before" | "After" | "Compare") {
-  return page.locator("header").getByText(name, { exact: true });
+  return page.locator("header").getByRole("radio", { name, exact: true });
 }
 
 test.describe("baseline smoke", () => {
   test("app mounts with the Oak Park demo", async ({ page }) => {
     await loadDemo(page);
     await expect(page.getByRole("button", { name: "Menu" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Actors", exact: true })).toBeVisible();
+    await expect(page.locator("aside").getByRole("button", { name: "Add human" })).toBeVisible();
     await capturePage(page, ".docs/evidence/01-harness/before-light-1440.png");
   });
 

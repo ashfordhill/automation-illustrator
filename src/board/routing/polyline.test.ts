@@ -29,6 +29,18 @@ test("orthogonalPolyline stays stepped", () => {
   expect(pts.length).toBeGreaterThanOrEqual(3);
 });
 
+test("orthogonalPolyline jogs in y when flow is vertical", () => {
+  const pts = orthogonalPolyline(0, 0, 80, 100, "y");
+  expect(pts[0]).toEqual({ x: 0, y: 0 });
+  expect(pts[pts.length - 1]).toEqual({ x: 80, y: 100 });
+  expect(pts.some((p) => p.y !== 0 && p.y !== 100)).toBe(true);
+  const aligned = orthogonalPolyline(40, 0, 40, 100, "y");
+  expect(aligned).toEqual([
+    { x: 40, y: 0 },
+    { x: 40, y: 100 },
+  ]);
+});
+
 test("resample and lerp keep endpoints", () => {
   const a = [
     { x: 0, y: 0 },

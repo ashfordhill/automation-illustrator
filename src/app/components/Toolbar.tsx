@@ -8,41 +8,10 @@ import { IconArrowBackUp, IconArrowForwardUp, IconMenu2 } from "@tabler/icons-re
 import { DEMO_CHOICES } from "../../demos/catalog";
 import { prettyKey, KeyAction } from "../../keyboard/bindings";
 import { useStore } from "../../state/store";
-import { VIEW_SWITCH_LABEL, ViewMode } from "../../workflow/catalogs";
 import { PersistStatusChip } from "./PersistStatusChip";
 import { PresentButton } from "./PresentButton";
+import { ViewSwitch } from "./ViewSwitch";
 import { hamburgerShouldClose } from "./hamburgerDismiss";
-
-const VIEW_OPTIONS: Array<{ value: ViewMode; label: string }> = [
-  { value: ViewMode.Before, label: VIEW_SWITCH_LABEL[ViewMode.Before] },
-  { value: ViewMode.After, label: VIEW_SWITCH_LABEL[ViewMode.After] },
-  { value: ViewMode.Both, label: VIEW_SWITCH_LABEL[ViewMode.Both] },
-];
-
-function ViewSwitch() {
-  const view = useStore((s) => s.view);
-  return (
-    <div className="view-switch" role="radiogroup" aria-label="Before, After, or Compare">
-      <div className="view-switch-track">
-        {VIEW_OPTIONS.map((opt) => {
-          const on = view === opt.value;
-          return (
-            <button
-              key={opt.value}
-              type="button"
-              role="radio"
-              aria-checked={on}
-              className={`view-switch-btn${on ? " is-on" : ""}`}
-              onClick={() => useStore.getState().setView(opt.value)}
-            >
-              {opt.label}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
 
 export function Toolbar() {
   const keymap = useStore((s) => s.keymap);

@@ -7,6 +7,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { Point } from "../../workflow/types";
 import { lerpPolylines } from "../routing/polyline";
+import { layoutKeyOrientation } from "../flow/flowProfile";
 import type { LaneLayout, Rect } from "./laneLayout";
 
 const SNAP_PX = 1;
@@ -76,6 +77,10 @@ export function useAnimatedLayout(target: LaneLayout | null): LaneLayout | null 
       setCurrent(next);
     };
     if (!next || !from || prefersReducedMotion()) {
+      snap();
+      return;
+    }
+    if (layoutKeyOrientation(from.key) !== layoutKeyOrientation(next.key)) {
       snap();
       return;
     }

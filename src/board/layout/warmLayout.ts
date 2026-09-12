@@ -5,6 +5,7 @@
 import { projectBefore } from "../../state/projection";
 import { AssignmentLane } from "../../workflow/catalogs";
 import type { WorkflowDoc } from "../../workflow/types";
+import { loadBoardOrientation } from "../../state/persistence";
 import { layoutEngine } from "./elkClient";
 import { measureLabelBox, type LabelBox } from "./labelBox";
 
@@ -15,5 +16,13 @@ export function warmDocumentLayout(doc: WorkflowDoc): Promise<unknown> {
   for (const e of projection.edges) {
     if (e.label.trim()) boxes[e.id] = measureLabelBox(e.label);
   }
-  return layoutEngine.request(AssignmentLane.Before, projection, boxes);
+  return layoutEngine.request(
+    AssignmentLane.Before,
+    projection,
+    boxes,
+    undefined,
+    undefined,
+    "tile",
+    loadBoardOrientation(),
+  );
 }

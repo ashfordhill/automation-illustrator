@@ -12,6 +12,7 @@ import { KeybindsModal } from "../keyboard/KeybindsModal";
 import { useAppKeys } from "../keyboard/useAppKeys";
 import { useStore } from "../state/store";
 import { AssignmentLane, ColorScheme, ViewMode } from "../workflow/catalogs";
+import { flowProfile } from "../board/flow/flowProfile";
 import { CanvasHelper } from "./components/CanvasHelper";
 import { EmptyBoardCta } from "./components/EmptyBoardCta";
 import { ImportErrorModal } from "./components/ImportErrorModal";
@@ -91,11 +92,15 @@ function CanvasArea() {
   const view = useStore((s) => s.view);
   const present = useStore((s) => s.present);
   const presentExpand = useStore((s) => s.presentExpand);
+  const orientation = useStore((s) => s.boardOrientation);
+  const profile = flowProfile(orientation);
   if (present || view === ViewMode.Both) {
     return (
       <div
         className="lane-stack"
         data-present-expand={present ? (presentExpand ?? "split") : undefined}
+        data-orientation={orientation}
+        data-stack={profile.stack}
       >
         <LanePane lane={AssignmentLane.Before} present={present} />
         <LanePane lane={AssignmentLane.After} present={present} />

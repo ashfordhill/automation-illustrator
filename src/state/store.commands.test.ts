@@ -25,6 +25,7 @@ function resetSession() {
   s.setColorScheme(ColorScheme.Light);
   if (s.recovery) s.clearRecoveryHold();
   s.setInspectorCollapsed(false);
+  s.setBoardOrientation("horizontal");
 }
 
 beforeEach(() => {

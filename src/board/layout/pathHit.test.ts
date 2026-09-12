@@ -80,6 +80,27 @@ test("routesShareBundle detects a shared trunk and a shared inbound merge", () =
   expect(routesShareBundle(mergeA, mergeB)).toBe(true);
 });
 
+test("routesShareBundle detects a vertical shared trunk by first-bend y", () => {
+  const trunkA = [
+    { x: 50, y: 0 },
+    { x: 50, y: 40 },
+    { x: 10, y: 40 },
+    { x: 10, y: 80 },
+  ];
+  const trunkB = [
+    { x: 50, y: 0 },
+    { x: 50, y: 40 },
+    { x: 90, y: 40 },
+    { x: 90, y: 80 },
+  ];
+  const other = [
+    { x: 10, y: 80 },
+    { x: 10, y: 140 },
+  ];
+  expect(routesShareBundle(trunkA, trunkB, "y")).toBe(true);
+  expect(routesShareBundle(trunkA, other, "y")).toBe(false);
+});
+
 const fanLayout: LaneLayout = {
   key: "fan",
   positions: {},

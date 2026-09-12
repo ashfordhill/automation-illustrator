@@ -15,7 +15,8 @@ export function ManageActorsPanel() {
   const workflow = useStore((s) => s.workflow);
   const actorId = useStore((s) => s.manageActorId);
   const deleteMode = useStore((s) => s.manageActorsDeleteMode);
-  const actor = workflow.actors.find((a) => a.id === actorId) ?? null;
+  const pickedId = actorId ?? workflow.actors[0]?.id ?? null;
+  const actor = workflow.actors.find((a) => a.id === pickedId) ?? null;
 
   return (
     <div className="inspector-manage">
@@ -86,7 +87,7 @@ export function ManageActorsPanel() {
       ) : null}
       <ActorWhoGrid
         actors={workflow.actors}
-        selectedId={deleteMode ? null : actorId}
+        selectedId={deleteMode ? null : pickedId}
         listbox
         deleteMode={deleteMode}
         ariaLabel="Actors"

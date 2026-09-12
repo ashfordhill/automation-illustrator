@@ -47,20 +47,17 @@ test.describe("Improvement 21 — bottom status bar", () => {
     ).toEqual([]);
   });
 
-  test("inspector Manage actors opens; Present hides the inspector", async ({
+  test("idle inspector is Actors; Present hides the inspector", async ({
     page,
   }) => {
     await loadOakPark(page);
-    await page.getByRole("button", { name: "Actors", exact: true }).click();
-    await expect(page.getByRole("button", { name: "Actors", exact: true })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
+    await expect(page.locator("aside").getByRole("button", { name: "Add human" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Actors", exact: true })).toHaveCount(0);
     await capturePage(page, `${EVIDENCE}/actors-1440.png`);
 
     await enterPresent(page);
     await expect(page.getByRole("button", { name: "Menu" })).toHaveCount(0);
-    await expect(page.getByRole("button", { name: "Actors", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Add human" })).toHaveCount(0);
     await page.keyboard.press("Escape");
   });
 

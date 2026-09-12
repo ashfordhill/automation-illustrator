@@ -1,5 +1,5 @@
 /**
- * Quiet Excalidraw-style hint strip at the bottom of the board (P-06).
+ * Quiet Excalidraw-style hint strip at the bottom-left of the board (P-06).
  * Idle has no chips. Hints appear only for a selection or an active task.
  * Rejections use TransientNotice instead of this strip.
  */
@@ -14,11 +14,11 @@ type Hint = { key: string; label: string; mark?: "stroke" };
 function StrokeToggleMark() {
   return (
     <span className="canvas-helper-stroke" data-stroke-toggle="true" aria-label="Dotted / Solid">
-      <svg viewBox="0 0 28 8" width="28" height="8" aria-hidden>
+      <svg viewBox="0 0 22 8" width="22" height="8" data-stroke-sample="dotted" aria-hidden>
         <line
           x1="1.5"
           y1="4"
-          x2="26.5"
+          x2="20.5"
           y2="4"
           stroke="currentColor"
           strokeWidth="2"
@@ -27,11 +27,11 @@ function StrokeToggleMark() {
         />
       </svg>
       <span aria-hidden>/</span>
-      <svg viewBox="0 0 28 8" width="28" height="8" aria-hidden>
+      <svg viewBox="0 0 22 8" width="22" height="8" data-stroke-sample="solid" aria-hidden>
         <line
           x1="1.5"
           y1="4"
-          x2="26.5"
+          x2="20.5"
           y2="4"
           stroke="currentColor"
           strokeWidth="2"
@@ -55,18 +55,32 @@ function Chip({ item }: { item: Hint }) {
   );
 }
 
-function SpawnArrow({ dir }: { dir: "left" | "right" }) {
+function SpawnArrow({ dir }: { dir: "left" | "right" | "up" | "down" }) {
+  const vertical = dir === "up" || dir === "down";
+  const up = dir === "up";
   const left = dir === "left";
   return (
     <svg
       className="canvas-helper-spawn-arrow"
       data-spawn-arrow={dir}
-      viewBox="0 0 36 12"
-      width="32"
-      height="10"
+      viewBox={vertical ? "0 0 12 16" : "0 0 36 12"}
+      width={vertical ? 10 : 32}
+      height={vertical ? 12 : 10}
       aria-hidden
     >
-      {left ? (
+      {vertical ? (
+        up ? (
+          <>
+            <line x1="6" y1="15" x2="6" y2="6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            <path d="M1.5 7 L6 1 L10.5 7 Z" fill="currentColor" />
+          </>
+        ) : (
+          <>
+            <line x1="6" y1="1" x2="6" y2="10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            <path d="M1.5 9 L6 15 L10.5 9 Z" fill="currentColor" />
+          </>
+        )
+      ) : left ? (
         <>
           <line x1="34" y1="6" x2="10" y2="6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
           <path d="M11 1.5 L1 6 L11 10.5 Z" fill="currentColor" />
@@ -86,29 +100,36 @@ function SpawnKey({ area, value }: { area: string; value: string | null }) {
   return <kbd className={`canvas-helper-spawn-${area}`}>{value}</kbd>;
 }
 
-/** Four-corner spawn compass: Q/E Step, A/D Data, mini empty tile in the center (P-01, P-06). */
+/** Four-corner spawn compass: keys stay at Q/E/A/D; Horizontal step/data top/bottom, Vertical left/right (P-06). */
 function SpawnHints() {
   const k = useStore.getState().keymap;
+  const orientation = useStore((s) => s.boardOrientation);
   const pk = (a: (typeof KeyAction)[keyof typeof KeyAction]) => prettyKey(k[a]);
   const q = k[KeyAction.AddStepIn] ? pk(KeyAction.AddStepIn) : null;
   const e = k[KeyAction.AddStepOut] ? pk(KeyAction.AddStepOut) : null;
   const a = k[KeyAction.AddDataIn] ? pk(KeyAction.AddDataIn) : null;
   const d = k[KeyAction.AddDataOut] ? pk(KeyAction.AddDataOut) : null;
   if (!q && !e && !a && !d) return null;
+  const vertical = orientation === "vertical";
   return (
     <div
       className="canvas-helper-spawn"
       data-spawn-hints="true"
       data-spawn-compass="true"
+      data-orientation={orientation}
       role="group"
-      aria-label="Q and A add to the left, E and D add to the right"
+      aria-label={
+        vertical
+          ? "Q and A add a Step above or below, E and D add Data above or below"
+          : "Q and A add to the left, E and D add to the right"
+      }
     >
       <SpawnKey area="q" value={q} />
       <span className="canvas-helper-spawn-kind-step">step</span>
       <SpawnKey area="e" value={e} />
-      <SpawnArrow dir="left" />
+      <SpawnArrow dir={vertical ? "up" : "left"} />
       <span className="canvas-helper-spawn-tile" data-spawn-tile="true" />
-      <SpawnArrow dir="right" />
+      <SpawnArrow dir={vertical ? "down" : "right"} />
       <SpawnKey area="a" value={a} />
       <span className="canvas-helper-spawn-kind-data">data</span>
       <SpawnKey area="d" value={d} />
@@ -187,12 +208,13 @@ export function CanvasHelper() {
   useStore((s) => s.keymap);
   useStore((s) => s.view);
   useStore((s) => s.rightClickDelete);
+  useStore((s) => s.boardOrientation);
   if (present) return null;
   const { chips, spawnAfter } = hintsFor();
   if (!chips.length && spawnAfter === null) return null;
   const extras = chips.map((item) => <Chip key={`${item.key}-${item.label}`} item={item} />);
   return (
-    <div className="canvas-helper" aria-live="polite">
+    <div className="canvas-helper" data-helper-dock="bottom-left" aria-live="polite">
       {spawnAfter !== null ? (
         <div className="canvas-helper-cluster">
           <SpawnHints />

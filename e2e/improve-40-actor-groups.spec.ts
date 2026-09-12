@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { capturePage, waitForLayout } from "./ready";
+import { capturePage, waitForLayout, showActorsHome } from "./ready";
 
 const EVIDENCE = ".docs/evidence/improve-40-actor-groups";
 
@@ -20,7 +20,7 @@ async function newBoardWithStep(page: import("@playwright/test").Page) {
 test.describe("Improvement 40 — Humans then Robots on their own row", () => {
   test("Add human sits with Humans; Robots start on the next row", async ({ page }) => {
     await newBoardWithStep(page);
-    await aside(page).getByRole("button", { name: "Actors", exact: true }).click();
+    await showActorsHome(page);
     await aside(page).getByRole("button", { name: "Add human" }).click();
 
     const options = aside(page).getByRole("option");
@@ -51,9 +51,9 @@ test.describe("Improvement 40 — Humans then Robots on their own row", () => {
 
   test("Who picker also keeps Robots on their own row", async ({ page }) => {
     await newBoardWithStep(page);
-    await aside(page).getByRole("button", { name: "Actors", exact: true }).click();
+    await showActorsHome(page);
     await aside(page).getByRole("button", { name: "Add human" }).click();
-    await aside(page).getByRole("button", { name: "Back" }).click();
+    await page.locator(".react-flow__node").first().click();
 
     const person = aside(page).getByRole("button", { name: "Who Human" });
     const llm = aside(page).getByRole("button", { name: "Who Robot LLM" });
@@ -71,7 +71,7 @@ test.describe("Improvement 40 min-width", () => {
 
   test("Robots still start on a new row at 1024", async ({ page }) => {
     await newBoardWithStep(page);
-    await aside(page).getByRole("button", { name: "Actors", exact: true }).click();
+    await showActorsHome(page);
     await aside(page).getByRole("button", { name: "Add human" }).click();
     const person = aside(page).getByRole("option").nth(4);
     const llm = aside(page).getByRole("option", { name: "Robot LLM", exact: true });

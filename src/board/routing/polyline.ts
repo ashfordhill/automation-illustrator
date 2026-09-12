@@ -4,6 +4,7 @@
  */
 import type { Point } from "../../workflow/types";
 import { GRID } from "../layout/tileMetrics";
+import type { FlowAxis } from "../flow/flowProfile";
 
 export type PolyPoint = Point;
 
@@ -13,11 +14,28 @@ export function orthogonalPolyline(
   sourceY: number,
   targetX: number,
   targetY: number,
+  along: FlowAxis = "x",
 ): PolyPoint[] {
   const sx = Math.round(sourceX);
   const sy = Math.round(sourceY);
   const tx = Math.round(targetX);
   const ty = Math.round(targetY);
+  if (along === "y") {
+    if (Math.abs(sx - tx) < GRID) {
+      const x = Math.round((sx + tx) / 2);
+      return [
+        { x, y: sy },
+        { x, y: ty },
+      ];
+    }
+    const midY = sy + Math.max(GRID, Math.round((ty - sy) / 2));
+    return [
+      { x: sx, y: sy },
+      { x: sx, y: midY },
+      { x: tx, y: midY },
+      { x: tx, y: ty },
+    ];
+  }
   if (Math.abs(sy - ty) < GRID) {
     const y = Math.round((sy + ty) / 2);
     return [

@@ -57,6 +57,7 @@ import type { TileSizes } from "./layout/elkGraph";
 import { useLaneLayout } from "./layout/useLaneLayout";
 import { pointAt, useAnimatedLayout } from "./layout/useAnimatedLayout";
 import { LaneLayoutContext } from "./routing/LaneLayoutContext";
+import { layoutKeyMode } from "./flow/flowProfile";
 import { pathIsDotted, type FlowPathData } from "./routing/FlowArrow";
 import {
   MIN_ZOOM,
@@ -146,6 +147,7 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
   const rf = useReactFlow();
   const { zoom } = useViewport();
   const simplifyPrefs = useStore((s) => s.simplify);
+  const boardOrientation = useStore((s) => s.boardOrientation);
   const [webFit, setWebFit] = useState(false);
   const lastZoomRef = useRef(zoom);
   const simplified = isSimplified(simplifyPrefs);
@@ -186,6 +188,7 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
     labelBoxes,
     tileSizes,
     layoutMode,
+    boardOrientation,
   );
   const shown = useAnimatedLayout(layout);
   const viewLayout = shown;
@@ -239,6 +242,13 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
   const cameraApplied = useRef(false);
   const [boardReady, setBoardReady] = useState(nodeCount === 0);
   const covering = boardNeedsCover(nodeCount, boardReady);
+  const prevOrientation = useRef(boardOrientation);
+  useLayoutEffect(() => {
+    if (prevOrientation.current === boardOrientation) return;
+    prevOrientation.current = boardOrientation;
+    cameraApplied.current = false;
+    setBoardReady(false);
+  }, [boardOrientation]);
   useLayoutEffect(() => {
     bindReactFlow(lane, rf);
     return () => bindReactFlow(lane, null);
@@ -343,7 +353,7 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
   useEffect(() => {
     if (!simplified || isWebFitted()) return;
     if (!drivesSimplifyCamera) return;
-    if (phase !== "ready" || !layout || !layout.key.startsWith("web|")) return;
+    if (phase !== "ready" || !layout || layoutKeyMode(layout.key) !== "web") return;
     if (!layoutBoundsAreUsable(layout.bounds)) return;
     let raf = 0;
     const attempt = () => {
@@ -621,6 +631,8 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
       data-layout={phase}
       data-board={covering ? "loading" : "ready"}
       data-layout-error={error ? "true" : undefined}
+      data-orientation={boardOrientation}
+      data-board-orientation={boardOrientation}
       aria-busy={covering || undefined}
       data-insert-preview={insertHover ? "true" : undefined}
       data-insert-kind={insertHover?.kind}

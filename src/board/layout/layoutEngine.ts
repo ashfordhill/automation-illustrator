@@ -18,6 +18,8 @@ import { buildElkGraph, laneGraphKey, type LayoutMode, type TileSizes } from "./
 import { emptyLayout, toLaneLayout } from "./elkLayout";
 import type { LabelBox } from "./labelBox";
 import type { LaneLayout } from "./laneLayout";
+import type { BoardOrientation } from "../flow/flowProfile";
+import { layoutKeyOrientation } from "../flow/flowProfile";
 
 export type ElkLike = { layout(graph: ElkNode): Promise<ElkNode> };
 
@@ -30,6 +32,7 @@ export type LayoutEngine = {
     boxes: Record<string, LabelBox>,
     sizes?: TileSizes,
     mode?: LayoutMode,
+    orientation?: BoardOrientation,
   ): string;
   /** Resolve to the layout for these inputs; may reject with LayoutSuperseded or an ELK error. */
   request(
@@ -39,6 +42,7 @@ export type LayoutEngine = {
     sizes?: TileSizes,
     previous?: PositionMap,
     mode?: LayoutMode,
+    orientation?: BoardOrientation,
   ): Promise<LaneLayout>;
 };
 
@@ -103,9 +107,10 @@ export function createLayoutEngine(
 
   return {
     get: (key) => cache.get(key),
-    keyFor: (projection, boxes, sizes, mode) => laneGraphKey(projection, boxes, sizes, mode),
-    request(lane, projection, boxes, sizes, previous, mode = "tile") {
-      const key = laneGraphKey(projection, boxes, sizes, mode);
+    keyFor: (projection, boxes, sizes, mode, orientation) =>
+      laneGraphKey(projection, boxes, sizes, mode, orientation),
+    request(lane, projection, boxes, sizes, previous, mode = "tile", orientation = "horizontal") {
+      const key = laneGraphKey(projection, boxes, sizes, mode, orientation);
       const hit = cache.get(key);
       if (hit) return Promise.resolve(hit);
       if (!projection.nodes.length) {
@@ -127,7 +132,7 @@ export function createLayoutEngine(
         current.reject(new LayoutSuperseded(current.key));
       }
 
-      const graph = buildElkGraph(projection, boxes, sizes, previous, mode);
+      const graph = buildElkGraph(projection, boxes, sizes, previous, mode, orientation);
       let resolve!: (layout: LaneLayout) => void;
       let reject!: (error: unknown) => void;
       const promise = new Promise<LaneLayout>((res, rej) => {
@@ -140,7 +145,10 @@ export function createLayoutEngine(
         run(key, graph).then(entry.resolve, entry.reject);
       };
       const cold = cache.size === 0 && inFlight.size === 0 && pending.size === 0;
-      if (debounceMs > 0 && !cold) {
+      const knownOrientation = [...cache.keys()].some(
+        (k) => layoutKeyOrientation(k) === orientation,
+      );
+      if (debounceMs > 0 && !cold && knownOrientation) {
         entry.timer = setTimeout(fire, debounceMs);
       } else {
         queueMicrotask(fire);

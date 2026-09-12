@@ -6,7 +6,7 @@ const MAIL_STEP = "Read incoming mail";
 const SCAN = "Scan letter to PDF";
 
 function viewLabel(page: Page, name: "Before" | "After" | "Compare") {
-  return page.locator("header").getByText(name, { exact: true });
+  return page.locator("header").getByRole("radio", { name, exact: true });
 }
 
 function aside(page: Page) {

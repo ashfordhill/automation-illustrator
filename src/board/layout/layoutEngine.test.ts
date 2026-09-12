@@ -166,3 +166,27 @@ test("an ELK failure rejects and leaves earlier cache entries intact", async () 
   expect(spy).toHaveBeenCalledTimes(1);
   spy.mockRestore();
 });
+
+test("a new orientation skips debounce like a cold start", async () => {
+  const { elk, layout, flush } = fakeElk();
+  const engine = createLayoutEngine(elk, { debounceMs: 60 });
+  const first = engine.request(AssignmentLane.Before, projection, boxes);
+  await Promise.resolve();
+  flush();
+  await first;
+  layout.mockClear();
+  const p = engine.request(
+    AssignmentLane.Before,
+    projection,
+    boxes,
+    undefined,
+    undefined,
+    "tile",
+    "vertical",
+  );
+  await Promise.resolve();
+  expect(layout).toHaveBeenCalledTimes(1);
+  flush();
+  const result = await p;
+  expect(result.key).toBe(engine.keyFor(projection, boxes, undefined, "tile", "vertical"));
+});

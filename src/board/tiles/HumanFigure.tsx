@@ -2,8 +2,14 @@
  * Stick-figure person drawn on ActorColumn and the roster.
  * Stroke should stay dark on pastel fills (FIGURE_INK_ON_PASTEL), not theme --ink.
  * crop "head" is the inspector add-human key (Human vs Robot differ by the head).
+ * Artwork lives in human-figure.svg.
  */
+import humanMarkup from "./human-figure.svg?raw";
+import { svgInner } from "./svgInner";
+
 type Fig = { size?: number; color?: string; className?: string };
+
+const INNER = svgInner(humanMarkup);
 
 export function HumanFigure({
   size = 44,
@@ -21,17 +27,8 @@ export function HumanFigure({
       preserveAspectRatio="xMidYMid meet"
       fill="none"
       aria-hidden
-    >
-      <circle cx="20" cy="10" r="7.5" stroke={color} strokeWidth="2.4" />
-      {head ? null : (
-        <path
-          d="M20 18.2 V40 M8.5 28.5 H31.5 M20 40 L10 58 M20 40 L30 58"
-          stroke={color}
-          strokeWidth="2.4"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      )}
-    </svg>
+      color={color}
+      dangerouslySetInnerHTML={{ __html: INNER }}
+    />
   );
 }

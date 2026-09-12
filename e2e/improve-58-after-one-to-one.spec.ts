@@ -4,7 +4,7 @@ import { capturePage, loadOakPark, waitForLayout } from "./ready";
 const EVIDENCE = ".docs/evidence/improve-58-after-one-to-one";
 
 function viewLabel(page: Page, name: "Before" | "After" | "Compare") {
-  return page.locator("header").getByText(name, { exact: true });
+  return page.locator("header").getByRole("radio", { name, exact: true });
 }
 
 async function tileTransforms(page: Page) {

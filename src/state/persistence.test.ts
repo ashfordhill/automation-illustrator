@@ -3,11 +3,13 @@ import {
   downloadTextFile,
   downloadWorkflowCopy,
   hydratePersistedWorkflow,
+  loadBoardOrientation,
   loadInspectorCollapsed,
   loadRightClickDelete,
   loadSimplifyPrefs,
   loadSound,
   loadTheme,
+  LS_BOARD_ORIENTATION,
   LS_INSPECTOR_COLLAPSED,
   LS_RIGHT_CLICK_DELETE,
   LS_SIMPLIFY,
@@ -15,6 +17,7 @@ import {
   LS_THEME,
   LS_WORKFLOW,
   SAVE_COPY_FILENAME,
+  saveBoardOrientation,
   saveInspectorCollapsed,
   saveRightClickDelete,
   saveSimplifyPrefs,
@@ -319,4 +322,16 @@ test("right-click-delete defaults off and only 'on' enables it", () => {
   expect(loadRightClickDelete()).toBe(false);
   localStorage.setItem(LS_RIGHT_CLICK_DELETE, "yes");
   expect(loadRightClickDelete()).toBe(false);
+});
+
+test("board orientation defaults horizontal and only vertical is stored", () => {
+  localStorage.clear();
+  expect(loadBoardOrientation()).toBe("horizontal");
+  saveBoardOrientation("vertical");
+  expect(localStorage.getItem(LS_BOARD_ORIENTATION)).toBe("vertical");
+  expect(loadBoardOrientation()).toBe("vertical");
+  saveBoardOrientation("horizontal");
+  expect(loadBoardOrientation()).toBe("horizontal");
+  localStorage.setItem(LS_BOARD_ORIENTATION, "sideways");
+  expect(loadBoardOrientation()).toBe("horizontal");
 });

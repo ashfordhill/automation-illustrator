@@ -1,16 +1,12 @@
 import { expect, test } from "@playwright/test";
-import { capturePage, loadOakPark, enterDarkTheme } from "./ready";
+import { capturePage, loadOakPark, enterDarkTheme, showActorsHome } from "./ready";
 
 const EVIDENCE = ".docs/evidence/improve-28-who-select";
 const YELLOW_LIGHT = "rgb(232, 193, 74)";
 const YELLOW_DARK = "rgb(226, 184, 74)";
 
 async function openManageActors(page: import("@playwright/test").Page) {
-  await page.locator("aside").getByRole("button", { name: "Actors", exact: true }).click();
-  await expect(page.locator("aside").getByRole("button", { name: "Actors", exact: true })).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
+  await showActorsHome(page);
 }
 
 test.describe("Improvement 28 — Who select is yellow", () => {

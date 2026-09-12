@@ -22,6 +22,7 @@ function resetSession() {
   s.setColorScheme(ColorScheme.Light);
   s.setInspectorCollapsed(false);
   if (s.recovery) s.clearRecoveryHold();
+  s.setBoardOrientation("horizontal");
 }
 
 beforeEach(() => {
@@ -264,6 +265,7 @@ test("Manage actors opens on the selected Step’s Who", () => {
   const s = useStore.getState();
   s.select({ type: SelectionKind.Node, id: fs });
   s.openManageActors();
+  expect(useStore.getState().selected).toBe(null);
   expect(useStore.getState().manageActorsOpen).toBe(true);
   expect(useStore.getState().manageActorsSource).toBe("step");
   expect(useStore.getState().manageActorId).toBe(alice);
@@ -272,6 +274,14 @@ test("Manage actors opens on the selected Step’s Who", () => {
   s.select({ type: SelectionKind.Node, id: review });
   s.openManageActors();
   expect(useStore.getState().manageActorId).toBe(roy);
+});
+
+test("deselecting a Step parks that Who on the idle Actors roster", () => {
+  const { fs, alice } = OAK_PARK_IDS;
+  const s = useStore.getState();
+  s.select({ type: SelectionKind.Node, id: fs });
+  s.select(null);
+  expect(useStore.getState().manageActorId).toBe(alice);
 });
 
 test("Manage actors source is empty when nothing is selected", () => {

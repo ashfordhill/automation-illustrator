@@ -2932,5 +2932,207 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(improve-59): cover first layout until camera ready`
 
+## Improvement 61 — Vertical board orientation — 2026-09-12
+
+- Starting commit: `beb254d56d741c2280a9cab0f0ebe18abf151ffb` (`v1.1.0, various visual improvements`)
+- Working tree at start: clean. HEAD is ahead of the Improve 59/60 COMPLETE ledger entries (those were squashed into v1.1.0).
+- GOAL clauses addressed: CX-03, CX-05, CX-01, BA-05, P-07, SH-02, P-05 (amendments dated 2026-09-12). Document version unchanged.
+- Library research and decisions: no new runtime dependency. One `FlowProfile` drives ELK direction/ports, Path handles, `+`/Path tabs, dock hints, and the Compare/Present split. Graph commands stay `in`/`out`. Tile faces do not rotate. Orientation is a persisted display pref (`automation-pitch.board-orientation`), not YAML and not undo.
+- Files changed:
+  - New: `src/board/flow/flowProfile.ts`, `rfHandle.ts`, `flowProfile.test.ts`
+  - Layout: `elkGraph.ts`, `layoutEngine.ts`, `useLaneLayout.ts`, `useAnimatedLayout.ts`, `warmLayout.ts`, `tileMetrics.ts`, `insertPreview.ts`, `pathHit.ts`, `polyline.ts`
+  - Board / chrome: `Board.tsx`, `StepNode.tsx`, `DataFieldNode.tsx`, `TileChrome.tsx`, `plusPreviewLayout.ts`, `FlowArrow.tsx`, `App.tsx`, `Toolbar.tsx`, `CanvasHelper.tsx`, `tokens.css`
+  - State: `store.ts`, `persistence.ts`
+  - Tests: unit coverage listed in the plan; `e2e/improve-61-orientation.spec.ts`; `e2e/ready.ts` plus-preview pull follows orientation; `e2e/view-switch.spec.ts` scopes the Before/After/Compare radiogroup
+  - Docs: `.docs/GOAL.md`, `.docs/IMPROVEMENTS.md`, this handoff entry
+  - Evidence: `.docs/evidence/improve-61-orientation/`
+- Behavior implemented:
+  - Top-bar **Horizontal | Vertical** (left of Present, `aria-label="Board orientation"`). Default Horizontal.
+  - Vertical: ELK top-to-bottom tree; `+` / Path tabs on top and bottom; Compare and Present side-by-side (Before left). Present still hides the bar.
+  - Switching orientation is a cold layout (no cross-orientation hints or lerp) and fits the camera. Q/E/A/D stay parent/child.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning). Node 24.
+  - `npm run test:unit` — 48 files, 373 tests pass.
+  - `npm run test:e2e` — `improve-61-orientation` (3), `view-switch` (1), `improve-51-present-expand` (4), `improve-26-compare` (1), `improve-43-spawn-compass` (2), `improve-34-reverse-add` (7), `improve-36-branch-rows` (3), `improve-57-word-web` (5) all pass (26). Chromium via `LD_LIBRARY_PATH` `/home/ash/.local/pw-libs/usr/lib/x86_64-linux-gnu`. Full suite not run (avoids rewriting older evidence).
+- Evidence:
+  - `.docs/evidence/improve-61-orientation/horizontal-before-1440.png` — Horizontal Before, orientation switch left of Present (1440×900)
+  - `.docs/evidence/improve-61-orientation/orientation-toggle-1440.png` — Vertical selected in the top bar (1440×900)
+  - `.docs/evidence/improve-61-orientation/vertical-before-1440.png` — Oak Park as a top-to-bottom tree (1440×900)
+  - `.docs/evidence/improve-61-orientation/vertical-compare-1440.png` — Compare Before | After (1440×900)
+  - `.docs/evidence/improve-61-orientation/vertical-present-1440.png` — Present split side-by-side; bar hidden (1440×900)
+  - `.docs/evidence/improve-61-orientation/vertical-1024.png` — Vertical tree at 1024×768
+- Earlier-slice defects fixed: version unit pins still expected `1.0.0` after the v1.1.0 bump (`src/app/version.test.ts`, `App.test.tsx`). `view-switch` e2e matched `.view-switch`, which now also hits the orientation radiogroup.
+- Known limitations / follow-ups: Q/E/A/D are not remapped to W/S. Tile faces do not rotate. Orientation is not saved in YAML. `package-lock.json` root version stamp synced to 1.1.0 by `npm install`.
+- Status: COMPLETE
+- Commit: `feat(improve-61): add vertical board orientation`
+
+## Improvement 61 — correction 1 — 2026-09-12
+
+- Requested: Vertical spawn compass should match the sketch — Q/A Step up/down, E/D Data up/down — without moving the keycaps or the mini tile.
+- Changed:
+  - Compass CSS: **step** left, **data** right, arrows up/down
+  - `spawnForAction` remaps Q/A to Step in/out and E/D to Data in/out while Vertical
+  - Keybinds copy follows orientation
+  - Docs: GOAL SH-14/P-06, VISUAL_IMPROVEMENTS, this entry
+- Tests and exact results:
+  - `npm run build` — pass
+  - `npm run test:unit` — 49 files, 376 tests pass
+  - `npm run test:e2e` — `improve-61-orientation` (4) and `improve-43-spawn-compass` (2) pass
+- Evidence: `.docs/evidence/improve-61-orientation/vertical-spawn-compass-1440.png` — Vertical compass on a selected Tile (1440×900)
+- Status: COMPLETE
+- Commit: `feat(improve-61): vertical spawn compass Q/A Step E/D Data`
+
+## Improvement 61 — correction 2 — 2026-09-12
+
+- Requested: Swap `+` / Path tab order on the tile; move the X off the top so it no longer sits on the Vertical create tabs.
+- Changed:
+  - Each flow edge renders Path then `+` (Path above `+` when Horizontal; Path left of `+` when Vertical)
+  - Tile X stays top-center when Horizontal; left-center when Vertical
+  - Docs: GOAL CX-01/CX-07, IMPROVEMENTS 61, this entry
+- Tests and exact results:
+  - `npm run build` — pass
+  - `npm run test:unit` — 49 files, 376 tests pass
+  - `npm run test:e2e` — `improve-61-orientation` (5), `improve-38-chrome-hints` (5), `improve-09-chrome-root` (4), `improve-22-tab-peek` (1) all pass (15). Older evidence PNGs from 09/22/38 were restored.
+- Evidence: `.docs/evidence/improve-61-orientation/vertical-tile-chrome-1440.png` — Vertical selected Tile with Path-then-`+` on the top/bottom edges and X on the left (1440×900)
+- Status: COMPLETE
+- Commit: `feat(improve-61): swap Path/+ tabs and park X off the flow edge`
+
+## Improvement 62 — idle Actors inspector and orientation tree icons — 2026-09-12
+
+- Starting commit: `2433817` (`feat(improve-61): swap Path/+ tabs and park X off the flow edge`)
+- Working tree at start: clean
+- GOAL clauses addressed: NA-06, P-05
+- Library research and decisions: Custom SVG tree marks (same pattern as Present / Right-click delete), not extra Tabler icons. Idle inspector renders `ManageActorsPanel` when nothing is selected; Compare stays empty. Orientation radios moved from the top bar to the left of the status bar.
+- Files changed:
+  - `src/app/inspector/SelectedItemForm.tsx`, `ManageActorsPanel.tsx`; removed `ActorsButton.tsx`
+  - `src/state/store.ts` (deselect parks Who; `openManageActors` clears selection)
+  - `src/app/components/OrientationSwitch.tsx`, `StatusBar.tsx`, `StatusBar.css`, `Toolbar.tsx`
+  - Tests, GOAL, IMPROVEMENTS, VISUAL_IMPROVEMENTS, this entry
+- Behavior implemented: Idle right inspector is the Actors roster with no Actors/Back chrome. Horizontal/Vertical is two highlighted tree icons on the status bar.
+- Tests and exact results:
+  - `npm run build` — pass
+  - `npm run test:unit` — 49 files, 377 tests pass
+  - `npm run test:e2e` — `improve-62-idle-actors-orientation` (3), `improve-61-orientation` (5), `smoke` (5) pass. `inspector.spec` 5 pass, 1 fail (`target-size` on tile Path/+ tabs; pre-existing adjacency, not this inspector change). Older evidence from 61/01/07 restored.
+- Evidence:
+  - `.docs/evidence/improve-62-idle-actors-orientation/idle-actors-1440.png` — idle Actors roster, no Back (1440×900)
+  - `.docs/evidence/improve-62-idle-actors-orientation/orientation-status-1440.png` — tree radios on the status bar, Horizontal on (1440×900)
+  - `.docs/evidence/improve-62-idle-actors-orientation/orientation-vertical-1440.png` — Vertical on (1440×900)
+  - `.docs/evidence/improve-62-idle-actors-orientation/idle-actors-1024.png` — same at 1024×768
+- Earlier-slice defects fixed: none
+- Known limitations / follow-ups: inspector axe `target-size` on adjacent Path/+ tabs — later chrome pass
+- Status: COMPLETE
+- Commit: `feat(improve-62): idle Actors inspector and orientation tree icons`
+
+## Improvement 61 — correction 3 — 2026-09-12
+
+- Requested: Vertical spawn arrows are too tall, so the bottom helper jumps when switching Horizontal / Vertical.
+- Changed:
+  - Vertical up/down arrows are 12px (same 15px keycap row as Horizontal); the Vertical grid no longer uses 32px rows
+  - E2E asserts the helper box stays put across orientations
+  - Docs: GOAL P-06, IMPROVEMENTS 61, VISUAL_IMPROVEMENTS, this entry
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning)
+  - `npm run test:unit` — 49 files, 377 tests pass
+  - `npm run test:e2e` — `improve-61-orientation` spawn compass (1) and `improve-43-spawn-compass` (2) pass. Older 43 evidence restored.
+- Evidence: `.docs/evidence/improve-61-orientation/vertical-spawn-compass-1440.png` — Vertical compass with short arrows (1440×900)
+- Status: COMPLETE
+- Commit: `feat(improve-61): shorten vertical spawn arrows so the helper stays put`
+
+## Improvement 61 — correction 4 — 2026-09-12
+
+- Requested: Vertical `+` fan should show Data on the left and Step on the right. Park all canvas hotkey helpers at the bottom-left instead of bottom-center.
+- Changed:
+  - `plusPreviewKinds` is Data then Step when Vertical; Horizontal stays Step above Data
+  - `.canvas-helper` docks at `left: 14px` (no center translate)
+  - Docs: GOAL P-06 / WG-07 / CX-01, IMPROVEMENTS 61, this entry
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning)
+  - `npm run test:unit` — 49 files, 378 tests pass
+  - `npm run test:e2e` — `improve-61-orientation` spawn + plus fan (2) and `canvas-helper-hints` (3) pass
+- Evidence:
+  - `.docs/evidence/improve-61-orientation/helper-bottom-left-1440.png` — spawn compass at the bottom-left (1440×900)
+  - `.docs/evidence/improve-61-orientation/vertical-plus-fan-1440.png` — Vertical `+` fan with Data left of Step (1440×900)
+- Status: COMPLETE
+- Commit: `feat(improve-61): left-dock helpers and swap the vertical + fan`
+
+## Improvement 63 — new Paths start solid; shorter Path stroke hints — 2026-09-12
+
+- Starting commit: `03eca9418d95651fda1ca5c1b320973e52bbe610` (`feat(improve-61): left-dock helpers and swap the vertical + fan`)
+- Working tree at start: clean
+- GOAL clauses addressed: PC-02, P-06
+- Library research and decisions: no new runtime dependency. `applyConnectStroke` now only stamps the new Path solid; `applyDashForSplit` still restamps when Split changes. Restitch / collapse strokes are unchanged. Oak Park amount Paths stay explicit dotted.
+- Files changed:
+  - `src/workflow/graph.ts`, `after.ts`
+  - `src/app/components/CanvasHelper.tsx`
+  - Tests: `graph.test.ts`, `commands.test.ts`, `CanvasHelper.test.tsx`, `e2e/improve-63-solid-paths.spec.ts`
+  - Docs: GOAL, IMPROVEMENTS, VISUAL_IMPROVEMENTS, this entry
+- Behavior implemented: Spawn / connect / After-only Paths start solid. Path helper dotted sample loses one dash; solid matches that length.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning)
+  - `npm run test:unit` — 49 files, 378 tests pass
+  - `npm run test:e2e` — `improve-63-solid-paths` (2) pass
+- Evidence:
+  - `.docs/evidence/improve-63-solid-paths/new-path-solid-1440.png` — new child off Read is solid; amount Paths stay dotted (1440×900)
+  - `.docs/evidence/improve-63-solid-paths/path-helper-strokes-1440.png` — shorter S stroke samples (1440×900)
+- Earlier-slice defects fixed: none
+- Known limitations / follow-ups: none
+- Status: COMPLETE
+- Commit: `feat(improve-63): new Paths start solid; shrink Path stroke hints`
+
+## Improvement 62 — correction 1 — 2026-09-12
+
+- Requested: Remove the tiny arrowheads on the Horizontal / Vertical tree icons so the lines stay straight and do not cut into the Step rectangles.
+- Changed:
+  - Orientation SVGs are forks of straight strokes only; stubs meet the child tiles
+  - Docs: GOAL P-05, IMPROVEMENTS 62, VISUAL_IMPROVEMENTS, this entry
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning)
+  - `npm run test:unit` — 49 files, 378 tests pass
+  - `npm run test:e2e` — `improve-62-idle-actors-orientation` orientation trees (1) pass
+- Evidence: `.docs/evidence/improve-62-idle-actors-orientation/orientation-trees-plain-1440.png` — status-bar trees without arrowheads (1440×900)
+- Status: COMPLETE
+- Commit: `feat(improve-62): drop arrowheads from orientation tree icons`
+
+## Improvement 64 — icon Before / After / Compare — 2026-09-12
+
+- Starting commit: `32019cdc7480f701ea86f132ab108ffd82f9e3eb` (`feat(improve-62): drop arrowheads from orientation tree icons`)
+- Working tree at start: clean
+- GOAL clauses addressed: SH-02, AQ-02, P-10
+- Library research and decisions: No new runtime dependency. Figure and Compare artwork live in `.svg` files; thin wrappers inject inner markup so `currentColor`, size, and Human/Robot head crop still work. Compare mark follows board orientation (stacked when Horizontal, side-by-side when Vertical), matching the Compare panes.
+- Files changed:
+  - `src/board/tiles/human-figure.svg`, `robot-figure.svg`, `HumanFigure.tsx`, `RobotFigure.tsx`, `svgInner.ts`
+  - `src/app/icons/compare-stacked.svg`, `compare-side.svg`, `CompareIcon.tsx`
+  - `src/app/components/ViewSwitch.tsx`, `Toolbar.tsx`, `src/app/styles/tokens.css`
+  - Tests: `svgInner.test.ts`, `App.test.tsx`, `e2e/improve-64-view-icons.spec.ts`, `e2e/ready.ts` (`viewSwitchRadio`), view helpers retargeted from `getByText` to the radio role
+  - Docs: GOAL, IMPROVEMENTS, VISUAL_IMPROVEMENTS, this entry
+- Behavior implemented: Top-bar switch is compact Human / Robot / Compare icon radios. Tooltips and accessible names stay Before / After / Compare. Horizontal Compare uses the stacked mark; Vertical uses the side-by-side mark.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning)
+  - `npm run test:unit` — 50 files, 380 tests pass
+  - `npm run test:e2e` — `improve-64-view-icons` (3), `view-switch` (1), `smoke` (5), `improve-12-hover-chrome` (4), `improve-26-compare` (1), `shell` (5), `canvas` (8), `improve-55` (2), `improve-58` (2), `improve-61-orientation` (6), `inspector` 5 pass / 1 fail (`target-size` on adjacent Path/+ tabs; pre-existing, recorded in Improvement 62)
+- Evidence:
+  - `.docs/evidence/improve-64-view-icons/view-icons-before-1440.png` — Human selected (1440×900)
+  - `.docs/evidence/improve-64-view-icons/view-icons-after-1440.png` — Robot selected (1440×900)
+  - `.docs/evidence/improve-64-view-icons/view-icons-compare-1440.png` — stacked Compare mark (1440×900)
+  - `.docs/evidence/improve-64-view-icons/view-icons-compare-vertical-1440.png` — side-by-side Compare mark (1440×900)
+  - `.docs/evidence/improve-64-view-icons/view-icons-1024.png` — icon switch at 1024×768
+- Earlier-slice defects fixed: `shell.spec` still expected Escape from an expanded Present pane to return to split. P-07 (2026-09-11) exits Present immediately; the spec now matches that.
+- Known limitations / follow-ups: inspector axe `target-size` on adjacent Path/+ tabs — later chrome pass
+- Status: COMPLETE
+- Commit: `feat(improve-64): icon Before After Compare switch`
+
+## Improvement 64 — correction 1 — 2026-09-12
+
+- Requested: Compare marks should not extend the divider past the rounded rect, and should not fill light blue. The sketch fill was only a stand-in for the chrome well.
+- Changed:
+  - `compare-stacked.svg` / `compare-side.svg` are outline-only (`currentColor`); dividers stop at the rect
+  - Dropped the `#c8e8ff` CSS fill
+  - Docs: IMPROVEMENTS 64, this entry
+- Tests and exact results:
+  - `npm run test:e2e` — `improve-64-view-icons` (3) pass
+- Evidence: `.docs/evidence/improve-64-view-icons/view-icons-compare-1440.png` and `view-icons-compare-vertical-1440.png` — yellow selected fill shows through the outline marks
+- Status: COMPLETE
+- Commit: `feat(improve-64): outline Compare marks without overflow`
+
 
 

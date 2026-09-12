@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { DEMO_STEP, capturePage, loadOakPark, waitForLayout } from "./ready";
+import { DEMO_STEP, capturePage, loadOakPark, waitForLayout, showActorsHome } from "./ready";
 
 const EVIDENCE = ".docs/evidence/improve-44-inspector-compact";
 
@@ -39,7 +39,7 @@ test.describe("Improvement 44 — Human name and compact Name/Details", () => {
 
   test("Add human is named Human with no number", async ({ page }) => {
     await newBoardWithStep(page);
-    await aside(page).getByRole("button", { name: "Actors", exact: true }).click();
+    await showActorsHome(page);
     await aside(page).getByRole("button", { name: "Add human" }).click();
 
     await expect(aside(page).getByRole("option", { name: "Human", exact: true })).toBeVisible();

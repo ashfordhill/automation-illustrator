@@ -12,6 +12,7 @@ import { afterGraph, edgeIsDotted } from "../../workflow/graph";
 import { findEdge } from "../../workflow/selectors";
 import type { WorkflowDoc } from "../../workflow/types";
 import { wrapConditionLines } from "../layout/labelBox";
+import { flowProfile } from "../flow/flowProfile";
 import { useSimplifyView } from "../simplify/SimplifyContext";
 import { useLaneLayoutContext } from "./LaneLayoutContext";
 import {
@@ -137,6 +138,7 @@ export function FlowArrow({
   );
   const { layout } = useLaneLayoutContext();
   const { simplified } = useSimplifyView();
+  const along = flowProfile(useStore((s) => s.boardOrientation)).along;
   const restitch = Boolean(pathData.restitch);
   const stretch = Boolean(pathData.stretch);
   const displayHop = Boolean(pathData.displayHop);
@@ -158,10 +160,10 @@ export function FlowArrow({
     () =>
       route && route.length >= 2
         ? route
-        : orthogonalPolyline(sourceX, sourceY, targetX, targetY),
+        : orthogonalPolyline(sourceX, sourceY, targetX, targetY, along),
     // routeKey stands in for the route array identity (animated frames reuse ids).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [routeKey, sourceX, sourceY, targetX, targetY],
+    [routeKey, sourceX, sourceY, targetX, targetY, along],
   );
 
   const viaX = pathData.viaX;
@@ -170,10 +172,10 @@ export function FlowArrow({
     if (viaX == null || viaY == null) return settled;
     const start = settled[0]!;
     const end = settled[settled.length - 1]!;
-    const a = orthogonalPolyline(start.x, start.y, viaX, viaY);
-    const b = orthogonalPolyline(viaX, viaY, end.x, end.y);
+    const a = orthogonalPolyline(start.x, start.y, viaX, viaY, along);
+    const b = orthogonalPolyline(viaX, viaY, end.x, end.y, along);
     return [...a.slice(0, -1), ...b];
-  }, [viaX, viaY, settled]);
+  }, [viaX, viaY, settled, along]);
 
   const stretched = useStretch(stretch && viaX != null, fromVia, settled);
   const points = stretched ?? settled;

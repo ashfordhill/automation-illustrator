@@ -3,7 +3,7 @@
  */
 import { expect, test } from "vitest";
 import { WorkflowNodeKind } from "../../workflow/catalogs";
-import { BRANCH_GAP, STEP_H, STEP_W, TILE_GAP, clearDockPosition, dockPosition, withDisplayedPositions } from "./tileMetrics";
+import { BRANCH_GAP, GRID, STEP_H, STEP_W, TILE_GAP, clearDockPosition, dockPosition, withDisplayedPositions } from "./tileMetrics";
 
 const roy = { position: { x: 569, y: 32 }, type: WorkflowNodeKind.Step };
 const read = { position: { x: 32, y: 128 }, type: WorkflowNodeKind.Step };
@@ -54,4 +54,18 @@ test("stacked fallback still has a vertical stride of one tile plus branch gap",
   }
   const pos = clearDockPosition(roy, WorkflowNodeKind.Step, 1, others, "out");
   expect(pos.y).toBeGreaterThanOrEqual(roy.position.y + STEP_H + BRANCH_GAP - 1);
+});
+
+test("vertical inbound parent docks above the source in the same column", () => {
+  const pos = clearDockPosition(roy, WorkflowNodeKind.Step, 0, [roy], "in", "vertical");
+  expect(pos).toEqual(dockPosition(roy, WorkflowNodeKind.Step, 0, "in", "vertical"));
+  expect(Math.abs(pos.x - roy.position.x)).toBeLessThan(GRID);
+  expect(pos.y + STEP_H).toBeLessThanOrEqual(roy.position.y + 1);
+});
+
+test("vertical outbound child docks below the source in the same column", () => {
+  const pos = clearDockPosition(roy, WorkflowNodeKind.Step, 0, [roy], "out", "vertical");
+  expect(pos).toEqual(dockPosition(roy, WorkflowNodeKind.Step, 0, "out", "vertical"));
+  expect(Math.abs(pos.x - roy.position.x)).toBeLessThan(GRID);
+  expect(pos.y).toBeGreaterThanOrEqual(roy.position.y + STEP_H + TILE_GAP - 1);
 });
