@@ -8,28 +8,17 @@ test.describe("Improvement 43 — spawn hint compass", () => {
     await loadOakPark(page);
     await page.getByText(DEMO_STEP).first().click();
     const spawn = page.locator("[data-spawn-hints]");
-    await expect(spawn).toContainText("+ Step");
-    await expect(spawn).toContainText("+ Data");
-    await expect(spawn.locator("[data-spawn-compass]")).toBeVisible();
+    await expect(spawn.locator(".canvas-helper-spawn-kind-step")).toHaveText("step");
+    await expect(spawn.locator(".canvas-helper-spawn-kind-data")).toHaveText("data");
+    await expect(spawn).toBeVisible();
     await expect(spawn).not.toContainText("|");
-    const geom = await spawn.locator("[data-spawn-compass]").evaluate((el) => {
-      const svg = el as SVGSVGElement;
-      const shaft = svg.querySelector("line");
-      const tick = svg.querySelectorAll("line")[1];
-      if (!shaft || !tick) return null;
-      return {
-        shaftY1: shaft.getAttribute("y1"),
-        shaftY2: shaft.getAttribute("y2"),
-        tickX1: tick.getAttribute("x1"),
-        tickX2: tick.getAttribute("x2"),
-        tickY1: tick.getAttribute("y1"),
-        tickY2: tick.getAttribute("y2"),
-      };
-    });
-    expect(geom).toBeTruthy();
-    expect(geom!.shaftY1).toBe(geom!.shaftY2);
-    expect(geom!.tickX1).toBe(geom!.tickX2);
-    expect(Math.abs(Number(geom!.tickY2) - Number(geom!.tickY1))).toBeGreaterThan(24);
+    await expect(spawn.locator("[data-spawn-tile]")).toBeVisible();
+    await expect(spawn.locator("[data-spawn-arrow='left']")).toBeVisible();
+    await expect(spawn.locator("[data-spawn-arrow='right']")).toBeVisible();
+    const tile = await spawn.locator("[data-spawn-tile]").boundingBox();
+    expect(tile).toBeTruthy();
+    expect(tile!.width).toBeGreaterThan(20);
+    expect(tile!.height).toBeGreaterThan(12);
 
     const keySizes = await page.locator(".canvas-helper kbd").evaluateAll((els) =>
       els.map((el) => {

@@ -158,7 +158,7 @@ function whoFromSourceOrUpstream(doc: WorkflowDoc, startId: string): string | un
  * A new Before-origin Step hanging off `sourceId` (NA-03).
  * A Step parent stamps its Before Who on both lanes. A Data parent walks
  * incoming Paths to the nearest upstream Step. Otherwise last-used Human /
- * Alice. After-only Steps still use the default Robot.
+ * Alice. After uses the same inherit on the shared graph.
  */
 export function whoForChildStep(
   doc: WorkflowDoc,
@@ -214,7 +214,7 @@ function stepTitle(doc: WorkflowDoc, stepId: string): string {
   return n.label;
 }
 
-/** Assignments in Before, After, and After-only extra Steps (NA-02). */
+/** Assignments in Before and After Who maps (NA-02). */
 export function actorUsages(doc: WorkflowDoc, actorId: string): ActorUse[] {
   const uses: ActorUse[] = [];
   for (const [stepId, id] of Object.entries(doc.assignments)) {

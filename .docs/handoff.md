@@ -2655,4 +2655,282 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(improve-53): widen Back to Actors plus trash`
 
+## Improvement 54 — skip leftover restitch Paths — 2026-09-10
+
+- Starting commit: `8dd076b85fffeab0d3168a7ff5191097102a7049` (Add Alice favicon and rename the app to Automation Illustrator.)
+- Working tree at start: not clean. HEAD was the favicon commit (after improve-53 correction 4; that favicon work is not in this ledger). Visual log GIF from the leftover-Path review was unstaged.
+- GOAL clauses addressed: WG-10 (amendment dated 2026-09-10); WG-12 merge-into-existing kept; BA-07 After-only auto restitch uses the same skip. Document version unchanged.
+- Library research and decisions: no new runtime dependency. Weak connectivity would drop one N:1 fan Path, so skip uses directed reachability (`reachableFrom` predecessor → successor) on newly created restitch Paths only. Path-delete (Improvement 11) is unchanged.
+- Files changed:
+  - Graph: `src/workflow/graph.ts` (`dropDirectedRedundantNewPaths`)
+  - Commands: `src/workflow/commands.ts` (auto `applyPairings`, After overlay restitch)
+  - After: `src/workflow/after.ts` (After-only auto restitch)
+  - Tests: `src/workflow/graph.test.ts`, `src/workflow/commands.test.ts`, `src/workflow/after.test.ts`, `e2e/improve-54-skip-redundant-restitch.spec.ts`
+  - Docs: `.docs/GOAL.md`, `.docs/IMPROVEMENTS.md`, `.docs/VISUAL_IMPROVEMENTS.md`, `.docs/visual-improvements/2026-09-10-delete-middle-alice-leftover-path.gif`, this handoff entry
+  - Evidence: `.docs/evidence/improve-54-skip-redundant-restitch/`
+- Behavior implemented:
+  - Deleting a middle Step in a diamond (Data already reaches the successor) no longer adds a leftover shortcut Path. The remaining route is predecessor → Data → successor.
+  - Linear 1:1 still reconnects. 1:N / N:1 still fan. M:N confirmed pairings stay. WG-12 still joins conditions into an existing Path.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning). Node 24.
+  - `npm run test:unit` — 42 files, 324 tests pass.
+  - `npm run test:e2e` — 213 passed, 1 failed (`e2e/inspector-trash-color.spec.ts`, pre-existing; not this improvement). Chromium via `LD_LIBRARY_PATH` `/home/ash/.local/pw-libs/usr/lib/x86_64-linux-gnu`.
+- Evidence:
+  - `.docs/evidence/improve-54-skip-redundant-restitch/diamond-before-1440.png` — Alice / Alice / Data / Alice diamond before delete (1440×900)
+  - `.docs/evidence/improve-54-skip-redundant-restitch/diamond-deleted-1440.png` — after delete: Alice → Data → Alice, no leftover Path (1440×900)
+  - `.docs/evidence/improve-54-skip-redundant-restitch/diamond-deleted-1024.png` — same after delete at 1024×768
+- Earlier-slice defects fixed: none
+- Known limitations / follow-ups: A labeled shortcut that is still directed-redundant is also omitted (conditions on that new Path are not kept). M:N preview still applies the confirmed pairings even if one would be skippable.
+- Status: COMPLETE
+- Commit: `feat(improve-54): skip leftover restitch Paths`
+
+## Improvement 55 — After camera follows Before — 2026-09-10
+
+- Starting commit: `c10ca6a` (`feat(improve-54): skip leftover restitch Paths`)
+- Working tree at start: clean after improve-54 landed on `main` during this chat (HEAD had been the favicon commit when the review began).
+- GOAL clauses addressed: BA-05 (amendment dated 2026-09-10). Document version unchanged.
+- Library research and decisions: no new runtime dependency. Before-only and After-only still mount one Board; After remounts, so the fix is stored-camera copy (Before is source of truth) plus persist-both on pan/zoom/fit. Live instance sync stays for Compare/Present. First layout only inherits a stored camera so a sibling still at default 0,0,1 cannot block fitView.
+- Files changed:
+  - Store: `src/state/store.ts` (`withSharedCamera`; `setView` / `setPresent` seed both from Before)
+  - Board: `src/board/Board.tsx`, `src/board/reactFlowBridge.ts` (`persistSharedViewport`, `cameraToFollow`, remount apply)
+  - Tests: `src/state/store.projection.test.ts`, `e2e/ready.ts` (`laneCamera`), `e2e/improve-55-after-follows-before.spec.ts`
+  - Docs: `.docs/GOAL.md`, `.docs/IMPROVEMENTS.md`, this handoff entry
+  - Evidence: `.docs/evidence/improve-55-after-follows-before/`
+- Behavior implemented:
+  - Panning or zooming Before, then clicking After, opens After on the same viewport transform.
+  - After pans also write Before’s stored camera so switching back does not jump.
+  - Compare and Present still share one live camera.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning). Node 24.
+  - `npm run test:unit` — 42 files, 326 tests pass.
+  - `npm run test:e2e` — `improve-55-after-follows-before` (2), `projection` (6), `canvas` (8), `improve-24-first-tile-center` (2), `improve-51-present-expand` (3) all pass (21). Chromium via `LD_LIBRARY_PATH` `/home/ash/.local/pw-libs/usr/lib/x86_64-linux-gnu`.
+- Evidence:
+  - `.docs/evidence/improve-55-after-follows-before/before-panned-1440.png` — Before after pan + zoom (1440×900)
+  - `.docs/evidence/improve-55-after-follows-before/after-follows-1440.png` — After on the same camera (1440×900)
+  - `.docs/evidence/improve-55-after-follows-before/after-follows-1024.png` — After matches Before at 1024×768
+- Earlier-slice defects fixed: After-only remount ran its own fitView, so the camera jumped when switching from Before.
+- Known limitations / follow-ups: After-only extra Steps may sit outside the shared frame. Browser MCP tools were unavailable this chat; camera match was verified in Playwright.
+- Status: COMPLETE
+- Commit: `feat(improve-55): After camera follows Before`
+
+## Improvement 56 — Simplify zoom LOD — 2026-09-10
+
+- Starting commit: `90ef748846f117955085408e275c55762746b5e8` (`feat(improve-55): After camera follows Before`)
+- Working tree at start: dirty with unrelated tile/path WIP. Stashed as `wip: unrelated tile/path visuals before improve-56` so HEAD matched improve-55 and the tree was clean.
+- GOAL clauses addressed: P-05, CX-02, NA-10, AQ-01, AQ-02 (amendment dated 2026-09-10). Document version unchanged.
+- Library research and decisions: no new runtime dependency. Status menu uses existing Mantine `Menu.CheckboxItem` (role `menuitemcheckbox`) like the hamburger `Menu`. Zoom hysteresis 0.58 / 0.62. LOD is display-only; ELK and YAML are untouched.
+- Files changed:
+  - Prefs / store: `src/board/simplify/prefs.ts`, `src/state/persistence.ts`, `src/state/store.ts`
+  - Hop + headline: `src/board/simplify/hopEdges.ts`, `src/board/simplify/headline.ts`, `src/board/simplify/SimplifyContext.ts`
+  - Shell: `src/app/components/StatusBar.tsx`, `src/app/components/StatusBar.css`
+  - Board / tiles / Paths: `src/board/Board.tsx`, `src/board/nodes/StepNode.tsx`, `src/board/nodes/DataFieldNode.tsx`, `src/board/tiles/SimplifiedTile.tsx`, `src/board/routing/FlowArrow.tsx`, `src/app/styles/tokens.css`
+  - Tests: `src/board/simplify/*.test.ts`, `src/state/persistence.test.ts`, `src/state/store.shell.test.ts`, `src/app/App.test.tsx`, `e2e/improve-56-simplify.spec.ts`, `e2e/improve-21-status-bar.spec.ts`, `e2e/improve-30-status-toggle-right.spec.ts`
+  - Docs: `.docs/GOAL.md`, `.docs/IMPROVEMENTS.md`, this handoff entry
+  - Evidence: `.docs/evidence/improve-56-simplify/`
+- Behavior implemented:
+  - Status bar **Simplify** menu (left of Right Click Delete). Yellow when Hide visuals or Hide visuals on zoom-out is on. Exclusive hide-visuals pair; zoom-out mutes always but it stays clickable. Arrow paths and Hide data can be pre-set.
+  - Zoom-out LOD below 0.58 (leave above 0.62) or Hide visuals at any zoom: tiles become one-line headlines; condition chips hide.
+  - Hide data skips Data tiles and hop-connects Steps. Arrow paths draw straight heads.
+  - Present still hides the status bar; prefs persist so Present/Compare keep the LOD.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning). Node 24.
+  - `npm run test:unit` — 45 files, 343 tests pass.
+  - `npm run test:e2e` — 219 passed, 1 failed (`e2e/inspector-trash-color.spec.ts`, pre-existing; not this improvement). Chromium via `LD_LIBRARY_PATH` `/home/ash/.local/pw-libs/usr/lib/x86_64-linux-gnu`.
+- Evidence:
+  - `.docs/evidence/improve-56-simplify/menu-open-1440.png` — Simplify menu open above the status bar (1440×900)
+  - `.docs/evidence/improve-56-simplify/zoom-out-lod-1440.png` — Hide visuals on zoom-out: text-only tiles, yellow Simplify (1440×900)
+  - `.docs/evidence/improve-56-simplify/always-arrows-hide-data-1440.png` — Hide visuals + Arrow paths + Hide data at ~zoom 1 (1440×900)
+  - `.docs/evidence/improve-56-simplify/present-lod-1440.png` — Present full-bleed with Simplify still applied (1440×900)
+  - `.docs/evidence/improve-56-simplify/simplify-1024.png` — LOD at 1024×768
+- Earlier-slice defects fixed: none
+- Known limitations / follow-ups: At overview zoom the RF tile box stays STEP/FIELD size, so inverse-zoom type still ellipsizes long headlines (`Read invoice.pdf` → `Rea…`). Readable full titles need a closer zoom or a later box-size change. Unrelated WIP remains in git stash `wip: unrelated tile/path visuals before improve-56`.
+- Status: COMPLETE
+- Commit: `feat(improve-56): add Simplify zoom LOD`
+
+## Improvement 56 — correction 1 — 2026-09-10
+
+- Requested: Simplify should be a word-web view (large ovals, Type + Name, empty Other is `?`), not the same tiles with swapped copy. Keep ELK positions and Path lines. Drop Arrow paths.
+- Changed:
+  - `src/board/simplify/headline.ts` — `simplifyHeadline` (`?` for empty Other); screen-sized oval measure
+  - `src/board/tiles/SimplifiedTile.tsx` — cream ink oval centered on the ELK tile, larger than the zoomed-out card
+  - `src/board/simplify/prefs.ts`, `StatusBar.tsx`, `FlowArrow.tsx`, `Board.tsx` — Arrow paths removed; Hide data still skip-hops as plain lines
+  - Tests, GOAL/IMPROVEMENTS amendments, evidence under `.docs/evidence/improve-56-simplify/`
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning). Node 24.
+  - `npm run test:unit` — 45 files, 344 tests pass.
+  - `npm run test:e2e` — `improve-56-simplify` (4), `improve-21-status-bar` (5), `improve-30-status-toggle-right` (3) all pass (12). Chromium via `LD_LIBRARY_PATH` `/home/ash/.local/pw-libs/usr/lib/x86_64-linux-gnu`.
+- Status: COMPLETE
+- Commit: `feat(improve-56): word-web ovals for Simplify`
+
+## Improvement 56 — correction 2 — 2026-09-10
+
+- Requested: Ovals were a tiny island on an empty canvas. Lengthen Paths to spread them, make ovals bigger, and close the Simplify submenu on an outside click.
+- Changed:
+  - `src/board/simplify/spreadLayout.ts` — display-only 2.5× scale of ELK positions/routes about the centroid
+  - `src/board/simplify/headline.ts` — 40 / 28 screen-px type, max width 640, larger `?` minimum
+  - `src/app/components/StatusBar.tsx` — capture-phase pointerdown dismiss (React Flow ate Mantine’s click-outside)
+  - `Board.tsx`, tokens, tests, GOAL/IMPROVEMENTS/VISUAL_IMPROVEMENTS, evidence
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning). Node 24.
+  - `npm run test:unit` — 46 files, 347 tests pass.
+  - `npm run test:e2e` — `improve-56-simplify` (4) pass, including board click-out. Chromium via `LD_LIBRARY_PATH` `/home/ash/.local/pw-libs/usr/lib/x86_64-linux-gnu`.
+- Status: COMPLETE
+- Commit: `feat(improve-56): spread word-web ovals`
+
+## Improvement 57 — Simplify as a real word-web view — 2026-09-10
+
+- Starting commit: `c2e704115b73e5c3a88cd43dcbd1df750f37b515` (`docs(improve-57): plan a real word-web layout`)
+- Working tree at start: HEAD matched the plan commit. Unrelated untracked scrollbar files were left untouched.
+- GOAL clauses addressed: P-05, CX-02, CX-03, CX-05, NA-10 (amendment dated 2026-09-10). Document version unchanged.
+- Library research and decisions: no new runtime dependency. Same ELK worker; `mode: "tile" | "web"` is in the layout cache key with oval sizes. Zoom-out latch treats programmatic fit as not user zoom. Tile camera is remembered outside Board so After remount cannot overwrite it.
+- Files changed:
+  - Delete: `src/board/simplify/spreadLayout.ts`, `src/board/simplify/spreadLayout.test.ts`
+  - Word-web: `src/board/simplify/headline.ts`, `prefs.ts`, `hopEdges.ts`, `wordWebCamera.ts`, `SimplifiedTile.tsx`
+  - Layout: `src/board/layout/elkGraph.ts`, `layoutEngine.ts`, `useLaneLayout.ts`, `src/board/firstLayoutCamera.ts`
+  - Board / Paths: `src/board/Board.tsx`, `reactFlowBridge.ts`, `routing/FlowArrow.tsx`, `nodes/StepNode.tsx`, `nodes/DataFieldNode.tsx`, `src/app/styles/tokens.css`
+  - Tests: `src/board/simplify/*.test.ts`, `src/board/firstLayoutCamera.test.ts`, `e2e/improve-56-simplify.spec.ts`, `e2e/improve-57-word-web.spec.ts`
+  - Docs: `.docs/GOAL.md`, `.docs/IMPROVEMENTS.md`, this handoff entry
+  - Evidence: `.docs/evidence/improve-57-word-web/`
+- Behavior implemented:
+  - Hide visuals (and latched zoom-out) runs a second derived ELK pass whose node sizes are the ovals (Type + Name; empty Other is `?`). Paths route to oval ports with 160 / 80 gutters. Condition chips stay omitted.
+  - Camera fits that layout on enter (small boards zoom in; Oak Park zooms out) and restores the tile camera on leave. Document, undo, and YAML are unchanged.
+  - Hide data lays out the hopped Step graph (no Data slots). 1:1 Step Paths stay selectable; collapsed hops stay display-only.
+  - Zoom-out latches: `fitView` raising zoom does not flip tiles back on. Leave only by unchecking or a user wheel/pinch past `SIMPLIFY_ZOOM_LEAVE`.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning). Node 24.
+  - `npm run test:unit` — 48 files, 354 tests pass.
+  - `npm run test:e2e` — 223 passed, 1 failed (`e2e/inspector-trash-color.spec.ts`, pre-existing; not this improvement). `improve-56-simplify` (4) and `improve-57-word-web` (4) pass. Chromium via `LD_LIBRARY_PATH` `/home/ash/.local/pw-libs/usr/lib/x86_64-linux-gnu`. Older evidence PNGs rewritten by the full suite were restored.
+- Evidence:
+  - `.docs/evidence/improve-57-word-web/web-small-board-1440.png` — 4-Step board: large ovals, long Paths, pane used (1440×900)
+  - `.docs/evidence/improve-57-word-web/web-oak-park-1440.png` — Oak Park full web on screen, headlines complete (1440×900)
+  - `.docs/evidence/improve-57-word-web/web-hide-data-1440.png` — hops, no Data pills (1440×900)
+  - `.docs/evidence/improve-57-word-web/web-leave-tiles-1440.png` — after unchecking, tiles + Who back (1440×900)
+  - `.docs/evidence/improve-57-word-web/web-1024.png` — min width (1024×768)
+- Earlier-slice defects fixed: Improvement 56 overlay + 2.5× spread kept tile ELK boxes and the tile camera.
+- Known limitations / follow-ups: At 1024, Oak Park’s word-web can clip at the existing 0.2 min zoom (P-08). Name overflow on tiles stays out of scope. Unrelated scrollbar WIP remains untracked.
+- Status: COMPLETE
+- Commit: `feat(improve-57): lay out Simplify as a word-web`
+
+## Improvement 57 — correction 1 — 2026-09-11
+
+- Requested: Drop Hide visuals on zoom-out (stuck in ovals, laggy). Keep only Hide visuals. Floor tile (and web) zoom-out so a graph that already fits does not shrink into an island.
+- Changed:
+  - `src/board/simplify/prefs.ts` — `SimplifyPrefs` is only `{ hideVisuals, hideData }`; old `hideVisualsOnZoomOut` is ignored
+  - `src/app/components/StatusBar.tsx` — menu is Hide visuals + Hide data
+  - `src/board/zoom.ts`, `src/board/Board.tsx`, `src/board/firstLayoutCamera.ts` — wheel/pinch cannot zoom out past the fitted node box; if the graph already fits, zoom-out stays (or snaps up to fill)
+  - Tests, GOAL amendment 2026-09-11, IMPROVEMENTS/VISUAL_IMPROVEMENTS
+  - Evidence: `.docs/evidence/improve-57-word-web/tile-zoom-floor-1440.png`
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning). Node 24.
+  - `npm run test:unit` — 48 files, 355 tests pass.
+  - `npm run test:e2e` — `improve-56-simplify` (4) and `improve-57-word-web` (5) pass. Chromium via `LD_LIBRARY_PATH` `/home/ash/.local/pw-libs/usr/lib/x86_64-linux-gnu`. Full suite not run (avoids rewriting older evidence).
+- Status: COMPLETE
+- Commit: `feat(improve-57): drop zoom-out LOD and floor tile zoom`
+
+## Improvement 57 — correction 2 — 2026-09-11
+
+- Requested: Hard lock at fitted zoom felt stuck. Allow some zoom-out, but not the old tiny-island extreme.
+- Changed:
+  - `src/board/zoom.ts` — floor is `fitZoom * 0.72` (~four notches). No snap-in on zoom-out; already-below-floor stays (single new Tile at zoom 1).
+  - `src/board/Board.tsx` — dropped the already-fits lock
+  - e2e tile-zoom-floor asserts slack below fit and not 0.2
+  - GOAL amendment 2026-09-11 (P-08, CX-05)
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning). Node 24.
+  - `npm run test:unit` — 48 files, 354 tests pass.
+  - `npm run test:e2e` — `improve-56-simplify` (4) and `improve-57-word-web` (5) pass. Chromium via `LD_LIBRARY_PATH` `/home/ash/.local/pw-libs/usr/lib/x86_64-linux-gnu`.
+- Status: COMPLETE
+- Commit: `feat(improve-57): slack tile zoom-out past fit`
+
+## Improvement 58 — After is 1:1 with Before (no After-only) — 2026-09-11
+
+- Starting commit: `711847e90bcbe9b2fde05c13cd5602b181f0f299` (`feat(improve-57): slack tile zoom-out past fit`)
+- Working tree at start: clean except untracked scrollbar WIP (left untouched)
+- GOAL clauses addressed: BA-01, BA-02, BA-05, BA-06, BA-07, BA-09, CX-05, WG-07, SH-07, SH-14, NA-02, NA-03, NA-04, NG-06 (amendments dated 2026-09-11). Document version unchanged.
+- Library research and decisions: no new runtime dependency. After-only extras stayed in the schema and are dropped on load/import, same pattern as merge groups. After’s first ELK pass may seed from Before’s displayed positions so a remount cannot flip rows if the cache misses.
+- Files changed:
+  - Overlay / parse: `src/workflow/types.ts`, `src/workflow/migrate.ts`, `src/state/persistence.ts`, `src/state/projection.ts`
+  - Store / After edits: `src/state/store.ts` (After `+` / connect / remove use the shared base)
+  - UI: `src/board/controls/TileChrome.tsx`, `src/app/components/CanvasHelper.tsx`, `src/keyboard/useAppKeys.ts`, `src/app/inspector/SelectedItemForm.tsx`, `src/board/layout/useLaneLayout.ts`
+  - Demo: `src/demos/robot-mailroom.yaml` (receipt extra removed)
+  - Tests: projection, demos, serialize, after, store, CanvasHelper, elkLayout, e2e projection/canvas/merge/improve-07/34/35/55/58
+  - Docs: `.docs/GOAL.md`, `.docs/IMPROVEMENTS.md`, `.docs/VISUAL_IMPROVEMENTS.md`, this handoff entry
+  - Evidence: `.docs/evidence/improve-58-after-one-to-one/`
+- Behavior implemented:
+  - After is the same Nodes and Paths as Before. Who is the only per-lane value.
+  - After `+` / Q E A D / Connect existing edit the shared graph, including Data.
+  - Load/Import drop leftover After-only extras (notice: “After-only Steps were removed.”).
+  - Switching Before ↔ After keeps Tile positions (shared layout).
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning). Node 24.
+  - `npm run test:unit` — 48 files, 355 tests pass.
+  - `npm run test:e2e` — `improve-58-after-one-to-one` (2), `projection` (6), `canvas` (8), `merge` (2), `improve-07-no-merge` (4), `improve-34-reverse-add` (7), `improve-35-default-robots` (3), `improve-55-after-follows-before` (2) all pass (34). Chromium via `LD_LIBRARY_PATH` `/home/ash/.local/pw-libs/usr/lib/x86_64-linux-gnu`.
+- Evidence:
+  - `.docs/evidence/improve-58-after-one-to-one/before-1440.png` — Oak Park Before (1440×900)
+  - `.docs/evidence/improve-58-after-one-to-one/after-1440.png` — After on the same positions; Who differs (1440×900)
+  - `.docs/evidence/improve-58-after-one-to-one/after-1024.png` — After matches Before at 1024×768
+- Earlier-slice defects fixed: After remounted with a different graph (extras) and independent ELK, so branches flipped when switching views.
+- Known limitations / follow-ups: `after.ts` create/remove helpers remain for leftover in-memory extras and unit coverage; they are not wired from the store. Unrelated scrollbar WIP remains untracked. Browser MCP tools were unavailable; 1:1 positions were verified in Playwright (tile transforms equal).
+- Status: COMPLETE
+- Commit: `feat(improve-58): drop After-only and share Before layout`
+
+## Improvement 60 — View toggle, drop Hide data — 2026-09-11
+
+- Starting commit: `86f94f5` (`feat(improve-58): drop After-only and share Before layout`)
+- Working tree at start: dirty (unrelated WIP: Present Escape, first-layout cover, sound on status bar, scrollbar). Those files were left in place; this change only retargets Simplify → View and removes Hide data.
+- GOAL clauses addressed: P-05, CX-02, NA-10 (amendment dated 2026-09-11). Document version unchanged.
+- Library research and decisions: no new runtime dependency. With Hide data gone, the remaining submenu would have been one item, so **View** is a press-toggle like Right Click Delete.
+- Files changed:
+  - `src/app/components/StatusBar.tsx` — **View** press-toggle (menu and Hide data gone)
+  - `src/board/simplify/prefs.ts` — `{ hideVisuals }` only; old `hideData` ignored
+  - `src/board/Board.tsx` — no hop projection / `data-simplify-hide-data`
+  - Delete: `src/board/simplify/hopEdges.ts`, `src/board/simplify/hopEdges.test.ts`
+  - Tests: prefs, persistence, store.shell, App, wordWeb, `e2e/improve-56-simplify.spec.ts`, `e2e/improve-57-word-web.spec.ts`
+  - Docs: `.docs/GOAL.md`, `.docs/IMPROVEMENTS.md`, this handoff entry
+  - Evidence: `.docs/evidence/improve-60-view-toggle/`
+- Behavior implemented:
+  - Status-bar **View** (left of Right Click Delete) toggles the word-web. Yellow when on.
+  - Hide data is withdrawn. Data ovals stay in the word-web. Saved `hideData` in localStorage is ignored.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning). Node 24.
+  - `npm run test:unit` — 47 files, 353 tests pass.
+  - `npm run test:e2e` — `improve-56-simplify` (4) and `improve-57-word-web` (5) pass. Chromium via `LD_LIBRARY_PATH` `/home/ash/.local/pw-libs/usr/lib/x86_64-linux-gnu`. Full suite not run (avoids rewriting older evidence; tree already dirty).
+- Evidence:
+  - `.docs/evidence/improve-60-view-toggle/view-idle-1440.png` — View off in the status bar (1440×900)
+  - `.docs/evidence/improve-60-view-toggle/view-on-1440.png` — yellow View; word-web including Data (1440×900)
+  - `.docs/evidence/improve-60-view-toggle/view-1024.png` — min width (1024×768)
+- Earlier-slice defects fixed: none
+- Known limitations / follow-ups: not committed here — other uncommitted WIP shares GOAL.md / IMPROVEMENTS.md / Board.tsx / StatusBar. Intended commit: `feat(improve-60): rename Simplify to View and drop Hide data`
+- Status: COMPLETE
+- Commit: not made (dirty tree with unrelated WIP)
+
+## Improvement 59 — first layout cover (no Before/After flicker) — 2026-09-11
+
+- Starting commit: `86f94f53504f14e1a37a6d1068f29cc5357f3f45` (`feat(improve-58): drop After-only and share Before layout`)
+- Working tree at start: dirty (scrollbar WIP, Present Escape, concurrent Improve 60 View/Hide-data). Those files were left in place except where Board.tsx had to compile against the live tree (no hopEdges).
+- GOAL clauses addressed: P-08, CX-05, BA-05 (amendment dated 2026-09-11). Document version unchanged.
+- Library research and decisions: no new runtime dependency. First-load flicker was ELK + fitView after paint; first After click missed the cache because `laneGraphKey` included the lane and React Flow remounted on lane change.
+- Files changed:
+  - Layout: `src/board/layout/elkGraph.ts` (shared Before/After key), `layoutEngine.ts` (reuse in-flight by key; cold start skips debounce), `useLaneLayout.ts`, `warmLayout.ts`
+  - Board / camera: `src/board/Board.tsx`, `src/board/Board.css`, `src/board/firstLayoutCamera.ts`, `src/main.tsx` (warm ELK at boot)
+  - Tests: `layoutEngine.test.ts`, `elkLayout.test.ts`, `firstLayoutCamera.test.ts`, `e2e/ready.ts`, `e2e/improve-59-board-ready.spec.ts`
+  - Docs: `.docs/GOAL.md`, `.docs/IMPROVEMENTS.md`, `.docs/VISUAL_IMPROVEMENTS.md`, this handoff entry
+  - Evidence: `.docs/evidence/improve-59-board-ready/`
+- Behavior implemented:
+  - Refresh shows **Loading...** until the first nonempty ELK layout and camera are applied, then the board appears in place.
+  - Before and After share one layout cache and one React Flow instance (`canvasEpoch` still remounts on New / Demo / Import). First After click does not relayout or flash.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning). Node 24.
+  - `npm run test:unit` — 47 files, 353 tests pass.
+  - `npm run test:e2e` — `improve-59-board-ready` (2), `improve-24-first-tile-center` (2), `improve-55-after-follows-before` (2), `improve-58-after-one-to-one` (2), `view-switch` (1) all pass (9). Chromium via `LD_LIBRARY_PATH` `/home/ash/.local/pw-libs/usr/lib/x86_64-linux-gnu`.
+- Evidence:
+  - `.docs/evidence/improve-59-board-ready/before-ready-1440.png` — first paint after Loading, board ready (1440×900)
+  - `.docs/evidence/improve-59-board-ready/after-ready-1440.png` — first After click stays ready (1440×900)
+  - `.docs/evidence/improve-59-board-ready/after-ready-1024.png` — same at 1024×768
+- Earlier-slice defects fixed: first layout showed the graph at zoom 1 then jumped; After cache-missed Before because the key included the lane.
+- Known limitations / follow-ups: concurrent Improve 60 (View toggle, Hide data withdrawn) shares Board.tsx / GOAL / IMPROVEMENTS and is not in this commit. Unrelated scrollbar and Present Escape WIP remain untracked or unstaged.
+- Status: COMPLETE
+- Commit: `feat(improve-59): cover first layout until camera ready`
+
+
 

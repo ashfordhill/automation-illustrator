@@ -1,10 +1,12 @@
 /**
- * Upper-left sound toggle after Undo (P-08, SH-03). Off by default; state is announced.
+ * Status-bar sound toggle (left of the version). On by default; state is announced.
  */
 import { useState } from "react";
-import { ActionIcon, Tooltip } from "@mantine/core";
+import { Tooltip } from "@mantine/core";
 import { IconVolume, IconVolumeOff } from "@tabler/icons-react";
 import { useStore } from "../../state/store";
+
+const ICON_SIZE = 14;
 
 export function SoundToggle() {
   const soundEnabled = useStore((s) => s.soundEnabled);
@@ -12,24 +14,26 @@ export function SoundToggle() {
   const label = soundEnabled ? "Sound on" : "Sound off";
 
   return (
-    <>
+    <span className="status-sound">
       <Tooltip label={`${label} (click to turn ${soundEnabled ? "off" : "on"})`}>
-        <ActionIcon
-          variant="default"
+        <button
+          type="button"
+          className={`status-toggle status-icon${soundEnabled ? " is-on" : ""}`}
           aria-label={label}
           aria-pressed={soundEnabled}
+          data-status="sound"
           onClick={() => {
             const next = !useStore.getState().soundEnabled;
             useStore.getState().setSoundEnabled(next);
             setAnnouncement(next ? "Sound on" : "Sound off");
           }}
         >
-          {soundEnabled ? <IconVolume size={18} /> : <IconVolumeOff size={18} />}
-        </ActionIcon>
+          {soundEnabled ? <IconVolume size={ICON_SIZE} /> : <IconVolumeOff size={ICON_SIZE} />}
+        </button>
       </Tooltip>
       <span className="visually-hidden" aria-live="polite">
         {announcement}
       </span>
-    </>
+    </span>
   );
 }

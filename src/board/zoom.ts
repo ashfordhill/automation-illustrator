@@ -11,9 +11,28 @@ export const WHEEL_ZOOM_FACTOR = 1.08;
 export const ZOOM_BOUNDS_PAD = 32;
 /** Graph is an "island" when it covers less than this fraction on both axes. */
 export const GRAPH_ISLAND_FRACTION = 0.4;
+/** Zoom-out may go this far below fit (~four 1.08 notches) so the camera has give. */
+export const ZOOM_OUT_FIT_SLACK = 0.72;
 
 export function clampZoom(zoom: number): number {
   return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom));
+}
+
+/** Lowest zoom-out when the graph can fill the pane. Huge graphs still hit MIN_ZOOM. */
+export function zoomOutFloor(fitZoom: number, slack = ZOOM_OUT_FIT_SLACK): number {
+  return clampZoom(fitZoom * slack);
+}
+
+/**
+ * Zoom-out may pass fit by ZOOM_OUT_FIT_SLACK, then stops (not a 0.2 island).
+ * Does not snap zoom in. Zoom-in is unchanged.
+ */
+export function clampWheelZoom(current: number, next: number, fitZoom: number): number {
+  const capped = clampZoom(next);
+  if (capped >= current) return capped;
+  const floor = zoomOutFloor(fitZoom);
+  if (current <= floor + 1e-6) return current;
+  return Math.max(capped, floor);
 }
 
 /** Map a wheel delta to a multiplicative zoom factor (deltaY > 0 zooms out). */

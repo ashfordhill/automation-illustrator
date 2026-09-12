@@ -10,7 +10,7 @@ import {
   DEFAULT_HUMAN_ROLE,
   emptyAfterOverlay,
   ROBOT_KIND_LABEL,
-  unfoldMergeGroups,
+  normalizeAfterOverlay,
   type ActorDto,
   type HumanDto,
   type NodeDto,
@@ -25,6 +25,7 @@ export type ParseSuccess = {
   doc: WorkflowDoc;
   migratedFrom?: 1;
   unfolded?: boolean;
+  droppedAfterOnly?: boolean;
 };
 
 export type ParseFailure = {
@@ -119,12 +120,18 @@ function parseUnknown(data: unknown): ParseResult {
     if (graph.length) {
       return fail("invalid-graph", summarize(graph), graph);
     }
-    const migrated = unfoldMergeGroups(migrateV1ToV2(v1));
+    const migrated = normalizeAfterOverlay(migrateV1ToV2(v1));
     const again = validateWorkflow(migrated.doc);
     if (again.length) {
       return fail("invalid-graph", summarize(again), again);
     }
-    return { ok: true, doc: migrated.doc, migratedFrom: 1, unfolded: migrated.unfolded };
+    return {
+      ok: true,
+      doc: migrated.doc,
+      migratedFrom: 1,
+      unfolded: migrated.unfolded,
+      droppedAfterOnly: migrated.droppedAfterOnly,
+    };
   }
   if (version === 2) {
     const shape = workflowDocV2Shape.safeParse(data);
@@ -137,13 +144,18 @@ function parseUnknown(data: unknown): ParseResult {
     if (graph.length) {
       return fail("invalid-graph", summarize(graph), graph);
     }
-    const unfolded = unfoldMergeGroups(doc);
-    return { ok: true, doc: unfolded.doc, unfolded: unfolded.unfolded };
+    const normalized = normalizeAfterOverlay(doc);
+    return {
+      ok: true,
+      doc: normalized.doc,
+      unfolded: normalized.unfolded,
+      droppedAfterOnly: normalized.droppedAfterOnly,
+    };
   }
   return fail(
     "unsupported-version",
-    "This file is not an Automation Pitch workflow.",
-    [{ code: "invalid-shape", message: "This file is not an Automation Pitch workflow." }],
+    "This file is not an Automation Illustrator workflow.",
+    [{ code: "invalid-shape", message: "This file is not an Automation Illustrator workflow." }],
   );
 }
 

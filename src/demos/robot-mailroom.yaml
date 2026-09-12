@@ -1,4 +1,4 @@
-# Robot Mailroom demo. After-only receipt Step; no merge group.
+# Robot Mailroom demo. Shared graph; After Who only; no After-only extras.
 version: 2
 name: Robot Mailroom
 actors:
@@ -141,21 +141,6 @@ after:
     s_mail_route: r_mailbot
     s_mail_call: h_omar
     s_mail_file: h_omar
-    s_mail_receipt: r_mailbot
   groups: []
-  extraNodes:
-    - id: s_mail_receipt
-      type: step
-      position:
-        x: 1504
-        y: 32
-      stepKind: email
-      title: delivery receipt to sender
-      detail: ""
-      split: exclusive
-  extraEdges:
-    - id: e_mail_x1
-      source: s_mail_route
-      target: s_mail_receipt
-      label: ""
-      dashed: false
+  extraNodes: []
+  extraEdges: []

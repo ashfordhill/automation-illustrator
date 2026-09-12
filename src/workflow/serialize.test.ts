@@ -284,7 +284,7 @@ describe("parse edge cases", () => {
     expect(parsed.doc.edges.find((e) => e.id === "e_gt")?.label).toContain("and rush");
   });
 
-  test("After-only extras and merge groups survive YAML then unfold", () => {
+  test("merge groups unfold on YAML parse; After-only extras stay empty", () => {
     const mail = robotMailroom();
     const grouped: WorkflowDoc = {
       ...mail,
@@ -299,8 +299,9 @@ describe("parse edge cases", () => {
     if (!parsed.ok) return;
     expect(parsed.unfolded).toBe(true);
     expect(parsed.doc.after.groups).toEqual([]);
-    expect(parsed.doc.after.extraNodes.map((n) => n.id)).toEqual([MAILROOM_IDS.receipt]);
-    expect(parsed.doc.after.extraEdges.map((e) => e.id)).toEqual([MAILROOM_IDS.extra]);
+    expect(parsed.droppedAfterOnly).toBe(false);
+    expect(parsed.doc.after.extraNodes).toEqual([]);
+    expect(parsed.doc.after.extraEdges).toEqual([]);
   });
 
   test("omitted Path dashed is valid on a 1:1 Path", () => {

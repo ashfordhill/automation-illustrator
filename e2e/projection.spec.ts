@@ -3,7 +3,7 @@ import { DEMO_STEP, loadOakPark, screenshotBoard, waitForLayout, laneZoom, waitF
 
 const EVIDENCE = ".docs/evidence/10-projection";
 const MAIL_STEP = "Read incoming mail";
-const RECEIPT = "Email delivery receipt to sender";
+const SCAN = "Scan letter to PDF";
 
 function viewLabel(page: Page, name: "Before" | "After" | "Compare") {
   return page.locator("header").getByText(name, { exact: true });
@@ -23,9 +23,9 @@ async function loadMailroom(page: Page) {
 }
 
 test.describe("slice 10 After projection and comparison", () => {
-  test("After-only receipt is absent from Before and present in After", async ({ page }) => {
+  test("After matches Before 1:1 (no After-only extras)", async ({ page }) => {
     await loadMailroom(page);
-    await expect(page.getByText(RECEIPT)).toHaveCount(0);
+    await expect(page.getByText("delivery receipt")).toHaveCount(0);
     await expect(page.getByText("Recipient").first()).toBeVisible();
     await screenshotBoard(page, `${EVIDENCE}/before-light-1440.png`);
 
@@ -35,9 +35,9 @@ test.describe("slice 10 After projection and comparison", () => {
       "true",
     );
     await waitForLayout(page);
-    await expect(page.getByText(RECEIPT).first()).toBeVisible();
+    await expect(page.getByText("delivery receipt")).toHaveCount(0);
     await expect(page.locator("[data-merge-group]")).toHaveCount(0);
-    await expect(page.getByText("Scan letter to PDF").first()).toBeVisible();
+    await expect(page.getByText(SCAN).first()).toBeVisible();
     await screenshotBoard(page, `${EVIDENCE}/after-light-1440.png`);
 
     await enterDarkTheme(page);
@@ -122,7 +122,8 @@ test.describe("supported min-width", () => {
     await loadMailroom(page);
     await viewLabel(page, "After").click();
     await waitForLayout(page);
-    await expect(page.getByText(RECEIPT).first()).toBeVisible();
+    await expect(page.getByText(SCAN).first()).toBeVisible();
+    await expect(page.getByText("delivery receipt")).toHaveCount(0);
     await screenshotBoard(page, `${EVIDENCE}/after-light-1024.png`);
   });
 });

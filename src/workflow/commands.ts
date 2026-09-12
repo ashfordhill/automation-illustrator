@@ -5,6 +5,7 @@
 import { IdPrefix, WorkflowNodeKind } from "./catalogs";
 import {
   applyConnectStroke,
+  dropDirectedRedundantNewPaths,
   edgeIsDotted,
   incomingSorted,
   maybeExclusiveSplit,
@@ -183,7 +184,12 @@ export function pruneAfterOverlay(
     const extraPairings = pairings.filter(
       (p) => extraIds.has(p.predecessorId) || extraIds.has(p.successorId),
     );
-    extraEdges = applyPairings(afterNodes, extraEdges, extraPairings);
+    const auto = predCount < 2 || succCount < 2;
+    const priorExtra = extraEdges;
+    const paired = applyPairings(afterNodes, extraEdges, extraPairings);
+    extraEdges = auto
+      ? dropDirectedRedundantNewPaths(priorExtra, paired, [..._remainingEdges, ...paired])
+      : paired;
   }
 
   return {
@@ -522,6 +528,7 @@ function planFromNeighborhood(
     doc.nodes,
     doc.edges.filter((e) => e.source !== nodeId && e.target !== nodeId),
     pairings,
+    { skipRedundant: mode === "auto" },
   );
   const overlayEffects = pruneAfterOverlay(
     doc.after,
@@ -540,7 +547,8 @@ function planFromNeighborhood(
   });
 }
 
-/** WG-10 / WG-11: auto fan for 1:1, 1:N, N:1; preview nearest pairings for M:N. */
+/** WG-10 / WG-11: auto fan for 1:1, 1:N, N:1; preview nearest pairings for M:N.
+ * Auto restitches omit a new Path when the predecessor already reaches the successor. */
 export function planNodeRemoval(
   doc: WorkflowDoc,
   nodeId: string,
@@ -581,6 +589,7 @@ function applyPairings(
   nodes: NodeDto[],
   edges: EdgeDto[],
   pairings: RemovalPairing[],
+  options?: { skipRedundant?: boolean; reachEdges?: EdgeDto[] },
 ): EdgeDto[] {
   let next = edges;
   for (const pairing of pairings) {
@@ -613,7 +622,8 @@ function applyPairings(
       ];
     }
   }
-  return next;
+  if (!options?.skipRedundant) return next;
+  return dropDirectedRedundantNewPaths(edges, next, options.reachEdges ?? next);
 }
 
 /** Apply a RemovalPlan atomically (WG-11 confirmation; auto plans included). */
@@ -645,7 +655,9 @@ export function applyNodeRemoval(
   const withoutIncident = doc.edges.filter(
     (e) => e.source !== plan.nodeId && e.target !== plan.nodeId,
   );
-  const remainingEdges = applyPairings(doc.nodes, withoutIncident, pairings);
+  const remainingEdges = applyPairings(doc.nodes, withoutIncident, pairings, {
+    skipRedundant: plan.mode === "auto",
+  });
   const overlayEffects = pruneAfterOverlay(
     doc.after,
     plan.nodeId,
@@ -696,7 +708,9 @@ export function insertNodeOnPath(
   if (!planned.ok) return planned;
 
   const withoutIncident = doc.edges.filter((e) => e.source !== nodeId && e.target !== nodeId);
-  const restitched = applyPairings(doc.nodes, withoutIncident, planned.value.pairings);
+  const restitched = applyPairings(doc.nodes, withoutIncident, planned.value.pairings, {
+    skipRedundant: planned.value.mode === "auto",
+  });
   const liveHost = restitched.find((e) => e.id === edgeId);
   if (!liveHost) return fail("insert-host-gone", MSG.insertHostGone);
 
@@ -776,7 +790,9 @@ export function insertNodeOnBundle(
   if (!planned.ok) return planned;
 
   const withoutIncident = doc.edges.filter((e) => e.source !== nodeId && e.target !== nodeId);
-  const restitched = applyPairings(doc.nodes, withoutIncident, planned.value.pairings);
+  const restitched = applyPairings(doc.nodes, withoutIncident, planned.value.pairings, {
+    skipRedundant: planned.value.mode === "auto",
+  });
   const liveBundle =
     spec.role === "merge"
       ? restitched.filter((e) => e.target === spec.hostId)

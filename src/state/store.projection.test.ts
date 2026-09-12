@@ -58,17 +58,17 @@ test("Both does not mutate; After may remove a Before-origin Step (BA-04, BA-05)
   expect(useStore.getState().workflow.nodes.some((n) => n.id === OAK_PARK_IDS.review)).toBe(false);
 });
 
-test("Robot Mailroom After projection includes the receipt as a normal tile", () => {
+test("Robot Mailroom After is 1:1 with Before (no receipt extra)", () => {
   const s = useStore.getState();
   s.requestDemo(DemoId.RobotMailroom);
   s.confirmReplaceDiscard();
   const doc = useStore.getState().workflow;
-  expect(projectBefore(doc).nodes.some((n) => n.id === MAILROOM_IDS.receipt)).toBe(false);
-  const after = projectAfter(doc);
-  expect(after.nodes.some((n) => n.id === MAILROOM_IDS.receipt)).toBe(true);
-  expect(after.nodes.some((n) => n.id === MAILROOM_IDS.scan)).toBe(true);
-  expect(after.nodes.some((n) => n.id === MAILROOM_IDS.group)).toBe(false);
-  expect(after.nodes.some((n) => n.id === MAILROOM_IDS.recipient)).toBe(true);
+  expect(doc.after.extraNodes).toEqual([]);
+  expect(projectBefore(doc).nodes.map((n) => n.id)).toEqual(projectAfter(doc).nodes.map((n) => n.id));
+  expect(projectAfter(doc).nodes.some((n) => n.id === MAILROOM_IDS.receipt)).toBe(false);
+  expect(projectAfter(doc).nodes.some((n) => n.id === MAILROOM_IDS.scan)).toBe(true);
+  expect(projectAfter(doc).nodes.some((n) => n.id === MAILROOM_IDS.group)).toBe(false);
+  expect(projectAfter(doc).nodes.some((n) => n.id === MAILROOM_IDS.recipient)).toBe(true);
   expect(doc.after.groups).toEqual([]);
 });
 
@@ -92,4 +92,28 @@ test("entering Both copies the focused lane viewport onto both lanes (BA-05)", (
   s.setView(ViewMode.Both);
   expect(useStore.getState().laneViewports.before).toEqual(seed);
   expect(useStore.getState().laneViewports.after).toEqual(seed);
+});
+
+test("switching to After copies Before's camera so After follows Before (BA-05)", () => {
+  const beforeCam = { x: 40, y: -80, zoom: 0.85 };
+  const staleAfter = { x: 0, y: 0, zoom: 1 };
+  const s = useStore.getState();
+  s.setView(ViewMode.Before);
+  s.setLaneViewport("before", beforeCam);
+  s.setLaneViewport("after", staleAfter);
+  s.setView(ViewMode.After);
+  expect(useStore.getState().laneViewports.after).toEqual(beforeCam);
+  expect(useStore.getState().laneViewports.before).toEqual(beforeCam);
+});
+
+test("switching to Before keeps Before's camera when After has drifted (BA-05)", () => {
+  const beforeCam = { x: 10, y: 20, zoom: 0.9 };
+  const afterCam = { x: 99, y: 99, zoom: 0.4 };
+  const s = useStore.getState();
+  s.setView(ViewMode.Before);
+  s.setLaneViewport("before", beforeCam);
+  s.setLaneViewport("after", afterCam);
+  s.setView(ViewMode.Before);
+  expect(useStore.getState().laneViewports.before).toEqual(beforeCam);
+  expect(useStore.getState().laneViewports.after).toEqual(beforeCam);
 });

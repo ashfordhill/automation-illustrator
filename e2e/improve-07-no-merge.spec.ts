@@ -20,13 +20,13 @@ async function loadMailroom(page: Page) {
 }
 
 test.describe("Improvement 07 — merge groups withdrawn", () => {
-  test("Mailroom After has no merge dock or merge tile; After-only Step remains", async ({
+  test("Mailroom After has no merge dock or After-only extras", async ({
     page,
   }) => {
     await loadMailroom(page);
     await viewLabel(page, "After").click();
     await waitForLayout(page);
-    await expect(page.getByText(RECEIPT).first()).toBeVisible();
+    await expect(page.getByText(RECEIPT)).toHaveCount(0);
     await expect(page.getByText(SCAN).first()).toBeVisible();
     await expect(page.locator("[data-merge-group]")).toHaveCount(0);
     await expect(page.getByRole("region", { name: "Merge and Unmerge" })).toHaveCount(0);

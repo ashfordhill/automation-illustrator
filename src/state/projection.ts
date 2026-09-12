@@ -43,16 +43,14 @@ export function projectBefore(doc: WorkflowDoc): LaneProjection {
 }
 
 /**
- * After: extra Nodes/Paths on the base graph. Every Before-origin Step is a
- * normal tile (merge groups are unfolded on load).
+ * After: the same Nodes and Paths as Before (After-only extras are dropped on
+ * load). Who is lane-specific at render time, not in this graph.
  */
 export function projectAfter(doc: WorkflowDoc): LaneProjection {
-  const extra = doc.after.extraNodes.map((n) => asProjected(n, "extra"));
-  const edges: ProjectedEdge[] = [...doc.edges, ...doc.after.extraEdges].map(asProjectedEdge);
   return {
     lane: AssignmentLane.After,
-    nodes: [...doc.nodes.map((n) => asProjected(n, "base")), ...extra],
-    edges,
+    nodes: doc.nodes.map((n) => asProjected(n, "base")),
+    edges: doc.edges.map(asProjectedEdge),
   };
 }
 

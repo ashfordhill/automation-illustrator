@@ -3,6 +3,7 @@
  * Framework-free so unit tests can drive it with a fake ELK.
  *
  * - A cache hit resolves synchronously via `get(key)` (no flash on view switches).
+ *   Before and After share the key, so the first After click reuses Before.
  * - Requests inside the debounce window replace the pending one; the replaced
  *   request rejects with LayoutSuperseded so callers keep their previous layout.
  * - An empty projection resolves to `emptyLayout` without calling ELK.
@@ -13,7 +14,7 @@ import type { ElkNode } from "elkjs/lib/elk-api";
 import type { LaneProjection } from "../../state/projection";
 import type { AssignmentLane } from "../../workflow/catalogs";
 import type { PositionMap } from "../../workflow/types";
-import { buildElkGraph, laneGraphKey, type TileSizes } from "./elkGraph";
+import { buildElkGraph, laneGraphKey, type LayoutMode, type TileSizes } from "./elkGraph";
 import { emptyLayout, toLaneLayout } from "./elkLayout";
 import type { LabelBox } from "./labelBox";
 import type { LaneLayout } from "./laneLayout";
@@ -24,7 +25,12 @@ export type LayoutEngine = {
   /** Cached layout for a key, or undefined. */
   get(key: string): LaneLayout | undefined;
   /** Key the engine would compute for these inputs. */
-  keyFor(projection: LaneProjection, boxes: Record<string, LabelBox>, sizes?: TileSizes): string;
+  keyFor(
+    projection: LaneProjection,
+    boxes: Record<string, LabelBox>,
+    sizes?: TileSizes,
+    mode?: LayoutMode,
+  ): string;
   /** Resolve to the layout for these inputs; may reject with LayoutSuperseded or an ELK error. */
   request(
     lane: AssignmentLane,
@@ -32,6 +38,7 @@ export type LayoutEngine = {
     boxes: Record<string, LabelBox>,
     sizes?: TileSizes,
     previous?: PositionMap,
+    mode?: LayoutMode,
   ): Promise<LaneLayout>;
 };
 
@@ -96,9 +103,9 @@ export function createLayoutEngine(
 
   return {
     get: (key) => cache.get(key),
-    keyFor: (projection, boxes, sizes) => laneGraphKey(projection, boxes, sizes),
-    request(lane, projection, boxes, sizes, previous) {
-      const key = laneGraphKey(projection, boxes, sizes);
+    keyFor: (projection, boxes, sizes, mode) => laneGraphKey(projection, boxes, sizes, mode),
+    request(lane, projection, boxes, sizes, previous, mode = "tile") {
+      const key = laneGraphKey(projection, boxes, sizes, mode);
       const hit = cache.get(key);
       if (hit) return Promise.resolve(hit);
       if (!projection.nodes.length) {
@@ -108,6 +115,9 @@ export function createLayoutEngine(
       }
       const running = inFlight.get(key);
       if (running) return running;
+      for (const queued of pending.values()) {
+        if (queued.key === key) return queued.promise;
+      }
 
       const current = pending.get(lane);
       if (current) {
@@ -117,7 +127,7 @@ export function createLayoutEngine(
         current.reject(new LayoutSuperseded(current.key));
       }
 
-      const graph = buildElkGraph(projection, boxes, sizes, previous);
+      const graph = buildElkGraph(projection, boxes, sizes, previous, mode);
       let resolve!: (layout: LaneLayout) => void;
       let reject!: (error: unknown) => void;
       const promise = new Promise<LaneLayout>((res, rej) => {
@@ -129,7 +139,8 @@ export function createLayoutEngine(
         if (pending.get(lane) === entry) pending.delete(lane);
         run(key, graph).then(entry.resolve, entry.reject);
       };
-      if (debounceMs > 0) {
+      const cold = cache.size === 0 && inFlight.size === 0 && pending.size === 0;
+      if (debounceMs > 0 && !cold) {
         entry.timer = setTimeout(fire, debounceMs);
       } else {
         queueMicrotask(fire);

@@ -27,8 +27,11 @@ function resetSession() {
   s.closeBoardModes();
   s.closeManageActors({ restoreFocus: false });
   s.setColorScheme(ColorScheme.Light);
-  s.setSoundEnabled(false);
+  s.setSoundEnabled(true);
   s.setRightClickDelete(false);
+  s.setSimplify({
+    hideVisuals: false,
+  });
   s.setInspectorCollapsed(false);
 }
 
@@ -65,16 +68,36 @@ test("demo startup loads the Oak Park invoice workflow", () => {
   expect(workflow.nodes.some((n) => !isStepNode(n) && n.label === "Account #")).toBe(true);
 });
 
-test("status bar shows toggle and package version", () => {
+test("View button is yellow when the word-web is on", () => {
+  expect(host.querySelector('[data-status="simplify"]')?.classList.contains("is-on")).toBe(false);
+  act(() => {
+    useStore.getState().setSimplify({ hideVisuals: true });
+  });
+  expect(host.querySelector('[data-status="simplify"]')?.classList.contains("is-on")).toBe(true);
+});
+
+test("status bar shows text-only, Right-click delete, sound, and package version", () => {
   const bar = host.querySelector("footer.status-bar");
   expect(bar).not.toBeNull();
   expect(host.querySelector(".status-project")).toBeNull();
   const end = host.querySelector(".status-end");
   expect(end).not.toBeNull();
-  expect(end?.firstElementChild?.classList.contains("status-toggle")).toBe(true);
   expect(end?.lastElementChild?.classList.contains("status-version")).toBe(true);
-  expect(host.querySelector(".status-toggle")?.getAttribute("aria-pressed")).toBe("false");
-  expect(host.querySelector(".status-toggle")?.textContent).toBe("Right Click Delete");
+  const simplify = host.querySelector('[data-status="simplify"]');
+  const del = host.querySelector('[data-status="right-click-delete"]');
+  const sound = end?.querySelector('[data-status="sound"]');
+  expect(simplify?.textContent).toBe("text-only");
+  expect(simplify?.getAttribute("aria-pressed")).toBe("false");
+  expect(simplify?.classList.contains("is-on")).toBe(false);
+  expect(del?.getAttribute("aria-pressed")).toBe("false");
+  expect(del?.getAttribute("aria-label")).toBe("Right-click delete");
+  expect(del?.classList.contains("status-mouse")).toBe(true);
+  expect(del?.textContent).toMatch(/delete/);
+  expect(del?.querySelector("[data-mouse-right-click]")).not.toBeNull();
+  expect(sound).not.toBeNull();
+  expect(sound?.getAttribute("aria-label")).toBe("Sound on");
+  expect(sound?.classList.contains("is-on")).toBe(true);
+  expect(sound && end && (sound.compareDocumentPosition(end.lastElementChild!) & Node.DOCUMENT_POSITION_FOLLOWING)).toBeTruthy();
   expect(host.querySelector(".status-version")?.textContent).toBe(`v${APP_VERSION}`);
   expect(APP_VERSION).toBe("1.0.0");
 });
@@ -205,20 +228,21 @@ test("Actors is a header text button on empty and Step, hidden on Data", () => {
   expect(host.querySelector('[aria-label="Remove Data"]')).not.toBeNull();
 });
 
-test("selected Path hints omit Right-click Delete while the toggle is off", () => {
+test("selected Path hints always include Right-click delete and Edit text", () => {
   act(() => {
     useStore.getState().select({ type: SelectionKind.Edge, id: OAK_PARK_IDS.webAcct });
   });
   const helper = host.querySelector(".canvas-helper")?.textContent ?? "";
-  expect(helper).toMatch(/Dotted \/ Solid/);
-  expect(helper).toMatch(/Edit label/);
-  expect(helper).not.toMatch(/Right-click/);
+  expect(helper).toMatch(/Edit text/);
+  expect(helper).not.toMatch(/Edit label/);
+  expect(helper).toMatch(/Right-click/);
   expect(helper).toMatch(/Remove Path/);
+  expect(host.querySelector("[data-stroke-toggle]")).not.toBeNull();
   act(() => {
     useStore.getState().select({ type: SelectionKind.Edge, id: OAK_PARK_IDS.reviewTo3 });
   });
   const bridge = host.querySelector(".canvas-helper")?.textContent ?? "";
-  expect(bridge).not.toMatch(/Right-click/);
+  expect(bridge).toMatch(/Right-click/);
   expect(bridge).not.toMatch(/Remove Path/);
 });
 
@@ -247,8 +271,32 @@ test("Path inspector Dotted / Solid is shown for a Data-sourced Path", () => {
   expect(rail).toMatch(/Solid/);
 });
 
-test("sound toggle is off by default and Present restores the inspector", () => {
-  expect(host.querySelector('[aria-label="Sound off"]')).not.toBeNull();
+test("toolbar Undo is followed by Redo; Redo is disabled until there is future history", () => {
+  const undoBtn = () => host.querySelector<HTMLButtonElement>('[aria-label^="Undo"]');
+  const redoBtn = () => host.querySelector<HTMLButtonElement>('[aria-label^="Redo"]');
+  expect(undoBtn()).not.toBeNull();
+  expect(redoBtn()).not.toBeNull();
+  const undo = undoBtn();
+  const redo = redoBtn();
+  expect(undo && redo && (undo.compareDocumentPosition(redo) & Node.DOCUMENT_POSITION_FOLLOWING)).toBeTruthy();
+  expect(redoBtn()?.disabled).toBe(true);
+  act(() => {
+    useStore.getState().updateNode(OAK_PARK_IDS.read, { title: "redo-check" });
+  });
+  expect(useStore.getState().past.length).toBeGreaterThan(0);
+  act(() => {
+    useStore.getState().undo();
+  });
+  expect(redoBtn()?.disabled).toBe(false);
+  act(() => {
+    redoBtn()?.click();
+  });
+  expect(useStore.getState().future.length).toBe(0);
+  expect(redoBtn()?.disabled).toBe(true);
+});
+
+test("sound toggle is on by default and Present restores the inspector", () => {
+  expect(host.querySelector("footer.status-bar [aria-label=\"Sound on\"]")).not.toBeNull();
   expect(host.querySelector('[aria-pressed="false"]')).not.toBeNull();
   act(() => {
     useStore.getState().select({ type: SelectionKind.Node, id: OAK_PARK_IDS.read });
@@ -311,8 +359,27 @@ test("Present stacks Before and After; expand fills one lane (P-07)", () => {
   act(() => {
     window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
   });
-  expect(useStore.getState().present).toBe(true);
+  expect(useStore.getState().present).toBe(false);
   expect(useStore.getState().presentExpand).toBeNull();
+});
+
+test("tucking a Present pane blurs it so Escape still exits", () => {
+  act(() => {
+    useStore.getState().setPresent(true);
+  });
+  const afterBtn = host.querySelector<HTMLButtonElement>('[aria-label="Expand After"]');
+  expect(afterBtn).not.toBeNull();
+  act(() => {
+    afterBtn!.focus();
+  });
+  expect(document.activeElement).toBe(afterBtn);
+
+  act(() => {
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true }));
+  });
+  expect(useStore.getState().presentExpand).toBe("before");
+  expect(afterBtn!.closest("[inert]")).not.toBeNull();
+  expect(document.activeElement === afterBtn).toBe(false);
 
   act(() => {
     window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));

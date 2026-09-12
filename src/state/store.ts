@@ -12,8 +12,9 @@
  * removePath / openPathMenu — redundant Path Delete (reachability)
  * requestNew / requestDemo / importRaw / exportWorkflow — replacement gate and YAML Export
  * startFresh / downloadHeldRecovery — corrupt-storage recovery (SH-10)
- * setSoundEnabled — persisted Web Audio cues (SH-03, SH-04)
+ * setSoundEnabled — persisted Web Audio cues (SH-03, SH-04; on by default)
  * setRightClickDelete — persisted Tile right-click remove (off by default)
+ * setSimplify — persisted View (word-web) pref (off by default)
  * setInspectorCollapsed — persisted right-inspector fold (P-05)
  * setPresent — saves and restores view + selection (P-07)
  * presentExpand — Present split vs one fullscreen lane (P-07)
@@ -60,7 +61,6 @@ import {
   insertNodeOnBundle,
   insertNodeOnPath,
   nearestPairings,
-  neighborhoodOf,
   nextTileAfterRemoval,
   pairingBetween,
   planNodeRemoval,
@@ -72,14 +72,6 @@ import {
   type RemovalPlan,
 } from "../workflow/commands";
 import {
-  addAfterStep,
-  applyAfterOnlyRemoval,
-  planAfterOnlyRemoval,
-  connectAfter,
-} from "../workflow/after";
-import { projectAfter } from "./projection";
-import {
-  afterGraph,
   applyDashForSplit,
   edgeIsDotted,
   nextIncomingIndex,
@@ -103,8 +95,8 @@ import {
   type StepNodeDto,
   type ViewMode as ViewModeT,
   type WorkflowDoc,
-  UNFOLD_NOTICE,
-  unfoldMergeGroups,
+  overlayLoadNotice,
+  normalizeAfterOverlay,
 } from "../workflow/types";
 import {
   commitStructural,
@@ -129,10 +121,12 @@ import {
   hydratePersistedWorkflow,
   loadInspectorCollapsed,
   loadRightClickDelete,
+  loadSimplifyPrefs,
   loadSound,
   loadTheme,
   saveInspectorCollapsed,
   saveRightClickDelete,
+  saveSimplifyPrefs,
   saveSound,
   saveTheme,
   writeWorkflow,
@@ -140,12 +134,13 @@ import {
   type RecoveryState,
 } from "./persistence";
 import { playCue, playCueWhen } from "../app/sound/cues";
-import { parseDocument, type ParseResult } from "../workflow/migrate";
 import {
-  findEdge,
-  findNode,
-  isAfterOnlyNode,
-} from "../workflow/selectors";
+  applySimplifyPatch,
+  DEFAULT_SIMPLIFY_PREFS,
+  type SimplifyPrefs,
+} from "../board/simplify/prefs";
+import { parseDocument, type ParseResult } from "../workflow/migrate";
+import { findEdge, findNode } from "../workflow/selectors";
 
 /** Right-hand inspector target, or null when nothing is selected. */
 export type Selection =
@@ -157,11 +152,28 @@ export type Selection =
 /** Board-local pan/zoom, keyed by lane and excluded from the document (BA-05). */
 export type LaneViewport = { x: number; y: number; zoom: number };
 
+/** After follows Before: copy the preferred camera onto both lanes (BA-05). */
+function withSharedCamera(
+  laneViewports: Partial<Record<AssignmentLane, LaneViewport>>,
+  prefer?: AssignmentLane,
+): Partial<Record<AssignmentLane, LaneViewport>> {
+  const seed =
+    (prefer ? laneViewports[prefer] : undefined) ??
+    laneViewports[AssignmentLane.Before] ??
+    laneViewports[AssignmentLane.After];
+  if (!seed) return laneViewports;
+  return {
+    ...laneViewports,
+    [AssignmentLane.Before]: seed,
+    [AssignmentLane.After]: seed,
+  };
+}
+
 /** Pending New / Demo / Import replacement (SH-06). */
 export type PendingReplace =
   | { kind: "new" }
   | { kind: "demo"; demoId: DemoId }
-  | { kind: "import"; doc: WorkflowDoc; unfolded?: boolean };
+  | { kind: "import"; doc: WorkflowDoc; unfolded?: boolean; droppedAfterOnly?: boolean };
 
 function documentForPending(pending: PendingReplace): WorkflowDoc {
   if (pending.kind === "new") return freshBoard();
@@ -169,9 +181,10 @@ function documentForPending(pending: PendingReplace): WorkflowDoc {
   return pending.doc;
 }
 
-function importUnfoldOpts(pending: PendingReplace): { unfoldedNotice?: boolean } | undefined {
-  if (pending.kind === "import" && pending.unfolded) return { unfoldedNotice: true };
-  return undefined;
+function importUnfoldOpts(pending: PendingReplace): { unfoldedNotice?: boolean; droppedAfterOnly?: boolean } | undefined {
+  if (pending.kind !== "import") return undefined;
+  if (!pending.unfolded && !pending.droppedAfterOnly) return undefined;
+  return { unfoldedNotice: pending.unfolded, droppedAfterOnly: pending.droppedAfterOnly };
 }
 
 /** Demo or last saved board. Label spacing is derived per lane (CX-05), not saved. */
@@ -179,22 +192,23 @@ function loadStart(): {
   workflow: WorkflowDoc;
   persistStatus: PersistStatus;
   recovery: RecoveryState | null;
-  unfoldNotice: boolean;
+  overlayNotice: string | null;
 } {
   const boot = hydratePersistedWorkflow(oakParkInvoice);
+  const overlayNotice = overlayLoadNotice(Boolean(boot.unfolded), Boolean(boot.droppedAfterOnly));
   if (boot.recovery || boot.persistStatus === "unavailable") {
     return {
       workflow: boot.workflow,
       persistStatus: boot.persistStatus,
       recovery: boot.recovery,
-      unfoldNotice: Boolean(boot.unfolded),
+      overlayNotice,
     };
   }
   return {
     workflow: boot.workflow,
     persistStatus: writeWorkflow(boot.workflow),
     recovery: null,
-    unfoldNotice: Boolean(boot.unfolded),
+    overlayNotice,
   };
 }
 
@@ -235,6 +249,7 @@ export const useStore = create<{
   selected: Selection;
   soundEnabled: boolean;
   rightClickDelete: boolean;
+  simplify: SimplifyPrefs;
   inspectorCollapsed: boolean;
   keymap: Keymap;
   helpOpen: boolean;
@@ -255,7 +270,7 @@ export const useStore = create<{
   notice: string | null;
   noticeId: number;
   commit: (next: WorkflowDoc, kind?: HistoryKind) => void;
-  replaceDoc: (next: WorkflowDoc, opts?: { unfoldedNotice?: boolean }) => void;
+  replaceDoc: (next: WorkflowDoc, opts?: { unfoldedNotice?: boolean; droppedAfterOnly?: boolean }) => void;
   undo: () => void;
   redo: () => void;
   setView: (v: ViewModeT) => void;
@@ -272,6 +287,7 @@ export const useStore = create<{
   togglePresentLane: () => void;
   setSoundEnabled: (on: boolean) => void;
   setRightClickDelete: (on: boolean) => void;
+  setSimplify: (patch: Partial<SimplifyPrefs>) => void;
   setInspectorCollapsed: (collapsed: boolean) => void;
   select: (s: Selection) => void;
   setHelp: (v: boolean) => void;
@@ -333,7 +349,7 @@ export const useStore = create<{
   cancelReplace: () => void;
   confirmReplaceDiscard: () => void;
   confirmReplaceSaveCopy: () => void;
-  loadDoc: (doc: WorkflowDoc, opts?: { unfoldedNotice?: boolean }) => void;
+  loadDoc: (doc: WorkflowDoc, opts?: { unfoldedNotice?: boolean; droppedAfterOnly?: boolean }) => void;
   exportWorkflow: () => void;
   importRaw: (raw: string) => ParseResult;
   clearImportError: () => void;
@@ -357,6 +373,7 @@ export const useStore = create<{
   selected: null,
   soundEnabled: loadSound(),
   rightClickDelete: loadRightClickDelete(),
+  simplify: loadSimplifyPrefs(),
   inspectorCollapsed: loadInspectorCollapsed(),
   keymap: loadKeymap(),
   helpOpen: false,
@@ -373,7 +390,7 @@ export const useStore = create<{
   recovery: started.recovery,
   pendingReplace: null,
   importError: null,
-  notice: started.unfoldNotice ? UNFOLD_NOTICE : null,
+  notice: started.overlayNotice,
   noticeId: 0,
 
   /** Snapshot current board onto the undo stack, persist unless recovery holds the raw key. */
@@ -392,22 +409,26 @@ export const useStore = create<{
     set({ ...stacks, persistStatus });
   },
   replaceDoc: (next, opts) => {
-    const unfolded = unfoldMergeGroups(next);
-    const doc = unfolded.doc;
+    const normalized = normalizeAfterOverlay(next);
+    const doc = normalized.doc;
     const violations = validateWorkflow(doc);
     if (violations.length) {
       get().setNotice(violations[0]!.message);
       return;
     }
     const persistStatus = persistIfAllowed(doc, get().recovery);
-    const showUnfold = unfolded.unfolded || opts?.unfoldedNotice;
+    const notice = overlayLoadNotice(
+      normalized.unfolded || Boolean(opts?.unfoldedNotice),
+      normalized.droppedAfterOnly || Boolean(opts?.droppedAfterOnly),
+    );
+    const showNotice = Boolean(notice);
     set({
       ...replaceHistory(doc),
       persistStatus,
       selected: null,
       interaction: IDLE,
       departing: null,
-      notice: showUnfold ? UNFOLD_NOTICE : null,
+      notice,
       pendingReplace: null,
       importError: null,
       lastHumanId: null,
@@ -420,7 +441,7 @@ export const useStore = create<{
       laneLayoutPositions: {},
       canvasEpoch: get().canvasEpoch + 1,
     });
-    if (showUnfold) {
+    if (showNotice) {
       set({ noticeId: get().noticeId + 1 });
     }
   },
@@ -457,20 +478,8 @@ export const useStore = create<{
         : view === ViewMode.Before
           ? AssignmentLane.Before
           : get().focusedLane;
-    let laneViewports = get().laneViewports;
-    if (view === ViewMode.Both) {
-      const seed =
-        laneViewports[focusedLane] ??
-        laneViewports[AssignmentLane.Before] ??
-        laneViewports[AssignmentLane.After];
-      if (seed) {
-        laneViewports = {
-          ...laneViewports,
-          [AssignmentLane.Before]: seed,
-          [AssignmentLane.After]: seed,
-        };
-      }
-    }
+    const prefer = view === ViewMode.Both ? focusedLane : AssignmentLane.Before;
+    const laneViewports = withSharedCamera(get().laneViewports, prefer);
     set({ view, interaction: IDLE, focusedLane, laneViewports });
   },
   setFocusedLane: (focusedLane) => {
@@ -495,18 +504,7 @@ export const useStore = create<{
     const s = get();
     if (present) {
       if (s.present) return;
-      let laneViewports = s.laneViewports;
-      const seed =
-        laneViewports[s.focusedLane] ??
-        laneViewports[AssignmentLane.Before] ??
-        laneViewports[AssignmentLane.After];
-      if (seed) {
-        laneViewports = {
-          ...laneViewports,
-          [AssignmentLane.Before]: seed,
-          [AssignmentLane.After]: seed,
-        };
-      }
+      const laneViewports = withSharedCamera(s.laneViewports, AssignmentLane.Before);
       set({
         present: true,
         presentExpand: null,
@@ -557,6 +555,11 @@ export const useStore = create<{
   setRightClickDelete: (rightClickDelete) => {
     saveRightClickDelete(rightClickDelete);
     set({ rightClickDelete });
+  },
+  setSimplify: (patch) => {
+    const simplify = applySimplifyPatch(get().simplify ?? DEFAULT_SIMPLIFY_PREFS, patch);
+    saveSimplifyPrefs(simplify);
+    set({ simplify });
   },
   setInspectorCollapsed: (inspectorCollapsed) => {
     saveInspectorCollapsed(inspectorCollapsed);
@@ -902,11 +905,8 @@ export const useStore = create<{
   },
   connect: (source, target, label = "") => {
     if (get().present || get().view === ViewMode.Both) return;
-    const { workflow, view } = get();
-    const result =
-      view === ViewMode.After
-        ? connectAfter(workflow, source, target, { label })
-        : connectNodes(workflow, source, target, { label });
+    const { workflow } = get();
+    const result = connectNodes(workflow, source, target, { label });
     if (!result.ok) {
       get().setNotice(result.message);
       return;
@@ -1056,68 +1056,7 @@ export const useStore = create<{
     if (get().present || get().view === ViewMode.Both) return "";
     const inbound = side === "in";
     const dock: "out" | "in" = inbound ? "in" : "out";
-    const { workflow, lastHumanId, view } = get();
-    if (view === ViewMode.After) {
-      if (type === WorkflowNodeKind.DataField) {
-        get().setNotice("After does not add Data. Pull + onto Step, or press Q or E.");
-        return "";
-      }
-      if (!findNode(workflow, sourceId)) {
-        get().setNotice(MSG.missingNode);
-        return "";
-      }
-      const graph = afterGraph(workflow);
-      const srcNode =
-        projectAfter(workflow).nodes.find((n) => n.id === sourceId) ??
-        graph.nodes.find((n) => n.id === sourceId);
-      if (!srcNode) {
-        set({ interaction: IDLE });
-        return "";
-      }
-      const port = inbound
-        ? nextIncomingIndex(graph.edges, sourceId)
-        : nextPortIndex(graph.edges, sourceId);
-      const displayed = get().activePositions();
-      const srcPlaced = withDisplayedPositions([srcNode], displayed)[0]!;
-      const others = withDisplayedPositions(
-        [...graph.nodes, ...projectAfter(workflow).nodes],
-        displayed,
-      );
-      const pos = clearDockPosition(
-        srcPlaced,
-        WorkflowNodeKind.Step,
-        port,
-        others,
-        dock,
-      );
-      const id = nid(IdPrefix.Step);
-      const result = addAfterStep(
-        workflow,
-        sourceId,
-        {
-          id,
-          type: WorkflowNodeKind.Step,
-          position: pos,
-          stepKind: StepKind.Other,
-          title: STEP_KIND_META[StepKind.Other].defaultTitle,
-          detail: "",
-          split: SplitKind.Exclusive,
-        },
-        { inbound },
-      );
-      if (!result.ok) {
-        get().setNotice(result.message);
-        return "";
-      }
-      get().commit(result.value);
-      playCueWhen(get().soundEnabled, "blip");
-      set({
-        interaction: IDLE,
-        selected: { type: SelectionKind.Node, id },
-      });
-      get().requestFocus(id);
-      return id;
-    }
+    const { workflow, lastHumanId } = get();
     const src = workflow.nodes.find((n) => n.id === sourceId);
     if (!src) {
       set({ interaction: IDLE });
@@ -1215,13 +1154,12 @@ export const useStore = create<{
     get().requestFocus(targetId);
   },
   toggleSelectedDash: () => {
-    const { selected, workflow, view, updateEdge } = get();
+    const { selected, workflow, updateEdge } = get();
     if (!get().canvasEditable()) return;
     if (selected?.type !== SelectionKind.Edge) return;
     const edge = findEdge(workflow, selected.id);
     if (!edge) return;
-    const graph =
-      view === ViewMode.After ? afterGraph(workflow) : { nodes: workflow.nodes, edges: workflow.edges };
+    const graph = { nodes: workflow.nodes, edges: workflow.edges };
     updateEdge(selected.id, { dashed: !edgeIsDotted(graph.nodes, graph.edges, edge) });
   },
   focusPathLabel: () => {
@@ -1265,7 +1203,7 @@ export const useStore = create<{
 
   removeTarget: (nodeId) => {
     if (get().present || get().view === ViewMode.Both) return;
-    const { workflow, view } = get();
+    const { workflow } = get();
     set({
       selected: { type: SelectionKind.Node, id: nodeId },
       manageActorsOpen: false, manageActorsSource: null,
@@ -1273,20 +1211,6 @@ export const useStore = create<{
       manageActorId: null,
     });
     const positions = get().activePositions();
-    if (isAfterOnlyNode(workflow, nodeId)) {
-      if (view !== ViewMode.After) return;
-      const planned = planAfterOnlyRemoval(workflow, nodeId, positions);
-      if (!planned.ok) {
-        get().setNotice(planned.message);
-        return;
-      }
-      if (planned.value.mode === "preview") {
-        set({ interaction: { kind: "remove-preview", plan: planned.value } });
-        return;
-      }
-      applyAfterOnlyPlanned(get, set, planned.value, planned.value.pairings);
-      return;
-    }
     if (!workflow.nodes.some((n) => n.id === nodeId)) return;
     const planned = planNodeRemoval(workflow, nodeId, positions);
     if (!planned.ok) {
@@ -1304,12 +1228,8 @@ export const useStore = create<{
     get().removeTarget(hostId);
   },
   confirmRemove: () => {
-    const { interaction, workflow } = get();
+    const { interaction } = get();
     if (interaction.kind !== "remove-preview") return;
-    if (isAfterOnlyNode(workflow, interaction.plan.nodeId)) {
-      applyAfterOnlyPlanned(get, set, interaction.plan, interaction.plan.pairings);
-      return;
-    }
     applyPlannedRemoval(get, set, interaction.plan, interaction.plan.pairings);
   },
   setPreviewSuccessorPred: (successorId, predecessorId) => {
@@ -1398,7 +1318,12 @@ export const useStore = create<{
     }
     if (get().recovery) return parsed;
     set({
-      pendingReplace: { kind: "import", doc: parsed.doc, unfolded: parsed.unfolded },
+      pendingReplace: {
+        kind: "import",
+        doc: parsed.doc,
+        unfolded: parsed.unfolded,
+        droppedAfterOnly: parsed.droppedAfterOnly,
+      },
       importError: null,
     });
     return parsed;
@@ -1480,43 +1405,6 @@ function applyPlannedRemoval(
     node,
     actor,
     notice: plan.overlayEffects.notices[0] ?? null,
-  });
-}
-
-function applyAfterOnlyPlanned(
-  get: () => {
-    workflow: WorkflowDoc;
-    past: WorkflowDoc[];
-    recovery: RecoveryState | null;
-    actorFor: (stepId: string) => ActorDto | undefined;
-    setNotice: (message: string | null) => void;
-    soundEnabled: boolean;
-    activePositions: () => PositionMap | undefined;
-  },
-  set: (partial: Record<string, unknown>) => void,
-  plan: RemovalPlan,
-  pairings: RemovalPairing[],
-) {
-  const { workflow } = get();
-  const node = findNode(workflow, plan.nodeId);
-  const actor = node && isStepNode(node) ? get().actorFor(node.id) : undefined;
-  const positions = get().activePositions();
-  const graph = afterGraph(workflow);
-  const { predecessorIds, successorIds } = neighborhoodOf(
-    graph.nodes,
-    graph.edges,
-    plan.nodeId,
-    positions,
-  );
-  const applied = applyAfterOnlyRemoval(workflow, plan, pairings, positions);
-  if (!applied.ok) {
-    get().setNotice(applied.message);
-    return;
-  }
-  commitRemovalKeepingNeighbor(get, set, applied.value, predecessorIds, successorIds, {
-    node,
-    actor,
-    notice: null,
   });
 }
 

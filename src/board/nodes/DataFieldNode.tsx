@@ -6,8 +6,11 @@ import { Handle, Position, type NodeProps } from "@xyflow/react";
 import { SelectionKind, WorkflowNodeKind } from "../../workflow/catalogs";
 import { useStore } from "../../state/store";
 import { DataTile } from "../tiles/DataTile";
+import { SimplifiedTile } from "../tiles/SimplifiedTile";
 import { PathHostFrame } from "../controls/PathHostFrame";
 import { findNode } from "../../workflow/selectors";
+import { useSimplifyView } from "../simplify/SimplifyContext";
+import { simplifyHeadline } from "../simplify/headline";
 
 export function DataFieldNode({ id, selected, dragging }: NodeProps) {
   const departing = useStore((s) => s.departing?.node.id === id);
@@ -21,12 +24,22 @@ export function DataFieldNode({ id, selected, dragging }: NodeProps) {
   const storeOn = useStore(
     (s) => s.selected?.type === SelectionKind.Node && s.selected.id === id,
   );
+  const { simplified } = useSimplifyView();
   if (!node || node.type !== WorkflowNodeKind.DataField) return null;
   const on = !!(storeOn || selected || focusId === id);
   return (
     <PathHostFrame id={id} selected={on} departing={departing}>
       <Handle type="target" position={Position.Left} />
-      <DataTile label={node.label} selected={on && !departing} lifted={dragging} />
+      {simplified ? (
+        <SimplifiedTile
+          kind="data"
+          text={simplifyHeadline(node)}
+          selected={on && !departing}
+          lifted={dragging}
+        />
+      ) : (
+        <DataTile label={node.label} selected={on && !departing} lifted={dragging} />
+      )}
       <Handle type="source" position={Position.Right} />
     </PathHostFrame>
   );

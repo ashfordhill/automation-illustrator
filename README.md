@@ -28,7 +28,7 @@ Intended to help engineers and non-engineers get on the same page about what wor
 
 ### Usage
 
-The **sound is off by default** but turning it on for the sound effects can make using the software more enjoyable.
+The **sound is on by default**. The status-bar speaker toggle turns the cues off if you prefer quiet.
 
 ```bash
 docker pull ghcr.io/ashfordhill/automation-illustrator:latest

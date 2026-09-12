@@ -1,15 +1,18 @@
 /**
  * React Flow node for a Step tile (actor + task).
  * Lane in node.data chooses Before vs After assignment (actorFor).
- * After-only Steps are supplied via projection data.
+ * After Who is lane-specific; the graph is shared with Before.
  */
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import { AssignmentLane, SelectionKind } from "../../workflow/catalogs";
 import { useStore } from "../../state/store";
 import { StepTile } from "../tiles/StepTile";
+import { SimplifiedTile } from "../tiles/SimplifiedTile";
 import { PathHostFrame } from "../controls/PathHostFrame";
 import { findNode } from "../../workflow/selectors";
 import { isStepNode, laneAssignments, type StepNodeDto } from "../../workflow/types";
+import { useSimplifyView } from "../simplify/SimplifyContext";
+import { simplifyHeadline } from "../simplify/headline";
 
 export type StepNodeData = {
   lane?: AssignmentLane;
@@ -39,19 +42,29 @@ export function StepNode({ id, selected, dragging, data }: NodeProps) {
     (s) => s.selected?.type === SelectionKind.Node && s.selected.id === id,
   );
   const node = live && isStepNode(live) ? live : payload.node;
+  const { simplified } = useSimplifyView();
   if (!node || !isStepNode(node)) return null;
   const on = !!(storeOn || selected || focusId === id);
   return (
     <PathHostFrame id={id} selected={on} departing={!!departing}>
       <Handle type="target" position={Position.Left} />
-      <StepTile
-        actor={actor}
-        kind={node.stepKind}
-        title={node.title}
-        detail={node.detail}
-        selected={on && !departing}
-        lifted={dragging}
-      />
+      {simplified ? (
+        <SimplifiedTile
+          kind="step"
+          text={simplifyHeadline(node)}
+          selected={on && !departing}
+          lifted={dragging}
+        />
+      ) : (
+        <StepTile
+          actor={actor}
+          kind={node.stepKind}
+          title={node.title}
+          detail={node.detail}
+          selected={on && !departing}
+          lifted={dragging}
+        />
+      )}
       <Handle type="source" position={Position.Right} />
     </PathHostFrame>
   );

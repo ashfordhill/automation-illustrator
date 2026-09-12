@@ -385,3 +385,117 @@ Do *NOT* put `.docs/` in the image links! It will break the markdown image rende
 - Attachments:
   ![actor trash small](visual-improvements/2026-09-09-actor-trash-small.png)
 
+## 2026-09-10 — Alice card favicon
+
+- Issue: Wanted a favicon that is a mini Alice card with no text and clearly rounded corners.
+- Resolution: SVG favicon of Alice’s pink strip and empty name plate on a rounded tile; tab title is Automation Illustrator.
+- Attachments:
+  ![alice favicon sketch](visual-improvements/2026-09-10-alice-favicon.png)
+
+## 2026-09-10 — favicon clipped in the tab
+
+- Issue: The two-panel Alice card read as a white pill with a pink sliver in the browser tab.
+- Resolution: Favicon is only the pink rounded square and a chunky stick figure.
+- Attachments:
+  ![favicon clipped](visual-improvements/2026-09-10-favicon-clipped.png)
+
+## 2026-09-10 — leftover Path after deleting middle Alice
+
+- Issue: Deleting the middle Alice in a diamond (Alice → Alice → Alice, with Data already reaching the right Alice) leaves a dotted shortcut Path through the empty gap. It does nothing; the user has to delete it by hand.
+- Resolution: Shipped in `feat(improve-54): skip leftover restitch Paths`. Auto restitch omits a new Path when the predecessor already reaches the successor.
+- Attachments:
+  ![delete middle Alice leftover Path](visual-improvements/2026-09-10-delete-middle-alice-leftover-path.gif)
+
+## 2026-09-10 — Simplify ovals too small
+
+- Issue: Word-web ovals sit in a tiny island on a mostly empty canvas; Paths stay tile-length; the Simplify submenu stays open after a click on the board.
+- Resolution: Larger screen-sized ovals, longer spread Paths in Simplify, and the submenu closes on an outside click.
+- Attachments:
+  ![simplify ovals too small](visual-improvements/2026-09-10-simplify-ovals-too-small.png)
+
+## 2026-09-10 — Simplify word-web still wrong
+
+- Issue: Turning Simplify on this small board still fails as a view: ovals stay a pile or a tiny island, Paths do not meet the pills, the camera stays the tile camera.
+- Resolution: Planned for Improvement 57 (real word-web ELK pass + fit camera; drop overlay/spread).
+- Attachments:
+  ![source board before Simplify](visual-improvements/2026-09-10-simplify-word-web-source-board.jpg)
+  ![simplify ovals too small](visual-improvements/2026-09-10-simplify-ovals-too-small.png)
+
+## 2026-09-11 — tile zoom-out island
+
+- Issue: Zooming out shrinks the tile graph into a tiny island in empty paper. Hide visuals on zoom-out also stuck the board in ovals and felt laggy.
+- Resolution: Dropped zoom-out Simplify. Wheel/pinch cannot zoom out past the fitted graph size, so tiles stop shrinking once they fill the pane.
+- Attachments:
+  ![tile zoom-out island](visual-improvements/2026-09-11-tile-zoom-out-island.jpg)
+
+## 2026-09-11 — Before/After layout flip
+
+- Issue: Switching Before ↔ After rearranges the same Tiles onto different rows. After-only extras also make After a different graph.
+- Resolution: After-only Steps and Paths are withdrawn. After is 1:1 with Before (Who only). Both lanes share the same derived layout.
+- Attachments:
+  ![before after layout flip](visual-improvements/2026-09-11-before-after-layout-flip.gif)
+
+## 2026-09-11 — Before/After first-load flicker
+
+- Issue: First paint and the first After click flash the graph at the wrong camera, then jump. ELK and fitView ran after the board was already visible.
+- Resolution: Shipped in `feat(improve-59): cover first layout until camera ready`. Cover the board with Loading until the first layout and camera land. Before and After share one layout cache and one React Flow instance.
+- Attachments:
+  ![before after first flicker](visual-improvements/2026-09-11-before-after-first-flicker.gif)
+
+## 2026-09-11 — hide visuals tiny ovals
+
+- Issue: Hide visuals keeps thin one-line ovals, so a Mailroom-length chain is a tiny island in empty paper and Type/Name smash together.
+- Resolution: Planned — taller word-wrapped ovals (break on words, never mid-word) so the web uses more of the pane and type stays larger.
+- Attachments:
+  ![hide visuals tiny ovals](visual-improvements/2026-09-11-hide-visuals-tiny-ovals.png)
+
+## 2026-09-12 — hotkey hints size and color
+
+- Issue: Bottom hotkey hints are too large and dark; Right-click sits beside Z and shifts it when the toggle is on.
+- Resolution: Quieter lighter type and keycaps, about half size; Right-click stacks under Remove Step without moving Z. Status bar copy is Text-only View and Right-click delete.
+- Attachments:
+  ![hotkey hints size and color](visual-improvements/2026-09-12-hotkey-hints-size-color.png)
+
+## 2026-09-12 — right-click mouse mark
+
+- Issue: After shrinking, hints are a bit too pale; Right-click is a wide rough keycap. Status bar still spells out Right-click delete.
+- Resolution: Darken hints ~20% and grow ~10%. Replace Right-click with a top-down mouse (right button filled) in the hint strip and as a status-bar icon like sound.
+- Attachments:
+  ![hotkey hints mouse icon](visual-improvements/2026-09-12-hotkey-hints-mouse-icon.png)
+  ![right-click mouse source](visual-improvements/2026-09-12-right-click-mouse.svg.png)
+
+## 2026-09-12 — Step Actor figure and name plate (restored)
+
+- Issue: The name/role plate sat high in the pink strip with unused space under it. An earlier alignment (figure a bit lower, plate on the bottom) was reverted.
+- Resolution: Figure sits in the upper strip; the name/role plate pins to the bottom.
+- Attachments:
+  ![actor box bottom gap](visual-improvements/2026-09-08-actor-box-bottom-gap.png)
+
+## 2026-09-12 — spawn compass mini tile
+
+- Issue: The center of the Q/E A/D spawn arrows is a vertical tick that does not read as “this tile.”
+- Resolution: Replace the tick with a mini empty rounded tile; Right-click hover is on/off only; status button shows mouse + delete.
+- Attachments:
+  ![spawn compass center tick](visual-improvements/2026-09-12-spawn-compass-center-tick.png)
+
+## 2026-09-12 — spawn compass four-corner sketch
+
+- Issue: Q/E and A/D still read as two labeled rows (`+ Step` / `+ Data`) around a long arrow bar.
+- Resolution: Four-corner layout matching the sketch: keys at Q/E/A/D, **step** and **data** as center labels, short arrows flanking the mini empty tile. Compact hint size kept.
+- Attachments:
+  ![spawn compass four-corner sketch](visual-improvements/2026-09-12-spawn-compass-sketch.png)
+
+## 2026-09-12 — Path hotkey hints
+
+- Issue: Path hints use `.` and “Dotted / Solid” / “Edit label”; Right-click delete is missing unless the status toggle is on.
+- Resolution: Default stroke key is S with SVG dotted/solid samples; copy is Edit text; mouse + delete always shows. Tile Z Remove is gone; compass keys sit closer with longer arrows and a slightly narrower tile.
+- Attachments:
+  ![path hotkey hints](visual-improvements/2026-09-12-path-hotkey-hints.png)
+
+## 2026-09-12 — tile Right-click hint shift
+
+- Issue: Turning Right-click delete on adds the mouse+delete chip in the centered hint row, so the spawn compass jumps left.
+- Resolution: The compass stays centered; the chip is parked to its right and does not change the row width.
+- Attachments:
+  ![tile right-click hint shift](visual-improvements/2026-09-12-tile-right-click-hint-shift.gif)
+

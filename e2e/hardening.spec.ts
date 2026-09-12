@@ -4,7 +4,7 @@ import { DEMO_STEP, loadOakPark, screenshotBoard, waitForLayout, capturePage, en
 
 const EVIDENCE = ".docs/evidence/12-release";
 const MAIL_STEP = "Read incoming mail";
-const RECEIPT = "Email delivery receipt to sender";
+const SCAN = "Scan letter to PDF";
 
 function viewRadio(page: Page, name: "Before" | "After" | "Compare") {
   return page.getByRole("radio", { name, exact: true });
@@ -90,16 +90,16 @@ test.describe("slice 12 supported min-width", () => {
 test.describe("slice 12 persistence, keymap, and reload", () => {
   test("theme and sound survive reload", async ({ page }) => {
     await loadOakPark(page);
-    await expect(page.getByRole("button", { name: "Sound off" })).toBeVisible();
-    await page.getByRole("button", { name: "Sound off" }).click();
     await expect(page.getByRole("button", { name: "Sound on" })).toBeVisible();
+    await page.getByRole("button", { name: "Sound on" }).click();
+    await expect(page.getByRole("button", { name: "Sound off" })).toBeVisible();
     await enterDarkTheme(page);
     await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
     await page.reload();
     await expect(page.getByText(DEMO_STEP).first()).toBeVisible({ timeout: 15_000 });
     await waitForLayout(page);
     await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-    await expect(page.getByRole("button", { name: "Sound on" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Sound off" })).toBeVisible();
   });
 
   test("saved keymap ignores retired actions and keeps Undo rebound (SH-14)", async ({ page }) => {
@@ -191,7 +191,7 @@ test.describe("slice 12 surfaces, dialogs, and final screenshots", () => {
       "Oak Park Invoice",
       "Robot Mailroom",
     ]);
-    await expect(page.getByRole("button", { name: /Redo/ })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /Redo/ })).toBeVisible();
     await capturePage(page, `${EVIDENCE}/hamburger-1440.png`);
     await page.keyboard.press("Escape");
 
@@ -232,7 +232,8 @@ test.describe("slice 12 surfaces, dialogs, and final screenshots", () => {
     await viewRadio(page, "After").click();
     await waitForLayout(page);
     await expect(page.getByRole("region", { name: "Merge and Unmerge" })).toHaveCount(0);
-    await expect(page.getByText(RECEIPT).first()).toBeVisible();
+    await expect(page.getByText(SCAN).first()).toBeVisible();
+    await expect(page.getByText("delivery receipt")).toHaveCount(0);
     await screenshotBoard(page, `${EVIDENCE}/mailroom-after-1440.png`);
     await enterDarkTheme(page);
     await waitForLayout(page);

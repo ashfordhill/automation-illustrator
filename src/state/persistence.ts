@@ -16,6 +16,11 @@ import {
   workflowExportFilename,
   workflowToYaml,
 } from "../workflow/serialize";
+import {
+  DEFAULT_SIMPLIFY_PREFS,
+  parseSimplifyPrefs,
+  type SimplifyPrefs,
+} from "../board/simplify/prefs";
 import type { WorkflowDoc } from "../workflow/types";
 
 export type PersistStatus = "saved" | "dirty" | "unavailable";
@@ -33,6 +38,7 @@ export type HydrateResult = {
   persistStatus: PersistStatus;
   recovery: RecoveryState | null;
   unfolded?: boolean;
+  droppedAfterOnly?: boolean;
 };
 
 /** Pretty JSON for localStorage. Files use YAML via workflowToYaml. */
@@ -55,6 +61,7 @@ export const LS_THEME = "automation-pitch.theme";
 export const LS_SOUND = "automation-pitch.sound";
 export const LS_RIGHT_CLICK_DELETE = "automation-pitch.right-click-delete";
 export const LS_INSPECTOR_COLLAPSED = "automation-pitch.inspectorCollapsed";
+export const LS_SIMPLIFY = "automation-pitch.simplify";
 export const SAVE_COPY_FILENAME = "untitled.yaml";
 export const RECOVERY_COPY_FILENAME = "automation-pitch.recovery.json";
 
@@ -154,6 +161,7 @@ export function hydratePersistedWorkflow(
     persistStatus: writeWorkflow(workflow, storage),
     recovery: null,
     unfolded: parsed.unfolded,
+    droppedAfterOnly: parsed.droppedAfterOnly,
   };
 }
 
@@ -176,12 +184,12 @@ export function saveTheme(scheme: ColorScheme) {
   }
 }
 
-/** Sound is off unless the saved value is exactly `on` (SH-03). */
+/** Sound is on unless the user saved `off` (SH-03). */
 export function loadSound(): boolean {
   try {
-    return localStorage.getItem(LS_SOUND) === "on";
+    return localStorage.getItem(LS_SOUND) !== "off";
   } catch {
-    return false;
+    return true;
   }
 }
 
@@ -205,6 +213,23 @@ export function loadRightClickDelete(): boolean {
 export function saveRightClickDelete(on: boolean) {
   try {
     localStorage.setItem(LS_RIGHT_CLICK_DELETE, on ? "on" : "off");
+  } catch {
+    /* preference is session-only if storage is denied */
+  }
+}
+
+/** View (word-web) pref. Missing or invalid JSON is off. Hide data is ignored. */
+export function loadSimplifyPrefs(): SimplifyPrefs {
+  try {
+    return parseSimplifyPrefs(localStorage.getItem(LS_SIMPLIFY));
+  } catch {
+    return { ...DEFAULT_SIMPLIFY_PREFS };
+  }
+}
+
+export function saveSimplifyPrefs(prefs: SimplifyPrefs) {
+  try {
+    localStorage.setItem(LS_SIMPLIFY, JSON.stringify(prefs));
   } catch {
     /* preference is session-only if storage is denied */
   }

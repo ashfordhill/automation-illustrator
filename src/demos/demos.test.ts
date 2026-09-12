@@ -58,8 +58,9 @@ test("Robot Mailroom matches Appendix A overlay", () => {
   expect(doc.after.assignments[MAILROOM_IDS.scan]).toBe(MAILROOM_IDS.mailbot);
   expect(doc.after.assignments[MAILROOM_IDS.lookup]).toBe(MAILROOM_IDS.mailbot);
   expect(doc.after.assignments[MAILROOM_IDS.route]).toBe(MAILROOM_IDS.mailbot);
-  expect(doc.after.extraNodes.map((n) => n.id)).toEqual([MAILROOM_IDS.receipt]);
-  expect(doc.after.extraEdges.map((e) => e.id)).toEqual([MAILROOM_IDS.extra]);
+  expect(doc.after.extraNodes).toEqual([]);
+  expect(doc.after.extraEdges).toEqual([]);
+  expect(doc.after.assignments[MAILROOM_IDS.receipt]).toBeUndefined();
   expect(doc.assignments[MAILROOM_IDS.priya]).toBeUndefined();
   expect(doc.actors.find((a) => a.id === MAILROOM_IDS.priya)?.kind).toBe(ActorKind.Human);
   const found = doc.edges.find((e) => e.id === MAILROOM_IDS.e4)!;

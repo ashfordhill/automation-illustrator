@@ -4,7 +4,7 @@
  * folds to a thin strip when editing (P-05). Under 1024 CSS px the board is
  * replaced (P-04). Theme is dataset.theme for CSS plus Mantine forceColorScheme.
  */
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { AppShell, MantineProvider, createTheme } from "@mantine/core";
 import { useReducedMotion } from "@mantine/hooks";
 import { Board } from "../board/Board";
@@ -53,12 +53,20 @@ function LanePane({
   lane: typeof AssignmentLane.Before | typeof AssignmentLane.After;
   present: boolean;
 }) {
+  const paneRef = useRef<HTMLDivElement>(null);
   const presentExpand = useStore((s) => s.presentExpand);
   const tucked = present && presentExpand !== null && presentExpand !== lane;
   const expanded = present && presentExpand === lane;
   const isAfter = lane === AssignmentLane.After;
+  useEffect(() => {
+    if (!tucked) return;
+    const root = paneRef.current;
+    const ae = document.activeElement;
+    if (root && ae instanceof HTMLElement && root.contains(ae)) ae.blur();
+  }, [tucked]);
   return (
     <div
+      ref={paneRef}
       className={[
         "lane-pane",
         isAfter ? "lane-after" : "lane-before",

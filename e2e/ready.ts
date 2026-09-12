@@ -5,7 +5,7 @@ import { expect, type Page } from "@playwright/test";
 /** Oak Park root Step title as shown on the tile. */
 export const DEMO_STEP = "Read invoice.pdf";
 
-/** ELK lays each lane out on a worker; screenshots wait until every lane is `ready` (Improvement 01). */
+/** ELK lays each lane out on a worker; screenshots wait until every lane is `ready` (Improvement 01 / 59). */
 export async function waitForLayout(page: Page) {
   const hosts = page.locator("[data-layout]");
   await expect(hosts.first()).toBeAttached({ timeout: 15_000 });
@@ -14,13 +14,16 @@ export async function waitForLayout(page: Page) {
     await expect(hosts.nth(i)).toHaveAttribute("data-layout", "ready", {
       timeout: 15_000,
     });
+    await expect(hosts.nth(i)).toHaveAttribute("data-board", "ready", {
+      timeout: 15_000,
+    });
   }
 }
 
 export async function loadOakPark(page: Page) {
   await page.goto("/");
-  await expect(page.getByText(DEMO_STEP).first()).toBeVisible({ timeout: 15_000 });
   await waitForLayout(page);
+  await expect(page.getByText(DEMO_STEP).first()).toBeVisible({ timeout: 15_000 });
 }
 
 /** Present is a top-right icon, not a hamburger item. */
@@ -96,8 +99,8 @@ export async function pullPlusPreview(
     .getByRole("button", {
       name:
         side === "in"
-          ? /Add left Step or Data|Add left After-only Step/
-          : /Add Step or Data|Add After-only Step/,
+          ? /Add left Step or Data/
+          : /Add Step or Data/,
     })
     .first();
   await expect(plus).toBeVisible();
@@ -116,19 +119,36 @@ export async function pullPlusPreview(
   await page.mouse.up();
 }
 
-/** Current React Flow zoom (translate/scale or matrix). Defaults to the first lane. */
-export async function laneZoom(page: Page, lane?: "before" | "after"): Promise<number> {
+type LaneCamera = { x: number; y: number; zoom: number };
+
+function parseLaneCamera(transform: string): LaneCamera {
+  const translate = transform.match(/translate\(\s*([^\s,]+)(?:px)?\s*,\s*([^\s,)]+)(?:px)?/);
+  const scale = transform.match(/scale\(([^)]+)\)/);
+  if (translate && scale) {
+    return { x: parseFloat(translate[1]), y: parseFloat(translate[2]), zoom: Number(scale[1]) };
+  }
+  const matrix = transform.match(/matrix\(([^)]+)\)/);
+  if (matrix) {
+    const p = matrix[1].split(",").map((n) => Number(n.trim()));
+    return { x: p[4] ?? 0, y: p[5] ?? 0, zoom: Math.abs(p[0] ?? 1) };
+  }
+  return { x: 0, y: 0, zoom: 1 };
+}
+
+/** Current React Flow camera (translate + scale). Defaults to the first lane. */
+export async function laneCamera(page: Page, lane?: "before" | "after"): Promise<LaneCamera> {
   const host = lane
     ? page.locator(`.board-lane[data-lane="${lane}"]`)
     : page.locator(".board-lane").first();
-  return host.locator(".react-flow__viewport").evaluate((el) => {
-    const t = (el as HTMLElement).style.transform || getComputedStyle(el).transform;
-    const scale = t.match(/scale\(([^)]+)\)/);
-    if (scale) return Number(scale[1]);
-    const matrix = t.match(/matrix\(([^)]+)\)/);
-    if (matrix) return Math.abs(Number(matrix[1].split(",")[0]));
-    return 1;
+  const transform = await host.locator(".react-flow__viewport").evaluate((el) => {
+    return (el as HTMLElement).style.transform || getComputedStyle(el).transform;
   });
+  return parseLaneCamera(transform);
+}
+
+/** Current React Flow zoom (translate/scale or matrix). Defaults to the first lane. */
+export async function laneZoom(page: Page, lane?: "before" | "after"): Promise<number> {
+  return (await laneCamera(page, lane)).zoom;
 }
 
 /** fitView runs after `data-layout=ready`; wait until zoom is no longer animating. */

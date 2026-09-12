@@ -1,7 +1,7 @@
 /**
  * Bottom status bar chrome.
- * On/off for Right Click Delete is `.is-on` / aria-pressed, not copy.
- * Toggle + version sit on the right (not the left).
+ * On/off for toggles is `.is-on` / aria-pressed, not copy.
+ * text-only, Right-click delete (mouse icon), sound, and version sit on the right.
  */
 :root {
   --status-bar-height: 36px;
@@ -66,6 +66,39 @@
 .status-toggle:focus-visible {
   outline: 3px solid var(--yellow);
   outline-offset: 2px;
+}
+
+.status-sound {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+.status-toggle.status-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+}
+
+.status-toggle.status-icon svg,
+.status-toggle.status-mouse svg {
+  display: block;
+  flex: 0 0 auto;
+}
+
+.status-toggle.status-mouse {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  gap: 5px;
+  height: 26px;
+  width: auto;
+  padding: 0 8px 0 6px;
 }
 
 .canvas-helper {

@@ -7,27 +7,27 @@ function viewLabel(page: Page, name: "Before" | "After" | "Compare") {
   return page.locator("header").getByText(name, { exact: true });
 }
 
-test.describe("After-only Steps (merge withdrawn)", () => {
-  test("After + offers After-only Step, not Data", async ({ page }) => {
+test.describe("After spawn (merge withdrawn)", () => {
+  test("After + offers Step and Data", async ({ page }) => {
     await loadOakPark(page);
     await viewLabel(page, "After").click();
     await waitForLayout(page);
     await page.getByText("Read invoice.pdf").first().click();
-    const afterPlus = page.getByRole("button", { name: "Add After-only Step" });
+    const afterPlus = page.getByRole("button", { name: "Add Step or Data" });
     const box = await afterPlus.boundingBox();
     expect(box).toBeTruthy();
     const grab = tabPeekPoint(box!);
     await page.mouse.move(grab.x, grab.y);
     await page.mouse.down();
     await page.mouse.move(grab.x + 140, grab.y, { steps: 12 });
-    await expect(page.getByRole("button", { name: "After-only Step" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "New Data" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "New Step" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "New Data" })).toBeVisible();
     await screenshotBoard(page, `${EVIDENCE}/after-plus-1440.png`);
     await page.mouse.up();
     await page.keyboard.press("Escape");
   });
 
-  test("After-only Step can be added and removed", async ({ page }) => {
+  test("After Step can be added and removed on the shared graph", async ({ page }) => {
     await loadOakPark(page);
     await viewLabel(page, "After").click();
     await waitForLayout(page);

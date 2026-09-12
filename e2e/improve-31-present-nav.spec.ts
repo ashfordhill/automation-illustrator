@@ -40,11 +40,6 @@ test.describe("Improvement 31 — Present hides the nav bar", () => {
     await capturePage(page, `${EVIDENCE}/present-after-1440.png`);
 
     await page.keyboard.press("Escape");
-    await expect(page.locator("[data-present-expand]")).toHaveAttribute(
-      "data-present-expand",
-      "split",
-    );
-    await page.keyboard.press("Escape");
     await expect(page.getByRole("button", { name: "Menu" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Present" })).toBeVisible();
     await expect(page.locator("footer.status-bar")).toBeVisible();

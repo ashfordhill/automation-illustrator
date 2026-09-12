@@ -9,7 +9,7 @@ import {
 import { ActorKind, RobotKind, SplitKind, StepKind, WorkflowNodeKind } from "./catalogs";
 import { validateWorkflow } from "./graph";
 import { parseDocument } from "./migrate";
-import { emptyAfterOverlay, UNFOLD_NOTICE, unfoldMergeGroups, type EdgeDto, type NodeDto, type StepNodeDto, type WorkflowDoc } from "./types";
+import { dropAfterOnlyOverlay, emptyAfterOverlay, UNFOLD_NOTICE, unfoldMergeGroups, type EdgeDto, type NodeDto, type StepNodeDto, type WorkflowDoc } from "./types";
 import { MAILROOM_IDS, robotMailroom } from "../demos/robotMailroom";
 
 function step(id: string, y = 0, x = 0): StepNodeDto {
@@ -131,6 +131,39 @@ test("After-only removal restitches extra Paths and omits the Step (BA-07)", () 
   expect(validateWorkflow(applied.value)).toEqual([]);
 });
 
+test("After-only removal skips a restitch when another extra Path already reaches the successor", () => {
+  const d = doc([step("a"), step("b", 0, 200)], [path("e1", "a", "b")], {
+    after: {
+      ...emptyAfterOverlay(),
+      extraNodes: [step("x", 0, 400), step("z", 80, 400), step("y", 0, 600)],
+      extraEdges: [
+        path("ex", "b", "x"),
+        path("ey", "x", "y"),
+        path("ez", "b", "z"),
+        path("ezy", "z", "y"),
+      ],
+      assignments: { a: "h1", b: "h1", x: "r1", z: "r1", y: "r1" },
+    },
+  });
+  const planned = planAfterOnlyRemoval(d, "x");
+  expect(planned.ok).toBe(true);
+  if (!planned.ok) return;
+  const applied = applyAfterOnlyRemoval(d, planned.value);
+  expect(applied.ok).toBe(true);
+  if (!applied.ok) return;
+  expect(applied.value.after.extraNodes.map((n) => n.id).sort()).toEqual(["y", "z"]);
+  expect(applied.value.after.extraEdges.some((e) => e.source === "b" && e.target === "y")).toBe(
+    false,
+  );
+  expect(applied.value.after.extraEdges.some((e) => e.source === "b" && e.target === "z")).toBe(
+    true,
+  );
+  expect(applied.value.after.extraEdges.some((e) => e.source === "z" && e.target === "y")).toBe(
+    true,
+  );
+  expect(validateWorkflow(applied.value)).toEqual([]);
+});
+
 test("After-only removal picker lists the extra Step, not Before Nodes (BA-07)", () => {
   const d = doc([step("a"), step("b", 0, 200)], [path("e1", "a", "b")], {
     after: {
@@ -165,8 +198,35 @@ test("load unfolds merge groups and keeps After Robot Who", () => {
   expect(parsed.doc.after.assignments[MAILROOM_IDS.scan]).toBe(MAILROOM_IDS.mailbot);
   expect(parsed.doc.after.assignments[MAILROOM_IDS.lookup]).toBe(MAILROOM_IDS.mailbot);
   expect(parsed.doc.after.assignments[MAILROOM_IDS.route]).toBe(MAILROOM_IDS.mailbot);
-  expect(parsed.doc.after.extraNodes.map((n) => n.id)).toEqual([MAILROOM_IDS.receipt]);
+  expect(parsed.droppedAfterOnly).toBe(false);
+  expect(parsed.doc.after.extraNodes).toEqual([]);
   const again = unfoldMergeGroups(parsed.doc);
   expect(again.unfolded).toBe(false);
   expect(UNFOLD_NOTICE).toMatch(/unfolded/);
+});
+
+test("dropAfterOnlyOverlay removes extras and extra-only After Who", () => {
+  const mail = robotMailroom();
+  const withExtras: WorkflowDoc = {
+    ...mail,
+    after: {
+      ...mail.after,
+      extraNodes: [step(MAILROOM_IDS.receipt, 32, 1504)],
+      extraEdges: [path(MAILROOM_IDS.extra, MAILROOM_IDS.route, MAILROOM_IDS.receipt)],
+      assignments: { ...mail.after.assignments, [MAILROOM_IDS.receipt]: MAILROOM_IDS.mailbot },
+    },
+  };
+  const dropped = dropAfterOnlyOverlay(withExtras);
+  expect(dropped.dropped).toBe(true);
+  expect(dropped.doc.after.extraNodes).toEqual([]);
+  expect(dropped.doc.after.extraEdges).toEqual([]);
+  expect(dropped.doc.after.assignments[MAILROOM_IDS.receipt]).toBeUndefined();
+  expect(dropped.doc.after.assignments[MAILROOM_IDS.scan]).toBe(MAILROOM_IDS.mailbot);
+  expect(dropAfterOnlyOverlay(dropped.doc).dropped).toBe(false);
+
+  const parsed = parseDocument(JSON.stringify(withExtras));
+  expect(parsed.ok).toBe(true);
+  if (!parsed.ok) return;
+  expect(parsed.droppedAfterOnly).toBe(true);
+  expect(parsed.doc.after.extraNodes).toEqual([]);
 });

@@ -21,6 +21,7 @@ import {
 import {
   afterGraph,
   applyConnectStroke,
+  dropDirectedRedundantNewPaths,
   edgeIsDotted,
   incomingSorted,
   maybeExclusiveSplit,
@@ -165,6 +166,7 @@ function applyAfterPairings(
   extraEdges: EdgeDto[],
   baseEdges: EdgeDto[],
   pairings: RemovalPairing[],
+  skipRedundant = false,
 ): EdgeDto[] {
   let next = extraEdges;
   for (const pairing of pairings) {
@@ -197,7 +199,8 @@ function applyAfterPairings(
       },
     ];
   }
-  return next;
+  if (!skipRedundant) return next;
+  return dropDirectedRedundantNewPaths(extraEdges, next, [...baseEdges, ...next]);
 }
 
 function dropAssign(lane: Record<string, string>, nodeId: string): Record<string, string> {
@@ -232,6 +235,7 @@ export function planAfterOnlyRemoval(
     doc.after.extraEdges.filter((e) => e.source !== nodeId && e.target !== nodeId),
     doc.edges,
     pairings,
+    predCount < 2 || succCount < 2,
   );
   return ok({
     nodeId,
@@ -266,6 +270,7 @@ export function applyAfterOnlyRemoval(
     doc.after.extraEdges.filter((e) => e.source !== plan.nodeId && e.target !== plan.nodeId),
     doc.edges,
     pairings,
+    plan.mode === "auto",
   );
   return succeed({
     ...doc,

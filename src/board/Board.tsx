@@ -1,15 +1,18 @@
 /**
  * React Flow canvas for one Before or After lane.
  * Projects the v2 document, derives the lane layout with ELK (Improvement 01),
- * and binds a per-lane viewport. In Both, both lanes share one camera (BA-05).
+ * and binds a per-lane viewport. After always follows Before's camera (BA-05).
  */
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import "./Board.css";
 import {
   Background,
   BackgroundVariant,
+  getViewportForBounds,
   ReactFlow,
   ReactFlowProvider,
   useReactFlow,
+  useViewport,
   type Edge,
   type Node,
 } from "@xyflow/react";
@@ -23,10 +26,13 @@ import {
 } from "../workflow/catalogs";
 import {
   applyViewport,
+  beginProgrammaticViewport,
   bindReactFlow,
-  getReactFlow,
+  cameraToFollow,
+  endProgrammaticViewport,
   isProgrammaticViewport,
   laneIsTucked,
+  persistSharedViewport,
   sharesCompareCamera,
   syncBothViewports,
 } from "./reactFlowBridge";
@@ -37,6 +43,15 @@ import { GRID, nodeSize } from "./layout/tileMetrics";
 import { bundleInsertPreviewGeom, insertPreviewGeom } from "./layout/insertPreview";
 import { incidentPathIds } from "./layout/pathHit";
 import { findNode } from "../workflow/selectors";
+import { isSimplified } from "./simplify/prefs";
+import { wordWebNodeSize } from "./simplify/headline";
+import { SimplifyContext } from "./simplify/SimplifyContext";
+import {
+  isWebFitted,
+  markWebFitted,
+  rememberTileCamera,
+  restoreTileCamera,
+} from "./simplify/wordWebCamera";
 import { measureLabelBox, type LabelBox } from "./layout/labelBox";
 import type { TileSizes } from "./layout/elkGraph";
 import { useLaneLayout } from "./layout/useLaneLayout";
@@ -47,7 +62,7 @@ import {
   MIN_ZOOM,
   MAX_ZOOM,
   ZOOM_BOUNDS_PAD,
-  clampZoom,
+  clampWheelZoom,
   graphIsIsland,
   pointInPaddedBounds,
   pointerOverNodeOrPath,
@@ -57,11 +72,35 @@ import {
 } from "./zoom";
 import {
   FIRST_LAYOUT_FIT_PADDING,
+  boardNeedsCover,
   canApplyFirstLayoutCamera,
   firstLayoutCentersAtCurrentZoom,
   layoutBoundsAreUsable,
+  unionNodeBounds,
   viewportToCenterRect,
+  viewportToFitRect,
 } from "./firstLayoutCamera";
+
+function flowContentBox(rf: ReturnType<typeof useReactFlow>): { x: number; y: number; w: number; h: number } | null {
+  const nodes = rf.getNodes().filter((n) => !n.hidden);
+  if (nodes.length === 0) return null;
+  const box = rf.getNodesBounds(nodes);
+  if (box.width <= 0 || box.height <= 0) return null;
+  return { x: box.x, y: box.y, w: box.width, h: box.height };
+}
+
+function fitZoomFromFlow(rf: ReturnType<typeof useReactFlow>, pane: { width: number; height: number }): number {
+  const box = flowContentBox(rf);
+  if (!box || pane.width < 1 || pane.height < 1) return MIN_ZOOM;
+  return getViewportForBounds(
+    { x: box.x, y: box.y, width: box.w, height: box.h },
+    pane.width,
+    pane.height,
+    MIN_ZOOM,
+    MAX_ZOOM,
+    FIRST_LAYOUT_FIT_PADDING,
+  ).zoom;
+}
 
 /** Clicking a tile should send Delete to the board, not a leftover inspector field. */
 function blurDetailsFocus() {
@@ -105,31 +144,57 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
   const view = useStore((s) => s.view);
   const initialViewport = useRef(useStore.getState().laneViewports[lane]);
   const rf = useReactFlow();
+  const { zoom } = useViewport();
+  const simplifyPrefs = useStore((s) => s.simplify);
+  const [webFit, setWebFit] = useState(false);
+  const lastZoomRef = useRef(zoom);
+  const simplified = isSimplified(simplifyPrefs);
+  useEffect(() => {
+    lastZoomRef.current = zoom;
+  }, [zoom]);
+  const simplifyView = useMemo(
+    () => ({ simplified, prefs: simplifyPrefs, zoom }),
+    [simplified, simplifyPrefs, zoom],
+  );
   const editing = !present;
 
   const projection = useMemo(() => projectLane(workflow, lane), [workflow, lane]);
+  const layoutMode = simplified ? "web" : "tile";
 
-  /* Condition-chip boxes are ELK label sizes (CX-05): the layout reserves room for them. */
+  /* Condition-chip boxes are ELK label sizes (CX-05). Word-web omits chips. */
   const labelBoxes = useMemo(() => {
+    if (simplified) return {} as Record<string, LabelBox>;
     const boxes: Record<string, LabelBox> = {};
     for (const e of projection.edges) {
       if (e.label.trim()) boxes[e.id] = measureLabelBox(e.label);
     }
     return boxes;
-  }, [projection.edges]);
+  }, [simplified, projection.edges]);
 
   const tileSizes = useMemo(() => {
-    return {} as TileSizes;
-  }, []);
+    if (!simplified) return {} as TileSizes;
+    const sizes: TileSizes = {};
+    for (const n of projection.nodes) {
+      sizes[n.id] = wordWebNodeSize(n);
+    }
+    return sizes;
+  }, [simplified, projection]);
 
-  const { layout, phase, error } = useLaneLayout(lane, projection, labelBoxes, tileSizes);
+  const { layout, phase, error } = useLaneLayout(
+    lane,
+    projection,
+    labelBoxes,
+    tileSizes,
+    layoutMode,
+  );
   const shown = useAnimatedLayout(layout);
-  const display = shown?.positions;
+  const viewLayout = shown;
+  const display = viewLayout?.positions;
   const lastPos = useRef<Record<string, { x: number; y: number }>>({});
   if (display) lastPos.current = { ...lastPos.current, ...display };
   const hostRef = useRef<HTMLDivElement>(null);
-  const shownRef = useRef(shown);
-  shownRef.current = shown;
+  const shownRef = useRef(viewLayout);
+  shownRef.current = viewLayout;
 
   const insertHover = interaction.kind === "tile-drag" ? interaction.hover : null;
   const dragNodeId = interaction.kind === "tile-drag" ? interaction.nodeId : null;
@@ -164,75 +229,140 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
       : { geom, sourceId: null as string | null, targetId: insertHover.hostId };
   })();
 
-  /* First nonempty layout: fit once unless this lane already has a saved viewport.
-     Empty New does not consume that fit (P-08). A sole Tile is centered at the
-     current zoom so Add Step / Add Data is not stuck at the top left.
-     In Both, copy the other lane's camera instead of fitting independently (BA-05). */
+  /* First nonempty layout: hold the board until ELK and the camera land, then
+     fit once unless this lane already has a saved viewport. Empty New does not
+     consume that fit (P-08). A sole Tile is centered at the current zoom so
+     Add Step / Add Data is not stuck at the top left. After copies Before's
+     camera instead of fitting independently (BA-05). */
   const nodeCount = projection.nodes.length;
   const layoutKey = layout?.key ?? "";
-  const fitted = useRef(Boolean(initialViewport.current));
-  useEffect(() => {
+  const cameraApplied = useRef(false);
+  const [boardReady, setBoardReady] = useState(nodeCount === 0);
+  const covering = boardNeedsCover(nodeCount, boardReady);
+  useLayoutEffect(() => {
+    bindReactFlow(lane, rf);
+    return () => bindReactFlow(lane, null);
+  }, [rf, lane]);
+  useLayoutEffect(() => {
     if (nodeCount === 0) {
-      fitted.current = false;
+      cameraApplied.current = false;
+      setBoardReady(true);
       return;
     }
-    if (fitted.current || !canApplyFirstLayoutCamera(phase, nodeCount)) return;
-    if (sharesCompareCamera()) {
-      const other = getReactFlow(otherLane(lane));
-      if (other) {
-        const v = other.getViewport();
-        if (v.zoom > 0) {
-          fitted.current = true;
-          applyViewport(lane, v);
-          useStore.getState().setLaneViewport(lane, v);
-          return;
-        }
-      }
-    }
-    const targetBounds = layout?.bounds;
-    if (firstLayoutCentersAtCurrentZoom(nodeCount) && !layoutBoundsAreUsable(targetBounds)) {
+    if (cameraApplied.current) {
+      setBoardReady(true);
       return;
     }
-    fitted.current = true;
+    if (!canApplyFirstLayoutCamera(phase, nodeCount)) {
+      setBoardReady(false);
+      return;
+    }
     let raf = 0;
+    let cancelled = false;
+    const finish = (next?: { x: number; y: number; zoom: number }) => {
+      if (!next) {
+        cameraApplied.current = true;
+        setBoardReady(true);
+        return;
+      }
+      persistSharedViewport(next);
+      if (sharesCompareCamera()) applyViewport(otherLane(lane), next);
+      beginProgrammaticViewport(lane);
+      void rf.setViewport(next, { duration: 0 }).finally(() => {
+        endProgrammaticViewport(lane);
+        if (cancelled) return;
+        cameraApplied.current = true;
+        setBoardReady(true);
+      });
+    };
     const attempt = () => {
+      const follow = cameraToFollow(lane);
+      if (follow) {
+        finish(follow);
+        return;
+      }
+      const paneEl = hostRef.current?.querySelector(".react-flow");
+      const pane = paneEl instanceof HTMLElement ? paneEl.getBoundingClientRect() : null;
+      if (!pane || pane.width < 1 || pane.height < 1) {
+        raf = requestAnimationFrame(attempt);
+        return;
+      }
       if (firstLayoutCentersAtCurrentZoom(nodeCount)) {
-        const paneEl = hostRef.current?.querySelector(".react-flow");
-        const pane = paneEl instanceof HTMLElement ? paneEl.getBoundingClientRect() : null;
-        const box = targetBounds;
-        if (!pane || pane.width < 1 || pane.height < 1 || !layoutBoundsAreUsable(box)) {
+        const box = layout?.bounds;
+        if (!layoutBoundsAreUsable(box)) {
           raf = requestAnimationFrame(attempt);
           return;
         }
         const zoom = rf.getViewport().zoom || 1;
-        const next = viewportToCenterRect(pane, box, zoom);
-        applyViewport(lane, next);
-        const s = useStore.getState();
-        s.setLaneViewport(lane, next);
-        if (sharesCompareCamera()) {
-          s.setLaneViewport(otherLane(lane), next);
-          applyViewport(otherLane(lane), next);
-        }
+        finish(viewportToCenterRect(pane, box, zoom));
         return;
       }
-      void rf.fitView({ padding: FIRST_LAYOUT_FIT_PADDING }).then((done) => {
-        if (!done) {
-          raf = requestAnimationFrame(attempt);
-          return;
-        }
-        const v = rf.getViewport();
-        const s = useStore.getState();
-        s.setLaneViewport(lane, v);
-        if (sharesCompareCamera()) {
-          s.setLaneViewport(otherLane(lane), v);
-          applyViewport(otherLane(lane), v);
-        }
-      });
+      const sizes: Record<string, { w: number; h: number }> = {};
+      for (const n of projection.nodes) {
+        sizes[n.id] = tileSizes[n.id] ?? nodeSize(n.type);
+      }
+      const box = layout ? unionNodeBounds(layout.positions, sizes) : undefined;
+      if (!layoutBoundsAreUsable(box)) {
+        raf = requestAnimationFrame(attempt);
+        return;
+      }
+      finish(viewportToFitRect(pane, box, FIRST_LAYOUT_FIT_PADDING, MIN_ZOOM, MAX_ZOOM));
     };
     attempt();
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(raf);
+    };
     // layout.bounds is keyed by layoutKey; do not retrigger on animated `shown`.
   }, [phase, rf, lane, nodeCount, layoutKey]);
+
+  /* Word-web camera: store the tile viewport on enter, fit the oval layout,
+     restore on leave. After follows Before (BA-05). */
+  const cameraSimplified = useRef(false);
+  const drivesSimplifyCamera = !sharesCompareCamera() || lane === "before";
+  useEffect(() => {
+    const prev = cameraSimplified.current;
+    if (simplified === prev) return;
+    cameraSimplified.current = simplified;
+    if (simplified && !prev) {
+      rememberTileCamera(rf.getViewport());
+      setWebFit(false);
+      return;
+    }
+    if (!simplified && prev) {
+      const stored = restoreTileCamera();
+      setWebFit(false);
+      if (stored && drivesSimplifyCamera) {
+        applyViewport(lane, stored);
+        persistSharedViewport(stored);
+        if (sharesCompareCamera()) applyViewport(otherLane(lane), stored);
+      }
+    }
+  }, [simplified, rf, lane, drivesSimplifyCamera]);
+
+  useEffect(() => {
+    if (!simplified || isWebFitted()) return;
+    if (!drivesSimplifyCamera) return;
+    if (phase !== "ready" || !layout || !layout.key.startsWith("web|")) return;
+    if (!layoutBoundsAreUsable(layout.bounds)) return;
+    let raf = 0;
+    const attempt = () => {
+      const paneEl = hostRef.current?.querySelector(".react-flow");
+      const pane = paneEl instanceof HTMLElement ? paneEl.getBoundingClientRect() : null;
+      if (!pane || pane.width < 1 || pane.height < 1) {
+        raf = requestAnimationFrame(attempt);
+        return;
+      }
+      const next = viewportToFitRect(pane, layout.bounds, FIRST_LAYOUT_FIT_PADDING, MIN_ZOOM, MAX_ZOOM);
+      applyViewport(lane, next);
+      persistSharedViewport(next);
+      if (sharesCompareCamera()) applyViewport(otherLane(lane), next);
+      markWebFitted();
+      setWebFit(true);
+    };
+    raf = requestAnimationFrame(attempt);
+    return () => cancelAnimationFrame(raf);
+  }, [simplified, phase, layout, layoutKey, rf, lane, drivesSimplifyCamera]);
 
   useEffect(() => {
     if (!departing) return;
@@ -258,10 +388,16 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
       e.preventDefault();
       e.stopPropagation();
       const vp = rf.getViewport();
-      const nextZoom = clampZoom(vp.zoom * wheelZoomFactor(e.deltaY, e.deltaMode));
-      if (Math.abs(nextZoom - vp.zoom) < 1e-6) return;
       const paneEl = host.querySelector(".react-flow");
       const pane = (paneEl instanceof HTMLElement ? paneEl : host).getBoundingClientRect();
+      const fitZoom = fitZoomFromFlow(rf, pane);
+      const nextZoom = clampWheelZoom(
+        vp.zoom,
+        vp.zoom * wheelZoomFactor(e.deltaY, e.deltaMode),
+        fitZoom,
+      );
+      if (Math.abs(nextZoom - vp.zoom) < 1e-6) return;
+      lastZoomRef.current = nextZoom;
       const flowPointer = rf.screenToFlowPosition({ x: e.clientX, y: e.clientY });
       const bounds = shownRef.current?.bounds;
       const hasBounds = Boolean(bounds && bounds.w > 0 && bounds.h > 0);
@@ -292,10 +428,8 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
       /* Copy onto the other stacked lane before marking this instance programmatic. */
       syncBothViewports(lane, next);
       applyViewport(lane, next);
-      const s = useStore.getState();
       if (laneIsTucked(lane)) return;
-      s.setLaneViewport(lane, next);
-      if (sharesCompareCamera()) s.setLaneViewport(otherLane(lane), next);
+      persistSharedViewport(next);
     };
     host.addEventListener("wheel", onWheel, { passive: false });
     return () => host.removeEventListener("wheel", onWheel);
@@ -374,11 +508,6 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
     });
   }
 
-  useEffect(() => {
-    bindReactFlow(lane, rf);
-    return () => bindReactFlow(lane, null);
-  }, [rf, lane]);
-
   /* Newly created tiles still request focus for selection chrome; never pan or zoom to them. */
   useEffect(() => {
     if (!focusId) return;
@@ -396,33 +525,48 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
     : null;
 
   /* Draw order implements the stroke rule at crossings: dotted first, solid last, selected on top. */
-  const laneEdges = projection.edges.map((e) => {
-    const stretching = stretchIds.has(e.id);
-    const isSelected = selected?.type === SelectionKind.Edge && selected.id === e.originId;
-    const dotted = pathIsDotted(workflow, e.originId);
+  const visualEdges = projection.edges.map((e) => ({
+    id: e.id,
+    source: e.source,
+    target: e.target,
+    originId: e.originId,
+    displayHop: false,
+    dotted: pathIsDotted(workflow, e.originId),
+  }));
+  const laneEdges = visualEdges.map((e) => {
+    const stretching = !e.displayHop && stretchIds.has(e.id);
+    const isSelected =
+      !e.displayHop && selected?.type === SelectionKind.Edge && selected.id === e.originId;
+    const dotted = e.dotted;
     const insertHoverPath =
+      !e.displayHop &&
       interaction.kind === "tile-drag" &&
       interaction.hover?.kind === "path" &&
       interaction.hover.edgeId === e.originId;
-    const fadeIncident = Boolean(dragNodeId) && fadeInsertPath(e.id);
+    const fadeIncident = Boolean(dragNodeId) && !e.displayHop && fadeInsertPath(e.id);
     const rfEdge: Edge<FlowPathData> = {
       id: e.id,
       source: e.source,
       target: e.target,
       type: ReactFlowEdgeKind.Flow,
-      selectable: editing && interaction.kind !== "remove-preview" && interaction.kind !== "tile-drag",
+      selectable:
+        editing &&
+        !e.displayHop &&
+        interaction.kind !== "remove-preview" &&
+        interaction.kind !== "tile-drag",
       selected: isSelected,
       className: [
         insertHoverPath ? "path-insert-hover" : undefined,
         fadeIncident ? "path-drag-incident" : undefined,
         dotted ? "is-path-dotted" : "is-path-solid",
+        e.displayHop ? "is-display-hop" : undefined,
       ]
         .filter(Boolean)
         .join(" "),
       data:
         stretching && via
-          ? { stretch: true, viaX: via.x, viaY: via.y, originId: e.originId, dotted }
-          : { originId: e.originId, dotted },
+          ? { stretch: true, viaX: via.x, viaY: via.y, originId: e.originId, dotted, displayHop: e.displayHop }
+          : { originId: e.originId, dotted, displayHop: e.displayHop },
     };
     return { rfEdge, isSelected, dotted };
   });
@@ -468,25 +612,31 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
   }, [lane]);
 
   const panTarget = view === ViewMode.Both && focusedLane === lane;
-  const contextValue = useMemo(() => ({ layout: shown }), [shown]);
+  const contextValue = useMemo(() => ({ layout: viewLayout }), [viewLayout]);
 
   return (
     <div
       ref={hostRef}
       className="board-lane"
       data-layout={phase}
+      data-board={covering ? "loading" : "ready"}
       data-layout-error={error ? "true" : undefined}
+      aria-busy={covering || undefined}
       data-insert-preview={insertHover ? "true" : undefined}
       data-insert-kind={insertHover?.kind}
       data-insert-bundle={insertHover?.kind === "bundle" ? insertHover.role : undefined}
       data-tile-drag={dragNodeId ? "true" : undefined}
       data-editable={editing && view !== ViewMode.Both ? "true" : undefined}
       data-lane={lane}
+      data-simplified={simplified ? "true" : "false"}
+      data-web-fit={webFit ? "true" : undefined}
+      data-layout-mode={layoutMode}
       data-pan-target={panTarget ? "true" : "false"}
       aria-label={lane === "after" ? "After lane" : "Before lane"}
       style={{ height: height ?? "100%" }}
       onPointerDown={() => useStore.getState().setFocusedLane(lane)}
     >
+      <SimplifyContext.Provider value={simplifyView}>
       <LaneLayoutContext.Provider value={contextValue}>
         <ReactFlow
           nodes={rfNodes}
@@ -494,6 +644,8 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
           nodesConnectable={false}
+          nodesFocusable={editing}
+          edgesFocusable={editing}
           deleteKeyCode={null}
           elementsSelectable={editing}
           nodesDraggable={false}
@@ -513,14 +665,27 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
           onMove={(_, viewport) => {
             if (isProgrammaticViewport(lane)) return;
             if (laneIsTucked(lane)) return;
+            const prevZoom = lastZoomRef.current;
+            lastZoomRef.current = viewport.zoom;
+            const paneEl = hostRef.current?.querySelector(".react-flow");
+            const pane = paneEl instanceof HTMLElement ? paneEl.getBoundingClientRect() : null;
+            if (pane && viewport.zoom < prevZoom - 1e-4) {
+              const fitZoom = fitZoomFromFlow(rf, pane);
+              const nextZoom = clampWheelZoom(prevZoom, viewport.zoom, fitZoom);
+              if (Math.abs(nextZoom - viewport.zoom) > 1e-4) {
+                const next = { ...viewport, zoom: nextZoom };
+                lastZoomRef.current = nextZoom;
+                applyViewport(lane, next);
+                syncBothViewports(lane, next);
+                return;
+              }
+            }
             syncBothViewports(lane, viewport);
           }}
           onMoveEnd={(_, viewport) => {
             if (isProgrammaticViewport(lane)) return;
             if (laneIsTucked(lane)) return;
-            const s = useStore.getState();
-            s.setLaneViewport(lane, viewport);
-            if (sharesCompareCamera()) s.setLaneViewport(otherLane(lane), viewport);
+            persistSharedViewport(viewport);
           }}
           proOptions={{ hideAttribution: true }}
           onPaneClick={() => {
@@ -555,7 +720,9 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
             if (s.interaction.kind === "remove-preview" || s.interaction.kind === "tile-drag") {
               return;
             }
-            const originId = (e.data as FlowPathData | undefined)?.originId;
+            const data = e.data as FlowPathData | undefined;
+            if (data?.displayHop) return;
+            const originId = data?.originId;
             s.select({ type: SelectionKind.Edge, id: typeof originId === "string" ? originId : e.id });
             blurDetailsFocus();
           }}
@@ -568,7 +735,9 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
             if (s.interaction.kind === "remove-preview" || s.interaction.kind === "tile-drag") {
               return;
             }
-            const originId = (e.data as FlowPathData | undefined)?.originId;
+            const data = e.data as FlowPathData | undefined;
+            if (data?.displayHop) return;
+            const originId = data?.originId;
             const id = typeof originId === "string" ? originId : e.id;
             s.openPathMenu(id, event.clientX, event.clientY);
           }}
@@ -576,7 +745,9 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
             const s = useStore.getState();
             s.setFocusedLane(lane);
             if (!s.canvasEditable()) return;
-            const originId = (e.data as FlowPathData | undefined)?.originId;
+            const data = e.data as FlowPathData | undefined;
+            if (data?.displayHop) return;
+            const originId = data?.originId;
             const id = typeof originId === "string" ? originId : e.id;
             s.select({ type: SelectionKind.Edge, id });
             s.toggleSelectedDash();
@@ -592,6 +763,12 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
           />
         </ReactFlow>
       </LaneLayoutContext.Provider>
+      </SimplifyContext.Provider>
+      {covering ? (
+        <div className="board-loading" role="status">
+          Loading...
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -599,7 +776,7 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
 export function Board({ lane, height }: { lane: Lane; height?: string }) {
   const epoch = useStore((s) => s.canvasEpoch);
   return (
-    <ReactFlowProvider key={`${lane}-${epoch}`}>
+    <ReactFlowProvider key={String(epoch)}>
       <Inner lane={lane} height={height} />
     </ReactFlowProvider>
   );

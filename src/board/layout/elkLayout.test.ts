@@ -194,6 +194,11 @@ describe("Oak Park (Before)", () => {
     });
     expect(laneGraphKey(rewired, boxesFor(rewired))).not.toBe(base);
   });
+
+  test("Before and After share a layout cache key", () => {
+    const after = projectAfter(doc);
+    expect(laneGraphKey(after, boxesFor(after))).toBe(laneGraphKey(projection, boxesFor(projection)));
+  });
 });
 
 describe("Robot Mailroom (After) and stress", () => {
@@ -201,6 +206,15 @@ describe("Robot Mailroom (After) and stress", () => {
     const projection = projectAfter(robotMailroom());
     const layout = await layoutOf(projection);
     expectInvariants(projection, layout);
+  });
+
+  test("Before and After layouts match on the shared graph", async () => {
+    for (const doc of [oakParkInvoice(), robotMailroom()]) {
+      const before = await layoutOf(projectBefore(doc));
+      const after = await layoutOf(projectAfter(doc));
+      expect(after.positions).toEqual(before.positions);
+      expect(after.routes).toEqual(before.routes);
+    }
   });
 
   test("empty projection maps to an empty layout", () => {

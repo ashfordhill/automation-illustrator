@@ -462,6 +462,47 @@ test("1:1 removal reconnects and joins conditions", () => {
   expect(validateWorkflow(applied.value)).toEqual([]);
 });
 
+test("1:1 removal skips a restitch when Data already reaches the successor", () => {
+  const board = doc(
+    [step("a1"), data("d", 0, 40), step("a2", 40, 40), step("a3", 0, 80)],
+    [path("e1", "a1", "a2"), path("e2", "a2", "a3"), path("e3", "a1", "d"), path("e4", "d", "a3")],
+  );
+  const plan = planNodeRemoval(board, "a2");
+  expect(plan.ok).toBe(true);
+  if (!plan.ok) return;
+  expect(plan.value.mode).toBe("auto");
+  const applied = applyNodeRemoval(board, plan.value);
+  expect(applied.ok).toBe(true);
+  if (!applied.ok) return;
+  expect(applied.value.nodes.map((n) => n.id).sort()).toEqual(["a1", "a3", "d"]);
+  expect(applied.value.edges).toEqual([
+    expect.objectContaining({ source: "a1", target: "d" }),
+    expect.objectContaining({ source: "d", target: "a3" }),
+  ]);
+  expect(applied.value.edges.some((e) => e.source === "a1" && e.target === "a3")).toBe(false);
+  expect(validateWorkflow(applied.value)).toEqual([]);
+  expect(canRemovePath(applied.value, applied.value.edges[0]!.id)).toBe(false);
+});
+
+test("1:N restitch keeps the Data child and skips the shortcut onto Data’s successor", () => {
+  const board = doc(
+    [step("a1"), step("a2", 0, 40), data("d", 40, 80), step("a3", 0, 80)],
+    [path("e1", "a1", "a2"), path("e2", "a2", "a3"), path("e3", "a2", "d"), path("e4", "d", "a3")],
+  );
+  const plan = planNodeRemoval(board, "a2");
+  expect(plan.ok).toBe(true);
+  if (!plan.ok) return;
+  const applied = applyNodeRemoval(board, plan.value);
+  expect(applied.ok).toBe(true);
+  if (!applied.ok) return;
+  expect(applied.value.edges).toEqual([
+    expect.objectContaining({ source: "d", target: "a3" }),
+    expect.objectContaining({ source: "a1", target: "d" }),
+  ]);
+  expect(applied.value.edges.some((e) => e.source === "a1" && e.target === "a3")).toBe(false);
+  expect(validateWorkflow(applied.value)).toEqual([]);
+});
+
 test("1:N removal fans the predecessor to every successor", () => {
   const board = doc(
     [step("r"), step("n", 40, 40), step("a", 0, 80), step("b", 80, 80)],
@@ -768,6 +809,20 @@ test("removing a Data Node uses the same 1:1 restitch rules", () => {
     label: "in + out",
   });
   expect(validateWorkflow(applied.value)).toEqual([]);
+});
+
+test("insertNodeOnPath does not leave a bypass restitch when Data already reaches the host", () => {
+  const board = doc(
+    [step("a1"), step("a2", 0, 40), data("d", 40, 40), step("a3", 0, 80)],
+    [path("e1", "a1", "a2"), path("e2", "a2", "a3"), path("e3", "a1", "d"), path("e4", "d", "a3")],
+  );
+  const result = insertNodeOnPath(board, "a2", "e4");
+  expect(result.ok).toBe(true);
+  if (!result.ok) return;
+  expect(validateWorkflow(result.value)).toEqual([]);
+  expect(result.value.edges.some((e) => e.source === "a1" && e.target === "a3")).toBe(false);
+  expect(result.value.edges.some((e) => e.source === "d" && e.target === "a2")).toBe(true);
+  expect(result.value.edges.some((e) => e.source === "a2" && e.target === "a3")).toBe(true);
 });
 
 test("insertNodeOnPath keeps the condition on S→T and leaves T→U unlabeled", () => {

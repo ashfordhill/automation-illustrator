@@ -46,33 +46,52 @@ test("selected Tile spawn hints are Q/E Step and A/D Data with direction arrows"
   const text = spawn?.textContent ?? "";
   expect(text).toMatch(/Q/);
   expect(text).toMatch(/E/);
-  expect(text).toMatch(/\+ Step/);
+  expect(spawn?.querySelector(".canvas-helper-spawn-kind-step")?.textContent).toBe("step");
   expect(text).toMatch(/A/);
   expect(text).toMatch(/D/);
-  expect(text).toMatch(/\+ Data/);
+  expect(spawn?.querySelector(".canvas-helper-spawn-kind-data")?.textContent).toBe("data");
+  expect(text).not.toMatch(/\+ Step/);
+  expect(text).not.toMatch(/\+ Data/);
   expect(host.querySelector("[data-spawn-compass]")).not.toBeNull();
-  const svg = host.querySelector("[data-spawn-compass]");
-  const shaft = svg?.querySelector("line");
-  const tick = svg?.querySelectorAll("line")[1];
-  expect(shaft?.getAttribute("y1")).toBe(shaft?.getAttribute("y2"));
-  expect(tick?.getAttribute("x1")).toBe(tick?.getAttribute("x2"));
-  expect(Math.abs(Number(tick?.getAttribute("y2")) - Number(tick?.getAttribute("y1")))).toBeGreaterThan(24);
+  expect(spawn?.querySelector("[data-spawn-tile]")).not.toBeNull();
+  expect(spawn?.querySelector("[data-spawn-arrow='left']")).not.toBeNull();
+  expect(spawn?.querySelector("[data-spawn-arrow='right']")).not.toBeNull();
   expect(text).not.toMatch(/\|/);
-  expect(host.textContent ?? "").toMatch(/Remove Step/);
+  expect(host.textContent ?? "").not.toMatch(/Remove Step/);
+  expect(host.textContent ?? "").not.toMatch(/Remove Data/);
   expect(host.textContent ?? "").not.toMatch(/Right-click/);
 });
 
-test("Right-click Delete hint is hidden until the toggle is on", () => {
+test("Tile Right-click delete sits beside the spawn cluster without joining its flow", () => {
   act(() => {
-    useStore.getState().select({ type: SelectionKind.Edge, id: OAK_PARK_IDS.webAcct });
+    useStore.getState().select({ type: SelectionKind.Node, id: OAK_PARK_IDS.read });
   });
-  expect(host.textContent ?? "").not.toMatch(/Right-click/);
+  const cluster = host.querySelector(".canvas-helper-cluster");
+  expect(cluster).not.toBeNull();
+  expect(cluster?.querySelector("[data-spawn-hints]")).not.toBeNull();
+  expect(cluster?.querySelector(".canvas-helper-chip")).toBeNull();
   act(() => {
     useStore.getState().setRightClickDelete(true);
+  });
+  expect(cluster?.querySelector(".canvas-helper-chip")?.textContent ?? "").toMatch(/Right-click/);
+  expect(cluster?.querySelector("[data-mouse-right-click]")).not.toBeNull();
+  expect(host.querySelector(".canvas-helper > .canvas-helper-chip")).toBeNull();
+});
+
+test("selected Path always shows stroke samples, Edit text, and Right-click delete", () => {
+  act(() => {
     useStore.getState().select({ type: SelectionKind.Edge, id: OAK_PARK_IDS.webAcct });
   });
-  expect(host.textContent ?? "").toMatch(/Right-click/);
-  expect(host.textContent ?? "").toMatch(/Delete/);
+  const helper = host.querySelector(".canvas-helper");
+  expect(helper?.textContent ?? "").toMatch(/S/);
+  expect(helper?.querySelector("[data-stroke-toggle]")).not.toBeNull();
+  expect(helper?.textContent ?? "").not.toMatch(/Dotted \/ Solid/);
+  expect(helper?.textContent ?? "").toMatch(/Edit text/);
+  expect(helper?.textContent ?? "").not.toMatch(/Edit label/);
+  expect(helper?.textContent ?? "").toMatch(/Right-click/);
+  expect(helper?.textContent ?? "").toMatch(/delete/);
+  expect(helper?.querySelector("[data-mouse-right-click]")).not.toBeNull();
+  expect(helper?.textContent ?? "").toMatch(/Remove Path/);
 });
 
 test("tile-drag hides the hint strip", () => {
@@ -89,12 +108,13 @@ test("tile-drag hides the hint strip", () => {
   expect(host.textContent ?? "").not.toMatch(/Neighbors make a gap/);
 });
 
-test("After spawn hints omit Data", () => {
+test("After spawn hints include Step and Data", () => {
   act(() => {
     useStore.getState().setView(ViewMode.After);
     useStore.getState().select({ type: SelectionKind.Node, id: OAK_PARK_IDS.read });
   });
-  const text = host.querySelector("[data-spawn-hints]")?.textContent ?? "";
-  expect(text).toMatch(/After-only Step/);
-  expect(text).not.toMatch(/Data/);
+  const spawn = host.querySelector("[data-spawn-hints]");
+  expect(spawn?.querySelector(".canvas-helper-spawn-kind-step")?.textContent).toBe("step");
+  expect(spawn?.querySelector(".canvas-helper-spawn-kind-data")?.textContent).toBe("data");
+  expect(spawn?.textContent ?? "").not.toMatch(/After-only/);
 });

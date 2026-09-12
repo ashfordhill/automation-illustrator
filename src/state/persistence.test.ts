@@ -5,16 +5,19 @@ import {
   hydratePersistedWorkflow,
   loadInspectorCollapsed,
   loadRightClickDelete,
+  loadSimplifyPrefs,
   loadSound,
   loadTheme,
   LS_INSPECTOR_COLLAPSED,
   LS_RIGHT_CLICK_DELETE,
+  LS_SIMPLIFY,
   LS_SOUND,
   LS_THEME,
   LS_WORKFLOW,
   SAVE_COPY_FILENAME,
   saveInspectorCollapsed,
   saveRightClickDelete,
+  saveSimplifyPrefs,
   saveSound,
   saveTheme,
   writeWorkflow,
@@ -251,16 +254,16 @@ test("downloadWorkflowCopy writes a YAML attachment named from the project", () 
   expect(click).toHaveBeenCalledTimes(3);
 });
 
-test("sound preference defaults off and only 'on' enables it (SH-03)", () => {
+test("sound preference defaults on and only 'off' disables it (SH-03)", () => {
   localStorage.clear();
-  expect(loadSound()).toBe(false);
-  saveSound(true);
-  expect(localStorage.getItem(LS_SOUND)).toBe("on");
   expect(loadSound()).toBe(true);
   saveSound(false);
+  expect(localStorage.getItem(LS_SOUND)).toBe("off");
   expect(loadSound()).toBe(false);
+  saveSound(true);
+  expect(loadSound()).toBe(true);
   localStorage.setItem(LS_SOUND, "yes");
-  expect(loadSound()).toBe(false);
+  expect(loadSound()).toBe(true);
 });
 
 test("theme preference defaults light and round-trips (P-09)", () => {
@@ -283,6 +286,27 @@ test("inspector fold defaults open and only 'on' collapses it (P-05)", () => {
   expect(loadInspectorCollapsed()).toBe(false);
   localStorage.setItem(LS_INSPECTOR_COLLAPSED, "yes");
   expect(loadInspectorCollapsed()).toBe(false);
+});
+
+test("simplify prefs default off and persist a JSON object", () => {
+  localStorage.clear();
+  expect(loadSimplifyPrefs()).toEqual({
+    hideVisuals: false,
+  });
+  saveSimplifyPrefs({
+    hideVisuals: true,
+  });
+  expect(JSON.parse(localStorage.getItem(LS_SIMPLIFY) ?? "{}")).toEqual({
+    hideVisuals: true,
+  });
+  expect(loadSimplifyPrefs().hideVisuals).toBe(true);
+  localStorage.setItem(
+    LS_SIMPLIFY,
+    JSON.stringify({ hideVisualsOnZoomOut: true, hideVisuals: false, hideData: true }),
+  );
+  expect(loadSimplifyPrefs()).toEqual({ hideVisuals: false });
+  localStorage.setItem(LS_SIMPLIFY, "nope");
+  expect(loadSimplifyPrefs()).toEqual({ hideVisuals: false });
 });
 
 test("right-click-delete defaults off and only 'on' enables it", () => {

@@ -53,7 +53,7 @@ export function ManageActorsPanel() {
           aria-pressed={deleteMode}
           onClick={() => useStore.getState().setManageActorsDeleteMode(!deleteMode)}
         >
-          <IconTrash size={48} color="var(--minus)" stroke={2.2} aria-hidden />
+          <IconTrash size={48} color="var(--trash)" stroke={2.2} aria-hidden />
         </button>
       </div>
       {actor && !deleteMode ? (

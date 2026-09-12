@@ -273,6 +273,27 @@ export function isWeaklyConnected(nodes: NodeDto[], edges: EdgeDto[]): boolean {
   return seen.size === nodes.length;
 }
 
+/**
+ * After an auto restitch, drop newly created Paths whose source already
+ * reaches the target on `reach` without that Path. Existing Paths stay,
+ * including WG-12 merges into a Path that was already on the board.
+ */
+export function dropDirectedRedundantNewPaths(
+  prior: EdgeDto[],
+  next: EdgeDto[],
+  reach: EdgeDto[] = next,
+): EdgeDto[] {
+  const priorIds = new Set(prior.map((e) => e.id));
+  const drop = new Set<string>();
+  for (const e of next) {
+    if (priorIds.has(e.id)) continue;
+    const without = reach.filter((x) => x.id !== e.id);
+    if (reachableFrom(e.source, without).has(e.target)) drop.add(e.id);
+  }
+  if (!drop.size) return next;
+  return next.filter((e) => !drop.has(e.id));
+}
+
 /** Nodes reachable by following Paths forward from `start` (includes `start`). */
 export function reachableFrom(start: string, edges: EdgeDto[]): Set<string> {
   const outgoing = new Map<string, string[]>();

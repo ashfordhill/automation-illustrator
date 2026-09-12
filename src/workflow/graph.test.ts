@@ -4,9 +4,11 @@ import {
   applyConnectStroke,
   applyDashForSplit,
   defaultRemovalCandidateId,
+  dropDirectedRedundantNewPaths,
   edgeIsDotted,
   isWeaklyConnected,
   outgoingSorted,
+  reachableFrom,
   removalCandidateIds,
   retargetIncoming,
   retargetOutgoing,
@@ -192,4 +194,20 @@ test("removal candidates include a source; a sole Tile defaults to itself (WG-08
   expect(sourceNodeIds(nodes, edges)).toEqual(["r"]);
   expect(isWeaklyConnected(nodes, edges)).toBe(true);
   expect(isWeaklyConnected(nodes, [])).toBe(false);
+});
+
+test("dropDirectedRedundantNewPaths keeps bridges and existing Paths", () => {
+  const prior: EdgeDto[] = [
+    { id: "keep", source: "a", target: "d", label: "" },
+    { id: "via", source: "d", target: "c", label: "" },
+  ];
+  const next: EdgeDto[] = [
+    ...prior,
+    { id: "shortcut", source: "a", target: "c", label: "" },
+  ];
+  expect(dropDirectedRedundantNewPaths(prior, next).map((e) => e.id)).toEqual(["keep", "via"]);
+  expect(reachableFrom("a", prior).has("c")).toBe(true);
+
+  const chain: EdgeDto[] = [{ id: "new", source: "a", target: "c", label: "" }];
+  expect(dropDirectedRedundantNewPaths([], chain).map((e) => e.id)).toEqual(["new"]);
 });

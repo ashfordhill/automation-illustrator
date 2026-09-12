@@ -1,7 +1,7 @@
 import type { ElkNode } from "elkjs/lib/elk-api";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { oakParkInvoice } from "../../demos/oakParkInvoice";
-import { projectBefore, type LaneProjection } from "../../state/projection";
+import { projectAfter, projectBefore, type LaneProjection } from "../../state/projection";
 import { AssignmentLane } from "../../workflow/catalogs";
 import { createLayoutEngine, LayoutSuperseded, type ElkLike } from "./layoutEngine";
 import { measureLabelBox, type LabelBox } from "./labelBox";
@@ -48,46 +48,96 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-test("debounces, computes once, then serves the cache synchronously", async () => {
+test("the first request runs without waiting for the debounce", async () => {
   const { elk, layout, flush } = fakeElk();
   const engine = createLayoutEngine(elk, { debounceMs: 60 });
-  const key = engine.keyFor(projection, boxes);
-  expect(engine.get(key)).toBeUndefined();
-
   const p = engine.request(AssignmentLane.Before, projection, boxes);
   expect(layout).not.toHaveBeenCalled();
-  await vi.advanceTimersByTimeAsync(60);
+  await Promise.resolve();
   expect(layout).toHaveBeenCalledTimes(1);
   flush();
-  const result = await p;
+  await p;
+  expect(engine.get(engine.keyFor(projection, boxes))).toBeTruthy();
+});
+
+test("debounces later graph changes, then serves the cache synchronously", async () => {
+  const { elk, layout, flush } = fakeElk();
+  const engine = createLayoutEngine(elk, { debounceMs: 60 });
+  const first = engine.request(AssignmentLane.Before, projection, boxes);
+  await Promise.resolve();
+  flush();
+  const result = await first;
+  const key = engine.keyFor(projection, boxes);
   expect(result.key).toBe(key);
   expect(Object.keys(result.positions)).toHaveLength(projection.nodes.length);
-  expect(engine.get(key)).toBe(result);
 
   const again = await engine.request(AssignmentLane.Before, projection, boxes);
   expect(again).toBe(result);
   expect(layout).toHaveBeenCalledTimes(1);
+
+  layout.mockClear();
+  const smaller: LaneProjection = { ...projection, nodes: projection.nodes.slice(0, 2), edges: [] };
+  const p = engine.request(AssignmentLane.Before, smaller, {});
+  expect(layout).not.toHaveBeenCalled();
+  await vi.advanceTimersByTimeAsync(60);
+  expect(layout).toHaveBeenCalledTimes(1);
+  flush();
+  await p;
+  expect(engine.get(engine.keyFor(smaller, {}))).toBeTruthy();
 });
 
 test("a newer request for the same lane supersedes a pending one", async () => {
   const { elk, layout, flush } = fakeElk();
   const engine = createLayoutEngine(elk, { debounceMs: 60 });
-  const first = engine.request(AssignmentLane.Before, projection, boxes);
+  const warm = engine.request(AssignmentLane.Before, projection, boxes);
+  await Promise.resolve();
+  flush();
+  await warm;
+  layout.mockClear();
   const smaller: LaneProjection = { ...projection, nodes: projection.nodes.slice(0, 2), edges: [] };
-  const second = engine.request(AssignmentLane.Before, smaller, {});
+  const first = engine.request(AssignmentLane.Before, smaller, {});
+  const secondGraph: LaneProjection = { ...projection, nodes: projection.nodes.slice(0, 1), edges: [] };
+  const second = engine.request(AssignmentLane.Before, secondGraph, {});
   await expect(first).rejects.toBeInstanceOf(LayoutSuperseded);
   await vi.advanceTimersByTimeAsync(60);
   expect(layout).toHaveBeenCalledTimes(1);
   flush();
   const result = await second;
-  expect(result.key).toBe(engine.keyFor(smaller, {}));
+  expect(result.key).toBe(engine.keyFor(secondGraph, {}));
 });
 
-test("different lanes do not supersede each other", async () => {
+test("After reuses Before's in-flight layout for the same graph", async () => {
+  const { elk, layout, flush } = fakeElk();
+  const engine = createLayoutEngine(elk, { debounceMs: 60 });
+  const afterProj = projectAfter(doc);
+  expect(engine.keyFor(afterProj, boxes)).toBe(engine.keyFor(projection, boxes));
+  const before = engine.request(AssignmentLane.Before, projection, boxes);
+  const after = engine.request(AssignmentLane.After, afterProj, boxes);
+  await Promise.resolve();
+  expect(layout).toHaveBeenCalledTimes(1);
+  flush();
+  const [a, b] = await Promise.all([before, after]);
+  expect(a).toBe(b);
+});
+
+test("different graphs on two lanes still debounce independently", async () => {
   const { elk, layout, flush } = fakeElk();
   const engine = createLayoutEngine(elk, { debounceMs: 10 });
-  const a = engine.request(AssignmentLane.Before, projection, boxes);
-  const b = engine.request(AssignmentLane.After, { ...projection, lane: AssignmentLane.After }, boxes);
+  const first = engine.request(AssignmentLane.Before, projection, boxes);
+  await Promise.resolve();
+  flush();
+  await first;
+  layout.mockClear();
+  const smaller: LaneProjection = { ...projection, nodes: projection.nodes.slice(0, 2), edges: [] };
+  const other: LaneProjection = {
+    ...projection,
+    lane: AssignmentLane.After,
+    nodes: projection.nodes.slice(0, 1),
+    edges: [],
+  };
+  const a = engine.request(AssignmentLane.Before, smaller, {});
+  const b = engine.request(AssignmentLane.After, other, {});
+  expect(layout).not.toHaveBeenCalled();
   await vi.advanceTimersByTimeAsync(10);
   expect(layout).toHaveBeenCalledTimes(2);
   flush();

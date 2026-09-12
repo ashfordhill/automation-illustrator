@@ -1,17 +1,16 @@
 /**
- * Top bar: hamburger (leftmost), Undo, sound, Not saved, Before/After/Compare,
+ * Top bar: hamburger (leftmost), Undo, Redo, Not saved, Before/After/Compare,
  * Present (right). Hamburger items are text only (no left-section icons).
  */
 import { useEffect, useRef, useState } from "react";
 import { ActionIcon, Group, Menu, Tooltip } from "@mantine/core";
-import { IconArrowBackUp, IconMenu2 } from "@tabler/icons-react";
+import { IconArrowBackUp, IconArrowForwardUp, IconMenu2 } from "@tabler/icons-react";
 import { DEMO_CHOICES } from "../../demos/catalog";
 import { prettyKey, KeyAction } from "../../keyboard/bindings";
 import { useStore } from "../../state/store";
 import { VIEW_SWITCH_LABEL, ViewMode } from "../../workflow/catalogs";
 import { PersistStatusChip } from "./PersistStatusChip";
 import { PresentButton } from "./PresentButton";
-import { SoundToggle } from "./SoundToggle";
 import { hamburgerShouldClose } from "./hamburgerDismiss";
 
 const VIEW_OPTIONS: Array<{ value: ViewMode; label: string }> = [
@@ -48,6 +47,7 @@ function ViewSwitch() {
 export function Toolbar() {
   const keymap = useStore((s) => s.keymap);
   const past = useStore((s) => s.past);
+  const future = useStore((s) => s.future);
   const fileRef = useRef<HTMLInputElement>(null);
   const menuBtnRef = useRef<HTMLButtonElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -138,8 +138,17 @@ export function Toolbar() {
                 <IconArrowBackUp size={18} />
               </ActionIcon>
             </Tooltip>
+            <Tooltip label="Redo (Ctrl+Shift+Z)">
+              <ActionIcon
+                variant="default"
+                disabled={!future.length}
+                aria-label="Redo (Ctrl+Shift+Z)"
+                onClick={() => useStore.getState().redo()}
+              >
+                <IconArrowForwardUp size={18} />
+              </ActionIcon>
+            </Tooltip>
           </Group>
-          <SoundToggle />
           <PersistStatusChip />
         </Group>
 

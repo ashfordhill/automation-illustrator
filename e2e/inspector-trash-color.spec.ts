@@ -13,7 +13,7 @@ function hexToRgb(hex: string) {
   return `rgb(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255})`;
 }
 
-async function trashUsesIdleXRed(page: import("@playwright/test").Page) {
+async function trashUsesRequestedRed(page: import("@playwright/test").Page) {
   const trash = aside(page).getByRole("button", { name: "Remove Step" });
   await expect(trash).toBeVisible();
   const colors = await trash.evaluate((el) => {
@@ -24,25 +24,24 @@ async function trashUsesIdleXRed(page: import("@playwright/test").Page) {
       icon: iconStyle.color,
       stroke: iconStyle.stroke,
       button: getComputedStyle(el).color,
-      active: root.getPropertyValue("--minus-active").trim(),
-      idle: root.getPropertyValue("--minus").trim(),
+      trash: root.getPropertyValue("--trash").trim(),
     };
   });
-  const active = hexToRgb(colors.active);
-  const idle = hexToRgb(colors.idle);
-  expect(colors.icon === idle || colors.stroke === idle || colors.button === idle).toBe(true);
-  expect(colors.icon).not.toBe(active);
+  const trashRgb = hexToRgb(colors.trash);
+  expect(colors.icon === trashRgb || colors.stroke === trashRgb || colors.button === trashRgb).toBe(
+    true,
+  );
   return trash;
 }
 
-test("inspector trash icon uses idle tile-X red", async ({ page }) => {
+test("inspector trash icon uses #b12015", async ({ page }) => {
   await loadOakPark(page);
   await page.getByText(DEMO_STEP).first().click();
-  const trash = await trashUsesIdleXRed(page);
+  const trash = await trashUsesRequestedRed(page);
   await capturePage(page, `${EVIDENCE}/trash-red-1440.png`);
   await trash.screenshot({ path: `${EVIDENCE}/trash-icon-closeup.png`, animations: "disabled" });
 
   await enterDarkTheme(page);
-  await trashUsesIdleXRed(page);
+  await trashUsesRequestedRed(page);
   await capturePage(page, `${EVIDENCE}/trash-red-dark-1440.png`);
 });

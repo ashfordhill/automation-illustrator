@@ -3,15 +3,15 @@ import { capturePage, loadOakPark, enterDarkTheme } from "./ready";
 
 const EVIDENCE = ".docs/evidence/improve-30-status-toggle-right";
 
-test.describe("Improvement 30 — Right Click Delete on the right", () => {
+test.describe("Improvement 30 — Right-click delete on the right", () => {
   test("toggle sits on the right of the status bar, left of the version", async ({
     page,
   }) => {
     await loadOakPark(page);
     const bar = page.locator("footer.status-bar");
-    const toggle = bar.locator(".status-toggle");
+    const toggle = bar.getByRole("button", { name: "Right-click delete" });
     const version = page.getByLabel("Application version 1.0.0");
-    await expect(toggle).toHaveText("Right Click Delete");
+    await expect(toggle).toHaveAttribute("aria-label", "Right-click delete");
     await expect(version).toHaveText("v1.0.0");
 
     const barBox = await bar.boundingBox();
@@ -30,7 +30,7 @@ test.describe("Improvement 30 — Right Click Delete on the right", () => {
 
   test("toggle stays on the right when on, in dark, and at 1024", async ({ page }) => {
     await loadOakPark(page);
-    const toggle = page.locator("footer.status-bar .status-toggle");
+    const toggle = page.getByRole("button", { name: "Right-click delete" });
     await toggle.click();
     await expect(toggle).toHaveAttribute("aria-pressed", "true");
     await capturePage(page, `${EVIDENCE}/toggle-on-1440.png`);
@@ -50,7 +50,7 @@ test.describe("Improvement 30 status toggle at 1024", () => {
   test("toggle remains on the right at min width", async ({ page }) => {
     await loadOakPark(page);
     const barBox = await page.locator("footer.status-bar").boundingBox();
-    const toggleBox = await page.locator("footer.status-bar .status-toggle").boundingBox();
+    const toggleBox = await page.getByRole("button", { name: "Right-click delete" }).boundingBox();
     expect(barBox).toBeTruthy();
     expect(toggleBox).toBeTruthy();
     expect(toggleBox!.x).toBeGreaterThan(barBox!.x + barBox!.width / 2);

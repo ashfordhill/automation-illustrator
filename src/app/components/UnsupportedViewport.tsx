@@ -9,7 +9,7 @@ export function UnsupportedViewport() {
     <main className="unsupported-viewport" data-unsupported-viewport="true">
       <h1>This window is too narrow</h1>
       <p>
-        Automation Pitch is a desktop workflow board. Use a laptop or monitor at least{" "}
+        Automation Illustrator is a desktop workflow board. Use a laptop or monitor at least{" "}
         {MIN_VIEWPORT_PX} pixels wide.
       </p>
     </main>

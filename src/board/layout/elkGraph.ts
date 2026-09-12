@@ -12,6 +12,14 @@ import { BRANCH_GAP, GRID, TILE_GAP, nodeSize } from "./tileMetrics";
 
 export type TileSizes = Record<string, { w: number; h: number }>;
 
+/** Tile ELK vs word-web ELK (oval sizes + wider gutters). */
+export type LayoutMode = "tile" | "web";
+
+/** Between-layer air while simplified (tile TILE_GAP is 64). */
+export const WEB_LAYER_GAP = 160;
+/** Sibling air while simplified (tile BRANCH_GAP is 32). */
+export const WEB_NODE_GAP = 80;
+
 /** Layered, left-to-right, orthogonal, hyperedges bundled at shared ports. */
 export const ROOT_OPTIONS: Record<string, string> = {
   "elk.algorithm": "layered",
@@ -39,6 +47,15 @@ export const ROOT_OPTIONS: Record<string, string> = {
   "elk.layered.wrapping.strategy": "OFF",
   "elk.aspectRatio": "1.6",
 };
+
+/** Same algorithm as tiles; longer gutters so oval pills do not touch. */
+export function wordWebRootOptions(): Record<string, string> {
+  return {
+    ...ROOT_OPTIONS,
+    "elk.spacing.nodeNode": String(WEB_NODE_GAP),
+    "elk.layered.spacing.nodeNodeBetweenLayers": String(WEB_LAYER_GAP),
+  };
+}
 
 /**
  * After the first layout: keep source-rank columns and the y-order we just
@@ -118,8 +135,11 @@ export function buildElkGraph(
   boxes: Record<string, LabelBox>,
   sizes?: TileSizes,
   previous?: PositionMap,
+  mode: LayoutMode = "tile",
 ): ElkNode {
-  const stable = hasPreviousHints(projection, previous);
+  const chipBoxes = mode === "web" ? {} : boxes;
+  const rootOptions = mode === "web" ? wordWebRootOptions() : ROOT_OPTIONS;
+  const stable = mode !== "web" && hasPreviousHints(projection, previous);
   const nodes = stable
     ? [...projection.nodes].sort((a, b) =>
         byHint({ id: a.id, ...hintOf(projection, a.id, previous) }, { id: b.id, ...hintOf(projection, b.id, previous) }),
@@ -152,7 +172,7 @@ export function buildElkGraph(
     };
   });
   const edges: ElkExtendedEdge[] = edgesIn.map((e) => {
-    const box = boxes[e.id];
+    const box = chipBoxes[e.id];
     const edge: ElkExtendedEdge = {
       id: e.id,
       sources: [outPortId(e.source)],
@@ -173,20 +193,22 @@ export function buildElkGraph(
   });
   return {
     id: "root",
-    layoutOptions: stable ? { ...ROOT_OPTIONS, ...STABILITY_OPTIONS } : { ...ROOT_OPTIONS },
+    layoutOptions: stable ? { ...rootOptions, ...STABILITY_OPTIONS } : { ...rootOptions },
     children,
     edges,
   };
 }
 
 /**
- * Cache key for one lane graph. Changes with Node ids/types/sizes, Path
- * endpoints, and chip box sizes; not with titles, details, or actors.
+ * Cache key for one graph. Changes with Node ids/types/sizes, Path
+ * endpoints, chip boxes, and tile vs word-web mode. Not titles, details,
+ * actors, or Before vs After — those lanes share one derived layout.
  */
 export function laneGraphKey(
   projection: LaneProjection,
   boxes: Record<string, LabelBox>,
   sizes?: TileSizes,
+  mode: LayoutMode = "tile",
 ): string {
   const nodes = projection.nodes
     .map((n) => {
@@ -194,13 +216,14 @@ export function laneGraphKey(
       return `${n.id}:${n.type}:${w}x${h}`;
     })
     .join(",");
+  const chipBoxes = mode === "web" ? {} : boxes;
   const edges = projection.edges
     .map((e) => {
-      const box = boxes[e.id];
+      const box = chipBoxes[e.id];
       const bw = box ? box.w : 0;
       const bh = box ? box.h : 0;
       return `${e.id}:${e.source}>${e.target}:${bw}x${bh}`;
     })
     .join(",");
-  return `${projection.lane}|${nodes}|${edges}`;
+  return `${mode}|${nodes}|${edges}`;
 }

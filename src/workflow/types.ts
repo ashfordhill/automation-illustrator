@@ -145,7 +145,7 @@ export type MergeGroupDto = {
   memberIds: string[];
 };
 
-/** Sparse After overlay on a v2 document (BA-01). */
+/** Sparse After overlay on a v2 document (BA-01). extras/groups are load-dropped. */
 export type AfterOverlay = {
   assignments: Assignments;
   groups: MergeGroupDto[];
@@ -177,7 +177,10 @@ export type WorkflowDoc = WorkflowDocV2;
 /** Shown once when load/import drops `after.groups`. */
 export const UNFOLD_NOTICE = "Merged tiles were unfolded.";
 
-/** Drop merge groups; member After Who and After-only Steps/Paths stay. */
+/** Shown once when load/import drops After-only Steps/Paths. */
+export const AFTER_ONLY_DROP_NOTICE = "After-only Steps were removed.";
+
+/** Drop merge groups; member After Who stays. */
 export function unfoldMergeGroups(doc: WorkflowDoc): { doc: WorkflowDoc; unfolded: boolean } {
   if (doc.after.groups.length === 0) return { doc, unfolded: false };
   return {
@@ -187,6 +190,50 @@ export function unfoldMergeGroups(doc: WorkflowDoc): { doc: WorkflowDoc; unfolde
       after: { ...doc.after, groups: [] },
     },
   };
+}
+
+/** Drop After-only Steps/Paths and their After Who keys (BA-01 withdrawn extras). */
+export function dropAfterOnlyOverlay(doc: WorkflowDoc): { doc: WorkflowDoc; dropped: boolean } {
+  const extras = doc.after.extraNodes;
+  const extraEdges = doc.after.extraEdges;
+  if (extras.length === 0 && extraEdges.length === 0) return { doc, dropped: false };
+  const extraIds = new Set(extras.map((n) => n.id));
+  const assignments = { ...doc.after.assignments };
+  for (const id of extraIds) delete assignments[id];
+  return {
+    dropped: true,
+    doc: {
+      ...doc,
+      after: {
+        ...doc.after,
+        extraNodes: [],
+        extraEdges: [],
+        assignments,
+      },
+    },
+  };
+}
+
+/** Unfold groups then drop After-only extras. Idempotent. */
+export function normalizeAfterOverlay(doc: WorkflowDoc): {
+  doc: WorkflowDoc;
+  unfolded: boolean;
+  droppedAfterOnly: boolean;
+} {
+  const unfolded = unfoldMergeGroups(doc);
+  const dropped = dropAfterOnlyOverlay(unfolded.doc);
+  return {
+    doc: dropped.doc,
+    unfolded: unfolded.unfolded,
+    droppedAfterOnly: dropped.dropped,
+  };
+}
+
+/** Notice after load/import overlay cleanup. After-only drop wins if both ran. */
+export function overlayLoadNotice(unfolded: boolean, droppedAfterOnly: boolean): string | null {
+  if (droppedAfterOnly) return AFTER_ONLY_DROP_NOTICE;
+  if (unfolded) return UNFOLD_NOTICE;
+  return null;
 }
 
 /** Version 1 on-disk shape before migrate.ts (lane maps, optional Human/Robot role, optional stub). */

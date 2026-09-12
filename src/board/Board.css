@@ -1,0 +1,25 @@
+.board-lane {
+  position: relative;
+}
+
+.board-lane[data-board="loading"] .react-flow__viewport {
+  visibility: hidden;
+}
+
+.board-loading {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  font-family: inherit;
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--ink);
+}
+
+.board-lane[data-board="ready"] .board-loading {
+  display: none;
+}

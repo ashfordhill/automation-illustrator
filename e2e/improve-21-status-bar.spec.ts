@@ -13,9 +13,9 @@ test.describe("Improvement 21 — bottom status bar", () => {
     await expect(bar).toBeVisible();
     await expect(bar.getByText("Oak Park Invoice")).toHaveCount(0);
     await expect(bar.getByRole("button", { name: "Actors", exact: true })).toHaveCount(0);
-    const toggle = page.locator("footer.status-bar .status-toggle");
+    const toggle = page.getByRole("button", { name: "Right-click delete" });
     await expect(toggle).toHaveAttribute("aria-pressed", "false");
-    await expect(toggle).toHaveText("Right Click Delete");
+    await expect(toggle).toHaveAttribute("aria-label", "Right-click delete");
     await expect(page.getByLabel("Application version 1.0.0")).toHaveText("v1.0.0");
     const toggleBox = await toggle.boundingBox();
     const versionBox = await page.getByLabel("Application version 1.0.0").boundingBox();
@@ -71,7 +71,7 @@ test.describe("Improvement 21 — bottom status bar", () => {
     await expect(review).toBeVisible();
     await expect(page.getByTestId("path-menu-delete")).toHaveCount(0);
 
-    const toggle = page.locator("footer.status-bar .status-toggle");
+    const toggle = page.getByRole("button", { name: "Right-click delete" });
     await toggle.click();
     await expect(toggle).toHaveAttribute("aria-pressed", "true");
     await capturePage(page, `${EVIDENCE}/right-click-on-1440.png`);

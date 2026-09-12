@@ -1,6 +1,6 @@
 /**
  * Right inspector: Step / Data / Path forms, Who, Manage actors (NA-01..12, PC-02..03).
- * Both is read-only comparison (BA-05). After-only Nodes/Paths resolve from the overlay.
+ * Both is read-only comparison (BA-05). After edits the shared base graph.
  */
 import { ActionIcon, Stack, Text, TextInput, Tooltip } from "@mantine/core";
 import { IconTrash } from "@tabler/icons-react";
@@ -10,7 +10,7 @@ import {
   ViewMode,
   WorkflowNodeKind,
 } from "../../workflow/catalogs";
-import { afterGraph, edgeIsDotted } from "../../workflow/graph";
+import { edgeIsDotted } from "../../workflow/graph";
 import { laneAssignments, STEP_KIND_META, isStepNode } from "../../workflow/types";
 import { findEdge, findNode } from "../../workflow/selectors";
 import { useStore } from "../../state/store";
@@ -49,11 +49,11 @@ function InspectorHeader({
               aria-label={removeLabel}
               onClick={onRemove}
               styles={{
-                root: { color: "var(--minus-active)" },
-                icon: { color: "var(--minus-active)" },
+                root: { color: "var(--trash)" },
+                icon: { color: "var(--trash)" },
               }}
             >
-              <IconTrash size={16} color="var(--minus-active)" stroke={2.2} />
+              <IconTrash size={22} color="var(--trash)" stroke={2.2} />
             </ActionIcon>
           </Tooltip>
         ) : null}
@@ -218,8 +218,7 @@ export function DetailsPanel() {
   if (selected.type === SelectionKind.Edge) {
     const e = findEdge(workflow, selected.id);
     if (!e) return null;
-    const graph =
-      view === ViewMode.After ? afterGraph(workflow) : { nodes: workflow.nodes, edges: workflow.edges };
+    const graph = { nodes: workflow.nodes, edges: workflow.edges };
     const dotted = edgeIsDotted(graph.nodes, graph.edges, e);
     return (
       <Stack gap="xs" p="sm" className="chrome-hide">

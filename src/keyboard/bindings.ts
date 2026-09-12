@@ -35,7 +35,7 @@ export const DEFAULT_KEYMAP: Keymap = {
   [KeyAction.Delete]: "delete",
   [KeyAction.AddPath]: "=",
   [KeyAction.RemoveNode]: "z",
-  [KeyAction.ToggleDash]: ".",
+  [KeyAction.ToggleDash]: "s",
   [KeyAction.AddStepIn]: "q",
   [KeyAction.AddStepOut]: "e",
   [KeyAction.AddDataIn]: "a",
@@ -92,10 +92,20 @@ export function loadKeymap(): Keymap {
     const raw = localStorage.getItem(LS_KEYMAP);
     if (!raw) return { ...DEFAULT_KEYMAP };
     const saved = JSON.parse(raw) as Record<string, unknown>;
-    return { ...DEFAULT_KEYMAP, ...pickKnown(saved) };
+    return migrateToggleDash({ ...DEFAULT_KEYMAP, ...pickKnown(saved) });
   } catch {
     return { ...DEFAULT_KEYMAP };
   }
+}
+
+/** Old default for ToggleDash was `.`; move it to `s` unless the user rebound it. */
+function migrateToggleDash(map: Keymap): Keymap {
+  if (map[KeyAction.ToggleDash] !== ".") return map;
+  const taken = (Object.entries(map) as [KeyAction, string][]).some(
+    ([action, key]) => action !== KeyAction.ToggleDash && key === "s",
+  );
+  if (taken) return map;
+  return { ...map, [KeyAction.ToggleDash]: "s" };
 }
 
 /** Ignore unknown and retired keys from older localStorage maps (SH-14). */

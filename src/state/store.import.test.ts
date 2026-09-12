@@ -45,15 +45,13 @@ test("importRaw YAML does not replace until Discard; Cancel leaves the board", (
   expect(useStore.getState().workflow.nodes.some((n) => n.id === OAK_PARK_IDS.read)).toBe(true);
 });
 
-test("Discard import loads YAML, clears history, and keeps After-only extras", () => {
+test("Discard import loads YAML, clears history, and has no After-only extras", () => {
   useStore.getState().updateNode(OAK_PARK_IDS.read, { title: "typed" });
   expect(useStore.getState().past.length).toBeGreaterThan(0);
   useStore.getState().importRaw(mailroomYaml);
   useStore.getState().confirmReplaceDiscard();
   expect(useStore.getState().workflow.nodes[0]?.id).toBe(MAILROOM_IDS.open);
-  expect(useStore.getState().workflow.after.extraNodes.map((n) => n.id)).toEqual([
-    MAILROOM_IDS.receipt,
-  ]);
+  expect(useStore.getState().workflow.after.extraNodes).toEqual([]);
   expect(useStore.getState().past).toEqual([]);
   expect(useStore.getState().future).toEqual([]);
 });

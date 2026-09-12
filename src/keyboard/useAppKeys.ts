@@ -29,6 +29,16 @@ function isDeleteKey(e: KeyboardEvent) {
   return e.key === "Delete" || e.code === "Delete";
 }
 
+function isEscapeKey(e: KeyboardEvent) {
+  return e.key === "Escape" || e.code === "Escape";
+}
+
+/** Focus left inside a tucked `inert` pane swallows real keyboard events in Chromium. */
+function blurInertFocus() {
+  const ae = document.activeElement;
+  if (ae instanceof HTMLElement && ae.closest("[inert]")) ae.blur();
+}
+
 /** Install window keydown — skip when typing in inputs unless capturing a rebind. */
 export function useAppKeys() {
   useEffect(() => {
@@ -38,7 +48,7 @@ export function useAppKeys() {
 
       if (s.capturing) {
         e.preventDefault();
-        if (e.key === "Escape") {
+        if (isEscapeKey(e)) {
           s.setCapturing(null);
           return;
         }
@@ -67,19 +77,28 @@ export function useAppKeys() {
       const action = actionFor(map, e);
       const editingText = isEditingText(e.target);
 
-      if (s.present && action === KeyAction.ToggleView) {
+      if (s.present && !isEscapeKey(e) && action === KeyAction.ToggleView) {
         e.preventDefault();
         s.togglePresentLane();
         return;
       }
 
-      if (action === KeyAction.Help) {
+      if (action === KeyAction.Help && !isEscapeKey(e)) {
         e.preventDefault();
         s.setHelp(!s.helpOpen);
         return;
       }
 
-      if (e.key === "Escape") {
+      if (isEscapeKey(e)) {
+        if (s.helpOpen || s.pendingReplace || s.recovery || s.importError) {
+          return;
+        }
+        if (s.present) {
+          e.preventDefault();
+          blurInertFocus();
+          s.setPresent(false);
+          return;
+        }
         if (isTransient(s.interaction)) {
           e.preventDefault();
           s.closeBoardModes();
@@ -92,18 +111,6 @@ export function useAppKeys() {
             return;
           }
           s.closeManageActors();
-          return;
-        }
-        if (s.helpOpen || s.pendingReplace || s.recovery || s.importError) {
-          return;
-        }
-        if (s.present) {
-          e.preventDefault();
-          if (s.presentExpand) {
-            s.setPresentExpand(null);
-            return;
-          }
-          s.setPresent(false);
           return;
         }
       }
@@ -162,8 +169,7 @@ export function useAppKeys() {
       }
 
       if (!readOnlyBoard && s.selected?.type === SelectionKind.Node) {
-        const n = s.workflow.nodes.find((x) => x.id === s.selected!.id)
-          ?? s.workflow.after.extraNodes.find((x) => x.id === s.selected!.id);
+        const n = s.workflow.nodes.find((x) => x.id === s.selected!.id);
         if (
           n?.type === WorkflowNodeKind.DataField &&
           (keyIs(map, KeyAction.Confirm, e) || e.key === "Enter")
@@ -184,13 +190,11 @@ export function useAppKeys() {
         }
         if (keyIs(map, KeyAction.AddDataOut, e)) {
           e.preventDefault();
-          if (s.view === ViewMode.After) return;
           s.spawnBranch(s.selected.id, WorkflowNodeKind.DataField, "out");
           return;
         }
         if (keyIs(map, KeyAction.AddDataIn, e)) {
           e.preventDefault();
-          if (s.view === ViewMode.After) return;
           s.spawnBranch(s.selected.id, WorkflowNodeKind.DataField, "in");
           return;
         }

@@ -4,7 +4,6 @@ import { OAK_PARK_IDS } from "../demos/oakParkInvoice";
 import { MAILROOM_IDS } from "../demos/robotMailroom";
 import { DemoId } from "../demos/catalog";
 import { isStepNode } from "../workflow/types";
-import { defaultRobotId } from "../workflow/actors";
 import { useStore } from "./store";
 
 function resetSession() {
@@ -59,23 +58,22 @@ test("spawnBranch from a Step inherits that Step’s Who, not last-used Human (N
   expect(useStore.getState().workflow.assignments[fromData]).toBe(alice);
 });
 
-test("After-only Step on a New board uses LLM (NA-04)", () => {
+test("After spawn adds a shared Step with inherited Who", () => {
   const s = useStore.getState();
   s.requestNew();
   s.confirmReplaceDiscard();
   const root = useStore.getState().addStep();
   expect(root).toBeTruthy();
-  const llm = defaultRobotId(useStore.getState().workflow.actors);
-  expect(llm).toBeTruthy();
-  const first = useStore.getState().workflow.actors.find((a) => a.id === llm);
-  expect(first && "role" in first && first.role).toBe("LLM");
+  const alice = useStore.getState().workflow.assignments[root];
+  expect(alice).toBeTruthy();
 
   s.setView(ViewMode.After);
-  const extra = useStore.getState().spawnBranch(root, WorkflowNodeKind.Step);
-  expect(extra).toBeTruthy();
-  expect(useStore.getState().workflow.after.assignments[extra]).toBe(llm);
-  expect(useStore.getState().workflow.nodes.some((n) => n.id === extra)).toBe(false);
-  expect(useStore.getState().workflow.after.extraNodes.some((n) => n.id === extra)).toBe(true);
+  const child = useStore.getState().spawnBranch(root, WorkflowNodeKind.Step);
+  expect(child).toBeTruthy();
+  expect(useStore.getState().workflow.nodes.some((n) => n.id === child)).toBe(true);
+  expect(useStore.getState().workflow.after.extraNodes).toEqual([]);
+  expect(useStore.getState().workflow.assignments[child]).toBe(alice);
+  expect(useStore.getState().workflow.after.assignments[child]).toBe(alice);
 });
 
 test("New board: a child of Roy, including off Roy’s Data, is Roy (NA-03)", () => {

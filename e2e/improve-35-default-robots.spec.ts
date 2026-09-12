@@ -20,7 +20,7 @@ async function newBoard(page: import("@playwright/test").Page) {
 }
 
 test.describe("Improvement 35 — default LLM Script Agent robots", () => {
-  test("New board Who offers LLM, Script, Agent; After-only defaults to LLM", async ({ page }) => {
+  test("New board Who offers LLM, Script, Agent; After spawn inherits Who", async ({ page }) => {
     await newBoard(page);
     await page.getByRole("button", { name: "Add Step" }).click();
     await waitForLayout(page);
@@ -45,7 +45,7 @@ test.describe("Improvement 35 — default LLM Script Agent robots", () => {
     await page.locator(".react-flow__node.selected").click();
     await page.keyboard.press("e");
     await waitForLayout(page);
-    await expect(aside(page).getByRole("button", { name: "Who Robot LLM" })).toHaveAttribute(
+    await expect(aside(page).getByRole("button", { name: "Who Alice" })).toHaveAttribute(
       "aria-pressed",
       "true",
     );

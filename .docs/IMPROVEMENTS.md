@@ -1127,3 +1127,162 @@ Correction 3 commit: `feat(improve-53): hide Step trash and pin actor grid`.
 
 Correction 4 commit: `feat(improve-53): widen Back to Actors plus trash`.
 
+---
+
+# Improvement 54 — skip leftover restitch Paths
+
+Approved 2026-09-10. Deleting a middle Step in a diamond (Alice → Alice → Alice, with Data already reaching the right Alice) used WG-10’s 1:1 restitch to add Alice → Alice even though Data already reached the successor. The leftover Path did nothing; the user had to delete it (Improvement 11).
+
+## Locked decisions
+
+- Auto restitch (1:1, 1:N, N:1) still fans predecessor → successor, then **drops a newly created Path** when the predecessor already reaches the successor on the remaining graph.
+- Existing Paths are never dropped this way. If the restitch **merges into an existing Path**, conditions still join (WG-12).
+- Many-to-many confirmed pairings are kept as confirmed (no skip).
+- Linear chains still reconnect (the restitch is the only route).
+- The same skip applies to After-only auto restitch (BA-07) and to insert-on-Path / insert-on-bundle’s neighborhood restitch.
+- No new runtime dependency. Document version unchanged.
+
+## Contract
+
+Append to `## Amendments` in `.docs/GOAL.md`: WG-10 as dated 2026-09-10.
+
+Commit: `feat(improve-54): skip leftover restitch Paths`.  
+Evidence: `.docs/evidence/improve-54-skip-redundant-restitch/`.
+
+---
+
+# Improvement 55 — After camera follows Before
+
+Approved 2026-09-10. Clicking After jumped to a different pan/zoom because Before-only and After-only kept independent cameras (After remounted and often ran its own fitView). After now always follows Before’s camera.
+
+## Locked decisions
+
+- After’s stored viewport is Before’s. Switching Before → After copies Before onto After so the remounted board opens on the same transform.
+- Pan, wheel zoom, first-layout fit, and pan keys write both stored viewports so After cannot drift.
+- After’s first layout copies Before instead of fitting independently. Before still fitViews on first nonempty load (P-08).
+- Compare and Present still share one live camera. After-only extra Steps may sit outside the shared frame.
+- No new runtime dependency.
+
+## Contract
+
+Append to `## Amendments` in `.docs/GOAL.md`: BA-05 as dated 2026-09-10.
+
+---
+
+# Improvement 56 — Simplify zoom LOD
+
+Approved 2026-09-10. Overview zoom makes Step/Data cards unreadable. A persisted **Simplify** menu on the status bar can replace fancy tiles and Paths with large title text (and optional arrows), either below a zoom threshold or at every zoom.
+
+## Locked decisions
+
+- Status-bar **Simplify** is a menu button (not a press-toggle), left of Right Click Delete. Yellow when Hide visuals or Hide visuals on zoom-out is on.
+- Submenu checkboxes: Hide visuals on zoom-out, Hide visuals (exclusive; zoom-out mutes always but it stays clickable to switch), Arrow paths, Hide data.
+- Zoom-out LOD enters below 0.58 and leaves above 0.62. Hide visuals is on at every zoom.
+- Each visible Tile stays at its ELK position as a one-line headline box (Type + Name / Data label). No cluster merge. Inverse-zoom type. RF node size unchanged.
+- Hide data omits Data tiles (`hidden`) and skip-hops Step→Step through Data. Layout is not re-run. 1:1 Step Paths stay selectable; collapsed hops are display-only.
+- Arrow paths: straight connectors with a filled head. Hide data without arrows uses the same hop geometry as a plain line. Chips hidden while simplified.
+- Prefs in `localStorage` (`automation-pitch.simplify`). Not undo, not YAML. No new runtime dependency.
+
+## Contract
+
+Append to `## Amendments` in `.docs/GOAL.md`: P-05, CX-02, NA-10, AQ-01, AQ-02 as dated 2026-09-10.
+
+Commit: `feat(improve-56): add Simplify zoom LOD`  
+Evidence: `.docs/evidence/improve-56-simplify/`.
+
+## Correction 1 — 2026-09-10
+
+Simplify is a word-web view, not the same cards with swapped copy. Each Step/Data is a cream ink oval sized to its headline in **screen pixels** (centered on the ELK tile; RF node size unchanged). Empty Other shows **?**. Path lines stay (ELK, or hop lines when Hide data); **Arrow paths is withdrawn**. The graph does not have to fit the window.
+
+Commit: `feat(improve-56): word-web ovals for Simplify`
+
+## Correction 2 — 2026-09-10
+
+Ovals were a small island on an empty canvas. Displayed layout is scaled 2.5× about the centroid so Paths lengthen and the web uses the pane. Oval type is 40 / 28 screen px (max width 640). The Simplify submenu closes on an outside click (React Flow was eating Mantine’s dismiss).
+
+Commit: `feat(improve-56): spread word-web ovals`
+
+---
+
+# Improvement 57 — Simplify as a real word-web view
+
+Proposed 2026-09-10. Overlay + 2.5× spread still fails (tiny island or overlapping pills; camera stays the tile camera). Kickoff: [`.docs/improve-57-word-web.plan.md`](improve-57-word-web.plan.md).
+
+Shipped 2026-09-10 from `c2e7041` (`docs(improve-57): plan a real word-web layout`). Second derived ELK pass uses oval node sizes and wider gutters; camera fits that layout on enter and restores the tile camera on leave. Zoom-out latches (programmatic fit does not flip tiles back on). `spreadLaneLayout` deleted. Document unchanged.
+
+Commit: `feat(improve-57): lay out Simplify as a word-web`  
+Evidence: `.docs/evidence/improve-57-word-web/`.
+
+## Correction 1 — 2026-09-11
+
+Zoom-out LOD is withdrawn (it latched ovals and felt laggy). Simplify hide-visuals is only **Hide visuals**. Wheel/pinch cannot zoom out past the fitted graph size in tile or word-web view.
+
+Commit: `feat(improve-57): drop zoom-out LOD and floor tile zoom`
+
+## Correction 2 — 2026-09-11
+
+Hard lock at fit felt stuck. Zoom-out may go ~28% past fit, then stop — some shrinking, not a tiny island.
+
+Commit: `feat(improve-57): slack tile zoom-out past fit`
+
+---
+
+# Improvement 58 — After is 1:1 with Before (no After-only)
+
+Approved 2026-09-11. Switching Before/After rearranged Tiles because After laid out a different graph (After-only extras) and remounted without Before’s row hints. After-only Steps are withdrawn: not helpful for the audience, and After should stay 1:1 with Before.
+
+## Locked decisions
+
+- After-only Steps and After-only Paths are withdrawn. After is the same graph as Before; Who is the only per-lane value.
+- After `+` / Q E A D / Connect existing / insert / remove edit the shared base the same as Before, including Data.
+- `after.extraNodes` / `extraEdges` stay in the schema. Load and Import drop them (and extra-only After assignments), like merge groups. No document version bump.
+- After uses the same derived ELK layout as Before (shared graph key; After’s first pass may seed from Before positions). Switching views does not flip rows.
+- Robot Mailroom drops the receipt After-only Step. No new runtime dependency.
+
+## Contract
+
+Append to `## Amendments` in `.docs/GOAL.md`: BA-01, BA-02, BA-05, BA-06, BA-07, BA-09, CX-05, WG-07, SH-07, SH-14, NA-02, NA-03, NA-04, NG-06 as dated 2026-09-11.
+
+Commit: `feat(improve-58): drop After-only and share Before layout`  
+Evidence: `.docs/evidence/improve-58-after-one-to-one/`
+
+---
+
+# Improvement 59 — first layout cover (no Before/After flicker)
+
+Approved 2026-09-11. First paint and the first After click flashed the graph at the wrong camera, then jumped: ELK and fitView ran after the board was visible, After missed Before’s layout cache (the key included the lane), and switching remounted React Flow.
+
+## Locked decisions
+
+- Cover the board with **Loading...** until the first nonempty ELK layout and camera are applied. Empty New is not covered.
+- Before and After share one layout cache key (graph + mode, not lane). The first After click reuses Before’s layout.
+- Single-board Before ↔ After does not remount React Flow (`canvasEpoch` still remounts on New / Demo / Import).
+- Warm the current document’s layout at boot so the worker starts before the first paint. No new runtime dependency.
+
+## Contract
+
+Append to `## Amendments` in `.docs/GOAL.md`: P-08, CX-05, BA-05 as dated 2026-09-11.
+
+Commit: `feat(improve-59): cover first layout until camera ready`  
+Evidence: `.docs/evidence/improve-59-board-ready/`
+
+---
+
+# Improvement 60 — View toggle, drop Hide data
+
+Requested 2026-09-11. The status-bar **Simplify** menu is renamed **View** and is a press-toggle (like Right Click Delete). **Hide data** (skip-hop over Data) is withdrawn: the word-web keeps Data ovals.
+
+## Locked decisions
+
+- Status-bar **View** is a press-toggle, left of Right Click Delete. Yellow / `aria-pressed` when the word-web is on. No submenu.
+- Hide data, hop edges, and `data-simplify-hide-data` are withdrawn. Data tiles stay in the word-web layout.
+- Prefs remain `{ hideVisuals }` in `localStorage` (`automation-pitch.simplify`). Old `hideData` is ignored. Not undo, not YAML.
+- No new runtime dependency.
+
+## Contract
+
+Append to `## Amendments` in `.docs/GOAL.md`: P-05, CX-02, NA-10 as dated 2026-09-11.
+
+Commit: `feat(improve-60): rename Simplify to View and drop Hide data`  
+Evidence: `.docs/evidence/improve-60-view-toggle/`
+

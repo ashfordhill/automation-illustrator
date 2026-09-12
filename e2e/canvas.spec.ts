@@ -98,10 +98,10 @@ test.describe("slice 6 canvas create / connect / remove", () => {
       "true",
     );
     await page.getByText(DEMO_STEP).first().click();
-    await expect(page.getByRole("button", { name: "Add After-only Step" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Add Step or Data" })).toBeVisible();
     await expect(page.getByRole("button", { name: `Remove ${DEMO_STEP}` })).toBeVisible();
     await capturePage(page, `${EVIDENCE}/after-light-1440.png`);
-    const afterPlus = page.getByRole("button", { name: "Add After-only Step" });
+    const afterPlus = page.getByRole("button", { name: "Add Step or Data" });
     const afterBox = await afterPlus.boundingBox();
     expect(afterBox).toBeTruthy();
     const afterGrab = tabPeekPoint(afterBox!);
@@ -110,8 +110,8 @@ test.describe("slice 6 canvas create / connect / remove", () => {
     await page.mouse.move(afterGrab.x + 140, afterGrab.y, {
       steps: 12,
     });
-    await expect(page.getByRole("button", { name: "After-only Step" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "New Data" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "New Step" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "New Data" })).toBeVisible();
     await capturePage(page, `${EVIDENCE}/after-no-plus-1440.png`);
     await page.mouse.up();
     await page.keyboard.press("Escape");

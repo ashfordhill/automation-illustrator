@@ -60,9 +60,18 @@ test.describe("Improvement 51 — Present expand panes", () => {
     await capturePage(page, `${EVIDENCE}/present-after-expanded-1440.png`);
 
     await page.keyboard.press("Escape");
+    await expect(page.getByRole("button", { name: "Present" })).toBeVisible();
+  });
+
+  test("Escape exits Present after Space tucks the focused pane", async ({ page }) => {
+    await loadOakPark(page);
+    await enterPresent(page);
+    await waitForLayout(page);
+    await page.getByRole("button", { name: "Expand After" }).click();
+    await page.keyboard.press("Space");
     await expect(page.locator("[data-present-expand]")).toHaveAttribute(
       "data-present-expand",
-      "split",
+      "before",
     );
     await page.keyboard.press("Escape");
     await expect(page.getByRole("button", { name: "Present" })).toBeVisible();

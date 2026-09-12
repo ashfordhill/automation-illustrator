@@ -213,7 +213,6 @@ export function TileChrome({
 }
 
 function PlusPullTab({ nodeId, inbound }: { nodeId: string; inbound: boolean }) {
-  const view = useStore((s) => s.view);
   const interaction = useStore((s) => s.interaction);
   const restRef = useRef<HTMLButtonElement>(null);
   const [drag, setDrag] = useState<{
@@ -225,7 +224,7 @@ function PlusPullTab({ nodeId, inbound }: { nodeId: string; inbound: boolean }) 
     live: boolean;
     tile: TileRect;
   } | null>(null);
-  const items = view === ViewMode.After ? (["step"] as const) : (["step", "data"] as const);
+  const items = ["step", "data"] as const;
   const stretched = drag
     ? Math.hypot(drag.x - drag.restX, drag.y - drag.restY) >= PULL_THRESHOLD
     : false;
@@ -336,7 +335,7 @@ function PlusPullTab({ nodeId, inbound }: { nodeId: string; inbound: boolean }) 
                     <PlusPreview
                       key={kind}
                       kind={kind}
-                      label={kind === "step" ? (view === ViewMode.After ? "After-only Step" : "New Step") : "New Data"}
+                      label={kind === "step" ? "New Step" : "New Data"}
                       hovering={drag.hovering === kind}
                       style={{ left: pos.x, top: pos.y }}
                     />
@@ -359,24 +358,8 @@ function PlusPullTab({ nodeId, inbound }: { nodeId: string; inbound: boolean }) 
         ref={restRef}
         type="button"
         className={`plus-tab${drag?.live ? " is-hidden-rest" : ""}`}
-        aria-label={
-          inbound
-            ? view === ViewMode.After
-              ? "Add left After-only Step"
-              : "Add left Step or Data"
-            : view === ViewMode.After
-              ? "Add After-only Step"
-              : "Add Step or Data"
-        }
-        title={
-          inbound
-            ? view === ViewMode.After
-              ? "Pull left to add an After-only Step"
-              : "Pull left onto Step or Data"
-            : view === ViewMode.After
-              ? "Pull to add an After-only Step"
-              : "Pull onto Step or Data"
-        }
+        aria-label={inbound ? "Add left Step or Data" : "Add Step or Data"}
+        title={inbound ? "Pull left onto Step or Data" : "Pull onto Step or Data"}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}

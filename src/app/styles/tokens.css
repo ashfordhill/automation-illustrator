@@ -29,6 +29,7 @@
   --plus-active: #176e4e;
   --minus: #c4453a;
   --minus-active: #9e3229;
+  --trash: #b12015;
   --select-ring: rgba(26, 143, 212, 0.5);
   --select-glow: var(--blue);
   --actor-empty: #cfe8f2;
@@ -74,6 +75,7 @@
   --plus-active: #2d8a54;
   --minus: #e06a5e;
   --minus-active: #c44d42;
+  --trash: #b12015;
   --select-ring: rgba(126, 182, 224, 0.65);
   --select-glow: var(--blue);
   --actor-empty: #2a4554;
@@ -547,11 +549,19 @@ body.is-tile-dragging * {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  /* Pin icon + first title line; wrapping grows down instead of squeezing. */
+  justify-content: flex-start;
   gap: 2px;
-  padding: 8px 10px 10px;
+  padding: 24px 10px 8px;
   box-sizing: border-box;
   overflow: hidden;
+}
+
+.task-card-icon {
+  flex: 0 0 52px;
+  width: 52px;
+  height: 52px;
+  overflow: visible;
 }
 
 .task-card-title {
@@ -563,6 +573,11 @@ body.is-tile-dragging * {
   border-top: 3px solid var(--line);
   padding: 4px 2px 0;
   box-sizing: border-box;
+}
+
+.task-card-title .fit-label,
+.task-card-title .fit-label-fit {
+  height: auto;
 }
 
 .task-card-detail {
@@ -727,83 +742,156 @@ body.is-tile-dragging * {
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
-  gap: 12px 16px;
+  gap: 7px 9px;
   max-width: min(720px, calc(100% - 48px));
   pointer-events: none;
-  color: color-mix(in srgb, var(--ink) 48%, var(--paper));
+  color: color-mix(in srgb, var(--ink) 31%, var(--paper));
   font-weight: 500;
-  font-size: 12px;
+  font-size: 9px;
   line-height: 1.35;
+}
+
+.canvas-helper-cluster {
+  position: relative;
+}
+
+.canvas-helper-cluster > .canvas-helper-chip {
+  position: absolute;
+  left: calc(100% + 9px);
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .canvas-helper-chip {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 3px;
   background: none;
   color: inherit;
   border: none;
   border-radius: 0;
   padding: 0;
   font-weight: 500;
-  font-size: 12px;
+  font-size: 9px;
   box-shadow: none;
   max-width: 100%;
   white-space: nowrap;
   text-align: left;
 }
 
-.canvas-helper-chip kbd {
+.canvas-helper-chip kbd,
+.canvas-helper-spawn kbd {
   box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   font-family: inherit;
   font-weight: 500;
-  font-size: 11px;
+  font-size: 9px;
   line-height: 1;
-  background: color-mix(in srgb, var(--ink) 7%, var(--paper));
-  border: 1px solid color-mix(in srgb, var(--ink) 22%, transparent);
-  border-radius: 4px;
+  background: color-mix(in srgb, var(--ink) 6%, var(--paper));
+  border: 1px solid color-mix(in srgb, var(--ink) 16%, transparent);
+  border-radius: 3px;
   width: auto;
-  min-width: 22px;
-  height: 22px;
-  padding: 0 5px;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 2px;
   text-align: center;
-  color: color-mix(in srgb, var(--ink) 58%, var(--paper));
+  color: color-mix(in srgb, var(--ink) 40%, var(--paper));
+}
+
+.canvas-helper-chip kbd.is-mouse {
+  padding: 1.5px;
+}
+
+.canvas-helper-chip kbd.is-mouse svg {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .canvas-helper-spawn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-}
-
-.canvas-helper-spawn-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 32px 32px 32px;
+  grid-template-rows: 15px 22px 15px;
+  grid-template-areas:
+    "q kind-step e"
+    "arr-l tile arr-r"
+    "a kind-data d";
   align-items: center;
-  column-gap: 22px;
-  min-width: 268px;
+  justify-items: center;
+  column-gap: 3px;
+  row-gap: 3px;
 }
 
-.canvas-helper-spawn-row > :first-child {
-  justify-self: end;
+.canvas-helper-spawn-q {
+  grid-area: q;
 }
 
-.canvas-helper-spawn-row > :last-child {
-  justify-self: start;
+.canvas-helper-spawn-e {
+  grid-area: e;
 }
 
-.canvas-helper-spawn-arrows {
+.canvas-helper-spawn-a {
+  grid-area: a;
+}
+
+.canvas-helper-spawn-d {
+  grid-area: d;
+}
+
+.canvas-helper-spawn-kind-step,
+.canvas-helper-spawn-kind-data {
+  font-size: 9px;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+
+.canvas-helper-spawn-kind-step {
+  grid-area: kind-step;
+}
+
+.canvas-helper-spawn-kind-data {
+  grid-area: kind-data;
+}
+
+.canvas-helper-spawn [data-spawn-arrow="left"] {
+  grid-area: arr-l;
+}
+
+.canvas-helper-spawn [data-spawn-arrow="right"] {
+  grid-area: arr-r;
+}
+
+.canvas-helper-spawn-arrow {
   display: block;
-  width: min(268px, 72vw);
-  height: 32px;
-  margin: -8px 0;
-  color: inherit;
-  opacity: 0.78;
+  color: color-mix(in srgb, var(--ink) 40%, var(--paper));
   overflow: visible;
+}
+
+.canvas-helper-spawn-tile {
+  grid-area: tile;
+  box-sizing: border-box;
+  width: 32px;
+  height: 22px;
+  border: 1.5px solid color-mix(in srgb, var(--ink) 40%, var(--paper));
+  border-radius: 7px;
+}
+
+.canvas-helper-spawn kbd {
+  width: 15px;
+  border-radius: 4px;
+}
+
+.canvas-helper-stroke {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: color-mix(in srgb, var(--ink) 40%, var(--paper));
+}
+
+.canvas-helper-stroke svg {
+  display: block;
 }
 
 .path-plus-menu {
@@ -1072,6 +1160,52 @@ body.is-tile-dragging * {
 .step-piece,
 .field-piece {
   box-shadow: 0 5px 0 var(--btn-shadow);
+}
+
+.board-lane[data-simplified="true"] .react-flow__node {
+  overflow: visible;
+}
+
+.simplified-tile-host {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.simplified-oval {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.15em;
+  border: 4px solid var(--line);
+  border-radius: 999px;
+  background: var(--cream);
+  color: var(--ink);
+  font-family: inherit;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  box-shadow: 0 6px 0 var(--btn-shadow);
+  pointer-events: auto;
+}
+
+.simplified-oval.is-lifted {
+  transform: translateY(-3px);
+}
+
+.simplified-oval.selected {
+  box-shadow: 0 0 0 4px var(--select-glow);
+}
+
+.simplified-oval-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .step-piece.is-lifted {
@@ -1550,14 +1684,16 @@ body.is-tile-dragging * {
   min-height: 36px;
   padding: 0 12px;
   margin: 0;
-  border: 2px solid var(--line);
+  border: 2px solid var(--ink);
   border-radius: 10px;
-  background: var(--cream);
-  color: var(--ink);
+  /* Same navy + ice type as unselected Before/After, so these do not read as Type chips. */
+  background: var(--chrome-well);
+  color: var(--chrome-ink);
   font-family: inherit;
   font-weight: 800;
   font-size: 13px;
   line-height: 1;
+  text-transform: uppercase;
   cursor: pointer;
   box-shadow: var(--chip-shadow);
   box-sizing: border-box;
@@ -1571,8 +1707,17 @@ body.is-tile-dragging * {
   box-shadow: none;
 }
 
+.inspector-actors:hover:not(.is-on),
+.inspector-back:hover {
+  background: color-mix(in srgb, var(--chrome-ink) 14%, var(--chrome-well));
+}
+
 .inspector-actors:focus-visible,
-.inspector-back:focus-visible,
+.inspector-back:focus-visible {
+  outline: 3px solid var(--yellow);
+  outline-offset: 2px;
+}
+
 .inspector-actor-op:focus-visible {
   outline: 3px solid var(--blue);
   outline-offset: 2px;
@@ -1584,15 +1729,15 @@ body.is-tile-dragging * {
   height: var(--inspector-trash-size, 36px);
   min-width: var(--inspector-trash-size, 36px);
   min-height: var(--inspector-trash-size, 36px);
-  /* Idle tile-X red (--minus). Hover uses the darker --minus-active. */
-  --ai-color: var(--minus);
-  --ai-hover: var(--minus-active);
-  color: var(--minus) !important;
+  --ai-color: var(--trash);
+  --ai-hover: var(--trash);
+  color: var(--trash) !important;
 }
 
-.inspector-trash:hover,
-.inspector-trash:focus-visible {
-  color: var(--minus-active) !important;
+.inspector-trash .mantine-ActionIcon-icon,
+.inspector-trash svg {
+  width: 22px;
+  height: 22px;
 }
 
 .inspector-type:focus-visible,

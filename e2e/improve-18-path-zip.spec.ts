@@ -8,7 +8,6 @@ test.describe("Improvement 18 Path zip vs Tile blip", () => {
     page,
   }) => {
     await loadOakPark(page);
-    await page.getByRole("button", { name: "Sound off" }).click();
     await expect(page.getByRole("button", { name: "Sound on" })).toHaveAttribute(
       "aria-pressed",
       "true",

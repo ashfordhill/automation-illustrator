@@ -5,72 +5,113 @@
  */
 import { prettyKey, KeyAction } from "../../keyboard/bindings";
 import { useStore } from "../../state/store";
-import {
-  SelectionKind,
-  ViewMode,
-  WorkflowNodeKind,
-} from "../../workflow/catalogs";
+import { SelectionKind, ViewMode } from "../../workflow/catalogs";
 import { canRemovePath } from "../../workflow/commands";
+import { MouseRightClickIcon } from "./MouseRightClickIcon";
 
-type Hint = { key: string; label: string };
+type Hint = { key: string; label: string; mark?: "stroke" };
 
-function Chip({ item }: { item: Hint }) {
+function StrokeToggleMark() {
   return (
-    <span className="canvas-helper-chip">
-      <kbd>{item.key}</kbd>
-      <span>{item.label}</span>
+    <span className="canvas-helper-stroke" data-stroke-toggle="true" aria-label="Dotted / Solid">
+      <svg viewBox="0 0 28 8" width="28" height="8" aria-hidden>
+        <line
+          x1="1.5"
+          y1="4"
+          x2="26.5"
+          y2="4"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeDasharray="2.2 3.2"
+        />
+      </svg>
+      <span aria-hidden>/</span>
+      <svg viewBox="0 0 28 8" width="28" height="8" aria-hidden>
+        <line
+          x1="1.5"
+          y1="4"
+          x2="26.5"
+          y2="4"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+      </svg>
     </span>
   );
 }
 
-/** Straight chunky double-headed compass: left/right spawn (P-01, P-06). */
-function SpawnArrows() {
+function Chip({ item }: { item: Hint }) {
+  const mouse = item.key === "Right-click";
+  return (
+    <span className="canvas-helper-chip">
+      <kbd className={mouse ? "is-mouse" : undefined}>
+        {mouse ? <MouseRightClickIcon size={12} /> : item.key}
+      </kbd>
+      {mouse ? <span className="visually-hidden">Right-click</span> : null}
+      {item.mark === "stroke" ? <StrokeToggleMark /> : <span>{item.label}</span>}
+    </span>
+  );
+}
+
+function SpawnArrow({ dir }: { dir: "left" | "right" }) {
+  const left = dir === "left";
   return (
     <svg
-      className="canvas-helper-spawn-arrows"
-      data-spawn-compass="true"
-      viewBox="0 0 268 32"
-      width="268"
-      height="32"
+      className="canvas-helper-spawn-arrow"
+      data-spawn-arrow={dir}
+      viewBox="0 0 36 12"
+      width="32"
+      height="10"
       aria-hidden
     >
-      <line x1="16" y1="16" x2="252" y2="16" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round" />
-      <path d="M 22 10 L 6 16 L 22 22 Z" fill="currentColor" />
-      <path d="M 246 10 L 262 16 L 246 22 Z" fill="currentColor" />
-      <line x1="134" y1="1" x2="134" y2="31" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+      {left ? (
+        <>
+          <line x1="34" y1="6" x2="10" y2="6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          <path d="M11 1.5 L1 6 L11 10.5 Z" fill="currentColor" />
+        </>
+      ) : (
+        <>
+          <line x1="2" y1="6" x2="26" y2="6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          <path d="M25 1.5 L35 6 L25 10.5 Z" fill="currentColor" />
+        </>
+      )}
     </svg>
   );
 }
 
-function SpawnHints({ after }: { after: boolean }) {
+function SpawnKey({ area, value }: { area: string; value: string | null }) {
+  if (!value) return <span className={`canvas-helper-spawn-${area}`} />;
+  return <kbd className={`canvas-helper-spawn-${area}`}>{value}</kbd>;
+}
+
+/** Four-corner spawn compass: Q/E Step, A/D Data, mini empty tile in the center (P-01, P-06). */
+function SpawnHints() {
   const k = useStore.getState().keymap;
   const pk = (a: (typeof KeyAction)[keyof typeof KeyAction]) => prettyKey(k[a]);
-  const step = after ? "After-only Step" : "+ Step";
-  const leftStep = k[KeyAction.AddStepIn] ? { key: pk(KeyAction.AddStepIn), label: step } : null;
-  const rightStep = k[KeyAction.AddStepOut] ? { key: pk(KeyAction.AddStepOut), label: step } : null;
-  const leftData = !after && k[KeyAction.AddDataIn] ? { key: pk(KeyAction.AddDataIn), label: "+ Data" } : null;
-  const rightData = !after && k[KeyAction.AddDataOut] ? { key: pk(KeyAction.AddDataOut), label: "+ Data" } : null;
-  if (!leftStep && !rightStep && !leftData && !rightData) return null;
+  const q = k[KeyAction.AddStepIn] ? pk(KeyAction.AddStepIn) : null;
+  const e = k[KeyAction.AddStepOut] ? pk(KeyAction.AddStepOut) : null;
+  const a = k[KeyAction.AddDataIn] ? pk(KeyAction.AddDataIn) : null;
+  const d = k[KeyAction.AddDataOut] ? pk(KeyAction.AddDataOut) : null;
+  if (!q && !e && !a && !d) return null;
   return (
     <div
       className="canvas-helper-spawn"
       data-spawn-hints="true"
+      data-spawn-compass="true"
       role="group"
-      aria-label={
-        after ? "Add After-only Step left or right" : "Q and A add to the left, E and D add to the right"
-      }
+      aria-label="Q and A add to the left, E and D add to the right"
     >
-      <div className="canvas-helper-spawn-row">
-        {leftStep ? <Chip item={leftStep} /> : <span />}
-        {rightStep ? <Chip item={rightStep} /> : <span />}
-      </div>
-      <SpawnArrows />
-      {after ? null : (
-        <div className="canvas-helper-spawn-row">
-          {leftData ? <Chip item={leftData} /> : <span />}
-          {rightData ? <Chip item={rightData} /> : <span />}
-        </div>
-      )}
+      <SpawnKey area="q" value={q} />
+      <span className="canvas-helper-spawn-kind-step">step</span>
+      <SpawnKey area="e" value={e} />
+      <SpawnArrow dir="left" />
+      <span className="canvas-helper-spawn-tile" data-spawn-tile="true" />
+      <SpawnArrow dir="right" />
+      <SpawnKey area="a" value={a} />
+      <span className="canvas-helper-spawn-kind-data">data</span>
+      <SpawnKey area="d" value={d} />
     </div>
   );
 }
@@ -119,12 +160,10 @@ function hintsFor(): { chips: Hint[]; spawnAfter: boolean | null } {
   if (s.selected?.type === SelectionKind.Edge) {
     if (s.view === ViewMode.Both) return { chips: [], spawnAfter: null };
     const items: Hint[] = [
-      { key: pk(KeyAction.ToggleDash), label: "Dotted / Solid" },
-      { key: pk(KeyAction.Confirm), label: "Edit label" },
+      { key: pk(KeyAction.ToggleDash), label: "Dotted / Solid", mark: "stroke" },
+      { key: pk(KeyAction.Confirm), label: "Edit text" },
+      { key: "Right-click", label: "delete" },
     ];
-    if (s.rightClickDelete) {
-      items.push({ key: "Right-click", label: "Delete" });
-    }
     if (canRemovePath(s.workflow, s.selected.id)) {
       items.push({ key: pk(KeyAction.Delete), label: "Remove Path" });
     }
@@ -132,27 +171,11 @@ function hintsFor(): { chips: Hint[]; spawnAfter: boolean | null } {
   }
   if (s.selected?.type === SelectionKind.Node) {
     if (s.view === ViewMode.Both) return { chips: [], spawnAfter: null };
-    const n =
-      s.workflow.nodes.find((x) => x.id === s.selected!.id) ??
-      s.workflow.after.extraNodes.find((x) => x.id === s.selected!.id);
     const chips: Hint[] = [];
-    if (s.view === ViewMode.After) {
-      if (s.workflow.after.extraNodes.some((x) => x.id === s.selected!.id)) {
-        chips.push({ key: pk(KeyAction.RemoveNode), label: "Remove Step" });
-      }
-      if (s.rightClickDelete) {
-        chips.push({ key: "Right-click", label: "Delete" });
-      }
-      return { chips, spawnAfter: true };
-    }
-    chips.push({
-      key: pk(KeyAction.RemoveNode),
-      label: n?.type === WorkflowNodeKind.DataField ? "Remove Data" : "Remove Step",
-    });
     if (s.rightClickDelete) {
-      chips.push({ key: "Right-click", label: "Delete" });
+      chips.push({ key: "Right-click", label: "delete" });
     }
-    return { chips, spawnAfter: false };
+    return { chips, spawnAfter: true };
   }
   return { chips: [], spawnAfter: null };
 }
@@ -167,12 +190,17 @@ export function CanvasHelper() {
   if (present) return null;
   const { chips, spawnAfter } = hintsFor();
   if (!chips.length && spawnAfter === null) return null;
+  const extras = chips.map((item) => <Chip key={`${item.key}-${item.label}`} item={item} />);
   return (
     <div className="canvas-helper" aria-live="polite">
-      {spawnAfter !== null ? <SpawnHints after={spawnAfter} /> : null}
-      {chips.map((item) => (
-        <Chip key={`${item.key}-${item.label}`} item={item} />
-      ))}
+      {spawnAfter !== null ? (
+        <div className="canvas-helper-cluster">
+          <SpawnHints />
+          {extras}
+        </div>
+      ) : (
+        extras
+      )}
     </div>
   );
 }

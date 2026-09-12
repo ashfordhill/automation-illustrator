@@ -100,7 +100,7 @@ export const AssignmentLane = {
 export type AssignmentLane =
   (typeof AssignmentLane)[keyof typeof AssignmentLane];
 
-/** The other comparison lane — used to share the Both camera (BA-05). */
+/** The other comparison lane — used to share the camera (BA-05). */
 export function otherLane(lane: AssignmentLane): AssignmentLane {
   return lane === AssignmentLane.Before ? AssignmentLane.After : AssignmentLane.Before;
 }

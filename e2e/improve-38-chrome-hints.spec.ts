@@ -18,8 +18,8 @@ test.describe("Improvement 38 — chrome, hints, Type, Who", () => {
     expect(Math.abs(xCx - tileCx)).toBeLessThan(3);
 
     const spawn = page.locator("[data-spawn-hints]");
-    await expect(spawn).toContainText("+ Step");
-    await expect(spawn).toContainText("+ Data");
+    await expect(spawn.locator(".canvas-helper-spawn-kind-step")).toHaveText("step");
+    await expect(spawn.locator(".canvas-helper-spawn-kind-data")).toHaveText("data");
     await expect(page.locator(".canvas-helper")).not.toContainText("Right-click");
     await capturePage(page, `${EVIDENCE}/step-chrome-hints-1440.png`);
   });
@@ -65,7 +65,7 @@ test.describe("Improvement 38 — chrome, hints, Type, Who", () => {
     await capturePage(page, `${EVIDENCE}/type-who-1440.png`);
   });
 
-  test("Manage actors selects the Step’s Who; Right-click Delete hint follows the toggle", async ({ page }) => {
+  test("Manage actors selects the Step’s Who; Path hints always show Right-click delete", async ({ page }) => {
     await loadOakPark(page);
     await page.getByText("Search filesystem").first().click();
     await page.locator("aside").getByRole("button", { name: "Actors", exact: true }).click();
@@ -76,9 +76,9 @@ test.describe("Improvement 38 — chrome, hints, Type, Who", () => {
 
     const pt = await pathScreenPoint(page, "e_web_acct", 0.22);
     await page.mouse.click(pt.x, pt.y);
-    await expect(page.locator(".canvas-helper")).not.toContainText("Right-click");
-    await page.getByRole("button", { name: "Right Click Delete" }).click();
     await expect(page.locator(".canvas-helper")).toContainText("Right-click");
+    await expect(page.locator(".canvas-helper [data-mouse-right-click]")).toBeVisible();
+    await expect(page.locator(".canvas-helper")).toContainText("Edit text");
     await capturePage(page, `${EVIDENCE}/path-hint-toggle-on-1440.png`);
   });
 });
@@ -89,7 +89,7 @@ test.describe("Improvement 38 — min width", () => {
   test("spawn hints and Type keypad still fit at 1024", async ({ page }) => {
     await loadOakPark(page);
     await page.getByText(DEMO_STEP).first().click();
-    await expect(page.locator("[data-spawn-hints]")).toContainText("+ Step");
+    await expect(page.locator("[data-spawn-hints] .canvas-helper-spawn-kind-step")).toHaveText("step");
     await expect(page.locator("aside").getByRole("button", { name: "Type Review" })).toHaveText(/Review/);
     await capturePage(page, `${EVIDENCE}/chrome-hints-1024.png`);
   });

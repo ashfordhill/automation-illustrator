@@ -1,5 +1,5 @@
 /**
- * Left column of a Step tile: figure + a name card with the title nested inside.
+ * Left column of a Step tile: figure in the upper strip, name/role plate on the bottom.
  * Fill is the actor’s pastel; the title sub-box reuses that color on cream (NA-10).
  */
 import { HumanFigure } from "./HumanFigure";
@@ -65,18 +65,27 @@ export function ActorColumn({ actor }: { actor: ActorDto | undefined }) {
         flexDirection: "column",
         alignItems: "stretch",
         justifyContent: "flex-start",
-        gap: 6,
-        padding: "8px 8px 12px",
+        gap: 0,
+        padding: "10px 8px 8px",
         boxSizing: "border-box",
         overflow: "hidden",
         ["--actor-fill" as string]: actor?.color ?? "var(--actor-empty)",
       }}
     >
-      <div style={{ display: "flex", justifyContent: "center", flex: "0 0 auto", overflow: "visible" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          flex: "1 1 auto",
+          minHeight: 0,
+          overflow: "visible",
+        }}
+      >
         {human ? (
-          <HumanFigure size={42} color={FIGURE_INK_ON_PASTEL} />
+          <HumanFigure size={36} color={FIGURE_INK_ON_PASTEL} />
         ) : (
-          <RobotFigure size={42} color={FIGURE_INK_ON_PASTEL} />
+          <RobotFigure size={36} color={FIGURE_INK_ON_PASTEL} />
         )}
       </div>
       <div className="actor-card">

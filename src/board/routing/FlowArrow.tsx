@@ -12,6 +12,7 @@ import { afterGraph, edgeIsDotted } from "../../workflow/graph";
 import { findEdge } from "../../workflow/selectors";
 import type { WorkflowDoc } from "../../workflow/types";
 import { wrapConditionLines } from "../layout/labelBox";
+import { useSimplifyView } from "../simplify/SimplifyContext";
 import { useLaneLayoutContext } from "./LaneLayoutContext";
 import {
   lerpPolylines,
@@ -38,6 +39,7 @@ export type FlowPathData = {
   stretch?: boolean;
   viaX?: number;
   viaY?: number;
+  displayHop?: boolean;
 } & Record<string, unknown>;
 
 /** Invisible Path hit pad in SVG units — wider than the drawn stroke. */
@@ -134,18 +136,29 @@ export function FlowArrow({
     (s) => s.interaction.kind === "path-label-edit" && s.interaction.edgeId === originId,
   );
   const { layout } = useLaneLayoutContext();
+  const { simplified } = useSimplifyView();
   const restitch = Boolean(pathData.restitch);
   const stretch = Boolean(pathData.stretch);
+  const displayHop = Boolean(pathData.displayHop);
+  const simplifyDraw = !restitch && simplified;
+  const hideChip = simplifyDraw;
   const restitchCondition = restitch && typeof pathData.condition === "string" ? pathData.condition : "";
   const restitchDashed = restitch ? Boolean(pathData.dashed) : false;
-  const edge = restitch ? undefined : findEdge(workflow, originId);
-  const dotted = restitch ? restitchDashed : pathIsDotted(workflow, originId);
+  const edge = restitch || displayHop ? undefined : findEdge(workflow, originId);
+  const dotted = restitch
+    ? restitchDashed
+    : displayHop
+      ? Boolean(pathData.dotted)
+      : pathIsDotted(workflow, originId);
   const label = restitch ? restitchCondition : edge?.label;
 
   const route = layout?.routes[id];
   const routeKey = route ? polylineKey(route) : "";
   const settled = useMemo<PolyPoint[]>(
-    () => (route && route.length >= 2 ? route : orthogonalPolyline(sourceX, sourceY, targetX, targetY)),
+    () =>
+      route && route.length >= 2
+        ? route
+        : orthogonalPolyline(sourceX, sourceY, targetX, targetY),
     // routeKey stands in for the route array identity (animated frames reuse ids).
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [routeKey, sourceX, sourceY, targetX, targetY],
@@ -175,6 +188,7 @@ export function FlowArrow({
 
   const insertHover = useStore(
     (s) =>
+      !displayHop &&
       s.interaction.kind === "tile-drag" &&
       s.interaction.hover?.kind === "path" &&
       s.interaction.hover.edgeId === originId,
@@ -247,7 +261,7 @@ export function FlowArrow({
             />
           ))
         : null}
-      {editingLabel && !restitch && !present && view !== ViewMode.Both ? (
+      {editingLabel && !restitch && !hideChip && !present && view !== ViewMode.Both ? (
         <EdgeLabelRenderer>
           <div
             className="nopan nowheel path-condition-wrap"
@@ -263,7 +277,7 @@ export function FlowArrow({
             <PathChipEditor edgeId={originId} value={label ?? ""} />
           </div>
         </EdgeLabelRenderer>
-      ) : label && lines.length ? (
+      ) : label && lines.length && !hideChip ? (
         <EdgeLabelRenderer>
           <div
             className="nopan nowheel path-condition-wrap"

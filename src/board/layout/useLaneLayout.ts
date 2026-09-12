@@ -1,17 +1,17 @@
 /**
  * Ask the layout engine for one lane's ELK layout (Improvement 01 / 36).
- * A cache hit renders synchronously (no flash on view switches). Otherwise the
- * previous layout stays on screen with phase "updating", or "initial" when
- * nothing has been laid out yet. Publishes displayed positions to the store so
+ * A cache hit renders synchronously (no flash on view switches). Before and
+ * After share one graph key. Otherwise the previous layout stays on screen
+ * with phase "updating", or "initial" when nothing has been laid out yet. Publishes displayed positions to the store so
  * WG-09 / WG-11 follow what the user sees. The previous layout is also passed
  * into ELK as row-stability hints when the graph changes.
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { LaneProjection } from "../../state/projection";
 import { useStore } from "../../state/store";
-import type { AssignmentLane } from "../../workflow/catalogs";
+import { AssignmentLane } from "../../workflow/catalogs";
 import { layoutEngine } from "./elkClient";
-import type { TileSizes } from "./elkGraph";
+import type { LayoutMode, TileSizes } from "./elkGraph";
 import type { LabelBox } from "./labelBox";
 import type { LaneLayout, LayoutPhase } from "./laneLayout";
 import { LayoutSuperseded, type LayoutEngine } from "./layoutEngine";
@@ -28,16 +28,20 @@ export function useLaneLayout(
   projection: LaneProjection,
   boxes: Record<string, LabelBox>,
   sizes?: TileSizes,
+  mode: LayoutMode = "tile",
   engine: LayoutEngine = layoutEngine,
 ): LaneLayoutState {
-  const key = useMemo(() => engine.keyFor(projection, boxes, sizes), [engine, projection, boxes, sizes]);
+  const key = useMemo(
+    () => engine.keyFor(projection, boxes, sizes, mode),
+    [engine, projection, boxes, sizes, mode],
+  );
   const cached = engine.get(key);
   const [state, setState] = useState<{ layout: LaneLayout | null; error: boolean }>({
     layout: cached ?? null,
     error: false,
   });
-  const inputs = useRef({ projection, boxes, sizes });
-  inputs.current = { projection, boxes, sizes };
+  const inputs = useRef({ projection, boxes, sizes, mode });
+  inputs.current = { projection, boxes, sizes, mode };
 
   const layout = cached ?? state.layout;
   const shownRef = useRef<LaneLayout | null>(layout);
@@ -50,8 +54,12 @@ export function useLaneLayout(
       return;
     }
     let live = true;
-    const { projection: p, boxes: b, sizes: z } = inputs.current;
-    engine.request(lane, p, b, z, shownRef.current?.positions).then(
+    const { projection: p, boxes: b, sizes: z, mode: m } = inputs.current;
+    const beforeHints =
+      lane === AssignmentLane.After
+        ? useStore.getState().laneLayoutPositions[AssignmentLane.Before]
+        : undefined;
+    engine.request(lane, p, b, z, shownRef.current?.positions ?? beforeHints, m).then(
       (layout) => {
         if (live) setState({ layout, error: false });
       },

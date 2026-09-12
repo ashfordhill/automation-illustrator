@@ -13,8 +13,11 @@ function resetSession() {
   s.setHelp(false);
   s.closeBoardModes();
   s.setColorScheme(ColorScheme.Light);
-  s.setSoundEnabled(false);
+  s.setSoundEnabled(true);
   s.setRightClickDelete(false);
+  s.setSimplify({
+    hideVisuals: false,
+  });
   s.setInspectorCollapsed(false);
 }
 
@@ -26,13 +29,13 @@ afterEach(() => {
   resetSession();
 });
 
-test("sound is off by default and persists on/off (SH-03)", () => {
-  expect(useStore.getState().soundEnabled).toBe(false);
-  useStore.getState().setSoundEnabled(true);
+test("sound is on by default and persists on/off (SH-03)", () => {
   expect(useStore.getState().soundEnabled).toBe(true);
-  expect(localStorage.getItem("automation-pitch.sound")).toBe("on");
   useStore.getState().setSoundEnabled(false);
+  expect(useStore.getState().soundEnabled).toBe(false);
   expect(localStorage.getItem("automation-pitch.sound")).toBe("off");
+  useStore.getState().setSoundEnabled(true);
+  expect(localStorage.getItem("automation-pitch.sound")).toBe("on");
 });
 
 test("theme persists across setColorScheme (P-09)", () => {
@@ -49,6 +52,16 @@ test("inspector fold persists and defaults open (P-05)", () => {
   expect(localStorage.getItem("automation-pitch.inspectorCollapsed")).toBe("on");
   useStore.getState().setInspectorCollapsed(false);
   expect(localStorage.getItem("automation-pitch.inspectorCollapsed")).toBe("off");
+});
+
+test("simplify prefs are off by default and persist independently", () => {
+  expect(useStore.getState().simplify).toEqual({ hideVisuals: false });
+  useStore.getState().setSimplify({ hideVisuals: true });
+  expect(useStore.getState().simplify.hideVisuals).toBe(true);
+  const saved = JSON.parse(localStorage.getItem("automation-pitch.simplify") ?? "{}");
+  expect(saved).toEqual({ hideVisuals: true });
+  expect("hideData" in saved).toBe(false);
+  expect("hideVisualsOnZoomOut" in saved).toBe(false);
 });
 
 test("right-click-delete is off by default and persists on/off", () => {

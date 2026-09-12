@@ -16,14 +16,14 @@ function viewRadio(page: Page, name: "Before" | "After" | "Compare") {
 }
 
 test.describe("slice 8 shell, typography, and sound", () => {
-  test("chunky Before/After/Both, sound off by default, Present hides inspector and restore", async ({
+  test("chunky Before/After/Both, sound on by default, Present hides inspector and restore", async ({
     page,
   }) => {
     await loadDemo(page);
-    await expect(page.getByRole("button", { name: "Sound off" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Sound off" })).toHaveAttribute(
+    await expect(page.getByRole("button", { name: "Sound on" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Sound on" })).toHaveAttribute(
       "aria-pressed",
-      "false",
+      "true",
     );
     await expect(viewRadio(page, "Before")).toHaveAttribute("aria-checked", "true");
 
@@ -64,8 +64,16 @@ test.describe("slice 8 shell, typography, and sound", () => {
   test("sound toggle announces on and stays independent of reduced motion", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await loadDemo(page);
-    const toggle = page.getByRole("button", { name: "Sound off" });
+    const toggle = page.getByRole("button", { name: "Sound on" });
     await toggle.click();
+    await expect(page.getByRole("button", { name: "Sound off" })).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
+    await expect(page.locator('[aria-live="polite"]').getByText("Sound off", { exact: true })).toHaveCount(
+      1,
+    );
+    await page.getByRole("button", { name: "Sound off" }).click();
     await expect(page.getByRole("button", { name: "Sound on" })).toHaveAttribute(
       "aria-pressed",
       "true",
@@ -74,11 +82,6 @@ test.describe("slice 8 shell, typography, and sound", () => {
       1,
     );
     await capturePage(page, `${EVIDENCE}/sound-on-1440.png`);
-    await page.getByRole("button", { name: "Sound on" }).click();
-    await expect(page.getByRole("button", { name: "Sound off" })).toHaveAttribute(
-      "aria-pressed",
-      "false",
-    );
   });
 
   test("After, Both, hamburger, and long tile text clamp", async ({ page }) => {
