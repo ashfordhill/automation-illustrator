@@ -571,25 +571,25 @@ Do *NOT* put `.docs/` in the image links! It will break the markdown image rende
 - Issue: In the side-by-side Compare mark (Vertical), the Robot square sits 1px left of the center of its half; the Human circle is centered in its half.
 - Resolution: Shipped — `compare-side.svg` square moved from x=28 to x=29 (right half spans 24–42, center 33).
 - Attachments:
-  ![compare side square off-center](.docs/visual-improvements/2026-09-13-compare-side-square-offcenter.png)
+  ![compare side square off-center](visual-improvements/2026-09-13-compare-side-square-offcenter.png)
 
 ## 2026-09-13 — orientation trees look thin and uneven
 
 - Issue: The Horizontal / Vertical tree radios do not match the chunky, simple look of the Human / Robot / Compare icons: thin 1.2px strokes, wide rounded rectangles, long spread-out Paths, and the two faces render at different widths (46 vs 38px) so the buttons are uneven.
 - Resolution: Shipped as Improvement 62 correction 2 — both trees share one `38×32` viewBox at `26×22`, stroke 2.6 (≈1.8px, same weight as the Compare mark), `10×10` rounded squares (`rx 3`), 5-unit Path stubs, and 10 units between siblings. Identical footprint and button width for both faces.
 - Attachments:
-  ![orientation tree gummy](.docs/visual-improvements/2026-09-13-orientation-tree-gummy.png)
+  ![orientation tree gummy](visual-improvements/2026-09-13-orientation-tree-gummy.png)
 
 ## 2026-09-13 — Theme window gripes
 
 - Issue: "Theme" title and "Colors" caption are dead text; the dropdown's "Built-in" group label is noise; Save and the Edited pill borrow the chrome yellow; the window is wider than its content (empty preview on the right, buttons pushed to the far edge); the preview's rounded frame is overlapped by the square top and status bars; color captions sit above the cards.
 - Resolution: Shipped in Improvement 66 — visually hidden title (dialog still named Theme), no Colors caption, flat built-in options with only a "My themes" group, blue Save and plain blue "Edited" text, narrower window (520) with Import / Export / Reset / Save packed left, preview bars rounded to the frame, captions under the cards.
 - Attachments:
-  ![theme window gripes](.docs/visual-improvements/2026-09-13-theme-window-gripes.png)
+  ![theme window gripes](visual-improvements/2026-09-13-theme-window-gripes.png)
 
 ## 2026-09-13 — Theme window top cut off, paper corners
 
 - Issue: After the first pass the preset dropdown's top edge is clipped by the header, Import / Export and Reset / Save should sit flush right in the narrower window, and the paper still pokes out square past the rounded bars at the preview's corners.
 - Resolution: Shipped in Improvement 66 — header keeps its padding (no negative margin), rows use space-between so actions align with the preview's right edge, and the preview clips to its radius (`.chrome-bar`'s `overflow: visible` was winning; the paper layer is also rounded to 11px).
 - Attachments:
-  ![theme window top cut and paper corners](.docs/visual-improvements/2026-09-13-theme-window-top-cut-corners.png)
+  ![theme window top cut and paper corners](visual-improvements/2026-09-13-theme-window-top-cut-corners.png)
