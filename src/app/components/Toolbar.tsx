@@ -3,11 +3,12 @@
  * Present (right). Hamburger items are text only (no left-section icons).
  */
 import { useEffect, useRef, useState } from "react";
-import { ActionIcon, Group, Menu, Tooltip } from "@mantine/core";
-import { IconArrowBackUp, IconArrowForwardUp, IconMenu2 } from "@tabler/icons-react";
+import { ActionIcon, Group, Menu } from "@mantine/core";
+import { IconMenu2 } from "@tabler/icons-react";
 import { DEMO_CHOICES } from "../../demos/catalog";
 import { prettyKey, KeyAction } from "../../keyboard/bindings";
 import { useStore } from "../../state/store";
+import { ChromeToolCluster } from "./ChromeToolCluster";
 import { PersistStatusChip } from "./PersistStatusChip";
 import { PresentButton } from "./PresentButton";
 import { ViewSwitch } from "./ViewSwitch";
@@ -73,51 +74,40 @@ export function Toolbar() {
               });
             }}
           />
-          <Menu shadow="md" width={240} position="bottom-start" opened={menuOpen} onChange={setMenuOpen}>
-            <Menu.Target>
-              <ActionIcon ref={menuBtnRef} variant="default" aria-label="Menu">
-                <IconMenu2 size={18} />
-              </ActionIcon>
-            </Menu.Target>
-            <Menu.Dropdown className="app-hamburger-dropdown">
-              <Menu.Item onClick={() => useStore.getState().requestNew()}>New</Menu.Item>
-              <Menu.Item onClick={() => fileRef.current?.click()}>Import</Menu.Item>
-              <Menu.Item onClick={() => useStore.getState().exportWorkflow()}>Export</Menu.Item>
-              <Menu.Item onClick={() => useStore.getState().setHelp(true)}>Keybinds</Menu.Item>
-              <Menu.Divider />
-              <Menu.Label>Demo</Menu.Label>
-              {DEMO_CHOICES.map((demo) => (
-                <Menu.Item
-                  key={demo.id}
-                  onClick={() => useStore.getState().requestDemo(demo.id)}
-                >
-                  {demo.name}
-                </Menu.Item>
-              ))}
-            </Menu.Dropdown>
-          </Menu>
-          <Group gap="xs" className="chrome-hide" wrap="nowrap">
-            <Tooltip label={`Undo (${prettyKey(keymap[KeyAction.Undo])} / Ctrl+Z)`}>
-              <ActionIcon
-                variant="default"
-                disabled={!past.length}
-                aria-label={`Undo (${prettyKey(keymap[KeyAction.Undo])} / Ctrl+Z)`}
-                onClick={() => useStore.getState().undo()}
-              >
-                <IconArrowBackUp size={18} />
-              </ActionIcon>
-            </Tooltip>
-            <Tooltip label="Redo (Ctrl+Shift+Z)">
-              <ActionIcon
-                variant="default"
-                disabled={!future.length}
-                aria-label="Redo (Ctrl+Shift+Z)"
-                onClick={() => useStore.getState().redo()}
-              >
-                <IconArrowForwardUp size={18} />
-              </ActionIcon>
-            </Tooltip>
-          </Group>
+          <ChromeToolCluster
+            menu={
+              <Menu shadow="md" width={240} position="bottom-start" opened={menuOpen} onChange={setMenuOpen}>
+                <Menu.Target>
+                  <ActionIcon ref={menuBtnRef} variant="default" aria-label="Menu">
+                    <IconMenu2 size={18} />
+                  </ActionIcon>
+                </Menu.Target>
+                <Menu.Dropdown className="app-hamburger-dropdown">
+                  <Menu.Item onClick={() => useStore.getState().requestNew()}>New</Menu.Item>
+                  <Menu.Item onClick={() => fileRef.current?.click()}>Import</Menu.Item>
+                  <Menu.Item onClick={() => useStore.getState().exportWorkflow()}>Export</Menu.Item>
+                  <Menu.Item onClick={() => useStore.getState().setHelp(true)}>Keybinds</Menu.Item>
+                  <Menu.Item onClick={() => useStore.getState().openTheme()}>Theme</Menu.Item>
+                  <Menu.Divider />
+                  <Menu.Label>Demo</Menu.Label>
+                  {DEMO_CHOICES.map((demo) => (
+                    <Menu.Item
+                      key={demo.id}
+                      onClick={() => useStore.getState().requestDemo(demo.id)}
+                    >
+                      {demo.name}
+                    </Menu.Item>
+                  ))}
+                </Menu.Dropdown>
+              </Menu>
+            }
+            undoDisabled={!past.length}
+            redoDisabled={!future.length}
+            undoLabel={`Undo (${prettyKey(keymap[KeyAction.Undo])} / Ctrl+Z)`}
+            redoLabel="Redo (Ctrl+Shift+Z)"
+            onUndo={() => useStore.getState().undo()}
+            onRedo={() => useStore.getState().redo()}
+          />
           <PersistStatusChip />
         </Group>
 

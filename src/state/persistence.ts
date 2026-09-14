@@ -26,6 +26,20 @@ import {
   type SimplifyPrefs,
 } from "../board/simplify/prefs";
 import type { WorkflowDoc } from "../workflow/types";
+import {
+  BUILTIN_THEMES,
+  CHROME_THEME_DEFAULTS,
+  CUSTOM_THEME_ID_PREFIX,
+  DEFAULT_THEME_ID,
+  chromeThemesEqual,
+  isBuiltinThemeId,
+  legacyThemeToBody,
+  parseChromeTheme,
+  themePresetSchema,
+  uniqueThemeName,
+  type ThemePreset,
+} from "../app/theme/chromeTheme";
+import { shortId } from "../workflow/ids";
 
 export type PersistStatus = "saved" | "dirty" | "unavailable";
 
@@ -67,6 +81,11 @@ export const LS_RIGHT_CLICK_DELETE = "automation-pitch.right-click-delete";
 export const LS_INSPECTOR_COLLAPSED = "automation-pitch.inspectorCollapsed";
 export const LS_SIMPLIFY = "automation-pitch.simplify";
 export const LS_BOARD_ORIENTATION = "automation-pitch.board-orientation";
+/** Improvement 65 hex map; migrated into LS_THEMES on load and then removed. */
+export const LS_CHROME_THEME = "automation-pitch.chrome-theme";
+export const LS_THEMES = "automation-pitch.themes";
+export const THEMES_STORAGE_VERSION = 1;
+export const MIGRATED_THEME_NAME = "My theme";
 export const SAVE_COPY_FILENAME = "untitled.yaml";
 export const RECOVERY_COPY_FILENAME = "automation-pitch.recovery.json";
 
@@ -269,6 +288,119 @@ export function loadInspectorCollapsed(): boolean {
 export function saveInspectorCollapsed(collapsed: boolean) {
   try {
     localStorage.setItem(LS_INSPECTOR_COLLAPSED, collapsed ? "on" : "off");
+  } catch {
+    /* preference is session-only if storage is denied */
+  }
+}
+
+/** Applied preset id plus the user's own presets. Built-ins are constants, never stored. */
+export type ThemesState = { selected: string; custom: ThemePreset[] };
+
+export function defaultThemesState(): ThemesState {
+  return { selected: DEFAULT_THEME_ID, custom: [] };
+}
+
+export function newCustomThemeId(): string {
+  return `${CUSTOM_THEME_ID_PREFIX}${shortId()}`;
+}
+
+/** Parse the stored themes blob leniently: bad custom entries are skipped, unknown ids fall back to Ice. */
+export function parseThemesState(raw: unknown): ThemesState {
+  const out = defaultThemesState();
+  if (typeof raw !== "object" || raw === null) return out;
+  const rec = raw as Record<string, unknown>;
+  const custom = Array.isArray(rec.custom) ? rec.custom : [];
+  const seenIds = new Set<string>(BUILTIN_THEMES.map((t) => t.id));
+  for (const entry of custom) {
+    const parsed = themePresetSchema.safeParse(entry);
+    if (!parsed.success) continue;
+    if (isBuiltinThemeId(parsed.data.id) || seenIds.has(parsed.data.id)) continue;
+    seenIds.add(parsed.data.id);
+    out.custom.push({
+      id: parsed.data.id,
+      name: uniqueThemeName(
+        parsed.data.name,
+        [...BUILTIN_THEMES, ...out.custom].map((t) => t.name),
+      ),
+      colors: { ...parsed.data.colors },
+      texture: { ...parsed.data.texture },
+    });
+  }
+  const selected = typeof rec.selected === "string" ? rec.selected : DEFAULT_THEME_ID;
+  out.selected =
+    isBuiltinThemeId(selected) || out.custom.some((t) => t.id === selected)
+      ? selected
+      : DEFAULT_THEME_ID;
+  return out;
+}
+
+function readThemesState(): ThemesState {
+  try {
+    const raw = localStorage.getItem(LS_THEMES);
+    if (!raw) return defaultThemesState();
+    return parseThemesState(JSON.parse(raw));
+  } catch {
+    return defaultThemesState();
+  }
+}
+
+/**
+ * Improvement 65 stored one hex map. On first load it becomes the custom preset
+ * "My theme" (selected), or is dropped when it equals Ice. The old key is removed either way.
+ */
+export function migrateLegacyChromeTheme(state: ThemesState): ThemesState {
+  let raw: string | null;
+  try {
+    raw = localStorage.getItem(LS_CHROME_THEME);
+  } catch {
+    return state;
+  }
+  if (raw == null) return state;
+  let next = state;
+  try {
+    const legacy = parseChromeTheme(JSON.parse(raw));
+    if (!chromeThemesEqual(legacy, CHROME_THEME_DEFAULTS)) {
+      const preset: ThemePreset = {
+        id: newCustomThemeId(),
+        name: uniqueThemeName(
+          MIGRATED_THEME_NAME,
+          [...BUILTIN_THEMES, ...state.custom].map((t) => t.name),
+        ),
+        ...legacyThemeToBody(legacy),
+      };
+      next = { selected: preset.id, custom: [...state.custom, preset] };
+    }
+  } catch {
+    /* unreadable legacy map: nothing to carry over */
+  }
+  try {
+    localStorage.removeItem(LS_CHROME_THEME);
+  } catch {
+    /* ignore */
+  }
+  if (next !== state) saveThemes(next);
+  return next;
+}
+
+/** Themes at startup: stored state plus the one-time Improvement 65 migration. */
+export function loadThemes(): ThemesState {
+  return migrateLegacyChromeTheme(readThemesState());
+}
+
+export function saveThemes(state: ThemesState) {
+  try {
+    if (state.selected === DEFAULT_THEME_ID && state.custom.length === 0) {
+      localStorage.removeItem(LS_THEMES);
+      return;
+    }
+    localStorage.setItem(
+      LS_THEMES,
+      JSON.stringify(
+        { version: THEMES_STORAGE_VERSION, selected: state.selected, custom: state.custom },
+        null,
+        2,
+      ),
+    );
   } catch {
     /* preference is session-only if storage is denied */
   }

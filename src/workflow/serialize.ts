@@ -40,9 +40,9 @@ export function parseWorkflowText(raw: string): unknown {
   return parseYaml(raw);
 }
 
-/** Download name: "Oak Park Invoice" → oak-park-invoice.yaml. Safe for a file, not a path. */
-export function workflowExportFilename(doc: Pick<WorkflowDoc, "name">): string {
-  const slug = projectDisplayName(doc)
+/** "Oak Park Invoice" → oak-park-invoice. Safe for a file, not a path. Empty when nothing survives. */
+export function filenameSlug(name: string): string {
+  return name
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
@@ -50,7 +50,11 @@ export function workflowExportFilename(doc: Pick<WorkflowDoc, "name">): string {
     .replace(/^-+|-+$/g, "")
     .slice(0, MAX_EXPORT_SLUG)
     .replace(/-+$/g, "");
-  return `${slug || "untitled"}.yaml`;
+}
+
+/** Download name: "Oak Park Invoice" → oak-park-invoice.yaml. */
+export function workflowExportFilename(doc: Pick<WorkflowDoc, "name">): string {
+  return `${filenameSlug(projectDisplayName(doc)) || "untitled"}.yaml`;
 }
 
 export const WORKFLOW_YAML_MIME = "text/yaml";

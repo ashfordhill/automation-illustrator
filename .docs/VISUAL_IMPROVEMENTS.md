@@ -542,3 +542,54 @@ Do *NOT* put `.docs/` in the image links! It will break the markdown image rende
 - Attachments:
   ![compare view icons](visual-improvements/2026-09-12-compare-view-icons.png)
 
+## 2026-09-12 — chrome Theme editor
+
+- Issue: Chrome colors (status-bar trees, hamburger / undo / redo) are hardcoded. Complementary hover and disabled should stay in sync without extra pickers.
+- Resolution: Shipped in Improvement 65 — hamburger Theme window with live chrome islands and the Actor color picker; well / fold hover / disabled stay derived.
+- Attachments:
+  ![theme orientation chrome](visual-improvements/2026-09-12-theme-orientation-chrome.png)
+  ![theme tool cluster](visual-improvements/2026-09-12-theme-tool-cluster.png)
+
+## 2026-09-13 — Theme window: live edits, clipped dropper, presets, texture
+
+- Issue: Picking a color recolors the whole app behind the window instead of only the preview; there is no Save. The eyedropper half of each color card is cut off and the cards are a bit large. User also wants theme presets in a dropdown (four built-ins including the current look), Save with name / save-over prompt, Import / Export of theme files, and a paper texture picker (dots, circles, criss-cross, mesh) with its own color, styled like the color cards (bottom-left of the sketch).
+- Resolution: Planned for Improvement 66 (`.docs/improve-66-theme-presets.plan.md`): draft-only preview, Save applies and closes, smaller unclipped cards, preset dropdown, YAML theme files, texture picker.
+- Attachments:
+  ![theme dropper clipped](visual-improvements/2026-09-13-theme-dropper-clip.png)
+  ![theme window sketch](visual-improvements/2026-09-13-theme-window-sketch.png)
+
+## 2026-09-13 — grey line above the status bar
+
+- Issue: A grey hairline sits between the paper and the status bar's cyan border. It is a hard `rgba(0,0,0,0.2)` shadow (`box-shadow: 0 -3px 0`) so no theme color reaches it.
+- Resolution: Planned for Improvement 66 — remove that shadow from the status bar and the Theme preview; the cyan `--chrome-line` border is the only edge.
+- Attachments:
+  ![status bar grey line](visual-improvements/2026-09-13-status-bar-grey-line.png)
+
+
+## 2026-09-13 — Vertical Compare square off-center
+
+- Issue: In the side-by-side Compare mark (Vertical), the Robot square sits 1px left of the center of its half; the Human circle is centered in its half.
+- Resolution: Shipped — `compare-side.svg` square moved from x=28 to x=29 (right half spans 24–42, center 33).
+- Attachments:
+  ![compare side square off-center](.docs/visual-improvements/2026-09-13-compare-side-square-offcenter.png)
+
+## 2026-09-13 — orientation trees look thin and uneven
+
+- Issue: The Horizontal / Vertical tree radios do not match the chunky, simple look of the Human / Robot / Compare icons: thin 1.2px strokes, wide rounded rectangles, long spread-out Paths, and the two faces render at different widths (46 vs 38px) so the buttons are uneven.
+- Resolution: Shipped as Improvement 62 correction 2 — both trees share one `38×32` viewBox at `26×22`, stroke 2.6 (≈1.8px, same weight as the Compare mark), `10×10` rounded squares (`rx 3`), 5-unit Path stubs, and 10 units between siblings. Identical footprint and button width for both faces.
+- Attachments:
+  ![orientation tree gummy](.docs/visual-improvements/2026-09-13-orientation-tree-gummy.png)
+
+## 2026-09-13 — Theme window gripes
+
+- Issue: "Theme" title and "Colors" caption are dead text; the dropdown's "Built-in" group label is noise; Save and the Edited pill borrow the chrome yellow; the window is wider than its content (empty preview on the right, buttons pushed to the far edge); the preview's rounded frame is overlapped by the square top and status bars; color captions sit above the cards.
+- Resolution: Shipped in Improvement 66 — visually hidden title (dialog still named Theme), no Colors caption, flat built-in options with only a "My themes" group, blue Save and plain blue "Edited" text, narrower window (520) with Import / Export / Reset / Save packed left, preview bars rounded to the frame, captions under the cards.
+- Attachments:
+  ![theme window gripes](.docs/visual-improvements/2026-09-13-theme-window-gripes.png)
+
+## 2026-09-13 — Theme window top cut off, paper corners
+
+- Issue: After the first pass the preset dropdown's top edge is clipped by the header, Import / Export and Reset / Save should sit flush right in the narrower window, and the paper still pokes out square past the rounded bars at the preview's corners.
+- Resolution: Shipped in Improvement 66 — header keeps its padding (no negative margin), rows use space-between so actions align with the preview's right edge, and the preview clips to its radius (`.chrome-bar`'s `overflow: visible` was winning; the paper layer is also rounded to 11px).
+- Attachments:
+  ![theme window top cut and paper corners](.docs/visual-improvements/2026-09-13-theme-window-top-cut-corners.png)

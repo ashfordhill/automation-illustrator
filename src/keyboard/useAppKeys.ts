@@ -91,7 +91,7 @@ export function useAppKeys() {
       }
 
       if (isEscapeKey(e)) {
-        if (s.helpOpen || s.pendingReplace || s.recovery || s.importError) {
+        if (s.helpOpen || s.themeOpen || s.pendingReplace || s.recovery || s.importError) {
           return;
         }
         if (s.present) {
@@ -115,6 +115,7 @@ export function useAppKeys() {
       if (editingText) return;
       if (
         s.helpOpen ||
+        s.themeOpen ||
         s.pendingReplace ||
         s.recovery ||
         s.importError

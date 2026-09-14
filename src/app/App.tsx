@@ -9,6 +9,8 @@ import { AppShell, MantineProvider, createTheme } from "@mantine/core";
 import { useReducedMotion } from "@mantine/hooks";
 import { Board } from "../board/Board";
 import { KeybindsModal } from "../keyboard/KeybindsModal";
+import { ThemeModal } from "./theme/ThemeModal";
+import { applyChromeTheme } from "./theme/chromeTheme";
 import { useAppKeys } from "../keyboard/useAppKeys";
 import { useStore } from "../state/store";
 import { AssignmentLane, ColorScheme, ViewMode } from "../workflow/catalogs";
@@ -134,6 +136,10 @@ export default function App() {
   }, [colorScheme]);
 
   useEffect(() => {
+    applyChromeTheme(useStore.getState().appliedTheme());
+  }, []);
+
+  useEffect(() => {
     const onTheme = (e: Event) => {
       const next = (e as CustomEvent<string>).detail;
       if (next === ColorScheme.Dark || next === ColorScheme.Light) {
@@ -228,6 +234,7 @@ export default function App() {
       )}
       {supported && !present ? <StatusBar /> : null}
       <KeybindsModal />
+      <ThemeModal />
       <ReplaceDocumentModal />
       <RecoveryModal />
       <ImportErrorModal />

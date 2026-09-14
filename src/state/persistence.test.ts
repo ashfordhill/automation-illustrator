@@ -9,16 +9,22 @@ import {
   loadSimplifyPrefs,
   loadSound,
   loadTheme,
+  loadThemes,
   LS_BOARD_ORIENTATION,
+  LS_CHROME_THEME,
   LS_INSPECTOR_COLLAPSED,
   LS_RIGHT_CLICK_DELETE,
   LS_SIMPLIFY,
   LS_SOUND,
   LS_THEME,
+  LS_THEMES,
   LS_WORKFLOW,
+  MIGRATED_THEME_NAME,
+  parseThemesState,
   SAVE_COPY_FILENAME,
   saveBoardOrientation,
   saveInspectorCollapsed,
+  saveThemes,
   saveRightClickDelete,
   saveSimplifyPrefs,
   saveSound,
@@ -31,6 +37,7 @@ import { robotMailroom, MAILROOM_IDS } from "../demos/robotMailroom";
 import { ColorScheme, SplitKind, StepKind, WorkflowNodeKind } from "../workflow/catalogs";
 import { emptyAfterOverlay, emptyWorkflow, type WorkflowDoc } from "../workflow/types";
 import { workflowToYaml } from "../workflow/serialize";
+import { CHROME_THEME_DEFAULTS, ICE_THEME, mixSrgb } from "../app/theme/chromeTheme";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -322,6 +329,73 @@ test("right-click-delete defaults off and only 'on' enables it", () => {
   expect(loadRightClickDelete()).toBe(false);
   localStorage.setItem(LS_RIGHT_CLICK_DELETE, "yes");
   expect(loadRightClickDelete()).toBe(false);
+});
+
+test("themes default to Ice with no custom presets and persist as pretty JSON", () => {
+  localStorage.clear();
+  expect(loadThemes()).toEqual({ selected: "ice", custom: [] });
+  expect(localStorage.getItem(LS_THEMES)).toBeNull();
+  const preset = { ...ICE_THEME, id: "custom-abc12345", name: "Mine" };
+  saveThemes({ selected: "custom-abc12345", custom: [preset] });
+  const raw = localStorage.getItem(LS_THEMES) ?? "";
+  expect(raw).toContain("\n  ");
+  expect(JSON.parse(raw)).toEqual({ version: 1, selected: "custom-abc12345", custom: [preset] });
+  expect(loadThemes()).toEqual({ selected: "custom-abc12345", custom: [preset] });
+  saveThemes({ selected: "ice", custom: [] });
+  expect(localStorage.getItem(LS_THEMES)).toBeNull();
+  localStorage.setItem(LS_THEMES, "nope");
+  expect(loadThemes()).toEqual({ selected: "ice", custom: [] });
+});
+
+test("themes: missing selected id falls back to Ice; bad entries and duplicate names are cleaned", () => {
+  localStorage.clear();
+  const a = { ...ICE_THEME, id: "custom-a", name: "Dup" };
+  const b = { ...ICE_THEME, id: "custom-b", name: "dup" };
+  const stored = {
+    version: 1,
+    selected: "custom-missing",
+    custom: [a, b, { id: "custom-bad", name: "Bad", colors: { chrome: "red" } }, { ...a, id: "ice" }],
+  };
+  localStorage.setItem(LS_THEMES, JSON.stringify(stored));
+  const loaded = loadThemes();
+  expect(loaded.selected).toBe("ice");
+  expect(loaded.custom.map((t) => t.name)).toEqual(["Dup", "dup 2"]);
+  expect(parseThemesState({ selected: "plum", custom: [] }).selected).toBe("plum");
+});
+
+test("Improvement 65 hex map migrates to a selected custom preset and the old key is removed", () => {
+  localStorage.clear();
+  localStorage.setItem(
+    LS_CHROME_THEME,
+    JSON.stringify({
+      chrome: "#802020",
+      chromeBtn: "#f7fcfe",
+      chromeLine: "#5ec8e8",
+      chromeInk: "#f3fbfe",
+      yellow: "#e8c14a",
+      paper: "#e8f4fa",
+    }),
+  );
+  const migrated = loadThemes();
+  expect(localStorage.getItem(LS_CHROME_THEME)).toBeNull();
+  expect(migrated.custom).toHaveLength(1);
+  const mine = migrated.custom[0]!;
+  expect(mine.name).toBe(MIGRATED_THEME_NAME);
+  expect(mine.id.startsWith("custom-")).toBe(true);
+  expect(migrated.selected).toBe(mine.id);
+  expect(mine.colors.chrome).toBe("#802020");
+  expect(mine.colors.chromeWell).toBe(mixSrgb("#802020", "#000000", 0.62));
+  expect(mine.texture).toEqual({ pattern: "dots", color: mixSrgb("#e8f4fa", "#802020", 0.72) });
+  expect(JSON.parse(localStorage.getItem(LS_THEMES) ?? "{}").selected).toBe(mine.id);
+  // Second load is stable.
+  expect(loadThemes()).toEqual(migrated);
+
+  // A stored map equal to Ice is simply dropped.
+  localStorage.clear();
+  localStorage.setItem(LS_CHROME_THEME, JSON.stringify(CHROME_THEME_DEFAULTS));
+  expect(loadThemes()).toEqual({ selected: "ice", custom: [] });
+  expect(localStorage.getItem(LS_CHROME_THEME)).toBeNull();
+  expect(localStorage.getItem(LS_THEMES)).toBeNull();
 });
 
 test("board orientation defaults horizontal and only vertical is stored", () => {

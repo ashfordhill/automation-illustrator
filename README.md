@@ -37,6 +37,8 @@ docker run -p 8080:80 ghcr.io/ashfordhill/automation-illustrator:latest
 
 <img src=".docs/readme/drag-create.gif" alt="Dragging from a Node handle to create a new Step" width="49%" />&nbsp;<img src=".docs/readme/path-add-delete.gif" alt="Adding and deleting Paths on the workflow board" width="49%" />
 
+<img src=".docs/readme/pick-theme.gif" width="41%" />&nbsp;<img src=".docs/readme/vertical-mode.gif" width="58%" />
+
 ---
 
 

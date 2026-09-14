@@ -188,6 +188,7 @@ test.describe("slice 12 surfaces, dialogs, and final screenshots", () => {
       "Import",
       "Export",
       "Keybinds",
+      "Theme",
       "Oak Park Invoice",
       "Robot Mailroom",
     ]);

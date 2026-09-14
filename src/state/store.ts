@@ -120,14 +120,19 @@ import {
   downloadRecoveryCopy,
   downloadWorkflowCopy,
   hydratePersistedWorkflow,
+  downloadTextFile,
   loadBoardOrientation,
   loadInspectorCollapsed,
   loadRightClickDelete,
   loadSimplifyPrefs,
   loadSound,
   loadTheme,
+  loadThemes,
+  newCustomThemeId,
   saveBoardOrientation,
   saveInspectorCollapsed,
+  saveThemes,
+  type ThemesState,
   saveRightClickDelete,
   saveSimplifyPrefs,
   saveSound,
@@ -145,6 +150,34 @@ import {
 } from "../board/simplify/prefs";
 import { parseDocument, type ParseResult } from "../workflow/migrate";
 import { findEdge, findNode } from "../workflow/selectors";
+import {
+  BUILTIN_THEMES,
+  DEFAULT_THEME_ID,
+  ICE_THEME,
+  applyChromeTheme,
+  cloneThemeBody,
+  isBuiltinThemeId,
+  themeBodiesEqual,
+  themeNameTaken,
+  uniqueThemeName,
+  type ThemeBody,
+  type ThemeColors,
+  type ThemePreset,
+  type ThemeTexture,
+} from "../app/theme/chromeTheme";
+import {
+  THEME_FILE_MIME,
+  parseThemeText,
+  themeExportFilename,
+  themeToYaml,
+} from "../app/theme/themeFile";
+
+/** The Theme window's working copy: the dropdown pick plus its (possibly edited) body. */
+export type ThemeDraft = ThemeBody & { presetId: string };
+
+export type ThemePrompt = "save" | "discard" | null;
+
+export type SaveThemeMode = "overwrite" | { name: string };
 
 /** Right-hand inspector target, or null when nothing is selected. */
 export type Selection =
@@ -290,6 +323,12 @@ export const useStore = create<{
   inspectorCollapsed: boolean;
   keymap: Keymap;
   helpOpen: boolean;
+  themeOpen: boolean;
+  /** Applied preset id plus user presets (persisted). Built-ins come from BUILTIN_THEMES. */
+  themes: ThemesState;
+  /** Exists only while the Theme window is open; the preview paints it, :root does not. */
+  themeDraft: ThemeDraft | null;
+  themePrompt: ThemePrompt;
   capturing: KeyAction | null;
   lastHumanId: string | null;
   manageActorsOpen: boolean;
@@ -329,6 +368,31 @@ export const useStore = create<{
   setInspectorCollapsed: (collapsed: boolean) => void;
   select: (s: Selection) => void;
   setHelp: (v: boolean) => void;
+  /** Every preset the dropdown lists: built-ins, then My themes. */
+  allThemes: () => ThemePreset[];
+  themeById: (id: string) => ThemePreset | undefined;
+  /** The preset currently painted on :root. */
+  appliedTheme: () => ThemePreset;
+  /** True when the draft differs from its preset's saved body. */
+  themeDraftEdited: () => boolean;
+  openTheme: () => void;
+  /** Close without applying. Drops the draft and any nested prompt. */
+  closeTheme: () => void;
+  /** X / Escape: asks Discard changes? when the draft is edited, else closes. */
+  requestCloseTheme: () => void;
+  setThemePrompt: (prompt: ThemePrompt) => void;
+  setThemeDraft: (patch: { colors?: Partial<ThemeColors>; texture?: Partial<ThemeTexture> }) => void;
+  selectThemePreset: (id: string) => void;
+  resetThemeDraft: () => void;
+  /** Apply and close. `overwrite` writes an edited draft over a custom preset; `{ name }` saves as new. */
+  saveTheme: (mode: SaveThemeMode) => boolean;
+  deleteThemePreset: (id: string) => void;
+  /** Add a theme file to My themes and load it into the draft. Not applied until Save. */
+  importTheme: (raw: string) => boolean;
+  /** Download the selected preset's saved body (never the draft). */
+  exportTheme: () => void;
+  /** Back to Ice with no custom presets (session reset for tests). */
+  resetThemes: () => void;
   setCapturing: (a: KeyAction | null) => void;
   setKey: (action: KeyAction, key: string) => void;
   resetKeymap: () => void;
@@ -416,6 +480,10 @@ export const useStore = create<{
   inspectorCollapsed: loadInspectorCollapsed(),
   keymap: loadKeymap(),
   helpOpen: false,
+  themeOpen: false,
+  themes: loadThemes(),
+  themeDraft: null,
+  themePrompt: null,
   capturing: null,
   lastHumanId: null,
   manageActorsOpen: false, manageActorsSource: null,
@@ -661,6 +729,141 @@ export const useStore = create<{
         document.querySelector<HTMLElement>('header [aria-label="Menu"]')?.focus();
       }, 0);
     }
+  },
+  allThemes: () => [...BUILTIN_THEMES, ...get().themes.custom],
+  themeById: (id) => get().allThemes().find((t) => t.id === id),
+  appliedTheme: () => get().themeById(get().themes.selected) ?? ICE_THEME,
+  themeDraftEdited: () => {
+    const { themeDraft } = get();
+    if (!themeDraft) return false;
+    const saved = get().themeById(themeDraft.presetId);
+    return saved ? !themeBodiesEqual(themeDraft, saved) : true;
+  },
+  openTheme: () => {
+    const applied = get().appliedTheme();
+    set({
+      themeOpen: true,
+      themePrompt: null,
+      themeDraft: { presetId: applied.id, ...cloneThemeBody(applied) },
+    });
+  },
+  closeTheme: () => {
+    const wasOpen = get().themeOpen;
+    set({ themeOpen: false, themeDraft: null, themePrompt: null });
+    if (wasOpen) {
+      window.setTimeout(() => {
+        document.querySelector<HTMLElement>('header [aria-label="Menu"]')?.focus();
+      }, 0);
+    }
+  },
+  requestCloseTheme: () => {
+    if (get().themePrompt) return;
+    if (get().themeDraftEdited()) {
+      set({ themePrompt: "discard" });
+      return;
+    }
+    get().closeTheme();
+  },
+  setThemePrompt: (themePrompt) => set({ themePrompt }),
+  setThemeDraft: (patch) => {
+    const { themeDraft } = get();
+    if (!themeDraft) return;
+    set({
+      themeDraft: {
+        ...themeDraft,
+        colors: { ...themeDraft.colors, ...(patch.colors ?? {}) },
+        texture: { ...themeDraft.texture, ...(patch.texture ?? {}) },
+      },
+    });
+  },
+  selectThemePreset: (id) => {
+    const preset = get().themeById(id);
+    if (!preset || !get().themeDraft) return;
+    set({ themeDraft: { presetId: preset.id, ...cloneThemeBody(preset) } });
+  },
+  resetThemeDraft: () => {
+    const { themeDraft } = get();
+    if (!themeDraft) return;
+    get().selectThemePreset(themeDraft.presetId);
+  },
+  saveTheme: (mode) => {
+    const { themeDraft, themes } = get();
+    if (!themeDraft) return false;
+    const body = cloneThemeBody(themeDraft);
+    let custom = themes.custom;
+    let selected = themeDraft.presetId;
+    if (mode === "overwrite") {
+      if (get().themeDraftEdited()) {
+        // Built-ins are constants (P-09): an edited built-in must be saved as new.
+        if (isBuiltinThemeId(selected)) return false;
+        custom = custom.map((t) => (t.id === selected ? { ...t, ...body } : t));
+      }
+    } else {
+      const name = mode.name.trim();
+      if (!name || themeNameTaken(name, get().allThemes())) return false;
+      const preset: ThemePreset = { id: newCustomThemeId(), name, ...body };
+      custom = [...custom, preset];
+      selected = preset.id;
+    }
+    const next: ThemesState = { selected, custom };
+    saveThemes(next);
+    const applied = [...BUILTIN_THEMES, ...custom].find((t) => t.id === selected) ?? ICE_THEME;
+    applyChromeTheme(applied);
+    set({ themes: next });
+    get().closeTheme();
+    return true;
+  },
+  deleteThemePreset: (id) => {
+    if (isBuiltinThemeId(id)) return;
+    const { themes, themeDraft } = get();
+    if (!themes.custom.some((t) => t.id === id)) return;
+    const custom = themes.custom.filter((t) => t.id !== id);
+    const wasApplied = themes.selected === id;
+    const next: ThemesState = { selected: wasApplied ? DEFAULT_THEME_ID : themes.selected, custom };
+    saveThemes(next);
+    if (wasApplied) applyChromeTheme(ICE_THEME);
+    set({
+      themes: next,
+      themeDraft: themeDraft
+        ? { presetId: DEFAULT_THEME_ID, ...cloneThemeBody(ICE_THEME) }
+        : null,
+    });
+  },
+  importTheme: (raw) => {
+    const parsed = parseThemeText(raw);
+    if (!parsed.ok) {
+      get().setNotice(parsed.message);
+      return false;
+    }
+    const { themes, themeDraft } = get();
+    const preset: ThemePreset = {
+      id: newCustomThemeId(),
+      name: uniqueThemeName(
+        parsed.theme.name,
+        get().allThemes().map((t) => t.name),
+      ),
+      colors: { ...parsed.theme.colors },
+      texture: { ...parsed.theme.texture },
+    };
+    const next: ThemesState = { selected: themes.selected, custom: [...themes.custom, preset] };
+    saveThemes(next);
+    set({
+      themes: next,
+      themeDraft: themeDraft ? { presetId: preset.id, ...cloneThemeBody(preset) } : null,
+    });
+    return true;
+  },
+  exportTheme: () => {
+    const { themeDraft } = get();
+    const preset = get().themeById(themeDraft?.presetId ?? get().themes.selected);
+    if (!preset) return;
+    downloadTextFile(themeExportFilename(preset.name), themeToYaml(preset), THEME_FILE_MIME);
+  },
+  resetThemes: () => {
+    const next: ThemesState = { selected: DEFAULT_THEME_ID, custom: [] };
+    saveThemes(next);
+    applyChromeTheme(ICE_THEME);
+    set({ themes: next, themeDraft: null, themePrompt: null, themeOpen: false });
   },
   setCapturing: (capturing) => set({ capturing }),
   setKey: (action, key) => {

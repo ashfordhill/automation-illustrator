@@ -1311,6 +1311,12 @@ Append to `## Amendments` in `.docs/GOAL.md`: CX-03, CX-05, CX-01, BA-05, P-07, 
 Commit: `feat(improve-61): add vertical board orientation`  
 Evidence: `.docs/evidence/improve-61-orientation/`
 
+## Correction 1 — 2026-09-13
+
+Horizontal tab order was wrong: reordering the tabs for Vertical also flipped Horizontal. Locked now: Horizontal shows `+` **above** Path on each flow edge; Vertical shows Path **left** of `+` (unchanged). CSS only (`.tile-side-tabs` is `column-reverse` when Horizontal, `row` when Vertical); DOM order stays Path then `+`.
+
+Correction 1 commit: `feat(improve-61): put + above Path when Horizontal`.
+
 ---
 
 # Improvement 62 — Idle Actors inspector and orientation trees
@@ -1330,6 +1336,30 @@ Append to `## Amendments` in `.docs/GOAL.md`: NA-06, P-05 as dated 2026-09-12.
 
 Commit: `feat(improve-62): idle Actors inspector and orientation tree icons`  
 Evidence: `.docs/evidence/improve-62-idle-actors-orientation/`
+
+## Correction 2 — 2026-09-13
+
+Correction 1 (2026-09-12, no arrowheads) is folded into the locked decisions above. The trees read thin and uneven next to the Human / Robot / Compare icons. Locked now: each face is three `10×10` rounded squares (`rx 3`) on a shared `38×32` viewBox rendered at `26×22`, stroke 2.6 with round caps and joins (≈1.8px, the Compare mark's weight), 5-unit Path stubs, 10 units between siblings. Both faces have the same footprint so the radios are equal width. Amend GOAL P-05 dated 2026-09-13.
+
+Commit: `feat(improve-62): gummier equal-size orientation tree icons`
+
+## Correction 3 — 2026-09-13
+
+The fork's two 90° turns toward the child tiles are hard corners. Locked now: each turn is a radius-3 arc (trunk `19 9..23` when Horizontal, crossbar `12..26` when Vertical), so the Path sweeps from the trunk into each child. Stubs, tiles, and footprint are unchanged from correction 2. Amend GOAL P-05 dated 2026-09-13.
+
+Commit: `feat(improve-62): round the orientation tree forks`
+
+## Correction 4 — 2026-09-13
+
+Sibling spacing differs per face. Locked now: Horizontal children sit 6 units apart (tiles at y 3 and 19; trunk `19 11..21`), Vertical children sit 14 units apart (tiles at x 2 and 26; crossbar `10..28`). Shared `38×32` viewBox, tile size, stubs, and arc radius unchanged, so the radios stay equal width. Amend GOAL P-05 dated 2026-09-13.
+
+Commit: `feat(improve-62): tighten Horizontal and widen Vertical tree siblings`
+
+## Correction 5 — 2026-09-13
+
+Vertical siblings a touch closer: tiles at x 3 and 25 (12 units apart, was 14); crossbar `11..27`. Nothing else moves.
+
+Commit: `feat(improve-62): nudge Vertical tree siblings closer`
 
 ---
 
@@ -1370,4 +1400,110 @@ Append to `## Amendments` in `.docs/GOAL.md`: SH-02, AQ-02, P-10 as dated 2026-0
 
 Commit: `feat(improve-64): icon Before After Compare switch`  
 Evidence: `.docs/evidence/improve-64-view-icons/`
+
+---
+
+# Improvement 65 — Chrome theme editor
+
+Requested 2026-09-12. Hamburger **Theme** opens a color editor for chrome and paper. The window previews the live hamburger/undo/redo cluster and orientation trees so later icon swaps stay in sync. Complementary well, fold hover, and disabled fade are derived.
+
+## Locked decisions
+
+- Editable: `--chrome`, `--chrome-btn` (hamburger / undo / redo; tiles keep `--cream`), `--chrome-line`, `--chrome-ink`, `--yellow` (shared with Type / Who), `--paper`.
+- Derived via `color-mix`: `--chrome-well`, `--chrome-ink-soft`, fold hover (22% ice into chrome), `--paper-deep`, `--grid-dot`. Disabled ActionIcons stay `opacity: 0.45`. `--on-yellow` follows yellow luminance.
+- Persist `automation-pitch.chrome-theme` (hex map). Not undo, not YAML. Reset clears storage and inline overrides.
+- Shared `ColorField` (Actor wheel + eyedropper). Preview mounts `ChromeToolCluster` and `OrientationSwitch` (inert; Vertical selected).
+- No new runtime dependency. Improvement 64 already used the view-icon switch.
+
+## Contract
+
+Append to `## Amendments` in `.docs/GOAL.md`: SH-05, P-09 as dated 2026-09-12.
+
+Commit: `feat(improve-65): add a hamburger chrome Theme editor`  
+Evidence: `.docs/evidence/improve-65-theme/`
+
+---
+
+# Improvement 66 — Theme presets, Save, theme files, paper texture
+
+Requested 2026-09-13 after reviewing Improvement 65 (sketch and screenshot in `.docs/visual-improvements/2026-09-13-*`). The Theme window edits a **draft** shown only in its preview; **Save** applies it and closes. Themes are named presets (four built-ins plus My themes), with YAML Import / Export inside the window, an editable **Well** color, and a paper texture (pattern + color). Full plan: `.docs/improve-66-theme-presets.plan.md`.
+
+## Locked decisions
+
+### Draft vs applied
+
+- Store gains `themeDraft` (a full `ThemePreset` body) that exists only while the window is open. Color cards and the texture picker edit the draft. The preview scopes CSS variables to `.theme-preview` from the draft; `:root` is untouched.
+- **Derived vars gotcha:** `--paper-deep`, `--chrome-ink-soft`, fold hover are `color-mix()` declared on `:root`, so overriding `--paper` on a descendant does **not** re-resolve them. Redeclare the derived vars inside a `.theme-preview { … }` rule (same `color-mix` formulas) so the preview computes them locally. `--on-yellow` is set inline from `onYellowFor`.
+- **Save**: applies the selected preset's saved body to `:root` (existing `applyChromeTheme`, extended with texture), persists the selection, closes the window. Not an undo entry.
+- **Close / Escape without Save**: if the draft is edited, a small nested confirm asks **Discard changes?** (Discard · Keep editing). Discard drops the draft and the dropdown returns to the applied preset. Unedited drafts close without a prompt. Escape closes the confirm first, then the window.
+- **Escape ownership**: the Theme window handles Escape itself (`closeOnEscape={false}`, capture-phase `keydown` on `window`) and ignores the key while a color / texture wheel (`.inspector-color-pop`) or the preset dropdown is open; those close themselves via `useEscapeClosesPopover`. Otherwise Mantine's own capture listener would close the window (and raise Discard changes?) when a swatch button holds focus.
+- **Reset** (was "Reset to defaults"): returns the draft to the **selected preset's saved body**. Disabled when the draft is not edited.
+
+### Well color
+
+- New editable key `chromeWell` → `--chrome-well`, card caption **Well**, placed right after Frame. It is no longer derived; each preset stores an explicit hex (defaults equal the old `color-mix(chrome 62%, black)` so Ice is pixel-identical).
+- `.view-switch` frame border and background switch from `var(--ink)` to `var(--chrome-well)` so the orientation and view switches read as one configurable dark block. Tile `--ink` stays untouched everywhere else.
+- Everything already on `--chrome-well` follows automatically: switch tracks, status toggle off state, inspector fold, StatusBar well. The `color-mix(chrome-ink 14%, chrome-well)` hover stays derived.
+
+### Presets
+
+- Four **built-in** presets, ids `ice`, `graphite`, `forest`, `plum`. `ice` is the current palette and the shipped default. Built-ins are constants in `chromeTheme.ts`; they cannot be overwritten or deleted.
+- **Custom** presets persist in `automation-pitch.themes` as pretty JSON: `{ version: 1, selected: <id>, custom: ThemePreset[] }`. Custom ids are `custom-<shortId>` via the id helper in `src/workflow/ids.ts`.
+- **Migration**: on first load, if `automation-pitch.chrome-theme` exists and differs from every built-in, it becomes custom preset **"My theme"** (`chromeWell` = `mixSrgb(chrome, "#000000", 0.62)`, texture `dots`, color = the old derived mix) and is selected; the old key is removed. If it equals `ice`, it is simply removed. No user data is dropped.
+- **Dropdown** (Mantine `Select`; built-ins are plain options, custom presets sit under one "My themes" group — no "Built-in" label) always shows the **selected** preset's name. Choosing a preset loads its saved body into the draft. When the draft differs from the saved body, plain blue **Edited** text sits next to the dropdown; the name itself does not change.
+- **Save on an edited draft** opens a small nested prompt (Mantine `Modal` inside the Theme window):
+  - Selected preset is **custom**: **Save over ‹name›** · **Save as new** (name field) · Cancel.
+  - Selected preset is **built-in**: name field only, copy "Built-in themes can't be overwritten. Name your theme." · **Save** · Cancel.
+  - Names are trimmed, non-empty, and unique across all presets (Save disabled otherwise). A saved-as-new preset becomes the selected one, is applied, and the window closes.
+- **Save on an unedited draft** applies the selected preset and closes (this is how you switch presets).
+- Custom presets get a **trash** (delete) next to the dropdown; hidden for built-ins. Deleting selects `ice` and loads it into the draft; if the deleted preset was the applied one, `ice` is applied too.
+
+### Theme files (Import / Export)
+
+- Format: **YAML 1.2** via the `yaml` package, like workflow files. JSON imports too. Module `src/app/theme/themeFile.ts` with Zod 4 schema `themeFileSchema` (`version: 1`, `name`, `colors` ×7, `texture: { pattern, color }`).
+- **Export** downloads the **selected preset's saved body** (never the unsaved draft) as `<slug>.theme.yaml` using the existing `downloadTextFile` and slug rules from `serialize.ts`.
+- **Import** (hidden file input, `.yaml,.yml,.json`) parses and validates; on failure `setNotice("Theme file is not valid")` and nothing changes. On success the theme is added to **My themes** (duplicate name gets a ` 2`, ` 3`… suffix), selected, and loaded into the draft. It is **not** applied until Save.
+- Theme files are not part of the workflow YAML; `WorkflowDoc` and `WORKFLOW_VERSION` are untouched.
+
+### Paper texture
+
+- `ThemePreset.texture = { pattern: "dots" | "rings" | "cross" | "mesh", color: hex }`. Texture color replaces the derived `--grid-dot` (the CSS variable name stays `--grid-dot`; it is now an explicit hex on the theme).
+- React Flow `<Background>` is replaced by `PaperTexture` (`src/board/PaperTexture.tsx`): one SVG `<pattern>` that follows the viewport transform (`useViewport`), gap `GRID` (32). At zoom 1: `dots` filled circle r 1.1; `rings` hollow circle r 3.5, stroke 1.2; `cross` plus mark, 6px arms, stroke 1.2; `mesh` full grid lines, 1px.
+- The preview paper uses the same pattern markup (static, zoom 1) so the preview and board match.
+- **Texture picker**: a compound control in the color-card style. Left: a wide card (about 2× a color card) showing paper + current pattern; clicking opens a Popover with a **2×2** grid of pattern tiles (each a mini paper swatch drawn with that pattern; selected tile has the ink border). Right, joined: a tall `ColorField` for the texture color. Caption **Texture** under the pair.
+
+### Status bar edge
+
+- The `box-shadow: 0 -3px 0 rgba(0, 0, 0, 0.2)` is gone from `.status-bar` (both declarations) and `.theme-preview-status`. The 3px `--chrome-line` border is the only edge between paper and status bar. Button and switch drop shadows are unchanged.
+
+### Card sizing
+
+- Theme-window color cards are **48×68** (fill 60% / dropper 40%, icon 16px) with an explicit height so nothing clips. Scoped to `.theme-picker .inspector-color-card`; the Manage-actors card is unchanged. Captions (Frame, Well, …) sit **under** the cards, like Texture.
+
+### Window layout (revised 2026-09-13 after review)
+
+- No visible title or "Colors" caption; the dialog keeps the accessible name **Theme** through a visually hidden title, and the header holds only the Close X.
+- Width **520** (was Mantine `lg`). Row 1: preset dropdown · Edited · trash on the left, **Import / Export** flush right. Row 2: preview. Row 3: color cards. Row 4: texture pair on the left, **Reset / Save** flush right, bottom-aligned with the cards.
+- **Save** and **Discard** use a fixed blue (`#1864ab`, white label, ≥ 6:1) unrelated to the chrome palette; **Edited** is the same blue as plain text. Nothing in the window's own controls uses the theme yellow.
+- Preview frame: radius 14 with a 3px `--chrome-line` border; the top bar and status bar round to the inner radius (11) so their corners meet the frame, and the paper layer clips to the frame (`.chrome-bar`'s `overflow: visible` is overridden on `.theme-preview`).
+
+### Built-in palettes
+
+| id | chrome | chromeWell | chromeBtn | chromeLine | chromeInk | yellow | paper | texture |
+|---|---|---|---|---|---|---|---|---|
+| ice | `#0c3349` | `#07202d` | `#f7fcfe` | `#5ec8e8` | `#f3fbfe` | `#e8c14a` | `#e8f4fa` | dots `#aabec8` |
+| graphite | `#2b2b30` | `#1b1b1e` | `#f4f2ee` | `#8a8f98` | `#f1efe9` | `#f0b429` | `#f3f0ea` | mesh `#cfcac0` |
+| forest | `#16382b` | `#0e231b` | `#f5f9f2` | `#7fc9a1` | `#eef7f0` | `#ecc94b` | `#edf5ea` | cross `#b8cdb4` |
+| plum | `#3a2450` | `#241632` | `#fbf7ff` | `#c39bea` | `#f6f0fc` | `#f2c14e` | `#f1eaf8` | rings `#c9b9dc` |
+
+### Unchanged
+
+- Hamburger items (SH-05), tile `--cream`, Type / Who `--yellow`, `--on-yellow` rule, undo semantics, workflow YAML. No new runtime dependency (`yaml`, Zod 4, Mantine, Tabler only).
+
+## Contract
+
+Append to `## Amendments` in `.docs/GOAL.md`: P-09; SH-08; NG-07, SH-13 as dated 2026-09-13.
+
+Commit: `feat(improve-66): theme presets, Save, theme files, paper texture`  
+Evidence: `.docs/evidence/improve-66-theme-presets/`
 

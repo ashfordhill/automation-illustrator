@@ -3134,5 +3134,157 @@ Corrections in the same chat before the next slice starts get their own short en
 - Status: COMPLETE
 - Commit: `feat(improve-64): outline Compare marks without overflow`
 
+## Improvement 65 — chrome Theme editor — 2026-09-12
+
+- Starting commit: `d7324017462afd22e5573298fca70b2a9e4967b5` (`v1.2.0, vertical mode added`)
+- Working tree at start: clean. Latest COMPLETE handoff subject is `feat(improve-64): outline Compare marks without overflow`; that work is already in the v1.2.0 HEAD. The attached plan numbered this slice 64; 64 already shipped (view icons), so this is Improvement 65.
+- GOAL clauses addressed: SH-05, P-09 (2026-09-12 amendments)
+- Library research and decisions: No new runtime dependency. Theme preview mounts live `ChromeToolCluster` and `OrientationSwitch` (inert) instead of a hand-drawn mock or html2canvas. Six user hexes persist as `automation-pitch.chrome-theme`; complements stay `color-mix`. Existing `automation-pitch.theme` remains the unused light/dark scheme key. Tile faces keep `--cream`.
+- Files changed:
+  - `src/app/theme/chromeTheme.ts`, `chromeTheme.test.ts`, `ColorField.tsx`, `ThemeModal.tsx`, `ThemeModal.css`
+  - `src/app/components/ChromeToolCluster.tsx`, `Toolbar.tsx`, `OrientationSwitch.tsx`, `App.tsx`
+  - `src/app/inspector/ActorColorField.tsx`, `inspectorFold.css`
+  - `src/app/styles/tokens.css` (`--chrome-btn`; derived well / ink-soft / paper-deep / grid-dot)
+  - `src/state/store.ts`, `persistence.ts` (`themeOpen`, `chromeTheme`, `LS_CHROME_THEME`)
+  - `src/keyboard/useAppKeys.ts` (Esc / board keys treat `themeOpen` like `helpOpen`)
+  - Tests: `chromeTheme.test.ts`, persistence + store.shell, `e2e/improve-65-theme.spec.ts`, hamburger lists in `improve-48-chrome` / `hardening`, `improve-28-fold-hover` parses `color(srgb…)` from `color-mix`
+  - Docs: GOAL, IMPROVEMENTS 65, VISUAL_IMPROVEMENTS, this entry
+- Behavior implemented: Hamburger **Theme** (after Keybinds) opens a modal with a live chrome preview and six ColorFields (Frame, Button, Outline, Ice, Selected, Paper). Edits write CSS variables immediately. Reset clears storage and inline overrides. Fold hover is ice mixed into chrome, not a hardcoded steel hex.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; Vite 8.2.2; existing chunk-size warning)
+  - `npm run test:unit` — 51 files, 386 tests pass
+  - `npm run test:e2e` — 241 passed, 8 failed (pre-existing, not Theme): axe `target-size` on Path/+ tabs (`hardening`, `improve-06-shell`, `improve-08-plus-chrome`, `inspector`); hardcoded `Application version 1.0.0` (`improve-21-status-bar`, `improve-30-status-toggle-right`, `sound-redo-chrome`); `merge.spec` still expects `Add human` after Remove Step. Theme-specific: `improve-65-theme` (2) and `improve-28-fold-hover` (2) pass.
+- Evidence:
+  - `.docs/evidence/improve-65-theme/theme-frame-1440.png` — Theme open, Frame set to the first swatch; live status bar matches (1440×900)
+  - `.docs/evidence/improve-65-theme/theme-default-1440.png` — Reset to defaults restores the navy frame (1440×900)
+  - `.docs/evidence/improve-65-theme/theme-1024.png` — Theme window at 1024×768
+- Earlier-slice defects fixed: none that blocked this slice. Fold-hover e2e now samples `color-mix` as `color(srgb…)` instead of expecting a serialized `rgb()`.
+- Known limitations / follow-ups: inspector axe `target-size` on adjacent Path/+ tabs — later chrome pass; dark-mode hamburger toggle still withdrawn; chrome theme is not in YAML
+- Status: COMPLETE
+- Commit: `feat(improve-65): add a hamburger chrome Theme editor`
 
 
+
+## Improvement 61 — correction 1 — 2026-09-13
+
+- Requested: Reordering the Path / `+` tabs for Vertical also flipped Horizontal. Horizontal should show `+` above Path; Vertical stays Path left of `+`.
+- Changed:
+  - `src/app/styles/tokens.css` — `.tile-side-tabs` is `column-reverse` when Horizontal (DOM order stays Path then `+`); Vertical `row` unchanged
+  - `e2e/improve-61-orientation.spec.ts` — Horizontal assertion is now `+` above Path; captures `horizontal-tile-chrome-1440.png`
+  - Docs: IMPROVEMENTS 61 correction 1, this entry
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; existing chunk-size warning)
+  - `npm run test:e2e` (targeted) — `improve-61-orientation` (6), `improve-09-chrome-root` (4), `improve-12-hover-chrome` (4), `improve-22-tab-peek` (1), `improve-08-plus-chrome` 1 pass / 1 fail (pre-existing axe `target-size` on adjacent Path/`+` tabs, recorded since Improvement 62). Playwright Chromium needs `LD_LIBRARY_PATH=~/.local/pw-libs/usr/lib/x86_64-linux-gnu` on this machine.
+- Evidence:
+  - `.docs/evidence/improve-61-orientation/horizontal-tile-chrome-1440.png` — Horizontal: `+` above Path on both flow edges (1440×900)
+  - `.docs/evidence/improve-61-orientation/vertical-tile-chrome-1440.png` — Vertical: Path left of `+` (1440×900)
+- Status: COMPLETE
+- Commit: `feat(improve-61): put + above Path when Horizontal`
+
+## Improvement 64 — correction 2 — 2026-09-13
+
+- Requested: In the Vertical (side-by-side) Compare mark the Robot square is not centered in its half like the Human circle is.
+- Changed: `src/app/icons/compare-side.svg` — square `x` 28 → 29 (right half spans 24–42, center 33; square 29–37). Docs: VISUAL_IMPROVEMENTS, this entry.
+- Tests and exact results:
+  - `npm run build` — pass
+  - `npm run test:e2e` — `improve-64-view-icons` (3) pass
+- Evidence: `.docs/evidence/improve-64-view-icons/view-icons-compare-vertical-1440.png` (refreshed); zoomed check against half-center guides done in-browser.
+- Status: COMPLETE
+- Commit: `feat(improve-64): center the Vertical Compare square`
+
+## Improvement 62 — correction 2 — 2026-09-13
+
+- Requested: The Horizontal / Vertical tree radios look thin and uneven next to the Human / Robot / Compare icons (1.2px strokes, wide rounded rectangles, spread-out Paths, faces rendered at 46 vs 38px so the buttons differ in width). Bring the lines closer, use squares, match the chunky simplicity of the neighbours.
+- Changed:
+  - `src/app/components/OrientationSwitch.tsx` — shared `TreeSvg` / `Tile` helpers; one `0 0 38 32` viewBox at `26×22` for both faces; stroke 2.6 round caps/joins (≈1.8px, the Compare mark's weight); `10×10` squares with `rx 3`; 5-unit Path stubs; 10 units between siblings; both trees fill `4..34 × 1..31`
+  - Docs: GOAL P-05 amendment (2026-09-13), IMPROVEMENTS 62 correction 2, VISUAL_IMPROVEMENTS, this entry
+- Working tree note: another improvement (Theme presets / texture, Improvement 66) was being edited concurrently in this checkout while this correction was made (`chromeTheme.ts`, `store.ts`, `persistence.ts`, `StatusBar.css`, …). None of those files were touched here. Verification ran in a throwaway `git worktree` at HEAD `15f71a4` plus only `OrientationSwitch.tsx`; the commit adds only this correction's paths.
+- Tests and exact results (in the isolated worktree):
+  - `npm run build` — pass (`tsc --noEmit && vite build`; existing chunk-size warning)
+  - `npm run test:unit` — 51 files, 386 tests pass
+  - `npm run test:e2e` (targeted) — `improve-62-idle-actors-orientation` (3), `improve-65-theme` (2), `improve-61-orientation` (6) pass. One first run of `improve-61-orientation` hit a Chromium `session closed` crash (not an assertion); clean on rerun. Playwright Chromium needs `LD_LIBRARY_PATH=~/.local/pw-libs/usr/lib/x86_64-linux-gnu` on this machine.
+- Evidence:
+  - `.docs/evidence/improve-62-idle-actors-orientation/orientation-trees-plain-1440.png` — status bar with the new trees, Horizontal on (1440×900, refreshed)
+  - `.docs/evidence/improve-62-idle-actors-orientation/orientation-vertical-1440.png` — Vertical on (1440×900, refreshed)
+  - `.docs/evidence/improve-62-idle-actors-orientation/orientation-trees-zoom-horizontal.png`, `orientation-trees-zoom-vertical.png` — 4× zoom of the radios
+- Status: COMPLETE
+- Commit: `feat(improve-62): gummier equal-size orientation tree icons`
+
+## Improvement 62 — correction 3 — 2026-09-13
+
+- Requested: The fork in each orientation tree turns toward the child tiles with two hard 90° corners; round those turns.
+- Changed:
+  - `src/app/components/OrientationSwitch.tsx` — fork Paths use radius-3 arcs at both turns (`A3 3 0 0 0` / `A3 3 0 0 1`); the parent stub is its own straight subpath. Tiles, stubs, viewBox, and stroke unchanged.
+  - Docs: GOAL P-05 amendment (2026-09-13), IMPROVEMENTS 62 correction 3, this entry
+- Working tree note: Improvement 66 work was still uncommitted in this checkout; as with correction 2, verification ran in a throwaway `git worktree` at HEAD `4945337` plus only `OrientationSwitch.tsx`, and the commit adds only this correction's paths.
+- Tests and exact results (isolated worktree):
+  - `npm run build` — pass
+  - `npm run test:unit` — 51 files, 386 tests pass
+  - `npm run test:e2e` (targeted) — `improve-62-idle-actors-orientation` (3), `improve-65-theme` (2), `improve-61-orientation` (6): 11 passed
+- Evidence (refreshed): `.docs/evidence/improve-62-idle-actors-orientation/orientation-trees-plain-1440.png`, `orientation-vertical-1440.png` (1440×900); `orientation-trees-zoom-horizontal.png`, `orientation-trees-zoom-vertical.png` (4× zoom)
+- Status: COMPLETE
+- Commit: `feat(improve-62): round the orientation tree forks`
+
+## Improvement 62 — correction 4 — 2026-09-13
+
+- Requested: Move the Horizontal icon's children closer together (top/bottom) and the Vertical icon's children further apart (left/right).
+- Changed:
+  - `src/app/components/OrientationSwitch.tsx` — Horizontal children at y 3 / 19 (6-unit gap; trunk `19 11..21`), Vertical children at x 2 / 26 (14-unit gap; crossbar `10..28`). Same viewBox, tiles, stubs, arcs.
+  - Docs: GOAL P-05 amendment (2026-09-13), IMPROVEMENTS 62 correction 4, this entry
+- Working tree note: Improvement 66 work still uncommitted in this checkout; verified in a throwaway `git worktree` at HEAD `aceebd6` plus only `OrientationSwitch.tsx`; commit adds only this correction's paths.
+- Tests and exact results (isolated worktree):
+  - `npm run build` — pass
+  - `npm run test:unit` — 51 files, 386 tests pass
+  - `npm run test:e2e` (targeted) — `improve-62-idle-actors-orientation` (3), `improve-65-theme` (2), `improve-61-orientation` (6): 11 passed
+- Evidence (refreshed): `.docs/evidence/improve-62-idle-actors-orientation/orientation-trees-plain-1440.png`, `orientation-vertical-1440.png` (1440×900); `orientation-trees-zoom-horizontal.png`, `orientation-trees-zoom-vertical.png` (4× zoom)
+- Status: COMPLETE
+- Commit: `feat(improve-62): tighten Horizontal and widen Vertical tree siblings`
+
+## Improvement 62 — correction 5 — 2026-09-13
+
+- Requested: Bring the Vertical icon's children a tiny bit closer together (left/right).
+- Changed:
+  - `src/app/components/OrientationSwitch.tsx` — Vertical children at x 3 / 25 (12-unit gap, was 14); crossbar `11..27`. Horizontal face unchanged.
+  - Docs: GOAL P-05 amendment (2026-09-13), IMPROVEMENTS 62 correction 5, this entry
+- Working tree note: Improvement 66 work still uncommitted in this checkout; verified in a throwaway `git worktree` at HEAD `3ee422c` plus only `OrientationSwitch.tsx`; commit adds only this correction's paths.
+- Tests and exact results (isolated worktree):
+  - `npm run build` — pass
+  - `npm run test:unit` — 51 files, 386 tests pass
+  - `npm run test:e2e` (targeted) — `improve-62-idle-actors-orientation` (3), `improve-65-theme` (2), `improve-61-orientation` (6): 11 passed
+- Evidence (refreshed): `.docs/evidence/improve-62-idle-actors-orientation/orientation-trees-plain-1440.png`, `orientation-vertical-1440.png` (1440×900); `orientation-trees-zoom-horizontal.png`, `orientation-trees-zoom-vertical.png` (4× zoom)
+- Status: COMPLETE
+- Commit: `feat(improve-62): nudge Vertical tree siblings closer`
+
+## Improvement 66 — theme presets, Save, theme files, paper texture — 2026-09-13
+
+- Starting commit: `0e8cbbbfb8e68ccb7f61eb14b780f5294f6cb23d` (`docs: record Improvement 66 starting commit`), two docs-only planning commits on top of `c28d58393` (`feat(improve-65): add a hamburger chrome Theme editor`, the latest COMPLETE entry at kickoff). The user asked to treat that as the expected start. While this slice ran, corrections for Improvements 61 / 62 / 64 landed in the same tree (HEAD at commit time: `cbb9f3d`); none touch theme files.
+- GOAL clauses addressed: P-09, SH-08, NG-07, SH-13 (2026-09-13 amendments)
+- Library research and decisions: No new runtime dependency. Theme files reuse `yaml` 2 + Zod 4 like workflow files (`themeFileSchema`, `version: 1`). React Flow `<Background>` is replaced by one SVG `<pattern>` that follows `useViewport` so the preview and board share markup. Escape inside the window is handled by the window itself (`closeOnEscape={false}`, capture-phase `keydown`) because Mantine's Modal listens on `window` in capture and would close the window when a color swatch button holds focus; wheels close via `useEscapeClosesPopover`.
+- Files changed:
+  - `src/app/theme/chromeTheme.ts` (+test) — `ThemePreset`, `BUILTIN_THEMES`, `chromeWell`, texture, `themeCssVars`, equality, `legacyThemeToBody`, `uniqueThemeName`
+  - `src/app/theme/themeFile.ts` (+test, new) — schema, `themeToYaml`, `parseThemeText`, `themeExportFilename`
+  - `src/app/theme/ThemeModal.tsx`, `ThemeModal.css`, `TexturePicker.tsx` (new), `ColorField.tsx`, `useEscapeClosesPopover.ts` (new)
+  - `src/board/PaperTexture.tsx` (new), `Board.tsx`, `Board.css`
+  - `src/state/store.ts`, `persistence.ts` (+tests) — `themes`, `themeDraft`, `themePrompt`, `LS_THEMES`, legacy migration
+  - `src/workflow/ids.ts` (`shortId`), `serialize.ts` (`filenameSlug`)
+  - `src/app/App.tsx` (+test), `components/Toolbar.tsx`, `components/StatusBar.css`, `styles/tokens.css`
+  - `src/app/version.test.ts` — compares against `package.json` instead of a literal
+  - `package.json`, `package-lock.json` — user bumped to `1.3.0` during this slice; lockfile synced
+  - Tests: `e2e/improve-66-theme-presets.spec.ts` (new), `e2e/improve-65-theme.spec.ts` (draft-then-Save flow)
+  - Docs: GOAL amendments, IMPROVEMENTS 66 (+ "Window layout" revision), VISUAL_IMPROVEMENTS (3 entries), this entry
+- Behavior implemented: Theme window edits a draft shown only in its preview; **Save** applies and closes, **Reset** returns to the selected preset, closing an edited draft asks **Discard changes?**. Four built-ins (Ice, Graphite, Forest, Plum) plus **My themes** (persisted, trash to delete, saved-over or saved-as-new via a nested prompt). **Import / Export** `.theme.yaml` inside the window. New **Well** color; paper **Texture** (dots, rings, cross, mesh + color) on the board and preview. Status-bar hairline removed. After review: no visible title / "Colors" caption, no "Built-in" group label, plain blue **Edited** text, blue Save / Discard, 520-wide window with actions flush right, captions under the cards, preview bars rounded to the frame, paper clipped to the frame.
+- Tests and exact results:
+  - `npm run build` — pass (`tsc --noEmit && vite build`; existing chunk-size warning)
+  - `npm run test:unit` — 52 files, 397 tests pass
+  - `npm run test:e2e` (targeted) — `improve-66-theme-presets` (6), `improve-65-theme` (2), `improve-48-chrome`, `improve-28-fold-hover`, `improve-62-orientation`, `hardening`, `improve-21-status-bar`: 29 passed, 2 failed, both pre-existing and recorded since Improvements 62 / 65 (axe `target-size` on adjacent Path/`+` tabs in `hardening`; hardcoded `Application version 1.0.0` in `improve-21-status-bar`). Chromium via `LD_LIBRARY_PATH=~/.local/pw-libs/usr/lib/x86_64-linux-gnu`. Evidence PNGs of unrelated slices rewritten by an earlier full run were restored.
+- Evidence (1440×900 unless noted), `.docs/evidence/improve-66-theme-presets/`:
+  - `theme-draft-edited-1440.png` — Frame swatch picked: preview red, live status bar still Ice, **Edited** shown, wheel open
+  - `theme-save-as-new-1440.png` — Save on an edited built-in: name prompt with "Ember"
+  - `theme-dropdown-1440.png` — preset dropdown: four built-ins, Ember under My themes
+  - `theme-texture-popover-1440.png` — texture 2×2 pattern grid open
+  - `theme-mesh-board-1440.png` — Mesh texture and green Well applied to the board and switches after Save
+  - `theme-1024.png` — Theme window at 1024×768
+- Earlier-slice defects fixed: `src/app/version.test.ts` hardcoded `1.2.0` and failed once the user bumped `package.json` to `1.3.0`; it now reads the version from `package.json`.
+- Known limitations / follow-ups: axe `target-size` on adjacent Path/`+` tabs — later chrome pass; `improve-21-status-bar`, `improve-30-status-toggle-right`, `sound-redo-chrome` still assert `v1.0.0`; `merge.spec` still expects `Add human` after Remove Step; dark-mode hamburger toggle still withdrawn.
+- Status: COMPLETE
+- Commit: `feat(improve-66): theme presets, Save, theme files, paper texture`

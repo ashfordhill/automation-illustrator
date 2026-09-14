@@ -12,16 +12,56 @@ const ICE = "rgb(243, 251, 254)";
 const BLUE_LIGHT = "rgb(26, 143, 212)";
 const BLUE_DARK = "rgb(126, 182, 224)";
 
+function parseRgbTriple(value: string): [number, number, number] {
+  const rgb = value.match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
+  if (!rgb) throw new Error(`unparsed rgb ${value}`);
+  return [Number(rgb[1]), Number(rgb[2]), Number(rgb[3])];
+}
+
+async function backgroundRgb(fold: import("@playwright/test").Locator) {
+  return fold.evaluate((el) => {
+    const raw = getComputedStyle(el).backgroundColor;
+    const srgb = raw.match(/color\(srgb\s+([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)/);
+    if (srgb) {
+      return [
+        Math.round(Number(srgb[1]) * 255),
+        Math.round(Number(srgb[2]) * 255),
+        Math.round(Number(srgb[3]) * 255),
+      ] as [number, number, number];
+    }
+    const rgb = raw.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
+    if (rgb) {
+      return [Number(rgb[1]), Number(rgb[2]), Number(rgb[3])] as [number, number, number];
+    }
+    throw new Error(`unparsed background ${raw}`);
+  });
+}
+
 async function expectSteelHover(
   fold: import("@playwright/test").Locator,
   steel: string,
   cream: string,
   yellow: string,
 ) {
+  const expected = parseRgbTriple(steel);
   await fold.hover();
-  await expect(fold).toHaveCSS("background-color", steel);
-  await expect(fold).not.toHaveCSS("background-color", cream);
-  await expect(fold).not.toHaveCSS("background-color", yellow);
+  await expect
+    .poll(async () => {
+      try {
+        const bg = await backgroundRgb(fold);
+        return (
+          Math.abs(bg[0] - expected[0]) <= 2 &&
+          Math.abs(bg[1] - expected[1]) <= 2 &&
+          Math.abs(bg[2] - expected[2]) <= 2
+        );
+      } catch {
+        return false;
+      }
+    })
+    .toBe(true);
+  const bg = await backgroundRgb(fold);
+  expect(bg).not.toEqual(parseRgbTriple(cream));
+  expect(bg).not.toEqual(parseRgbTriple(yellow));
   await expect(fold).toHaveCSS("color", ICE);
   await expect(fold).toHaveCSS("outline-style", "none");
 }

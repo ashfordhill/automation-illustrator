@@ -211,7 +211,7 @@ test.describe("Improvement 61 vertical + fan", () => {
 });
 
 test.describe("Improvement 61 vertical tile chrome", () => {
-  test("Path sits before +; X parks off the flow edge", async ({ page }) => {
+  test("+ above Path when Horizontal, Path left of + when Vertical; X parks off the flow edge", async ({ page }) => {
     await loadOakPark(page);
     await page.getByText(DEMO_STEP).first().click();
     const selected = page.locator(".tile-chrome-host.is-selected");
@@ -223,8 +223,9 @@ test.describe("Improvement 61 vertical tile chrome", () => {
     const plusH = await plus.boundingBox();
     const pathH = await pathTab.boundingBox();
     expect(plusH && pathH).toBeTruthy();
-    expect(pathH!.y).toBeLessThan(plusH!.y);
+    expect(plusH!.y).toBeLessThan(pathH!.y);
     expect(Math.abs(pathH!.x - plusH!.x)).toBeLessThan(8);
+    await capturePage(page, `${EVIDENCE}/horizontal-tile-chrome-1440.png`);
 
     await setOrientation(page, "Vertical");
     await page.getByText(DEMO_STEP).first().click();

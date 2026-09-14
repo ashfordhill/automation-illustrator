@@ -1,49 +1,66 @@
 /**
- * Status-bar Horizontal / Vertical radios. Each face is a three-tile tree
- * (rounded Step rectangles), highlighted yellow when that orientation is on.
+ * Status-bar Horizontal / Vertical radios. Each face is a three-tile tree of
+ * rounded squares joined by short straight Paths, highlighted yellow when that
+ * orientation is on. Both faces share one viewBox and stroke so the two radios
+ * render the same size and weight as the Compare mark next door.
  */
+import type { ReactNode } from "react";
 import type { BoardOrientation } from "../../board/flow/flowProfile";
 import { useStore } from "../../state/store";
 
-function HorizontalTreeIcon() {
+// 10-unit tiles, 5-unit Path stubs. Horizontal siblings sit 6 units apart
+// (tight stack); Vertical siblings sit 12 units apart (wide fan). The fork
+// turns toward each child on a radius-3 arc instead of a hard 90° corner.
+const TREE_VIEWBOX = "0 0 38 32";
+const TREE_WIDTH = 26;
+const TREE_HEIGHT = 22;
+const TREE_STROKE = 2.6;
+const TILE = 10;
+const TILE_RADIUS = 3;
+
+function TreeSvg({ children }: { children: ReactNode }) {
   return (
-    <svg viewBox="0 0 68 36" width="46" height="22" aria-hidden>
+    <svg viewBox={TREE_VIEWBOX} width={TREE_WIDTH} height={TREE_HEIGHT} aria-hidden>
       <g
         fill="none"
         stroke="currentColor"
-        strokeWidth="2"
+        strokeWidth={TREE_STROKE}
         strokeLinejoin="round"
         strokeLinecap="round"
       >
-        <rect x="2" y="12" width="16" height="12" rx="3" />
-        <path d="M18 18h10M28 8v20" />
-        <path d="M28 8h14" />
-        <path d="M28 28h14" />
-        <rect x="42" y="2" width="16" height="12" rx="3" />
-        <rect x="42" y="22" width="16" height="12" rx="3" />
+        {children}
       </g>
     </svg>
   );
 }
 
+function Tile({ x, y }: { x: number; y: number }) {
+  return <rect x={x} y={y} width={TILE} height={TILE} rx={TILE_RADIUS} />;
+}
+
+/** Parent on the left, two children on the right (flow left to right). */
+function HorizontalTreeIcon() {
+  return (
+    <TreeSvg>
+      <Tile x={4} y={11} />
+      <path d="M14 16H19" />
+      <path d="M24 8H22A3 3 0 0 0 19 11V21A3 3 0 0 0 22 24H24" />
+      <Tile x={24} y={3} />
+      <Tile x={24} y={19} />
+    </TreeSvg>
+  );
+}
+
+/** Parent on top, two children below (flow top to bottom). */
 function VerticalTreeIcon() {
   return (
-    <svg viewBox="0 0 56 36" width="38" height="22" aria-hidden>
-      <g
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinejoin="round"
-        strokeLinecap="round"
-      >
-        <rect x="20" y="2" width="16" height="10" rx="3" />
-        <path d="M28 12v8M10 20h36" />
-        <path d="M10 20v4" />
-        <path d="M46 20v4" />
-        <rect x="2" y="24" width="16" height="10" rx="3" />
-        <rect x="38" y="24" width="16" height="10" rx="3" />
-      </g>
-    </svg>
+    <TreeSvg>
+      <Tile x={14} y={1} />
+      <path d="M19 11V16" />
+      <path d="M8 21V19A3 3 0 0 1 11 16H27A3 3 0 0 1 30 19V21" />
+      <Tile x={3} y={21} />
+      <Tile x={25} y={21} />
+    </TreeSvg>
   );
 }
 
@@ -56,8 +73,14 @@ const OPTIONS: Array<{
   { value: "vertical", label: "Vertical", Icon: VerticalTreeIcon },
 ];
 
-export function OrientationSwitch() {
-  const orientation = useStore((s) => s.boardOrientation);
+export function OrientationSwitch({
+  previewValue,
+}: {
+  previewValue?: BoardOrientation;
+} = {}) {
+  const live = useStore((s) => s.boardOrientation);
+  const orientation = previewValue ?? live;
+  const frozen = previewValue !== undefined;
   return (
     <div
       className="view-switch orientation-switch"
@@ -77,7 +100,10 @@ export function OrientationSwitch() {
               title={opt.label}
               data-orientation-icon={opt.value}
               className={`view-switch-btn${on ? " is-on" : ""}`}
-              onClick={() => useStore.getState().setBoardOrientation(opt.value)}
+              onClick={() => {
+                if (frozen) return;
+                useStore.getState().setBoardOrientation(opt.value);
+              }}
             >
               <opt.Icon />
             </button>

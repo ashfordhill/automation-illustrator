@@ -2,6 +2,12 @@
   position: relative;
 }
 
+/* Theme paper texture (Improvement 66): same layer React Flow's Background used. */
+.paper-texture {
+  pointer-events: none;
+  z-index: -1;
+}
+
 .board-lane[data-board="loading"] .react-flow__viewport {
   visibility: hidden;
 }

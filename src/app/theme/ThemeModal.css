@@ -1,0 +1,278 @@
+/* Rows span the window: presets / texture on the left, actions flush right. */
+.theme-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+/* Header holds only the (visually hidden) title and the Close X. */
+.theme-window .mantine-Modal-header {
+  min-height: 0;
+  padding-bottom: 4px;
+}
+
+.theme-row-top {
+  margin-bottom: 10px;
+}
+
+.theme-row-bottom {
+  align-items: flex-start;
+  margin-top: 12px;
+}
+
+.theme-row-bottom .theme-actions {
+  align-self: flex-end;
+  padding-bottom: 22px;
+}
+
+.theme-row-bottom .theme-texture {
+  margin-right: auto;
+}
+
+.theme-preset-group {
+  min-width: 0;
+}
+
+/* Unsaved marker: plain text in an accent unrelated to the chrome palette. */
+.theme-edited {
+  color: var(--theme-accent);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.theme-window {
+  --theme-accent: #1864ab;
+  --theme-accent-hover: #145591;
+}
+
+/* Preview island: the draft's variables are set inline on .theme-preview. The
+   color-mix vars below are redeclared so they resolve from the draft, not :root. */
+.theme-preview.chrome-bar {
+  position: relative;
+  overflow: hidden; /* .chrome-bar sets visible; the paper must clip to the frame's radius */
+  border: 3px solid var(--chrome-line);
+  border-radius: 14px;
+  min-height: 148px;
+  --paper-deep: color-mix(in srgb, var(--paper) 88%, var(--chrome));
+  --chrome-ink-soft: color-mix(in srgb, var(--chrome-ink) 72%, var(--chrome-line));
+}
+
+.theme-preview-paper {
+  position: relative;
+  min-height: 148px;
+  background: var(--paper);
+  border-radius: 11px;
+  overflow: hidden;
+}
+
+.theme-preview-texture {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* Bars round to the frame's inner radius (14 − 3) so the corners do not clash. */
+.theme-preview-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 52px;
+  padding: 0 10px;
+  border-bottom: 3px solid var(--chrome-line);
+  border-radius: 11px 11px 0 0;
+}
+
+.theme-preview-status {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--status-bar-height);
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  border-top: 3px solid var(--chrome-line);
+  border-radius: 0 0 11px 11px;
+}
+
+.theme-preview-status .orientation-switch {
+  flex: 0 0 auto;
+  border-width: 2.5px;
+  border-radius: 9px;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.22);
+}
+
+.theme-preview-status .orientation-switch .view-switch-track {
+  border-radius: 7px;
+  height: 26px;
+}
+
+.theme-preview-status .orientation-switch .view-switch-btn {
+  min-width: 0;
+  height: 26px;
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-right-width: 2.5px;
+}
+
+.theme-pickers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 12px;
+  margin-top: 14px;
+}
+
+.theme-picker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.theme-picker-caption {
+  font-weight: 800;
+  font-size: 12px;
+  color: var(--ink);
+}
+
+/* Theme-window color cards: 48×68 with an explicit height so the dropper never clips.
+   Manage-actors cards keep the shared size. */
+.theme-picker .inspector-color-card,
+.theme-texture-pair .inspector-color-card {
+  flex: 0 0 48px;
+  width: 48px;
+  height: 68px;
+}
+
+.theme-picker .inspector-color-fill-hit,
+.theme-texture-pair .inspector-color-fill-hit {
+  flex: 0 0 60%;
+  min-height: 0;
+}
+
+.theme-picker .inspector-color-fill-hit > *,
+.theme-texture-pair .inspector-color-fill-hit > * {
+  min-height: 0;
+}
+
+.theme-picker .inspector-color-dropper,
+.theme-texture-pair .inspector-color-dropper {
+  flex: 0 0 40%;
+  min-height: 0;
+}
+
+.theme-picker .inspector-color-dropper svg,
+.theme-texture-pair .inspector-color-dropper svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Texture picker: wide pattern card joined to the tall color card. */
+.theme-texture {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.theme-texture-pair {
+  display: flex;
+  align-items: stretch;
+}
+
+.theme-texture-pair .inspector-color-card {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border-left-width: 0;
+}
+
+.theme-texture-card {
+  position: relative;
+  display: block;
+  box-sizing: border-box;
+  width: 96px;
+  height: 68px;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 2px solid var(--line);
+  border-radius: 10px 0 0 10px;
+  box-shadow: var(--chip-shadow);
+  cursor: pointer;
+}
+
+.theme-texture-card:focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: -3px;
+}
+
+.theme-texture-swatch {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.theme-texture-pop {
+  padding: 8px;
+}
+
+.theme-texture-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 96px);
+  gap: 8px;
+}
+
+.theme-texture-tile {
+  position: relative;
+  box-sizing: border-box;
+  width: 96px;
+  height: 68px;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.theme-texture-tile.is-on {
+  border: 3px solid var(--ink);
+  box-shadow: 0 0 0 2px var(--yellow) inset;
+}
+
+.theme-texture-tile:focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: -3px;
+}
+
+.theme-prompt .mantine-Modal-title {
+  font-weight: 800;
+}
+
+/* Primary actions: a fixed blue unrelated to the chrome palette; white label meets AA (AQ-04). */
+.theme-primary-btn.mantine-Button-root {
+  background: var(--theme-accent, #1864ab);
+  color: #ffffff;
+  border: none;
+  font-weight: 800;
+}
+
+.theme-primary-btn.mantine-Button-root:hover {
+  background: var(--theme-accent-hover, #145591);
+}
+
+.theme-primary-btn.mantine-Button-root:disabled,
+.theme-primary-btn.mantine-Button-root[data-disabled] {
+  background: var(--mantine-color-gray-2);
+  color: var(--mantine-color-gray-6);
+  border-color: var(--mantine-color-gray-4);
+}

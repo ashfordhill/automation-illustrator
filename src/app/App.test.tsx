@@ -22,6 +22,7 @@ function resetSession() {
   s.setPresent(false);
   s.select(null);
   s.setHelp(false);
+  s.resetThemes();
   s.cancelReplace();
   s.clearImportError();
   s.closeBoardModes();

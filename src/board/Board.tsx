@@ -6,8 +6,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import "./Board.css";
 import {
-  Background,
-  BackgroundVariant,
   getViewportForBounds,
   ReactFlow,
   ReactFlowProvider,
@@ -58,6 +56,7 @@ import { useLaneLayout } from "./layout/useLaneLayout";
 import { pointAt, useAnimatedLayout } from "./layout/useAnimatedLayout";
 import { LaneLayoutContext } from "./routing/LaneLayoutContext";
 import { layoutKeyMode } from "./flow/flowProfile";
+import { PaperTexture } from "./PaperTexture";
 import { pathIsDotted, type FlowPathData } from "./routing/FlowArrow";
 import {
   MIN_ZOOM,
@@ -148,6 +147,7 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
   const { zoom } = useViewport();
   const simplifyPrefs = useStore((s) => s.simplify);
   const boardOrientation = useStore((s) => s.boardOrientation);
+  const texture = useStore((s) => s.appliedTheme().texture);
   const [webFit, setWebFit] = useState(false);
   const lastZoomRef = useRef(zoom);
   const simplified = isSimplified(simplifyPrefs);
@@ -767,12 +767,7 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
           className="board-pan"
           style={{ height: "100%", background: "transparent" }}
         >
-          <Background
-            variant={BackgroundVariant.Dots}
-            gap={GRID}
-            size={2.2}
-            color="var(--grid-dot)"
-          />
+          <PaperTexture pattern={texture.pattern} color="var(--grid-dot)" />
         </ReactFlow>
       </LaneLayoutContext.Provider>
       </SimplifyContext.Provider>

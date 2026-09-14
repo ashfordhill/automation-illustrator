@@ -45,17 +45,12 @@
   transition: background-color 120ms ease, box-shadow 120ms ease;
 }
 
-/* Steel lift, not cream/yellow/blue. Ice mixed into chrome so it reads on paper and on the rail. */
+/* Steel lift: ice mixed into chrome so hover tracks the Theme frame (Improvement 65). */
 .inspector-fold:hover,
 .inspector-fold:focus-visible {
-  background: #3f5f71;
+  background: color-mix(in srgb, var(--chrome-ink) 22%, var(--chrome));
   color: var(--chrome-ink);
   outline: none;
-}
-
-:root[data-theme="dark"] .inspector-fold:hover,
-:root[data-theme="dark"] .inspector-fold:focus-visible {
-  background: #3b4a51;
 }
 
 .inspector-fold:focus-visible {
