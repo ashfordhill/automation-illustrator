@@ -5,6 +5,7 @@
 import { HumanFigure } from "./HumanFigure";
 import { RobotFigure } from "./RobotFigure";
 import { ACTOR_W } from "../layout/tileMetrics";
+import { normalizeAccessories } from "../../workflow/accessories";
 import { FIGURE_INK_ON_PASTEL } from "../../workflow/actors";
 import { ActorKind } from "../../workflow/catalogs";
 import {
@@ -83,7 +84,11 @@ export function ActorColumn({ actor }: { actor: ActorDto | undefined }) {
         }}
       >
         {human ? (
-          <HumanFigure size={36} color={FIGURE_INK_ON_PASTEL} />
+          <HumanFigure
+            size={36}
+            color={FIGURE_INK_ON_PASTEL}
+            accessories={isHuman(actor) ? normalizeAccessories(actor.accessories) : undefined}
+          />
         ) : (
           <RobotFigure size={36} color={FIGURE_INK_ON_PASTEL} />
         )}

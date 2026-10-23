@@ -4,6 +4,7 @@
  * Browser localStorage stays pretty JSON (see persistence.ts).
  */
 import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
+import { normalizeAccessories } from "./accessories";
 import {
   DEFAULT_HUMAN_ROLE,
   isHuman,
@@ -20,13 +21,19 @@ const MAX_EXPORT_SLUG = 80;
 function normalizeForFile(doc: WorkflowDoc): WorkflowDoc {
   return {
     ...doc,
-    actors: doc.actors.map((actor) =>
-      isHuman(actor)
-        ? { ...actor, role: actor.role.trim() || DEFAULT_HUMAN_ROLE }
-        : isRobot(actor)
-          ? { ...actor, role: robotRole(actor) }
-          : actor,
-    ),
+    actors: doc.actors.map((actor) => {
+      if (isHuman(actor)) {
+        const role = actor.role.trim() || DEFAULT_HUMAN_ROLE;
+        const accessories = normalizeAccessories(actor.accessories);
+        if (accessories.length === 0) {
+          const { accessories: _omit, ...rest } = { ...actor, role };
+          return rest;
+        }
+        return { ...actor, role, accessories };
+      }
+      if (isRobot(actor)) return { ...actor, role: robotRole(actor) };
+      return actor;
+    }),
   };
 }
 

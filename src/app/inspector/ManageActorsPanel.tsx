@@ -2,6 +2,7 @@
  * Add / edit / delete humans and robots in the right inspector (NA-01, NA-02, NA-06).
  */
 import { IconTrash } from "@tabler/icons-react";
+import { AccessoryPicker } from "./AccessoryPicker";
 import { ActorColorField } from "./ActorColorField";
 import { InspectorField } from "./InspectorField";
 import { FIGURE_INK_ON_PASTEL } from "../../workflow/actors";
@@ -84,6 +85,12 @@ export function ManageActorsPanel() {
             onChange={(color) => useStore.getState().updateActor(actor.id, { color })}
           />
         </div>
+      ) : null}
+      {actor && !deleteMode && isHuman(actor) ? (
+        <AccessoryPicker
+          accessories={actor.accessories ?? []}
+          onChange={(accessories) => useStore.getState().updateActor(actor.id, { accessories })}
+        />
       ) : null}
       <ActorWhoGrid
         actors={workflow.actors}

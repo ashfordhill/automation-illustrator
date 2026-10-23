@@ -3,7 +3,9 @@
  * Shape schemas plus graph-invariant refinements that emit GraphViolation messages (SH-09).
  */
 import { z } from "zod";
+import { normalizeAccessories } from "./accessories";
 import {
+  AccessoryKind,
   ActorKind,
   RobotKind,
   SplitKind,
@@ -28,6 +30,16 @@ const pointSchema = z.object({
 });
 
 const robotKindSchema = z.enum([RobotKind.Llm, RobotKind.Agent, RobotKind.Script]);
+const accessoryKindSchema = z.enum([
+  AccessoryKind.Sunglasses,
+  AccessoryKind.Tablet,
+  AccessoryKind.Scanner,
+]);
+/** Missing list means none. One accessory per slot; the last one in that slot wins. */
+const accessoryListSchema = z.preprocess(
+  (value) => (value == null ? [] : value),
+  z.array(accessoryKindSchema).transform((list) => normalizeAccessories(list)),
+);
 const splitSchema = z.enum([SplitKind.Exclusive, SplitKind.Parallel]);
 const stepKindSchema = z.enum(STEP_KINDS);
 
@@ -49,6 +61,7 @@ const humanV2Schema = z.object({
     (value) => (typeof value === "string" && value.trim() === "" ? DEFAULT_HUMAN_ROLE : value),
     z.string().min(1),
   ),
+  accessories: accessoryListSchema,
 });
 
 const robotFields = {

@@ -593,3 +593,10 @@ Do *NOT* put `.docs/` in the image links! It will break the markdown image rende
 - Resolution: Shipped in Improvement 66 — header keeps its padding (no negative margin), rows use space-between so actions align with the preview's right edge, and the preview clips to its radius (`.chrome-bar`'s `overflow: visible` was winning; the paper layer is also rounded to 11px).
 - Attachments:
   ![theme window top cut and paper corners](.docs/visual-improvements/2026-09-13-theme-window-top-cut-corners.png)
+
+## 2026-10-23 — sunglasses on the stick figure
+
+- Issue: Human figures should be able to wear sunglasses (gray lenses, thick brow bar), plus later a tablet and a barcode scanner in the hand. Robots stay plain.
+- Resolution: Shipped in `feat: add accessories for human actors` — Actors editor accessory row; one face item and one hand item.
+- Attachments:
+  ![sunglasses on the figure](.docs/visual-improvements/2026-10-23-sunglasses-on-figure.svg)

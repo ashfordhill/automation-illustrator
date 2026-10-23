@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, expect, test } from "vitest";
-import { ColorScheme, SelectionKind, SplitKind, StepKind, ViewMode, WorkflowNodeKind } from "../workflow/catalogs";
 import { OAK_PARK_IDS } from "../demos/oakParkInvoice";
 import { MAILROOM_IDS } from "../demos/robotMailroom";
 import { DemoId } from "../demos/catalog";
-import { isStepNode } from "../workflow/types";
+import { AccessoryKind, ColorScheme, SelectionKind, SplitKind, StepKind, ViewMode, WorkflowNodeKind } from "../workflow/catalogs";
+import { isHuman, isStepNode } from "../workflow/types";
 import { useStore } from "./store";
 
 function resetSession() {
@@ -310,4 +310,17 @@ test("new Other Steps have an empty Name; choosing Other does not fill Task", ()
   useStore.getState().updateNode(read, { stepKind: StepKind.Other });
   const seeded = useStore.getState().workflow.nodes.find((n) => n.id === read);
   expect(seeded && isStepNode(seeded) && seeded.title).toBe("");
+});
+
+test("accessories stick to Humans and are ignored on Robots", () => {
+  const { alice, robot } = OAK_PARK_IDS;
+  useStore.getState().updateActor(alice, {
+    accessories: [AccessoryKind.Sunglasses, AccessoryKind.Tablet],
+  });
+  const human = useStore.getState().workflow.actors.find((a) => a.id === alice);
+  expect(isHuman(human) && human.accessories).toEqual([AccessoryKind.Sunglasses, AccessoryKind.Tablet]);
+  useStore.getState().updateActor(robot, { accessories: [AccessoryKind.Scanner] });
+  const bot = useStore.getState().workflow.actors.find((a) => a.id === robot);
+  expect(bot).not.toHaveProperty("accessories");
+  expect(bot && "name" in bot && bot.name).toBeTruthy();
 });

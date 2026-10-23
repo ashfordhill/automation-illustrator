@@ -3,6 +3,7 @@
  * centered as a fixed 4-column cluster so wrapping does not shift cards (NA-05, NA-06).
  */
 import { IconX } from "@tabler/icons-react";
+import { normalizeAccessories } from "../../workflow/accessories";
 import { FIGURE_INK_ON_PASTEL, humansOf, robotsOf } from "../../workflow/actors";
 import { actorWhoAria, actorWhoCaption, isHuman, type ActorDto } from "../../workflow/types";
 import { HumanFigure } from "../../board/tiles/HumanFigure";
@@ -25,7 +26,6 @@ function ActorWhoButton({
   option?: boolean;
   onClick: () => void;
 }) {
-  const human = isHuman(actor);
   return (
     <button
       type="button"
@@ -38,8 +38,12 @@ function ActorWhoButton({
       onClick={onClick}
     >
       <span className="inspector-who-fig" style={{ background: actor.color }}>
-        {human ? (
-          <HumanFigure size={26} color={FIGURE_INK_ON_PASTEL} />
+        {isHuman(actor) ? (
+          <HumanFigure
+            size={26}
+            color={FIGURE_INK_ON_PASTEL}
+            accessories={normalizeAccessories(actor.accessories)}
+          />
         ) : (
           <RobotFigure size={26} color={FIGURE_INK_ON_PASTEL} />
         )}

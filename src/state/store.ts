@@ -31,6 +31,7 @@ import {
   type KeyAction,
   type Keymap,
 } from "../keyboard/bindings";
+import { normalizeAccessories } from "../workflow/accessories";
 import {
   defaultActors,
   defaultHumanId,
@@ -89,8 +90,10 @@ import {
   withLaneAssignments,
   type ActorDto,
   type ColorScheme as ColorSchemeT,
+  type HumanDto,
   type NodeDto,
   type PositionMap,
+  type RobotDto,
   type RobotKind as RobotKindT,
   type StepKind as StepKindT,
   type StepNodeDto,
@@ -413,7 +416,10 @@ export const useStore = create<{
   setManageActorsDeleteMode: (on: boolean) => void;
   updateNode: (id: string, patch: Partial<NodeDto>) => void;
   updateEdge: (id: string, patch: { label?: string; dashed?: boolean }) => void;
-  updateActor: (id: string, patch: Partial<ActorDto>) => void;
+  updateActor: (
+    id: string,
+    patch: Partial<HumanDto> & Partial<RobotDto>,
+  ) => void;
   assignActor: (stepId: string, actorId: string) => void;
   connect: (source: string, target: string, label?: string) => void;
   deleteSelection: () => void;
@@ -1135,12 +1141,25 @@ export const useStore = create<{
   updateActor: (id, patch) => {
     if (get().present || get().view === ViewMode.Both) return;
     const { workflow, commit } = get();
-    const textOnly = !("color" in patch) && !("robotKind" in patch) && !("kind" in patch);
+    const textOnly =
+      !("color" in patch) &&
+      !("robotKind" in patch) &&
+      !("kind" in patch) &&
+      !("accessories" in patch);
     commit({
       ...workflow,
-      actors: workflow.actors.map((a) =>
-        a.id === id ? ({ ...a, ...patch } as ActorDto) : a,
-      ),
+      actors: workflow.actors.map((a) => {
+        if (a.id !== id) return a;
+        if (!isHuman(a)) {
+          const { accessories: _drop, ...rest } = patch;
+          return { ...a, ...rest };
+        }
+        const next = { ...a, ...patch };
+        if ("accessories" in patch) {
+          next.accessories = normalizeAccessories(patch.accessories);
+        }
+        return next;
+      }),
     }, textOnly ? "text" : "structural");
   },
   /** Who is offered in both lanes (NA-03, NA-11). lastHumanId stamps Data-spawned and root Steps. */

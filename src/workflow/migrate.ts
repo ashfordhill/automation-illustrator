@@ -77,6 +77,7 @@ function withActorRole(actor: WorkflowDocV1["actors"][number]): ActorDto {
     name: actor.name,
     color: actor.color,
     role,
+    accessories: [],
   };
   return human;
 }

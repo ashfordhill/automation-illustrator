@@ -99,6 +99,83 @@ test("empty or missing Robot role becomes the Type word", () => {
   }
 });
 
+test("Human accessories round-trip; a missing list is none; robots ignore the field", () => {
+  const worn = parseCodes({
+    version: 2,
+    actors: [
+      {
+        id: "h1",
+        kind: "human",
+        name: "Ada",
+        color: "#f4c6d4",
+        role: "worker",
+        accessories: ["scanner", "sunglasses", "tablet"],
+      },
+    ],
+    nodes: [step("a")],
+    edges: [],
+    assignments: {},
+    after: emptyAfterOverlay(),
+  });
+  expect(worn.ok).toBe(true);
+  if (worn.ok) {
+    expect(worn.doc.actors[0]).toMatchObject({
+      accessories: ["sunglasses", "tablet"],
+    });
+  }
+
+  const plain = parseCodes({
+    version: 2,
+    actors: [{ id: "h1", kind: "human", name: "Ada", color: "#f4c6d4", role: "worker" }],
+    nodes: [step("a")],
+    edges: [],
+    assignments: {},
+    after: emptyAfterOverlay(),
+  });
+  expect(plain.ok).toBe(true);
+  if (plain.ok) expect(plain.doc.actors[0]).toMatchObject({ accessories: [] });
+
+  const robot = parseCodes({
+    version: 2,
+    actors: [
+      {
+        id: "r1",
+        kind: "robot",
+        name: "Bot",
+        color: "#6ab0c8",
+        robotKind: "script",
+        role: "Script",
+        accessories: ["sunglasses"],
+      },
+    ],
+    nodes: [step("a")],
+    edges: [],
+    assignments: {},
+    after: emptyAfterOverlay(),
+  });
+  expect(robot.ok).toBe(true);
+  if (robot.ok) expect(robot.doc.actors[0]).not.toHaveProperty("accessories");
+
+  const unknown = parseCodes({
+    version: 2,
+    actors: [
+      {
+        id: "h1",
+        kind: "human",
+        name: "Ada",
+        color: "#f4c6d4",
+        role: "worker",
+        accessories: ["hat"],
+      },
+    ],
+    nodes: [step("a")],
+    edges: [],
+    assignments: {},
+    after: emptyAfterOverlay(),
+  });
+  expect(unknown.ok).toBe(false);
+});
+
 test("empty Human role becomes worker", () => {
   const parsed = parseCodes({
     version: 2,

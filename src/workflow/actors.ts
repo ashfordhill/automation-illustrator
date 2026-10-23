@@ -94,6 +94,7 @@ export function defaultActors(): ActorDto[] {
     name: p.name,
     color: p.color,
     role: DEFAULT_HUMAN_ROLE,
+    accessories: [],
   }));
   const robots: ActorDto[] = ROBOT_PRESETS.map((p) => ({
     id: nid(IdPrefix.Robot),
@@ -299,6 +300,7 @@ export function makeHuman(name?: string, color?: string): ActorDto {
     name: n,
     color: c,
     role: DEFAULT_HUMAN_ROLE,
+    accessories: [],
   };
 }
 

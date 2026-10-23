@@ -6,7 +6,7 @@ import oakParkYaml from "../demos/oak-park-invoice.yaml?raw";
 import mailroomYaml from "../demos/robot-mailroom.yaml?raw";
 import { parseDocument } from "./migrate";
 import { workflowExportFilename, workflowToYaml } from "./serialize";
-import { emptyWorkflow, type WorkflowDoc } from "./types";
+import { emptyWorkflow, isHuman, type WorkflowDoc } from "./types";
 import type { WorkflowDocV1 } from "./types";
 
 const MINI_YAML = `version: 2
@@ -133,6 +133,25 @@ test("YAML comments are ignored and hex colors stay strings", () => {
   expect(parsed.doc.nodes.find((n) => n.id === "s_enter")).toMatchObject({
     title: "BS&A Software",
   });
+});
+
+test("Human accessories round-trip in YAML and an empty list is omitted", () => {
+  const doc = oakParkInvoice();
+  const alice = doc.actors.find((a) => a.id === "h_alice");
+  if (!isHuman(alice)) throw new Error("missing Alice");
+  alice.accessories = ["sunglasses", "scanner"];
+  const yaml = workflowToYaml(doc);
+  expect(yaml).toMatch(/accessories:\n\s+- sunglasses\n\s+- scanner/);
+  expect(yaml).not.toMatch(/kind: robot[\s\S]*accessories/);
+  const parsed = parseDocument(yaml);
+  expect(parsed.ok).toBe(true);
+  if (!parsed.ok) return;
+  expect(parsed.doc.actors.find((a) => a.id === "h_alice")).toMatchObject({
+    accessories: ["sunglasses", "scanner"],
+  });
+  const roy = parsed.doc.actors.find((a) => a.id === "h_roy");
+  expect(roy && "accessories" in roy ? roy.accessories : undefined).toEqual([]);
+  expect(yaml).not.toMatch(/id: h_roy[\s\S]*?accessories:/);
 });
 
 test("exported YAML quotes hex colors and keeps actor edits", () => {

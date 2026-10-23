@@ -4,6 +4,7 @@
  * String catalogs (ActorKind, StepKind, …) live in catalogs.ts and are re-exported here.
  */
 import {
+  AccessoryKind,
   ActorKind,
   AssignmentLane,
   RobotKind,
@@ -15,6 +16,7 @@ import {
 } from "./catalogs";
 
 export {
+  AccessoryKind,
   ActorKind,
   AssignmentLane,
   ColorScheme,
@@ -95,6 +97,8 @@ export type HumanDto = {
   name: string;
   color: string;
   role: string;
+  /** Omitted when the Human wears nothing. Robots never have this field. */
+  accessories?: AccessoryKind[];
 };
 
 export type RobotDto = {
