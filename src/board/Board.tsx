@@ -203,17 +203,16 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
   const dragNodeId = interaction.kind === "tile-drag" ? interaction.nodeId : null;
   const fadeInsertPath = useMemo(() => {
     if (!dragNodeId) return (_id: string) => false;
-    const edgeList = [...workflow.edges, ...workflow.after.extraEdges];
-    const incident = incidentPathIds(edgeList, dragNodeId);
+    const incident = incidentPathIds(projection.edges, dragNodeId);
     return (id: string) => incident.has(id);
-  }, [dragNodeId, workflow.edges, workflow.after.extraEdges]);
+  }, [dragNodeId, projection.edges]);
   const reduceMotion =
     typeof window !== "undefined" &&
     typeof window.matchMedia === "function" &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const insertPreview = (() => {
     if (!insertHover || interaction.kind !== "tile-drag" || !shown) return null;
-    const drag = findNode(workflow, interaction.nodeId);
+    const drag = findNode(workflow, interaction.nodeId, lane);
     if (!drag) return null;
     const tile = tileSizes[interaction.nodeId] ?? nodeSize(drag.type);
     if (insertHover.kind === "path") {
@@ -541,7 +540,7 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
     target: e.target,
     originId: e.originId,
     displayHop: false,
-    dotted: pathIsDotted(workflow, e.originId),
+    dotted: pathIsDotted(workflow, e.originId, lane),
   }));
   const laneEdges = visualEdges.map((e) => {
     const stretching = !e.displayHop && stretchIds.has(e.id);
@@ -575,8 +574,8 @@ function Inner({ lane, height }: { lane: Lane; height?: string }) {
         .join(" "),
       data:
         stretching && via
-          ? { stretch: true, viaX: via.x, viaY: via.y, originId: e.originId, dotted, displayHop: e.displayHop }
-          : { originId: e.originId, dotted, displayHop: e.displayHop },
+          ? { stretch: true, viaX: via.x, viaY: via.y, originId: e.originId, dotted, displayHop: e.displayHop, lane }
+          : { originId: e.originId, dotted, displayHop: e.displayHop, lane },
     };
     return { rfEdge, isSelected, dotted };
   });

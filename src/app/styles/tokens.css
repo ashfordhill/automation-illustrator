@@ -801,11 +801,15 @@ body.is-tile-dragging * {
   position: relative;
 }
 
-.canvas-helper-cluster > .canvas-helper-chip {
+.canvas-helper-cluster > .canvas-helper-side {
   position: absolute;
   left: calc(100% + 9px);
   top: 50%;
   transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  white-space: nowrap;
 }
 
 .canvas-helper-chip {
@@ -2157,6 +2161,60 @@ body.is-tile-dragging * {
   width: var(--inspector-cluster);
   max-width: 100%;
   margin-inline: auto;
+}
+
+.inspector-accessories {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: var(--inspector-who-gap);
+  width: var(--inspector-cluster);
+  max-width: 100%;
+  margin-inline: auto;
+}
+
+.inspector-accessory {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 62px;
+  margin: 0;
+  padding: 5px 4px 4px;
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  background: var(--cream);
+  color: var(--ink);
+  font-family: inherit;
+  font-weight: 800;
+  font-size: 11px;
+  line-height: 1.1;
+  cursor: pointer;
+  box-shadow: var(--chip-shadow);
+  box-sizing: border-box;
+}
+
+.inspector-accessory.is-on {
+  background: var(--yellow);
+  color: var(--on-yellow);
+  border-color: var(--yellow);
+  box-shadow: none;
+}
+
+.inspector-accessory:focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.inspector-accessory svg {
+  display: block;
+}
+
+.inspector-accessory-label {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .inspector-actor-edit-text {

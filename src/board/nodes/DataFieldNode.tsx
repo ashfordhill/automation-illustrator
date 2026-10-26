@@ -3,7 +3,7 @@
  * Same PathHostFrame as StepNode so + / Path-pull / X chrome works on fields too.
  */
 import { Handle, type NodeProps } from "@xyflow/react";
-import { SelectionKind, WorkflowNodeKind } from "../../workflow/catalogs";
+import { AssignmentLane, SelectionKind, WorkflowNodeKind } from "../../workflow/catalogs";
 import { useStore } from "../../state/store";
 import { DataTile } from "../tiles/DataTile";
 import { SimplifiedTile } from "../tiles/SimplifiedTile";
@@ -14,10 +14,11 @@ import { simplifyHeadline } from "../simplify/headline";
 import { flowProfile } from "../flow/flowProfile";
 import { rfHandle } from "../flow/rfHandle";
 
-export function DataFieldNode({ id, selected, dragging }: NodeProps) {
+export function DataFieldNode({ id, selected, dragging, data }: NodeProps) {
+  const lane = ((data ?? {}) as { lane?: AssignmentLane }).lane ?? AssignmentLane.Before;
   const departing = useStore((s) => s.departing?.node.id === id);
   const node = useStore((s) => {
-    const live = findNode(s.workflow, id);
+    const live = findNode(s.workflow, id, lane);
     if (live) return live;
     const ghost = s.departing?.node;
     return ghost?.id === id ? ghost : undefined;
@@ -41,7 +42,12 @@ export function DataFieldNode({ id, selected, dragging }: NodeProps) {
           lifted={dragging}
         />
       ) : (
-        <DataTile label={node.label} selected={on && !departing} lifted={dragging} />
+        <DataTile
+          label={node.label}
+          color={node.color}
+          selected={on && !departing}
+          lifted={dragging}
+        />
       )}
       <Handle type="source" position={rfHandle(profile.handleOut)} />
     </PathHostFrame>

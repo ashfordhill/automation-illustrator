@@ -76,10 +76,21 @@ export function StepKindIcon({ kind, size = 52 }: { kind: StepKindT; size?: numb
         <path d="M18 26 L24 32 L36 16" stroke={blue} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
       </IconShell>
     ),
-    [StepKind.Copy]: (
+    [StepKind.Travel]: (
       <IconShell size={size}>
-        <rect x="14" y="12" width="22" height="28" rx="2" fill={cream} stroke={ink} strokeWidth="2" />
-        <rect x="20" y="8" width="22" height="28" rx="2" fill={blue} stroke={ink} strokeWidth="2" />
+        <rect x="6" y="24" width="40" height="14" rx="4" fill={blue} stroke={ink} strokeWidth="2" />
+        <path
+          d="M16 24 L22 14 H36 L40 24 Z"
+          fill={cream}
+          stroke={ink}
+          strokeWidth="2"
+          strokeLinejoin="round"
+        />
+        <path d="M24 22 L27.5 16.5 H34.5 L37 22 Z" fill={blue} />
+        <circle cx="16" cy="38" r="6.5" fill={ink} />
+        <circle cx="16" cy="38" r="2.6" fill={cream} />
+        <circle cx="36" cy="38" r="6.5" fill={ink} />
+        <circle cx="36" cy="38" r="2.6" fill={cream} />
       </IconShell>
     ),
     [StepKind.Print]: (

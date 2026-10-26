@@ -12,10 +12,10 @@ import {
 import { createPortal } from "react-dom";
 import { useReactFlow, ViewportPortal } from "@xyflow/react";
 import { IconX } from "@tabler/icons-react";
-import { ViewMode, WorkflowNodeKind } from "../../workflow/catalogs";
+import { AssignmentLane, ViewMode, WorkflowNodeKind } from "../../workflow/catalogs";
 import { useStore } from "../../state/store";
 import { findNode } from "../../workflow/selectors";
-import { nodeCaption } from "../../workflow/types";
+import { laneBoard, nodeCaption } from "../../workflow/types";
 import { useLaneLayoutContext } from "../routing/LaneLayoutContext";
 import type { InsertHover } from "../../state/interaction";
 import { bundleInsertPreviewGeom, insertPreviewGeom } from "../layout/insertPreview";
@@ -185,7 +185,8 @@ export function TileChrome({
   const pulling =
     tabPulling || (interaction.kind === "tile-drag" && interaction.nodeId === id);
   const showChrome = editing && interaction.kind !== "remove-preview";
-  const caption = nodeCaption(findNode(workflow, id), id);
+  const lane = view === ViewMode.After ? AssignmentLane.After : AssignmentLane.Before;
+  const caption = nodeCaption(findNode(workflow, id, lane), id);
 
   return (
     <div
@@ -547,8 +548,11 @@ function InsertSilhouette({ nodeId }: { nodeId: string }) {
       : null,
   );
   const workflow = useStore((s) => s.workflow);
+  const lane = useStore((s) =>
+    s.view === ViewMode.After ? AssignmentLane.After : AssignmentLane.Before,
+  );
   if (!hover || !layout) return null;
-  const node = findNode(workflow, nodeId);
+  const node = findNode(workflow, nodeId, lane);
   if (!node) return null;
   const geom = previewGeom(layout, hover, nodeSize(node.type));
   if (!geom) return null;
@@ -681,8 +685,10 @@ function TilePickup({
         { x: ev.clientX, y: ev.clientY },
         { snapToGrid: false },
       );
-      const doc = useStore.getState().workflow;
-      const edges = [...doc.edges, ...doc.after.extraEdges];
+      const state = useStore.getState();
+      const lane =
+        viewRef.current === ViewMode.After ? AssignmentLane.After : AssignmentLane.Before;
+      const edges = laneBoard(state.workflow, lane).edges;
       const hover =
         viewRef.current === ViewMode.Both
           ? null

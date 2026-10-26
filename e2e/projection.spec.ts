@@ -45,18 +45,20 @@ test.describe("slice 10 After projection and comparison", () => {
     await screenshotBoard(page, `${EVIDENCE}/after-dark-1440.png`);
   });
 
-  test("shared Target edited from After is the same value in Before (BA-02)", async ({ page }) => {
+  test("a Name edited from After stays in After; Before keeps its own (BA-02 as amended 2026-10-23)", async ({ page }) => {
     await loadOakPark(page);
     await viewLabel(page, "After").click();
     await waitForLayout(page);
     await page.getByText(DEMO_STEP).first().click();
     const target = aside(page).getByLabel("Name");
     await expect(target).toBeVisible();
-    await target.fill("shared after title");
+    await target.fill("after only title");
     await target.blur();
+    await expect(page.getByText("Read after only title").first()).toBeVisible();
     await viewLabel(page, "Before").click();
     await waitForLayout(page);
-    await expect(page.getByText("Read shared after title").first()).toBeVisible();
+    await expect(page.getByText(DEMO_STEP).first()).toBeVisible();
+    await expect(page.getByText("Read after only title")).toHaveCount(0);
     await screenshotBoard(page, `${EVIDENCE}/shared-edit-1440.png`);
   });
 
@@ -96,7 +98,7 @@ test.describe("slice 10 After projection and comparison", () => {
     expect(await laneZoom(page, "before")).toBeGreaterThan(beforeZoom);
   });
 
-  test("After may remove a Before-origin Step; Before reflects it (BA-04)", async ({ page }) => {
+  test("After may remove a Before-origin Step; Before keeps it (BA-04 as amended 2026-10-23)", async ({ page }) => {
     await loadOakPark(page);
     await viewLabel(page, "After").click();
     await waitForLayout(page);
@@ -105,7 +107,7 @@ test.describe("slice 10 After projection and comparison", () => {
     await expect(page.getByText("Review BS&A Software")).toHaveCount(0);
     await viewLabel(page, "Before").click();
     await waitForLayout(page);
-    await expect(page.getByText("Review BS&A Software")).toHaveCount(0);
+    await expect(page.getByText("Review BS&A Software").first()).toBeVisible();
     await screenshotBoard(page, `${EVIDENCE}/after-origin-removed-1440.png`);
   });
 

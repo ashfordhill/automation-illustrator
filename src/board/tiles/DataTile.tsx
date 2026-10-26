@@ -8,10 +8,12 @@ import { FitLabel } from "./FitLabel";
 
 export function DataTile({
   label,
+  color,
   selected,
   lifted,
 }: {
   label: string;
+  color?: string;
   selected?: boolean;
   lifted?: boolean;
 }) {
@@ -37,7 +39,7 @@ export function DataTile({
         boxSizing: "border-box",
       }}
     >
-      <DataChip />
+      <DataChip color={color} />
       <div className="data-label">
         <FitLabel text={text} maxFontSizePx={14} mode="box" maxLines={3} />
       </div>

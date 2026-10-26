@@ -7,6 +7,7 @@ import { prettyKey, KeyAction } from "../../keyboard/bindings";
 import { useStore } from "../../state/store";
 import { SelectionKind, ViewMode } from "../../workflow/catalogs";
 import { canRemovePath } from "../../workflow/commands";
+import { asLaneDocument } from "../../workflow/lane";
 import { MouseRightClickIcon } from "./MouseRightClickIcon";
 
 type Hint = { key: string; label: string; mark?: "stroke" };
@@ -178,6 +179,10 @@ function hintsFor(): { chips: Hint[]; spawnAfter: boolean | null } {
       spawnAfter: null,
     };
   }
+  const restart =
+    s.view === ViewMode.After && k[KeyAction.RestartAfter]
+      ? { key: pk(KeyAction.RestartAfter), label: "Restart" }
+      : null;
   if (s.selected?.type === SelectionKind.Edge) {
     if (s.view === ViewMode.Both) return { chips: [], spawnAfter: null };
     const items: Hint[] = [
@@ -185,9 +190,10 @@ function hintsFor(): { chips: Hint[]; spawnAfter: boolean | null } {
       { key: pk(KeyAction.Confirm), label: "Edit text" },
       { key: "Right-click", label: "delete" },
     ];
-    if (canRemovePath(s.workflow, s.selected.id)) {
+    if (canRemovePath(asLaneDocument(s.workflow, s.assignmentLane()), s.selected.id)) {
       items.push({ key: pk(KeyAction.Delete), label: "Remove Path" });
     }
+    if (restart) items.push(restart);
     return { chips: items, spawnAfter: null };
   }
   if (s.selected?.type === SelectionKind.Node) {
@@ -196,6 +202,7 @@ function hintsFor(): { chips: Hint[]; spawnAfter: boolean | null } {
     if (s.rightClickDelete) {
       chips.push({ key: "Right-click", label: "delete" });
     }
+    if (restart) chips.push(restart);
     return { chips, spawnAfter: true };
   }
   return { chips: [], spawnAfter: null };
@@ -218,7 +225,7 @@ export function CanvasHelper() {
       {spawnAfter !== null ? (
         <div className="canvas-helper-cluster">
           <SpawnHints />
-          {extras}
+          {extras.length ? <div className="canvas-helper-side">{extras}</div> : null}
         </div>
       ) : (
         extras

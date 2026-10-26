@@ -2,8 +2,8 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { DemoId } from "../demos/catalog";
 import { freshBoard, isEmptyBoard, OAK_PARK_IDS } from "../demos/oakParkInvoice";
 import { MAILROOM_IDS, robotMailroom } from "../demos/robotMailroom";
-import { ColorScheme, StepKind, ViewMode, WorkflowNodeKind } from "../workflow/catalogs";
-import { UNFOLD_NOTICE, isStepNode } from "../workflow/types";
+import { AssignmentLane, ColorScheme, StepKind, ViewMode, WorkflowNodeKind } from "../workflow/catalogs";
+import { isStepNode, laneAssignments, UNFOLD_NOTICE } from "../workflow/types";
 import * as persist from "./persistence";
 import { useStore } from "./store";
 
@@ -100,7 +100,9 @@ test("loadDoc unfolds leftover groups and notices", () => {
   useStore.getState().loadDoc(grouped);
   expect(useStore.getState().workflow.after.groups).toEqual([]);
   expect(useStore.getState().notice).toBe(UNFOLD_NOTICE);
-  expect(useStore.getState().workflow.after.assignments[MAILROOM_IDS.scan]).toBe(MAILROOM_IDS.mailbot);
+  expect(laneAssignments(useStore.getState().workflow, AssignmentLane.After)[MAILROOM_IDS.scan]).toBe(
+    MAILROOM_IDS.mailbot,
+  );
 });
 
 test("addStep on an empty board creates the root (WG-01)", () => {

@@ -1,11 +1,13 @@
 ---
-description: Keep workflow YAML/JSON serialization valid when document fields change
+description: Keep workflow file (.illustrator, YAML, JSON) serialization valid when document fields change
 alwaysApply: true
 ---
 
 # Workflow serialization
 
-The interchange format is the versioned `WorkflowDoc` as **YAML 1.2** (Export, Import, demo fixtures). YAML 1.2 is a JSON superset, so `.json` still imports. Browser **localStorage stays pretty JSON**. There is no custom file format.
+Workflow files are **`.illustrator`**: the versioned `WorkflowDoc` as pretty JSON behind a `type: "automation-illustrator"` / `version` / `source` header, like `.excalidraw` (`workflowToIllustrator`; Export and Save copy). Import reads `.illustrator` plus older **YAML 1.2** and `.json` files through one parser (`parseDocument`; JSON is a YAML 1.2 subset) and refuses a `type` that names another format. Demo fixtures stay YAML 1.2. Browser **localStorage stays pretty JSON** without the header.
+
+Files write keys in schema order (`normalizeForFile` in `src/workflow/serialize.ts`) so a board exports the same bytes however it was edited. List a new top-level or `after` field there in its schema position.
 
 ## When you change stored meaning
 
@@ -14,7 +16,7 @@ If you add, rename, remove, or change the meaning of a field on `WorkflowDoc` (a
 1. Update `src/workflow/types.ts` and the Zod schemas in `src/workflow/schema.ts`.
 2. If the on-disk shape breaks, bump `WORKFLOW_VERSION` and add a deterministic migrate path in `src/workflow/migrate.ts`. Do not silently drop user data.
 3. Edit the demo YAML in `src/demos/*.yaml` (not TypeScript factories). Loaders only parse/clone. Keep ID constants in the `.ts` files in sync with the YAML.
-4. Add or extend a round-trip test (`workflowToYaml` → `parseDocument`) and fixture parse tests.
+4. Add or extend a round-trip test (`workflowToIllustrator` and `workflowToYaml` → `parseDocument`) and fixture parse tests.
 5. Record a GOAL amendment when version or Import/Export behavior changes.
 
 ## Do not serialize
@@ -23,4 +25,4 @@ Derived ELK layout, viewports, interaction, undo history, theme, sound, and keyb
 
 ## YAML pitfalls
 
-Quote strings that YAML treats as syntax (`#` colors, `&`, `>`). Prefer the `yaml` package stringify for Export so quoting stays correct.
+Demo fixtures and older exports are YAML. Quote strings that YAML treats as syntax (`#` colors, `&`, `>`). Prefer the `yaml` package stringify (`workflowToYaml`) when writing YAML so quoting stays correct.

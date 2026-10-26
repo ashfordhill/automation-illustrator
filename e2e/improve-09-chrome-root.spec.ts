@@ -78,7 +78,7 @@ test.describe("Improvement 09 — tile chrome, Data root, After removal", () => 
     await expect(page.locator("[data-plus-taffy]")).toHaveCount(0);
   });
 
-  test("After remove updates Before; reloading a demo restores the fixture", async ({ page }) => {
+  test("After remove leaves Before; reloading a demo restores the fixture", async ({ page }) => {
     await loadOakPark(page);
     await viewLabel(page, "After").click();
     await waitForLayout(page);
@@ -87,7 +87,7 @@ test.describe("Improvement 09 — tile chrome, Data root, After removal", () => 
     await expect(page.getByText(REVIEW)).toHaveCount(0);
     await viewLabel(page, "Before").click();
     await waitForLayout(page);
-    await expect(page.getByText(REVIEW)).toHaveCount(0);
+    await expect(page.getByText(REVIEW).first()).toBeVisible();
 
     await page.getByText(DEMO_STEP).first().click();
     await aside(page).getByLabel("Name").fill("messed-up");

@@ -43,14 +43,15 @@ export function projectBefore(doc: WorkflowDoc): LaneProjection {
 }
 
 /**
- * After: the same Nodes and Paths as Before (After-only extras are dropped on
- * load). Who is lane-specific at render time, not in this graph.
+ * After: the Before board while After is following, otherwise After's own copy.
+ * Who is read from the same board at render time.
  */
 export function projectAfter(doc: WorkflowDoc): LaneProjection {
+  const board = doc.after.fork ?? { nodes: doc.nodes, edges: doc.edges };
   return {
     lane: AssignmentLane.After,
-    nodes: doc.nodes.map((n) => asProjected(n, "base")),
-    edges: doc.edges.map(asProjectedEdge),
+    nodes: board.nodes.map((n) => asProjected(n, "base")),
+    edges: board.edges.map(asProjectedEdge),
   };
 }
 

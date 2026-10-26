@@ -3,13 +3,18 @@
  * centered as a fixed 4-column cluster so wrapping does not shift cards (NA-05, NA-06).
  */
 import { IconX } from "@tabler/icons-react";
+import { normalizeAccessories } from "../../workflow/accessories";
 import { FIGURE_INK_ON_PASTEL, humansOf, robotsOf } from "../../workflow/actors";
-import { actorWhoAria, actorWhoCaption, isHuman, type ActorDto } from "../../workflow/types";
+import { AccessoryKind } from "../../workflow/catalogs";
+import { laneLooks } from "../../workflow/looks";
+import { actorWhoAria, actorWhoCaption, isHuman, type ActorDto, type ActorLooks } from "../../workflow/types";
+import { useStore } from "../../state/store";
 import { HumanFigure } from "../../board/tiles/HumanFigure";
 import { RobotFigure } from "../../board/tiles/RobotFigure";
 
 function ActorWhoButton({
   actor,
+  accessories,
   on,
   disabled,
   deleteMode,
@@ -18,6 +23,7 @@ function ActorWhoButton({
   onClick,
 }: {
   actor: ActorDto;
+  accessories?: readonly AccessoryKind[];
   on: boolean;
   disabled?: boolean;
   deleteMode?: boolean;
@@ -25,7 +31,6 @@ function ActorWhoButton({
   option?: boolean;
   onClick: () => void;
 }) {
-  const human = isHuman(actor);
   return (
     <button
       type="button"
@@ -38,8 +43,12 @@ function ActorWhoButton({
       onClick={onClick}
     >
       <span className="inspector-who-fig" style={{ background: actor.color }}>
-        {human ? (
-          <HumanFigure size={26} color={FIGURE_INK_ON_PASTEL} />
+        {isHuman(actor) ? (
+          <HumanFigure
+            size={26}
+            color={FIGURE_INK_ON_PASTEL}
+            accessories={accessories}
+          />
         ) : (
           <RobotFigure size={26} color={FIGURE_INK_ON_PASTEL} />
         )}
@@ -57,6 +66,7 @@ function ActorWhoButton({
 function KindRow({
   label,
   actors,
+  looks,
   selectedId,
   disabled,
   deleteMode,
@@ -66,6 +76,7 @@ function KindRow({
 }: {
   label: string;
   actors: ActorDto[];
+  looks: ActorLooks;
   selectedId: string | null;
   disabled?: boolean;
   deleteMode?: boolean;
@@ -80,6 +91,7 @@ function KindRow({
         <ActorWhoButton
           key={actor.id}
           actor={actor}
+          accessories={isHuman(actor) ? normalizeAccessories(looks[actor.id]?.accessories) : undefined}
           on={!deleteMode && actor.id === selectedId}
           disabled={disabled}
           deleteMode={deleteMode}
@@ -109,6 +121,7 @@ export function ActorWhoGrid({
   listbox?: boolean;
   ariaLabel: string;
 }) {
+  const looks = useStore((s) => laneLooks(s.workflow, s.assignmentLane()));
   return (
     <div
       className="inspector-who-groups"
@@ -118,6 +131,7 @@ export function ActorWhoGrid({
       <KindRow
         label="Humans"
         actors={humansOf(actors)}
+        looks={looks}
         selectedId={selectedId}
         disabled={disabled}
         deleteMode={deleteMode}
@@ -128,6 +142,7 @@ export function ActorWhoGrid({
       <KindRow
         label="Robots"
         actors={robotsOf(actors)}
+        looks={looks}
         selectedId={selectedId}
         disabled={disabled}
         deleteMode={deleteMode}

@@ -4,6 +4,7 @@ import { DemoId } from "../demos/catalog";
 import { OAK_PARK_IDS } from "../demos/oakParkInvoice";
 import { MAILROOM_IDS } from "../demos/robotMailroom";
 import { ColorScheme, SelectionKind, ViewMode, WorkflowNodeKind } from "../workflow/catalogs";
+import { projectAfter } from "./projection";
 import { MSG } from "../workflow/commands";
 import { validateWorkflow } from "../workflow/graph";
 import { emptyAfterOverlay, type WorkflowDoc } from "../workflow/types";
@@ -395,13 +396,14 @@ test("deleting a Tile selects its parent so Delete can walk the chain", () => {
   expect(useStore.getState().selected).toEqual({ type: SelectionKind.Node, id: OAK_PARK_IDS.web });
 });
 
-test("deleting a Tile in After selects its parent on the shared graph", () => {
+test("deleting a Tile in After leaves Before and selects the After parent", () => {
   const s = useStore.getState();
   s.requestDemo(DemoId.RobotMailroom);
   s.confirmReplaceDiscard();
   s.setView(ViewMode.After);
   s.select({ type: SelectionKind.Node, id: MAILROOM_IDS.scan });
   s.deleteSelection();
-  expect(useStore.getState().workflow.nodes.some((n) => n.id === MAILROOM_IDS.scan)).toBe(false);
+  expect(useStore.getState().workflow.nodes.some((n) => n.id === MAILROOM_IDS.scan)).toBe(true);
+  expect(projectAfter(useStore.getState().workflow).nodes.some((n) => n.id === MAILROOM_IDS.scan)).toBe(false);
   expect(useStore.getState().selected).toEqual({ type: SelectionKind.Node, id: MAILROOM_IDS.open });
 });

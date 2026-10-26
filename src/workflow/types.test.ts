@@ -14,13 +14,13 @@ import type { StepNodeDto } from "./types";
 test("Type picker includes Scan; Other is last", () => {
   expect(typePickerKinds(StepKind.Read)).toEqual([
     StepKind.Call,
-    StepKind.Copy,
     StepKind.Email,
     StepKind.Print,
     StepKind.Read,
     StepKind.Review,
     StepKind.Scan,
     StepKind.Search,
+    StepKind.Travel,
     StepKind.Write,
     StepKind.Other,
   ]);

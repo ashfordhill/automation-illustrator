@@ -2,9 +2,11 @@
  * Add / edit / delete humans and robots in the right inspector (NA-01, NA-02, NA-06).
  */
 import { IconTrash } from "@tabler/icons-react";
+import { AccessoryPicker } from "./AccessoryPicker";
 import { ActorColorField } from "./ActorColorField";
 import { InspectorField } from "./InspectorField";
 import { FIGURE_INK_ON_PASTEL } from "../../workflow/actors";
+import { accessoriesFor } from "../../workflow/looks";
 import { DEFAULT_HUMAN_ROLE, isHuman, isRobot } from "../../workflow/types";
 import { HumanFigure } from "../../board/tiles/HumanFigure";
 import { RobotFigure } from "../../board/tiles/RobotFigure";
@@ -13,6 +15,7 @@ import { ActorWhoGrid } from "./ActorWhoGrid";
 
 export function ManageActorsPanel() {
   const workflow = useStore((s) => s.workflow);
+  const lane = useStore((s) => s.assignmentLane());
   const actorId = useStore((s) => s.manageActorId);
   const deleteMode = useStore((s) => s.manageActorsDeleteMode);
   const pickedId = actorId ?? workflow.actors[0]?.id ?? null;
@@ -84,6 +87,12 @@ export function ManageActorsPanel() {
             onChange={(color) => useStore.getState().updateActor(actor.id, { color })}
           />
         </div>
+      ) : null}
+      {actor && !deleteMode && isHuman(actor) ? (
+        <AccessoryPicker
+          accessories={accessoriesFor(workflow, lane, actor)}
+          onChange={(accessories) => useStore.getState().setActorAccessories(actor.id, accessories)}
+        />
       ) : null}
       <ActorWhoGrid
         actors={workflow.actors}

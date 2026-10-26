@@ -2,8 +2,11 @@
  * Stick-figure person drawn on ActorColumn and the roster.
  * Stroke should stay dark on pastel fills (FIGURE_INK_ON_PASTEL), not theme --ink.
  * crop "head" is the inspector add-human key (Human vs Robot differ by the head).
- * Artwork lives in human-figure.svg.
+ * Artwork lives in human-figure.svg. Accessories draw on the full figure only.
  */
+import type { AccessoryKind } from "../../workflow/catalogs";
+import { normalizeAccessories } from "../../workflow/accessories";
+import { AccessoryMarks } from "./accessoryMarks";
 import humanMarkup from "./human-figure.svg?raw";
 import { svgInner } from "./svgInner";
 
@@ -16,8 +19,10 @@ export function HumanFigure({
   color = "var(--ink)",
   className,
   crop = "full",
-}: Fig & { crop?: "full" | "head" }) {
+  accessories,
+}: Fig & { crop?: "full" | "head"; accessories?: readonly AccessoryKind[] }) {
   const head = crop === "head";
+  const worn = head ? [] : normalizeAccessories(accessories);
   return (
     <svg
       className={className}
@@ -28,7 +33,9 @@ export function HumanFigure({
       fill="none"
       aria-hidden
       color={color}
-      dangerouslySetInnerHTML={{ __html: INNER }}
-    />
+    >
+      <g dangerouslySetInnerHTML={{ __html: INNER }} />
+      {worn.length ? <AccessoryMarks kinds={worn} /> : null}
+    </svg>
   );
 }

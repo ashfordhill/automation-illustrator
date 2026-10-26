@@ -3,9 +3,9 @@ import { DemoId } from "../demos/catalog";
 import { OAK_PARK_IDS, oakParkInvoice } from "../demos/oakParkInvoice";
 import { MAILROOM_IDS, robotMailroom } from "../demos/robotMailroom";
 import mailroomYaml from "../demos/robot-mailroom.yaml?raw";
-import { ColorScheme, ViewMode } from "../workflow/catalogs";
-import { workflowToYaml } from "../workflow/serialize";
-import { UNFOLD_NOTICE } from "../workflow/types";
+import { AssignmentLane, ColorScheme, ViewMode } from "../workflow/catalogs";
+import { workflowToIllustrator, workflowToYaml } from "../workflow/serialize";
+import { laneAssignments, UNFOLD_NOTICE } from "../workflow/types";
 import * as persist from "./persistence";
 import { useStore } from "./store";
 
@@ -68,6 +68,26 @@ test("Import JSON of the live board round-trips titles", () => {
   expect(useStore.getState().workflow.nodes.find((n) => n.id === OAK_PARK_IDS.read)).toMatchObject({
     title: "edited.pdf",
   });
+});
+
+test("Import of an exported .illustrator file restores the live board exactly", () => {
+  useStore.getState().updateNode(OAK_PARK_IDS.read, { title: "edited.pdf" });
+  const exported = useStore.getState().workflow;
+  const text = workflowToIllustrator(exported);
+  useStore.getState().requestDemo(DemoId.RobotMailroom);
+  useStore.getState().confirmReplaceDiscard();
+  expect(useStore.getState().workflow.nodes[0]?.id).toBe(MAILROOM_IDS.open);
+  expect(useStore.getState().importRaw(text).ok).toBe(true);
+  useStore.getState().confirmReplaceDiscard();
+  expect(useStore.getState().workflow).toEqual(exported);
+});
+
+test("an .excalidraw file is refused without opening the replace gate", () => {
+  const before = useStore.getState().workflow;
+  useStore.getState().importRaw('{"type":"excalidraw","version":2,"elements":[]}');
+  expect(useStore.getState().importError).toMatch(/not an Automation Illustrator workflow/);
+  expect(useStore.getState().pendingReplace).toBeNull();
+  expect(useStore.getState().workflow).toBe(before);
 });
 
 test("invalid YAML sets importError and never opens the replace gate", () => {
@@ -146,7 +166,7 @@ test("Import of YAML with leftover merge groups unfolds and notices", () => {
   useStore.getState().confirmReplaceDiscard();
   expect(useStore.getState().workflow.after.groups).toEqual([]);
   expect(useStore.getState().notice).toBe(UNFOLD_NOTICE);
-  expect(useStore.getState().workflow.after.assignments[MAILROOM_IDS.scan]).toBe(
+  expect(laneAssignments(useStore.getState().workflow, AssignmentLane.After)[MAILROOM_IDS.scan]).toBe(
     MAILROOM_IDS.mailbot,
   );
 });

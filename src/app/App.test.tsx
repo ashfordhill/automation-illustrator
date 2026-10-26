@@ -157,13 +157,13 @@ test("inspector Type buttons are alphabetical with Other last; Who offers every 
   expect(types.at(-1)).toBe("Type Other");
   expect(types.slice(0, -1)).toEqual([
     "Type Call",
-    "Type Copy",
     "Type Email",
     "Type Print",
     "Type Read",
     "Type Review",
     "Type Scan",
     "Type Search",
+    "Type Travel",
     "Type Write",
   ]);
   expect(host.querySelector('[aria-label="Type Other"]')?.classList.contains("is-other")).toBe(true);
@@ -178,7 +178,7 @@ test("inspector Type buttons are alphabetical with Other last; Who offers every 
   expect(useStore.getState().workflow.assignments[OAK_PARK_IDS.read]).toBe(OAK_PARK_IDS.robot);
 });
 
-test("idle inspector is Actors; Step has trash and no Actors/Back", () => {
+test("Step and Data editors have Actors; Back returns to that tile", () => {
   expect(host.querySelector(".inspector-header #manage-actors-btn")).toBeNull();
   expect(host.querySelector('[aria-label="Add human"]')).not.toBeNull();
 
@@ -190,18 +190,18 @@ test("idle inspector is Actors; Step has trash and no Actors/Back", () => {
   const who = rail?.querySelector(".inspector-who-groups");
   const trash = rail?.querySelector('[aria-label="Remove Step"]');
   expect(type && who && trash).toBeTruthy();
-  expect(rail?.querySelector("#manage-actors-btn")).toBeNull();
+  expect(rail?.querySelector("#manage-actors-btn")).not.toBeNull();
   expect(rail?.querySelector(".inspector-back")).toBeNull();
   expect(type!.compareDocumentPosition(who!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 
   act(() => {
     useStore.getState().openManageActors();
   });
-  expect(useStore.getState().selected).toBeNull();
-  expect(useStore.getState().manageActorsSource).toBe("step");
+  expect(useStore.getState().selected).toEqual({ type: SelectionKind.Node, id: OAK_PARK_IDS.read });
+  expect(useStore.getState().manageActorsSource).toBe("tile");
   expect(useStore.getState().manageActorId).toBe(OAK_PARK_IDS.alice);
   expect(rail?.querySelector("#manage-actors-btn")).toBeNull();
-  expect(rail?.querySelector(".inspector-back")).toBeNull();
+  expect(rail?.querySelector(".inspector-back")).not.toBeNull();
   expect(rail?.querySelector('[aria-label="Remove Step"]')).toBeNull();
   const ops = rail?.querySelector(".inspector-actor-ops");
   const edit = rail?.querySelector(".inspector-actor-edit");
@@ -232,8 +232,23 @@ test("idle inspector is Actors; Step has trash and no Actors/Back", () => {
     useStore.getState().closeManageActors({ restoreFocus: false });
     useStore.getState().select({ type: SelectionKind.Node, id: OAK_PARK_IDS.acct });
   });
-  expect(host.querySelector("#manage-actors-btn")).toBeNull();
+  expect(host.querySelector("#manage-actors-btn")).not.toBeNull();
+  expect(host.querySelector('[aria-label="Data color"]')).not.toBeNull();
+  expect(host.querySelector("#data-label-field")).not.toBeNull();
   expect(host.querySelector('[aria-label="Remove Data"]')).not.toBeNull();
+  act(() => {
+    useStore.getState().openManageActors();
+  });
+  expect(useStore.getState().selected).toEqual({ type: SelectionKind.Node, id: OAK_PARK_IDS.acct });
+  expect(useStore.getState().manageActorsSource).toBe("tile");
+  expect(host.querySelector(".inspector-back")).not.toBeNull();
+  expect(host.querySelector('[aria-label="Remove Data"]')).toBeNull();
+  act(() => {
+    host.querySelector<HTMLButtonElement>(".inspector-back")?.click();
+  });
+  expect(useStore.getState().manageActorsOpen).toBe(false);
+  expect(host.querySelector("#data-label-field")).not.toBeNull();
+  expect(host.querySelector(".inspector-back")).toBeNull();
 });
 
 test("selected Path hints always include Right-click delete and Edit text", () => {

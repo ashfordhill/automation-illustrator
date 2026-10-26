@@ -33,17 +33,45 @@ afterEach(() => {
   resetSession();
 });
 
-test("shared base fields edited from After update Before immediately (BA-02)", () => {
-  useStore.getState().setView(ViewMode.After);
-  useStore.getState().updateNode(OAK_PARK_IDS.read, { title: "shared-from-after" });
-  const afterEdit = useStore.getState().workflow.nodes.find((n) => n.id === OAK_PARK_IDS.read);
-  expect(afterEdit && isStepNode(afterEdit) && afterEdit.title).toBe("shared-from-after");
-  useStore.getState().setView(ViewMode.Before);
-  const still = useStore.getState().workflow.nodes.find((n) => n.id === OAK_PARK_IDS.read);
-  expect(still && isStepNode(still) && still.title).toBe("shared-from-after");
+test("After edits stay on After; Restart copies the current Before board", () => {
+  const s = useStore.getState();
+  s.requestNew();
+  s.confirmReplaceDiscard();
+  const id = s.addStep();
+  const alice = useStore.getState().workflow.actors.find((a) => a.name === "Alice");
+  const roy = useStore.getState().workflow.actors.find((a) => a.name === "Roy");
+  expect(alice && roy).toBeTruthy();
+  s.assignActor(id, roy!.id);
+  expect(useStore.getState().workflow.after.fork).toBeNull();
+  expect(projectAfter(useStore.getState().workflow).nodes.map((n) => n.id)).toEqual([id]);
+
+  s.setView(ViewMode.After);
+  s.updateNode(id, { title: "only-after" });
+  const doc = useStore.getState().workflow;
+  const before = doc.nodes.find((n) => n.id === id);
+  const after = doc.after.fork?.nodes.find((n) => n.id === id);
+  expect(before && isStepNode(before) && before.title).toBe("");
+  expect(after && isStepNode(after) && after.title).toBe("only-after");
+  expect(doc.assignments[id]).toBe(roy!.id);
+
+  s.setView(ViewMode.Before);
+  s.updateNode(id, { title: "before-title" });
+  s.assignActor(id, alice!.id);
+  const forked = useStore.getState().workflow.after.fork;
+  const forkedStep = forked?.nodes.find((n) => n.id === id);
+  expect(forkedStep && isStepNode(forkedStep) && forkedStep.title).toBe("only-after");
+  expect(forked?.assignments[id]).toBe(roy!.id);
+
+  s.setView(ViewMode.After);
+  s.restartAfter();
+  const reset = useStore.getState().workflow;
+  expect(reset.after.fork).toBeNull();
+  const shown = projectAfter(reset).nodes.find((n) => n.id === id);
+  expect(shown && isStepNode(shown) && shown.title).toBe("before-title");
+  expect(reset.assignments[id]).toBe(alice!.id);
 });
 
-test("Both does not mutate; After may remove a Before-origin Step (BA-04, BA-05)", () => {
+test("Both does not mutate; removing a Step in After leaves Before in place", () => {
   const s = useStore.getState();
   const title = s.workflow.nodes.find((n) => n.id === OAK_PARK_IDS.read);
   const beforeTitle = title && isStepNode(title) ? title.title : "";
@@ -54,9 +82,12 @@ test("Both does not mutate; After may remove a Before-origin Step (BA-04, BA-05)
 
   s.setView(ViewMode.After);
   s.beginRemovePick(OAK_PARK_IDS.review);
-  expect(useStore.getState().workflow.nodes.some((n) => n.id === OAK_PARK_IDS.review)).toBe(false);
+  expect(useStore.getState().workflow.nodes.some((n) => n.id === OAK_PARK_IDS.review)).toBe(true);
+  expect(projectAfter(useStore.getState().workflow).nodes.some((n) => n.id === OAK_PARK_IDS.review)).toBe(
+    false,
+  );
   s.setView(ViewMode.Before);
-  expect(useStore.getState().workflow.nodes.some((n) => n.id === OAK_PARK_IDS.review)).toBe(false);
+  expect(useStore.getState().workflow.nodes.some((n) => n.id === OAK_PARK_IDS.review)).toBe(true);
 });
 
 test("Robot Mailroom After is 1:1 with Before (no receipt extra)", () => {

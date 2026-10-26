@@ -4,17 +4,17 @@
  *
  * Persistence status is saved / dirty / unavailable (SH-11). Failed startup
  * payloads stay under LS_WORKFLOW until the user downloads or starts fresh (SH-10).
- * localStorage is pretty JSON. Export and Save copy download YAML (SH-13).
+ * localStorage is pretty JSON. Export and Save copy download a `.illustrator` file (SH-13).
  */
 import { restoreBlankActorFills } from "../workflow/actors";
 import { ColorScheme } from "../workflow/catalogs";
 import { parseDocument } from "../workflow/migrate";
 import type { GraphViolation } from "../workflow/graph";
 import {
+  ILLUSTRATOR_FILE_MIME,
   WORKFLOW_JSON_MIME,
-  WORKFLOW_YAML_MIME,
   workflowExportFilename,
-  workflowToYaml,
+  workflowToIllustrator,
 } from "../workflow/serialize";
 import {
   parseBoardOrientation,
@@ -59,7 +59,7 @@ export type HydrateResult = {
   droppedAfterOnly?: boolean;
 };
 
-/** Pretty JSON for localStorage. Files use YAML via workflowToYaml. */
+/** Pretty JSON for localStorage. Files use workflowToIllustrator. */
 export function toJson(doc: WorkflowDoc): string {
   return JSON.stringify(doc, null, 2);
 }
@@ -86,14 +86,14 @@ export const LS_CHROME_THEME = "automation-pitch.chrome-theme";
 export const LS_THEMES = "automation-pitch.themes";
 export const THEMES_STORAGE_VERSION = 1;
 export const MIGRATED_THEME_NAME = "My theme";
-export const SAVE_COPY_FILENAME = "untitled.yaml";
+export const SAVE_COPY_FILENAME = "untitled.illustrator";
 export const RECOVERY_COPY_FILENAME = "automation-pitch.recovery.json";
 
 /** Trigger a file download. No-op when Blob URLs are missing. */
 export function downloadTextFile(
   filename: string,
   contents: string,
-  mimeType: string = WORKFLOW_YAML_MIME,
+  mimeType: string = ILLUSTRATOR_FILE_MIME,
 ): void {
   if (typeof document === "undefined" || typeof URL.createObjectURL !== "function") {
     return;
@@ -110,9 +110,9 @@ export function downloadTextFile(
   URL.revokeObjectURL(url);
 }
 
-/** Export / Save copy of the live validated v2 document as YAML. */
+/** Export / Save copy of the live validated v2 document as a `.illustrator` file. */
 export function downloadWorkflowCopy(doc: WorkflowDoc): void {
-  downloadTextFile(workflowExportFilename(doc), workflowToYaml(doc), WORKFLOW_YAML_MIME);
+  downloadTextFile(workflowExportFilename(doc), workflowToIllustrator(doc), ILLUSTRATOR_FILE_MIME);
 }
 
 /** Download the untouched failed startup payload (SH-10). */

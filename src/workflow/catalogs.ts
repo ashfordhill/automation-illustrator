@@ -39,6 +39,17 @@ export const ActorKind = {
 } as const;
 export type ActorKind = (typeof ActorKind)[keyof typeof ActorKind];
 
+/**
+ * Worn only by Humans. Add a value here, a row in accessories.ts, and a drawing
+ * in board/tiles/accessoryMarks.tsx.
+ */
+export const AccessoryKind = {
+  Sunglasses: "sunglasses",
+  Tablet: "tablet",
+  Scanner: "scanner",
+} as const;
+export type AccessoryKind = (typeof AccessoryKind)[keyof typeof AccessoryKind];
+
 /** Stored as `ai` in JSON; UI label is LLM (see ROBOT_KIND_LABEL). */
 export const RobotKind = {
   Llm: "ai",
@@ -59,7 +70,7 @@ export const StepKind = {
   Search: "search",
   Write: "write",
   Review: "review",
-  Copy: "copy",
+  Travel: "travel",
   Print: "print",
   Email: "email",
   Drag: "drag",
@@ -149,5 +160,6 @@ export const KeyAction = {
   AddDataIn: "addDataIn",
   AddDataOut: "addDataOut",
   LinkExisting: "linkExisting",
+  RestartAfter: "restartAfter",
 } as const;
 export type KeyAction = (typeof KeyAction)[keyof typeof KeyAction];

@@ -6,10 +6,10 @@ import {
   connectAfter,
   planAfterOnlyRemoval,
 } from "./after";
-import { ActorKind, RobotKind, SplitKind, StepKind, WorkflowNodeKind } from "./catalogs";
+import { ActorKind, AssignmentLane, RobotKind, SplitKind, StepKind, WorkflowNodeKind } from "./catalogs";
 import { validateWorkflow } from "./graph";
 import { parseDocument } from "./migrate";
-import { dropAfterOnlyOverlay, emptyAfterOverlay, UNFOLD_NOTICE, unfoldMergeGroups, type EdgeDto, type NodeDto, type StepNodeDto, type WorkflowDoc } from "./types";
+import { dropAfterOnlyOverlay, emptyAfterOverlay, laneAssignments, UNFOLD_NOTICE, unfoldMergeGroups, type EdgeDto, type NodeDto, type StepNodeDto, type WorkflowDoc } from "./types";
 import { MAILROOM_IDS, robotMailroom } from "../demos/robotMailroom";
 
 function step(id: string, y = 0, x = 0): StepNodeDto {
@@ -195,9 +195,10 @@ test("load unfolds merge groups and keeps After Robot Who", () => {
   if (!parsed.ok) return;
   expect(parsed.unfolded).toBe(true);
   expect(parsed.doc.after.groups).toEqual([]);
-  expect(parsed.doc.after.assignments[MAILROOM_IDS.scan]).toBe(MAILROOM_IDS.mailbot);
-  expect(parsed.doc.after.assignments[MAILROOM_IDS.lookup]).toBe(MAILROOM_IDS.mailbot);
-  expect(parsed.doc.after.assignments[MAILROOM_IDS.route]).toBe(MAILROOM_IDS.mailbot);
+  const afterWho = laneAssignments(parsed.doc, AssignmentLane.After);
+  expect(afterWho[MAILROOM_IDS.scan]).toBe(MAILROOM_IDS.mailbot);
+  expect(afterWho[MAILROOM_IDS.lookup]).toBe(MAILROOM_IDS.mailbot);
+  expect(afterWho[MAILROOM_IDS.route]).toBe(MAILROOM_IDS.mailbot);
   expect(parsed.droppedAfterOnly).toBe(false);
   expect(parsed.doc.after.extraNodes).toEqual([]);
   const again = unfoldMergeGroups(parsed.doc);
@@ -210,10 +211,14 @@ test("dropAfterOnlyOverlay removes extras and extra-only After Who", () => {
   const withExtras: WorkflowDoc = {
     ...mail,
     after: {
-      ...mail.after,
+      assignments: {
+        ...(mail.after.fork?.assignments ?? {}),
+        [MAILROOM_IDS.receipt]: MAILROOM_IDS.mailbot,
+      },
+      groups: [],
       extraNodes: [step(MAILROOM_IDS.receipt, 32, 1504)],
       extraEdges: [path(MAILROOM_IDS.extra, MAILROOM_IDS.route, MAILROOM_IDS.receipt)],
-      assignments: { ...mail.after.assignments, [MAILROOM_IDS.receipt]: MAILROOM_IDS.mailbot },
+      fork: null,
     },
   };
   const dropped = dropAfterOnlyOverlay(withExtras);
@@ -227,6 +232,7 @@ test("dropAfterOnlyOverlay removes extras and extra-only After Who", () => {
   const parsed = parseDocument(JSON.stringify(withExtras));
   expect(parsed.ok).toBe(true);
   if (!parsed.ok) return;
-  expect(parsed.droppedAfterOnly).toBe(true);
+  expect(parsed.droppedAfterOnly).toBe(false);
   expect(parsed.doc.after.extraNodes).toEqual([]);
+  expect(parsed.doc.after.fork?.nodes.some((n) => n.id === MAILROOM_IDS.receipt)).toBe(true);
 });

@@ -6,7 +6,7 @@ import { HumanFigure } from "./HumanFigure";
 import { RobotFigure } from "./RobotFigure";
 import { ACTOR_W } from "../layout/tileMetrics";
 import { FIGURE_INK_ON_PASTEL } from "../../workflow/actors";
-import { ActorKind } from "../../workflow/catalogs";
+import { AccessoryKind, ActorKind } from "../../workflow/catalogs";
 import {
   DEFAULT_HUMAN_ROLE,
   isHuman,
@@ -46,7 +46,13 @@ function Chip({
   );
 }
 
-export function ActorColumn({ actor }: { actor: ActorDto | undefined }) {
+export function ActorColumn({
+  actor,
+  accessories,
+}: {
+  actor: ActorDto | undefined;
+  accessories?: readonly AccessoryKind[];
+}) {
   const human = actor?.kind !== ActorKind.Robot;
   const role = isHuman(actor)
     ? (actor.role ?? "").trim() || DEFAULT_HUMAN_ROLE
@@ -83,7 +89,11 @@ export function ActorColumn({ actor }: { actor: ActorDto | undefined }) {
         }}
       >
         {human ? (
-          <HumanFigure size={36} color={FIGURE_INK_ON_PASTEL} />
+          <HumanFigure
+            size={36}
+            color={FIGURE_INK_ON_PASTEL}
+            accessories={accessories}
+          />
         ) : (
           <RobotFigure size={36} color={FIGURE_INK_ON_PASTEL} />
         )}

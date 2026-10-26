@@ -1507,3 +1507,24 @@ Append to `## Amendments` in `.docs/GOAL.md`: P-09; SH-08; NG-07, SH-13 as dated
 Commit: `feat(improve-66): theme presets, Save, theme files, paper texture`  
 Evidence: `.docs/evidence/improve-66-theme-presets/`
 
+---
+
+# Improvement 67 — `.illustrator` workflow files
+
+Requested 2026-10-26. User request: Import / Export a workflow file format of its own, like `.excalidraw`, rather than plain YAML or JSON, so a later repo can find and render `.illustrator` files (an Action in the style of `ashfordhill/action-excalidraw-render`). Also: make sure Import / Export serializes the 2026-10-23 additions (After copy, look books, Data color, Travel) correctly.
+
+## Locked decisions
+
+- A `.illustrator` file is pretty JSON (2-space indent, trailing newline): `type: "automation-illustrator"`, `version`, `source: "https://github.com/ashfordhill/automation-illustrator"`, then the validated v2 `WorkflowDoc` fields. `source` is fixed (not the page origin) so the same board exports the same bytes from any host.
+- **Export** and **Save copy** download `<slug>.illustrator` (`Oak Park Invoice` → `oak-park-invoice.illustrator`) as `application/vnd.automation-illustrator+json`.
+- **Import** offers `.illustrator` first and still accepts `.yaml`, `.yml`, and `.json`. One parser (`parseDocument`): a `type` header is dropped before validation; a file whose `type` names another format (an `.excalidraw` file) is refused with "This file is not an Automation Illustrator workflow."; headerless files load as before.
+- Files write keys in schema order (`normalizeForFile`), so a name or look book added mid-session does not reorder the next export. Fields not listed there still pass through.
+- `WORKFLOW_VERSION` stays 2. localStorage (pretty JSON, no header), demo fixtures (YAML), the recovery copy (`.json`), and theme files (`.theme.yaml`) are unchanged. No new dependency.
+- Agent rules: `.cursor/rules/workflow-serialization.mdc` and the workflow-files line in `.cursor/rules/agent-handoff.mdc` describe `.illustrator`.
+
+## Contract
+
+Append to `## Amendments` in `.docs/GOAL.md`: SH-05, SH-08, SH-13 as dated 2026-10-26.
+
+Commit: `feat(improve-67): export and import .illustrator workflow files`  
+Evidence: `.docs/evidence/improve-67-illustrator-files/`

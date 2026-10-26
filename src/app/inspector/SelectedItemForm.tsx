@@ -1,39 +1,58 @@
 /**
  * Right inspector: idle Actors roster, or the selected Step / Data / Path form.
- * Both is read-only comparison (BA-05). After edits the shared base graph.
+ * Both is read-only comparison (BA-05). After edits its own copy, never Before.
  */
 import { ActionIcon, Stack, Text, TextInput, Tooltip } from "@mantine/core";
 import { IconTrash } from "@tabler/icons-react";
 import {
+  ColorScheme,
   SelectionKind,
   StepKind,
   ViewMode,
   WorkflowNodeKind,
 } from "../../workflow/catalogs";
+import { ACTOR_COLOR_SWATCHES } from "../../workflow/actors";
 import { edgeIsDotted } from "../../workflow/graph";
-import { laneAssignments, STEP_KIND_META } from "../../workflow/types";
-import { findEdge, findNode } from "../../workflow/selectors";
+import { laneAssignments, laneBoard, STEP_KIND_META } from "../../workflow/types";
+import { findNode } from "../../workflow/selectors";
+import { DATA_MARK_DARK, DATA_MARK_LIGHT } from "../../board/tiles/DataChip";
 import { useStore } from "../../state/store";
+import { ColorField } from "../theme/ColorField";
 import { InspectorField } from "./InspectorField";
 import { ManageActorsPanel } from "./ManageActorsPanel";
 import { TypeButtons } from "./TypeButtons";
 import { WhoButtons } from "./WhoButtons";
 import "./compareDisabled.css";
 
+const DATA_COLOR_SWATCHES = [DATA_MARK_LIGHT, DATA_MARK_DARK, ...ACTOR_COLOR_SWATCHES];
+
 function InspectorHeader({
   title,
   removeLabel,
   onRemove,
+  onActors,
 }: {
   title?: string;
   removeLabel?: string;
   onRemove?: () => void;
+  onActors?: () => void;
 }) {
-  if (!title && !(removeLabel && onRemove)) return null;
+  const showTrash = Boolean(removeLabel && onRemove);
+  if (!title && !showTrash && !onActors) return null;
   return (
     <div className={`inspector-header${title ? "" : " is-tools"}`}>
       {title ? <Text fw={800}>{title}</Text> : <span />}
       <div className="inspector-header-tools">
+        {onActors ? (
+          <button
+            id="manage-actors-btn"
+            type="button"
+            className="inspector-actors"
+            onClick={onActors}
+          >
+            Actors
+          </button>
+        ) : null}
         {removeLabel && onRemove ? (
           <Tooltip label={removeLabel}>
             <ActionIcon
@@ -94,18 +113,44 @@ export function DetailsPanel() {
   const workflow = useStore((s) => s.workflow);
   const lane = useStore((s) => s.assignmentLane());
   const view = useStore((s) => s.view);
+  const scheme = useStore((s) => s.colorScheme);
+  const actorsFromTile = useStore(
+    (s) => s.manageActorsOpen && s.manageActorsSource === "tile",
+  );
   const readOnly = view === ViewMode.Both;
   const selectedNode =
-    selected?.type === SelectionKind.Node ? findNode(workflow, selected.id) : undefined;
+    selected?.type === SelectionKind.Node ? findNode(workflow, selected.id, lane) : undefined;
   const showRemove =
     !readOnly &&
     Boolean(selectedNode) &&
     (view === ViewMode.Before || view === ViewMode.After);
+  const tileSelected =
+    selectedNode?.type === WorkflowNodeKind.Step ||
+    selectedNode?.type === WorkflowNodeKind.DataField;
   const removeLabel = selectedNode
     ? selectedNode.type === WorkflowNodeKind.DataField
       ? "Remove Data"
       : "Remove Step"
     : undefined;
+
+  if (actorsFromTile && !readOnly) {
+    return (
+      <Stack gap="xs" p="sm" className="chrome-hide">
+        <div className="inspector-header is-tools">
+          <div className="inspector-header-tools is-back">
+            <button
+              type="button"
+              className="inspector-back"
+              onClick={() => useStore.getState().closeManageActors()}
+            >
+              Back
+            </button>
+          </div>
+        </div>
+        <ManageActorsPanel />
+      </Stack>
+    );
+  }
 
   const header = (
     <InspectorHeader
@@ -115,6 +160,9 @@ export function DetailsPanel() {
         showRemove && selectedNode
           ? () => useStore.getState().removeTarget(selectedNode.id)
           : undefined
+      }
+      onActors={
+        !readOnly && tileSelected ? () => useStore.getState().openManageActors() : undefined
       }
     />
   );
@@ -138,16 +186,29 @@ export function DetailsPanel() {
     const n = selectedNode;
     if (!n) return null;
     if (n.type === WorkflowNodeKind.DataField) {
+      const fallback = scheme === ColorScheme.Dark ? DATA_MARK_DARK : DATA_MARK_LIGHT;
+      const mark = n.color?.trim() || fallback;
       return (
         <Stack gap="xs" p="sm" className="chrome-hide">
           {header}
-          <TextInput
-            id="data-label-field"
-            label="Label"
-            value={n.label}
-            disabled={readOnly}
-            onChange={(e) => useStore.getState().updateNode(n.id, { label: e.target.value })}
-          />
+          <div className="inspector-actor-edit">
+            <div className="inspector-actor-edit-text">
+              <TextInput
+                id="data-label-field"
+                label="Label"
+                value={n.label}
+                disabled={readOnly}
+                onChange={(e) => useStore.getState().updateNode(n.id, { label: e.target.value })}
+              />
+            </div>
+            <ColorField
+              value={mark}
+              ariaLabel="Data color"
+              disabled={readOnly}
+              swatches={DATA_COLOR_SWATCHES}
+              onChange={(color) => useStore.getState().updateNode(n.id, { color })}
+            />
+          </div>
         </Stack>
       );
     }
@@ -190,10 +251,10 @@ export function DetailsPanel() {
   }
 
   if (selected.type === SelectionKind.Edge) {
-    const e = findEdge(workflow, selected.id);
+    const board = laneBoard(workflow, lane);
+    const e = board.edges.find((edge) => edge.id === selected.id);
     if (!e) return null;
-    const graph = { nodes: workflow.nodes, edges: workflow.edges };
-    const dotted = edgeIsDotted(graph.nodes, graph.edges, e);
+    const dotted = edgeIsDotted(board.nodes, board.edges, e);
     return (
       <Stack gap="xs" p="sm" className="chrome-hide">
         {header}
