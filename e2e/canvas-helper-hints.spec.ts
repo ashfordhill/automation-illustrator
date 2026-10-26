@@ -32,7 +32,7 @@ test.describe("canvas helper hints", () => {
 
     await page.getByRole("button", { name: "Right-click delete" }).click();
     await expect(page.locator(".canvas-helper")).toContainText("Right-click");
-    const chip = page.locator(".canvas-helper-cluster > .canvas-helper-chip");
+    const chip = page.locator(".canvas-helper-cluster > .canvas-helper-side > .canvas-helper-chip");
     await expect(chip).toBeVisible();
 
     const after = await spawn.boundingBox();

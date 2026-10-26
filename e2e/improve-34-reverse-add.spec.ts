@@ -90,7 +90,7 @@ test.describe("Improvement 34 — add Tiles and Paths to the left", () => {
     await capturePage(page, `${EVIDENCE}/fan-in-1440.png`);
   });
 
-  test("After Q adds a shared parent Step visible in Before", async ({ page }) => {
+  test("After Q adds a parent Step only in After", async ({ page }) => {
     await loadOakPark(page);
     await viewLabel(page, "After").click();
     await waitForLayout(page);
@@ -107,7 +107,7 @@ test.describe("Improvement 34 — add Tiles and Paths to the left", () => {
     await capturePage(page, `${EVIDENCE}/after-left-step-1440.png`);
     await viewLabel(page, "Before").click();
     await waitForLayout(page);
-    await expect(page.locator(".react-flow__node")).toHaveCount(afterCount + 1);
+    await expect(page.locator(".react-flow__node")).toHaveCount(afterCount);
   });
 
   test("deleting the last Tile returns the empty board", async ({ page }) => {
