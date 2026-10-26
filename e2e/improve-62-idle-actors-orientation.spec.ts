@@ -40,7 +40,7 @@ test.describe("Improvement 62 — idle Actors and orientation trees", () => {
     await page.getByText(DEMO_STEP).first().click();
     await expect(aside.getByRole("button", { name: "Type Read" })).toBeVisible();
     await expect(aside.getByRole("button", { name: "Remove Step" })).toBeVisible();
-    await expect(aside.getByRole("button", { name: "Actors", exact: true })).toHaveCount(0);
+    await expect(aside.getByRole("button", { name: "Actors", exact: true })).toBeVisible();
     await showActorsHome(page);
     await expect(aside.getByRole("option", { name: "Alice" })).toHaveAttribute("aria-selected", "true");
     await expectAxeClean(page);

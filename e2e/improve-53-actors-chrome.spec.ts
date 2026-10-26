@@ -18,7 +18,7 @@ async function newBoardWithStep(page: import("@playwright/test").Page) {
 }
 
 test.describe("Improvement 53 — Actors header text and headshot add", () => {
-  test("idle inspector is the Actors roster; Data and Step have no Actors/Back", async ({ page }) => {
+  test("idle inspector is the Actors roster; tile editors have Actors", async ({ page }) => {
     await loadOakPark(page);
     await expect(aside(page).getByRole("button", { name: "Add human" })).toBeVisible();
     await expect(aside(page).getByRole("button", { name: "Actors", exact: true })).toHaveCount(0);
@@ -27,7 +27,8 @@ test.describe("Improvement 53 — Actors header text and headshot add", () => {
 
     await page.getByText("Account #").first().click();
     await expect(aside(page).getByRole("button", { name: "Remove Data" })).toBeVisible();
-    await expect(aside(page).getByRole("button", { name: "Actors", exact: true })).toHaveCount(0);
+    await expect(aside(page).getByRole("button", { name: "Actors", exact: true })).toBeVisible();
+    await expect(aside(page).getByRole("button", { name: "Data color" })).toBeVisible();
 
     await page.getByText("Read invoice.pdf").first().click();
     const who = aside(page).locator(".inspector-who-groups");
@@ -35,7 +36,7 @@ test.describe("Improvement 53 — Actors header text and headshot add", () => {
     const trash = aside(page).getByRole("button", { name: "Remove Step" });
     await expect(who).toBeVisible();
     await expect(type.first()).toBeVisible();
-    await expect(aside(page).getByRole("button", { name: "Actors", exact: true })).toHaveCount(0);
+    await expect(aside(page).getByRole("button", { name: "Actors", exact: true })).toBeVisible();
     await expect(trash).toBeVisible();
     const whoBox = await who.boundingBox();
     const typeBox = await type.first().boundingBox();

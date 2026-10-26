@@ -5,7 +5,7 @@ import { ActorKind, SplitKind, StepKind, WorkflowNodeKind } from "./catalogs";
 import { validateWorkflow, type GraphViolationCode } from "./graph";
 import { parseDocument } from "./migrate";
 import { workflowDocV2Schema } from "./schema";
-import { emptyAfterOverlay, emptyWorkflow, type WorkflowDoc } from "./types";
+import { emptyAfterOverlay, emptyWorkflow, isDataFieldNode, type WorkflowDoc } from "./types";
 
 function step(id: string, y = 0) {
   return {
@@ -119,9 +119,9 @@ test("Human accessories round-trip; a missing list is none; robots ignore the fi
   });
   expect(worn.ok).toBe(true);
   if (worn.ok) {
-    expect(worn.doc.actors[0]).toMatchObject({
-      accessories: ["sunglasses", "tablet"],
-    });
+    expect(worn.doc.actors[0]).not.toHaveProperty("accessories");
+    expect(worn.doc.looks?.h1?.accessories).toEqual(["sunglasses", "tablet"]);
+    expect(worn.doc.after.looks ?? null).toBeNull();
   }
 
   const plain = parseCodes({
@@ -133,7 +133,10 @@ test("Human accessories round-trip; a missing list is none; robots ignore the fi
     after: emptyAfterOverlay(),
   });
   expect(plain.ok).toBe(true);
-  if (plain.ok) expect(plain.doc.actors[0]).toMatchObject({ accessories: [] });
+  if (plain.ok) {
+    expect(plain.doc.actors[0]).not.toHaveProperty("accessories");
+    expect(plain.doc.looks?.h1).toBeUndefined();
+  }
 
   const robot = parseCodes({
     version: 2,
@@ -176,6 +179,22 @@ test("Human accessories round-trip; a missing list is none; robots ignore the fi
   expect(unknown.ok).toBe(false);
 });
 
+test("a saved Copy step loads as Travel", () => {
+  const parsed = parseCodes({
+    version: 2,
+    actors: [],
+    nodes: [{ ...step("a"), stepKind: "copy" }],
+    edges: [],
+    assignments: {},
+    after: emptyAfterOverlay(),
+  });
+  expect(parsed.ok).toBe(true);
+  if (parsed.ok) {
+    const node = parsed.doc.nodes[0];
+    expect(node && "stepKind" in node && node.stepKind).toBe("travel");
+  }
+});
+
 test("empty Human role becomes worker", () => {
   const parsed = parseCodes({
     version: 2,
@@ -215,6 +234,41 @@ test("invalid shape: missing fields, bad enums, empty color, non-object", () => 
   const unsupported = parseDocument(JSON.stringify({ version: 99 }));
   expect(unsupported.ok).toBe(false);
   if (!unsupported.ok) expect(unsupported.code).toBe("unsupported-version");
+});
+
+test("a Data field may store a color and rejects a blank one", () => {
+  const data = {
+    id: "d1",
+    type: WorkflowNodeKind.DataField,
+    position: { x: 0, y: 0 },
+    label: "Amount",
+    color: "#ae78f2",
+  };
+  const ok = parseDocument(
+    JSON.stringify(
+      doc({
+        actors: [actor("h1")],
+        nodes: [step("a"), data],
+        edges: [path("e1", "a", "d1")],
+        assignments: { a: "h1" },
+      }),
+    ),
+  );
+  expect(ok.ok).toBe(true);
+  if (ok.ok) {
+    const field = ok.doc.nodes.find((n) => n.id === "d1");
+    expect(field && isDataFieldNode(field) ? field.color : undefined).toBe("#ae78f2");
+  }
+
+  const blank = parseCodes(
+    doc({
+      actors: [actor("h1")],
+      nodes: [step("a"), { ...data, color: "" }],
+      edges: [path("e1", "a", "d1")],
+      assignments: { a: "h1" },
+    }),
+  );
+  expect(blank.codes).toContain("invalid-shape");
 });
 
 test("duplicate IDs are rejected", () => {

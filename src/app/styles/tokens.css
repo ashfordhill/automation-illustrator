@@ -801,11 +801,15 @@ body.is-tile-dragging * {
   position: relative;
 }
 
-.canvas-helper-cluster > .canvas-helper-chip {
+.canvas-helper-cluster > .canvas-helper-side {
   position: absolute;
   left: calc(100% + 9px);
   top: 50%;
   transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  white-space: nowrap;
 }
 
 .canvas-helper-chip {

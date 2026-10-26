@@ -4,6 +4,7 @@
  */
 import { ActorKind, AssignmentLane, IdPrefix, RobotKind } from "./catalogs";
 import { nid } from "./ids";
+import { dropActorLook } from "./looks";
 import {
   DEFAULT_HUMAN_ROLE,
   DEFAULT_ROBOT_NAME,
@@ -94,7 +95,6 @@ export function defaultActors(): ActorDto[] {
     name: p.name,
     color: p.color,
     role: DEFAULT_HUMAN_ROLE,
-    accessories: [],
   }));
   const robots: ActorDto[] = ROBOT_PRESETS.map((p) => ({
     id: nid(IdPrefix.Robot),
@@ -209,13 +209,14 @@ export type ActorUse = {
 function stepTitle(doc: WorkflowDoc, stepId: string): string {
   const n =
     doc.nodes.find((x) => x.id === stepId) ??
+    doc.after.fork?.nodes.find((x) => x.id === stepId) ??
     doc.after.extraNodes.find((x) => x.id === stepId);
   if (!n) return stepId;
   if (isStepNode(n)) return stepDisplayLabel(n.stepKind, n.title);
   return n.label;
 }
 
-/** Assignments in Before and After Who maps (NA-02). */
+/** Assignments in Before and, once After has its own copy, that copy (NA-02). */
 export function actorUsages(doc: WorkflowDoc, actorId: string): ActorUse[] {
   const uses: ActorUse[] = [];
   for (const [stepId, id] of Object.entries(doc.assignments)) {
@@ -227,7 +228,8 @@ export function actorUsages(doc: WorkflowDoc, actorId: string): ActorUse[] {
       });
     }
   }
-  for (const [stepId, id] of Object.entries(doc.after.assignments)) {
+  const afterAssign = doc.after.fork ? doc.after.fork.assignments : doc.after.assignments;
+  for (const [stepId, id] of Object.entries(afterAssign)) {
     if (id === actorId) {
       uses.push({
         stepId,
@@ -259,7 +261,8 @@ export function removeActor(
   if (uses.length) {
     return { ok: false, code: "actor-in-use", message: actorInUseMessage(actor.name, uses) };
   }
-  return { ok: true, value: { ...doc, actors: doc.actors.filter((a) => a.id !== actorId) } };
+  const dropped = dropActorLook(doc, actorId);
+  return { ok: true, value: { ...dropped, actors: dropped.actors.filter((a) => a.id !== actorId) } };
 }
 
 
@@ -300,7 +303,6 @@ export function makeHuman(name?: string, color?: string): ActorDto {
     name: n,
     color: c,
     role: DEFAULT_HUMAN_ROLE,
-    accessories: [],
   };
 }
 

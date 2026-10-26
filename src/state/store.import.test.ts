@@ -3,9 +3,9 @@ import { DemoId } from "../demos/catalog";
 import { OAK_PARK_IDS, oakParkInvoice } from "../demos/oakParkInvoice";
 import { MAILROOM_IDS, robotMailroom } from "../demos/robotMailroom";
 import mailroomYaml from "../demos/robot-mailroom.yaml?raw";
-import { ColorScheme, ViewMode } from "../workflow/catalogs";
+import { AssignmentLane, ColorScheme, ViewMode } from "../workflow/catalogs";
 import { workflowToYaml } from "../workflow/serialize";
-import { UNFOLD_NOTICE } from "../workflow/types";
+import { laneAssignments, UNFOLD_NOTICE } from "../workflow/types";
 import * as persist from "./persistence";
 import { useStore } from "./store";
 
@@ -146,7 +146,7 @@ test("Import of YAML with leftover merge groups unfolds and notices", () => {
   useStore.getState().confirmReplaceDiscard();
   expect(useStore.getState().workflow.after.groups).toEqual([]);
   expect(useStore.getState().notice).toBe(UNFOLD_NOTICE);
-  expect(useStore.getState().workflow.after.assignments[MAILROOM_IDS.scan]).toBe(
+  expect(laneAssignments(useStore.getState().workflow, AssignmentLane.After)[MAILROOM_IDS.scan]).toBe(
     MAILROOM_IDS.mailbot,
   );
 });

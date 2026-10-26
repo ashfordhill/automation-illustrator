@@ -35,7 +35,7 @@ test.describe("slice 7 inspector and actors", () => {
     );
     await expect(aside(page).getByRole("button", { name: "Who Script" })).toBeVisible();
     await expect(aside(page).getByRole("button", { name: "Who LLM" })).toBeVisible();
-    await expect(aside(page).getByRole("button", { name: "Actors", exact: true })).toHaveCount(0);
+    await expect(aside(page).getByRole("button", { name: "Actors", exact: true })).toBeVisible();
     await capturePage(page, `${EVIDENCE}/step-who-before-1440.png`);
 
     await aside(page).getByRole("button", { name: "Who Script" }).click();

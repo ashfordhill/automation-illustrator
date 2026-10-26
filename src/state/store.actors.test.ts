@@ -2,8 +2,9 @@ import { afterEach, beforeEach, expect, test } from "vitest";
 import { OAK_PARK_IDS } from "../demos/oakParkInvoice";
 import { MAILROOM_IDS } from "../demos/robotMailroom";
 import { DemoId } from "../demos/catalog";
-import { AccessoryKind, ColorScheme, SelectionKind, SplitKind, StepKind, ViewMode, WorkflowNodeKind } from "../workflow/catalogs";
-import { isHuman, isStepNode } from "../workflow/types";
+import { AccessoryKind, AssignmentLane, ColorScheme, SelectionKind, SplitKind, StepKind, ViewMode, WorkflowNodeKind } from "../workflow/catalogs";
+import { accessoriesFor } from "../workflow/looks";
+import { isStepNode, laneAssignments } from "../workflow/types";
 import { useStore } from "./store";
 
 function resetSession() {
@@ -42,24 +43,24 @@ test("spawnBranch from a Step inherits that Step’s Who, not last-used Human (N
   const childOfAlice = useStore.getState().spawnBranch(enter, WorkflowNodeKind.Step);
   expect(childOfAlice).toBeTruthy();
   expect(useStore.getState().workflow.assignments[childOfAlice]).toBe(alice);
-  expect(useStore.getState().workflow.after.assignments[childOfAlice]).toBe(alice);
+  expect(useStore.getState().workflow.after.fork?.nodes.some((n) => n.id === childOfAlice)).toBe(false);
 
   s.assignActor(review, roy);
   const childOfRoy = useStore.getState().spawnBranch(review, WorkflowNodeKind.Step);
   expect(useStore.getState().workflow.assignments[childOfRoy]).toBe(roy);
-  expect(useStore.getState().workflow.after.assignments[childOfRoy]).toBe(roy);
+  expect(useStore.getState().workflow.after.fork?.nodes.some((n) => n.id === childOfRoy)).toBe(false);
   expect(useStore.getState().lastHumanId).toBe(roy);
 
   s.assignActor(review, robot);
   const childOfRobot = useStore.getState().spawnBranch(review, WorkflowNodeKind.Step);
   expect(useStore.getState().workflow.assignments[childOfRobot]).toBe(robot);
-  expect(useStore.getState().workflow.after.assignments[childOfRobot]).toBe(robot);
+  expect(useStore.getState().workflow.after.fork?.assignments[childOfRobot]).toBeUndefined();
 
   const fromData = useStore.getState().spawnBranch(acct, WorkflowNodeKind.Step);
   expect(useStore.getState().workflow.assignments[fromData]).toBe(alice);
 });
 
-test("After spawn adds a shared Step with inherited Who", () => {
+test("After spawn copies Before, then stays off the Before board", () => {
   const s = useStore.getState();
   s.requestNew();
   s.confirmReplaceDiscard();
@@ -67,14 +68,18 @@ test("After spawn adds a shared Step with inherited Who", () => {
   expect(root).toBeTruthy();
   const alice = useStore.getState().workflow.assignments[root];
   expect(alice).toBeTruthy();
+  expect(useStore.getState().workflow.after.fork).toBeNull();
 
   s.setView(ViewMode.After);
   const child = useStore.getState().spawnBranch(root, WorkflowNodeKind.Step);
   expect(child).toBeTruthy();
-  expect(useStore.getState().workflow.nodes.some((n) => n.id === child)).toBe(true);
-  expect(useStore.getState().workflow.after.extraNodes).toEqual([]);
-  expect(useStore.getState().workflow.assignments[child]).toBe(alice);
-  expect(useStore.getState().workflow.after.assignments[child]).toBe(alice);
+  const doc = useStore.getState().workflow;
+  expect(doc.nodes.some((n) => n.id === child)).toBe(false);
+  expect(doc.assignments[child]).toBeUndefined();
+  expect(doc.after.fork?.nodes.some((n) => n.id === child)).toBe(true);
+  expect(doc.after.fork?.nodes.some((n) => n.id === root)).toBe(true);
+  expect(doc.after.fork?.assignments[child]).toBe(alice);
+  expect(doc.assignments[root]).toBe(alice);
 });
 
 test("New board: a child of Roy, including off Roy’s Data, is Roy (NA-03)", () => {
@@ -88,12 +93,13 @@ test("New board: a child of Roy, including off Roy’s Data, is Roy (NA-03)", ()
   useStore.getState().assignActor(root, roy!);
   const child = useStore.getState().spawnBranch(root, WorkflowNodeKind.Step);
   expect(useStore.getState().workflow.assignments[child]).toBe(roy);
-  expect(useStore.getState().workflow.after.assignments[child]).toBe(roy);
+  expect(useStore.getState().workflow.after.fork).toBeNull();
+  expect(laneAssignments(useStore.getState().workflow, AssignmentLane.After)[child]).toBe(roy);
 
   const data = useStore.getState().spawnBranch(root, WorkflowNodeKind.DataField);
   const fromData = useStore.getState().spawnBranch(data, WorkflowNodeKind.Step);
   expect(useStore.getState().workflow.assignments[fromData]).toBe(roy);
-  expect(useStore.getState().workflow.after.assignments[fromData]).toBe(roy);
+  expect(laneAssignments(useStore.getState().workflow, AssignmentLane.After)[fromData]).toBe(roy);
 });
 
 test("Who assigns in both lanes, including a Robot in Before (NA-03, NA-11)", () => {
@@ -109,7 +115,7 @@ test("Who assigns in both lanes, including a Robot in Before (NA-03, NA-11)", ()
 
   s.setView(ViewMode.After);
   useStore.getState().assignActor(review, robot);
-  expect(useStore.getState().workflow.after.assignments[review]).toBe(robot);
+  expect(laneAssignments(useStore.getState().workflow, AssignmentLane.After)[review]).toBe(robot);
   expect(useStore.getState().workflow.assignments[review]).toBe(OAK_PARK_IDS.roy);
 });
 
@@ -265,9 +271,9 @@ test("Manage actors opens on the selected Step’s Who", () => {
   const s = useStore.getState();
   s.select({ type: SelectionKind.Node, id: fs });
   s.openManageActors();
-  expect(useStore.getState().selected).toBe(null);
+  expect(useStore.getState().selected).toEqual({ type: SelectionKind.Node, id: fs });
   expect(useStore.getState().manageActorsOpen).toBe(true);
-  expect(useStore.getState().manageActorsSource).toBe("step");
+  expect(useStore.getState().manageActorsSource).toBe("tile");
   expect(useStore.getState().manageActorId).toBe(alice);
   s.closeManageActors({ restoreFocus: false });
   expect(useStore.getState().manageActorsSource).toBe(null);
@@ -292,7 +298,8 @@ test("Manage actors source is empty when nothing is selected", () => {
   s.closeManageActors({ restoreFocus: false });
   s.select({ type: SelectionKind.Node, id: OAK_PARK_IDS.acct });
   s.openManageActors();
-  expect(useStore.getState().manageActorsSource).toBe("empty");
+  expect(useStore.getState().manageActorsSource).toBe("tile");
+  expect(useStore.getState().selected).toEqual({ type: SelectionKind.Node, id: OAK_PARK_IDS.acct });
 });
 
 test("new Other Steps have an empty Name; choosing Other does not fill Task", () => {
@@ -312,15 +319,36 @@ test("new Other Steps have an empty Name; choosing Other does not fill Task", ()
   expect(seeded && isStepNode(seeded) && seeded.title).toBe("");
 });
 
-test("accessories stick to Humans and are ignored on Robots", () => {
+test("accessories are per lane and ignored on Robots", () => {
   const { alice, robot } = OAK_PARK_IDS;
-  useStore.getState().updateActor(alice, {
-    accessories: [AccessoryKind.Sunglasses, AccessoryKind.Tablet],
-  });
-  const human = useStore.getState().workflow.actors.find((a) => a.id === alice);
-  expect(isHuman(human) && human.accessories).toEqual([AccessoryKind.Sunglasses, AccessoryKind.Tablet]);
-  useStore.getState().updateActor(robot, { accessories: [AccessoryKind.Scanner] });
-  const bot = useStore.getState().workflow.actors.find((a) => a.id === robot);
-  expect(bot).not.toHaveProperty("accessories");
-  expect(bot && "name" in bot && bot.name).toBeTruthy();
+  const s = useStore.getState();
+  s.setView(ViewMode.Before);
+  s.setActorAccessories(alice, [AccessoryKind.Tablet]);
+  const worn = (lane: AssignmentLane) => {
+    const doc = useStore.getState().workflow;
+    const actor = doc.actors.find((a) => a.id === alice);
+    return accessoriesFor(doc, lane, actor);
+  };
+  expect(worn(AssignmentLane.Before)).toEqual([AccessoryKind.Tablet]);
+  expect(worn(AssignmentLane.After)).toEqual([AccessoryKind.Tablet]);
+  expect(useStore.getState().workflow.actors.find((a) => a.id === alice)).not.toHaveProperty("accessories");
+
+  const fork = useStore.getState().workflow.after.fork;
+  s.setView(ViewMode.After);
+  useStore.getState().setActorAccessories(alice, [AccessoryKind.Sunglasses]);
+  expect(worn(AssignmentLane.Before)).toEqual([AccessoryKind.Tablet]);
+  expect(worn(AssignmentLane.After)).toEqual([AccessoryKind.Sunglasses]);
+  expect(useStore.getState().workflow.after.fork).toBe(fork);
+
+  useStore.getState().setView(ViewMode.Before);
+  useStore.getState().setActorAccessories(alice, [AccessoryKind.Scanner]);
+  expect(worn(AssignmentLane.Before)).toEqual([AccessoryKind.Scanner]);
+  expect(worn(AssignmentLane.After)).toEqual([AccessoryKind.Sunglasses]);
+
+  useStore.getState().setActorAccessories(robot, [AccessoryKind.Tablet]);
+  expect(useStore.getState().workflow.actors.find((a) => a.id === robot)).not.toHaveProperty("accessories");
+
+  useStore.getState().setView(ViewMode.After);
+  useStore.getState().restartAfter();
+  expect(worn(AssignmentLane.After)).toEqual([AccessoryKind.Scanner]);
 });

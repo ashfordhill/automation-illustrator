@@ -4,37 +4,53 @@
  * Browser localStorage stays pretty JSON (see persistence.ts).
  */
 import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
-import { normalizeAccessories } from "./accessories";
+import { packLook } from "./looks";
 import {
   DEFAULT_HUMAN_ROLE,
   isHuman,
   isRobot,
   projectDisplayName,
   robotRole,
+  type ActorLooks,
   type WorkflowDoc,
 } from "./types";
 
 const YAML_STRINGIFY = { indent: 2, lineWidth: 0 } as const;
 const MAX_EXPORT_SLUG = 80;
 
+/** Omit actors who wear nothing so a following board does not grow an empty map. */
+function looksForFile(looks: ActorLooks | null | undefined): ActorLooks | undefined {
+  if (!looks) return undefined;
+  const out: ActorLooks = {};
+  for (const [id, look] of Object.entries(looks)) {
+    const packed = packLook(look);
+    if (packed) out[id] = packed;
+  }
+  return Object.keys(out).length > 0 ? out : undefined;
+}
+
 /** Fill blanks so a dropped demo YAML still parses (empty Human role is worker). */
 function normalizeForFile(doc: WorkflowDoc): WorkflowDoc {
-  return {
+  const looks = looksForFile(doc.looks);
+  const after = { ...doc.after };
+  if (after.looks == null) delete after.looks;
+  else after.looks = looksForFile(after.looks) ?? {};
+  const next: WorkflowDoc = {
     ...doc,
     actors: doc.actors.map((actor) => {
       if (isHuman(actor)) {
         const role = actor.role.trim() || DEFAULT_HUMAN_ROLE;
-        const accessories = normalizeAccessories(actor.accessories);
-        if (accessories.length === 0) {
-          const { accessories: _omit, ...rest } = { ...actor, role };
-          return rest;
-        }
-        return { ...actor, role, accessories };
+        const { accessories: _omit, ...rest } = actor as typeof actor & { accessories?: unknown };
+        return { ...rest, role };
       }
       if (isRobot(actor)) return { ...actor, role: robotRole(actor) };
       return actor;
     }),
+    after,
   };
+  if (looks) next.looks = looks;
+  else delete next.looks;
+  return next;
 }
 
 /** Pretty YAML 1.2 for files. Trailing newline so diffs stay tidy. */

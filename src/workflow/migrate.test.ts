@@ -1,6 +1,7 @@
 import { expect, test } from "vitest";
+import { AssignmentLane } from "./catalogs";
 import { parseDocument, migrateV1ToV2 } from "./migrate";
-import type { WorkflowDocV1 } from "./types";
+import { laneAssignments, type WorkflowDocV1 } from "./types";
 
 const v1Oak: WorkflowDocV1 = {
   version: 1,
@@ -61,7 +62,7 @@ test("parseDocument migrates valid v1 and rejects an invalid v1 graph without mi
     expect(ok.migratedFrom).toBe(1);
     expect(ok.doc.version).toBe(2);
     expect(ok.doc.assignments.s_read).toBe("h_alice");
-    expect(ok.doc.after.assignments.s_read).toBe("r_script");
+    expect(laneAssignments(ok.doc, AssignmentLane.After).s_read).toBe("r_script");
   }
 
   const cyclicV1 = {

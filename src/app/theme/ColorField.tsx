@@ -15,6 +15,7 @@ export function ColorField({
   swatches,
   ariaLabel = "Color",
   accept,
+  disabled = false,
   position = "left-start",
 }: {
   value: string;
@@ -22,6 +23,7 @@ export function ColorField({
   swatches?: readonly string[];
   ariaLabel?: string;
   accept?: (color: string) => boolean;
+  disabled?: boolean;
   position?: PopoverProps["position"];
 }) {
   const [opened, setOpened] = useState(false);
@@ -72,6 +74,7 @@ export function ColorField({
               aria-label={ariaLabel}
               aria-haspopup="dialog"
               aria-expanded={opened}
+              disabled={disabled}
               style={{ background: value }}
               onClick={() => setOpened((o) => !o)}
             />
@@ -93,6 +96,7 @@ export function ColorField({
         type="button"
         className="inspector-color-dropper"
         aria-label="Eyedropper"
+        disabled={disabled}
         onClick={() => void pickFromScreen()}
       >
         <IconColorPicker size={20} stroke={2.2} aria-hidden />

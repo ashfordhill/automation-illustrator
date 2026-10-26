@@ -3,13 +3,17 @@
  */
 import { Button, Text } from "@mantine/core";
 import { IconDatabase, IconPlus } from "@tabler/icons-react";
-import { ViewMode } from "../../workflow/catalogs";
+import { AssignmentLane, ViewMode } from "../../workflow/catalogs";
 import { useStore } from "../../state/store";
+import { laneBoard } from "../../workflow/types";
 
 export function EmptyBoardCta() {
   const present = useStore((s) => s.present);
   const view = useStore((s) => s.view);
-  const empty = useStore((s) => s.workflow.nodes.length === 0);
+  const empty = useStore((s) => {
+    const lane = s.view === ViewMode.After ? AssignmentLane.After : AssignmentLane.Before;
+    return laneBoard(s.workflow, lane).nodes.length === 0;
+  });
   if (present || view === ViewMode.Both || !empty) return null;
 
   return (

@@ -2,7 +2,8 @@ import { expect, test } from "vitest";
 import { DemoId, workflowForDemo } from "./catalog";
 import { freshBoard, isEmptyBoard, oakParkInvoice, OAK_PARK_IDS } from "./oakParkInvoice";
 import { MAILROOM_IDS, robotMailroom } from "./robotMailroom";
-import { ActorKind, RobotKind } from "../workflow/catalogs";
+import { ActorKind, AssignmentLane, RobotKind } from "../workflow/catalogs";
+import { laneAssignments } from "../workflow/types";
 import { edgeIsDotted, validateWorkflow } from "../workflow/graph";
 
 test("Oak Park IDs are deterministic and both amount Paths are dotted (PC-06)", () => {
@@ -31,11 +32,12 @@ test("Oak Park IDs are deterministic and both amount Paths are dotted (PC-06)", 
   expect(a.assignments[OAK_PARK_IDS.review]).toBe(OAK_PARK_IDS.roy);
   expect(a.assignments[OAK_PARK_IDS.review2]).toBe(OAK_PARK_IDS.jack);
   expect(a.assignments[OAK_PARK_IDS.review3]).toBe(OAK_PARK_IDS.missy);
-  expect(a.after.assignments[OAK_PARK_IDS.read]).toBe(OAK_PARK_IDS.llm);
-  expect(a.after.assignments[OAK_PARK_IDS.web]).toBe(OAK_PARK_IDS.llm);
-  expect(a.after.assignments[OAK_PARK_IDS.fs]).toBe(OAK_PARK_IDS.llm);
-  expect(a.after.assignments[OAK_PARK_IDS.enter]).toBe(OAK_PARK_IDS.robot);
-  expect(a.after.assignments[OAK_PARK_IDS.review]).toBe(OAK_PARK_IDS.roy);
+  const afterWho = laneAssignments(a, AssignmentLane.After);
+  expect(afterWho[OAK_PARK_IDS.read]).toBe(OAK_PARK_IDS.llm);
+  expect(afterWho[OAK_PARK_IDS.web]).toBe(OAK_PARK_IDS.llm);
+  expect(afterWho[OAK_PARK_IDS.fs]).toBe(OAK_PARK_IDS.llm);
+  expect(afterWho[OAK_PARK_IDS.enter]).toBe(OAK_PARK_IDS.robot);
+  expect(afterWho[OAK_PARK_IDS.review]).toBe(OAK_PARK_IDS.roy);
   const llm = a.actors.find((actor) => actor.id === OAK_PARK_IDS.llm);
   const script = a.actors.find((actor) => actor.id === OAK_PARK_IDS.robot);
   expect(llm && "robotKind" in llm && llm.robotKind).toBe(RobotKind.Llm);
@@ -55,12 +57,13 @@ test("Robot Mailroom matches Appendix A overlay", () => {
     MAILROOM_IDS.reader,
   ]);
   expect(doc.after.groups).toEqual([]);
-  expect(doc.after.assignments[MAILROOM_IDS.scan]).toBe(MAILROOM_IDS.mailbot);
-  expect(doc.after.assignments[MAILROOM_IDS.lookup]).toBe(MAILROOM_IDS.mailbot);
-  expect(doc.after.assignments[MAILROOM_IDS.route]).toBe(MAILROOM_IDS.mailbot);
+  const afterWho = laneAssignments(doc, AssignmentLane.After);
+  expect(afterWho[MAILROOM_IDS.scan]).toBe(MAILROOM_IDS.mailbot);
+  expect(afterWho[MAILROOM_IDS.lookup]).toBe(MAILROOM_IDS.mailbot);
+  expect(afterWho[MAILROOM_IDS.route]).toBe(MAILROOM_IDS.mailbot);
   expect(doc.after.extraNodes).toEqual([]);
   expect(doc.after.extraEdges).toEqual([]);
-  expect(doc.after.assignments[MAILROOM_IDS.receipt]).toBeUndefined();
+  expect(afterWho[MAILROOM_IDS.receipt]).toBeUndefined();
   expect(doc.assignments[MAILROOM_IDS.priya]).toBeUndefined();
   expect(doc.actors.find((a) => a.id === MAILROOM_IDS.priya)?.kind).toBe(ActorKind.Human);
   const found = doc.edges.find((e) => e.id === MAILROOM_IDS.e4)!;

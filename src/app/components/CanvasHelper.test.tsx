@@ -123,6 +123,9 @@ test("After spawn hints include Step and Data", () => {
   expect(spawn?.querySelector(".canvas-helper-spawn-kind-step")?.textContent).toBe("step");
   expect(spawn?.querySelector(".canvas-helper-spawn-kind-data")?.textContent).toBe("data");
   expect(spawn?.textContent ?? "").not.toMatch(/After-only/);
+  const helper = host.querySelector(".canvas-helper");
+  expect(helper?.textContent ?? "").toMatch(/Restart/);
+  expect(helper?.textContent ?? "").toMatch(/R/);
 });
 
 test("vertical spawn compass points up and down", () => {

@@ -9,6 +9,7 @@ import {
   ActorKind,
   RobotKind,
   SplitKind,
+  StepKind,
   WorkflowNodeKind,
   WORKFLOW_VERSION,
   WORKFLOW_VERSION_V1,
@@ -41,7 +42,11 @@ const accessoryListSchema = z.preprocess(
   z.array(accessoryKindSchema).transform((list) => normalizeAccessories(list)),
 );
 const splitSchema = z.enum([SplitKind.Exclusive, SplitKind.Parallel]);
-const stepKindSchema = z.enum(STEP_KINDS);
+/** Saved `copy` steps load as Travel. */
+const stepKindSchema = z.preprocess(
+  (value) => (value === "copy" ? StepKind.Travel : value),
+  z.enum(STEP_KINDS),
+);
 
 const humanShape = {
   id: idSchema,
@@ -61,7 +66,8 @@ const humanV2Schema = z.object({
     (value) => (typeof value === "string" && value.trim() === "" ? DEFAULT_HUMAN_ROLE : value),
     z.string().min(1),
   ),
-  accessories: accessoryListSchema,
+  /** Legacy. Load moves this onto the Before look book and drops the field. */
+  accessories: accessoryListSchema.optional(),
 });
 
 const robotFields = {
@@ -117,6 +123,7 @@ const dataFieldSchema = z.object({
   type: z.literal(WorkflowNodeKind.DataField),
   position: pointSchema,
   label: z.string(),
+  color: colorSchema.optional(),
 });
 
 const nodeV1Schema = z.discriminatedUnion("type", [stepV1Schema, dataFieldSchema]);
@@ -131,10 +138,20 @@ const edgeSchema = z.object({
 });
 
 const assignmentsMapSchema = z.record(z.string(), z.string());
+const actorLookSchema = z.object({
+  accessories: accessoryListSchema.optional(),
+});
+const actorLooksSchema = z.record(z.string(), actorLookSchema);
 
 const mergeGroupSchema = z.object({
   id: idSchema,
   memberIds: z.array(idSchema),
+});
+
+const afterForkSchema = z.object({
+  nodes: z.array(nodeV2Schema),
+  edges: z.array(edgeSchema),
+  assignments: assignmentsMapSchema,
 });
 
 const afterOverlaySchema = z.object({
@@ -142,6 +159,10 @@ const afterOverlaySchema = z.object({
   groups: z.array(mergeGroupSchema),
   extraNodes: z.array(stepV2Schema),
   extraEdges: z.array(edgeSchema),
+  /** Omitted on older files. Null means After follows Before. */
+  fork: afterForkSchema.nullable().optional(),
+  /** Omitted on older files. Null means After wears the Before look book. */
+  looks: actorLooksSchema.nullable().optional().default(null),
 });
 
 function issuesFromViolations(
@@ -173,6 +194,7 @@ export const workflowDocV2Shape = z.object({
   nodes: z.array(nodeV2Schema),
   edges: z.array(edgeSchema),
   assignments: assignmentsMapSchema,
+  looks: actorLooksSchema.optional(),
   after: afterOverlaySchema,
 });
 

@@ -6,11 +6,11 @@
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BaseEdge, EdgeLabelRenderer, type EdgeProps } from "@xyflow/react";
-import { SelectionKind, ViewMode } from "../../workflow/catalogs";
+import { AssignmentLane, SelectionKind, ViewMode } from "../../workflow/catalogs";
 import { useStore } from "../../state/store";
-import { afterGraph, edgeIsDotted } from "../../workflow/graph";
+import { edgeIsDotted } from "../../workflow/graph";
 import { findEdge } from "../../workflow/selectors";
-import type { WorkflowDoc } from "../../workflow/types";
+import { laneBoard, type WorkflowDoc } from "../../workflow/types";
 import { wrapConditionLines } from "../layout/labelBox";
 import { flowProfile } from "../flow/flowProfile";
 import { useSimplifyView } from "../simplify/SimplifyContext";
@@ -41,19 +41,22 @@ export type FlowPathData = {
   viaX?: number;
   viaY?: number;
   displayHop?: boolean;
+  lane?: AssignmentLane;
 } & Record<string, unknown>;
 
 /** Invisible Path hit pad in SVG units — wider than the drawn stroke. */
 export const PATH_HIT_WIDTH = 44;
 
-/** Stroke for a document Path by origin id: dotted = choice, solid = always visited. */
-export function pathIsDotted(workflow: WorkflowDoc, originId: string): boolean {
-  const edge = findEdge(workflow, originId);
+/** Stroke for a lane Path by origin id: dotted = choice, solid = always visited. */
+export function pathIsDotted(
+  workflow: WorkflowDoc,
+  originId: string,
+  lane: AssignmentLane = AssignmentLane.Before,
+): boolean {
+  const board = laneBoard(workflow, lane);
+  const edge = board.edges.find((e) => e.id === originId);
   if (!edge) return false;
-  const inBefore = workflow.edges.some((e) => e.id === edge.id);
-  if (inBefore) return edgeIsDotted(workflow.nodes, workflow.edges, edge);
-  const graph = afterGraph(workflow);
-  return edgeIsDotted(graph.nodes, graph.edges, edge);
+  return edgeIsDotted(board.nodes, board.edges, edge);
 }
 
 function prefersReducedMotion(): boolean {
@@ -146,12 +149,13 @@ export function FlowArrow({
   const hideChip = simplifyDraw;
   const restitchCondition = restitch && typeof pathData.condition === "string" ? pathData.condition : "";
   const restitchDashed = restitch ? Boolean(pathData.dashed) : false;
-  const edge = restitch || displayHop ? undefined : findEdge(workflow, originId);
+  const lane = pathData.lane === AssignmentLane.After ? AssignmentLane.After : AssignmentLane.Before;
+  const edge = restitch || displayHop ? undefined : findEdge(workflow, originId, lane);
   const dotted = restitch
     ? restitchDashed
     : displayHop
       ? Boolean(pathData.dotted)
-      : pathIsDotted(workflow, originId);
+      : pathIsDotted(workflow, originId, lane);
   const label = restitch ? restitchCondition : edge?.label;
 
   const route = layout?.routes[id];

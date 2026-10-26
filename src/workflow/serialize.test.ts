@@ -1,12 +1,13 @@
 import { describe, expect, test } from "vitest";
 import { stringify } from "yaml";
-import { oakParkInvoice } from "../demos/oakParkInvoice";
+import { OAK_PARK_IDS, oakParkInvoice } from "../demos/oakParkInvoice";
 import { MAILROOM_IDS, robotMailroom } from "../demos/robotMailroom";
 import oakParkYaml from "../demos/oak-park-invoice.yaml?raw";
 import mailroomYaml from "../demos/robot-mailroom.yaml?raw";
 import { parseDocument } from "./migrate";
 import { workflowExportFilename, workflowToYaml } from "./serialize";
-import { emptyWorkflow, isHuman, type WorkflowDoc } from "./types";
+import { AssignmentLane } from "./catalogs";
+import { emptyWorkflow, isDataFieldNode, laneAssignments, type WorkflowDoc } from "./types";
 import type { WorkflowDocV1 } from "./types";
 
 const MINI_YAML = `version: 2
@@ -135,23 +136,48 @@ test("YAML comments are ignored and hex colors stay strings", () => {
   });
 });
 
-test("Human accessories round-trip in YAML and an empty list is omitted", () => {
+test("Human accessories round-trip on the look book and an empty list is omitted", () => {
   const doc = oakParkInvoice();
-  const alice = doc.actors.find((a) => a.id === "h_alice");
-  if (!isHuman(alice)) throw new Error("missing Alice");
-  alice.accessories = ["sunglasses", "scanner"];
+  doc.looks = { h_alice: { accessories: ["sunglasses", "scanner"] } };
   const yaml = workflowToYaml(doc);
-  expect(yaml).toMatch(/accessories:\n\s+- sunglasses\n\s+- scanner/);
-  expect(yaml).not.toMatch(/kind: robot[\s\S]*accessories/);
+  expect(yaml).toMatch(/looks:\n {2}h_alice:\n {4}accessories:\n {6}- sunglasses\n {6}- scanner/);
+  expect(yaml.split("\nnodes:")[0]).not.toMatch(/accessories/);
   const parsed = parseDocument(yaml);
   expect(parsed.ok).toBe(true);
   if (!parsed.ok) return;
-  expect(parsed.doc.actors.find((a) => a.id === "h_alice")).toMatchObject({
-    accessories: ["sunglasses", "scanner"],
-  });
-  const roy = parsed.doc.actors.find((a) => a.id === "h_roy");
-  expect(roy && "accessories" in roy ? roy.accessories : undefined).toEqual([]);
-  expect(yaml).not.toMatch(/id: h_roy[\s\S]*?accessories:/);
+  expect(parsed.doc.actors.find((a) => a.id === "h_alice")).not.toHaveProperty("accessories");
+  expect(parsed.doc.looks?.h_alice?.accessories).toEqual(["sunglasses", "scanner"]);
+  expect(parsed.doc.looks?.h_roy).toBeUndefined();
+  expect(parsed.doc.after.looks ?? null).toBeNull();
+
+  doc.after = { ...doc.after, looks: { h_alice: { accessories: ["tablet"] } } };
+  const afterYaml = workflowToYaml(doc);
+  expect(afterYaml).toMatch(/looks:\n {4}h_alice:\n {6}accessories:\n {8}- tablet/);
+  const afterParsed = parseDocument(afterYaml);
+  expect(afterParsed.ok).toBe(true);
+  if (!afterParsed.ok) return;
+  expect(afterParsed.doc.after.looks?.h_alice?.accessories).toEqual(["tablet"]);
+  expect(afterParsed.doc.looks?.h_alice?.accessories).toEqual(["sunglasses", "scanner"]);
+});
+
+test("a Data color round-trips in YAML and is omitted when unset", () => {
+  const doc = oakParkInvoice();
+  const before = doc.nodes.find((n) => n.id === OAK_PARK_IDS.acct);
+  expect(before && isDataFieldNode(before) ? before.color : "missing").toBeUndefined();
+  const yamlBefore = workflowToYaml(doc);
+  const beforeBlock = yamlBefore.split("id: d_acct")[1]?.split("\n  - id:")[0] ?? "";
+  expect(beforeBlock).not.toMatch(/color:/);
+
+  const field = doc.nodes.find((n) => n.id === OAK_PARK_IDS.acct);
+  if (!field || !isDataFieldNode(field)) throw new Error("missing data");
+  field.color = "#6b8cff";
+  const yaml = workflowToYaml(doc);
+  expect(yaml).toMatch(/color: ["']#6b8cff["']/);
+  const parsed = parseDocument(yaml);
+  expect(parsed.ok).toBe(true);
+  if (!parsed.ok) return;
+  const round = parsed.doc.nodes.find((n) => n.id === OAK_PARK_IDS.acct);
+  expect(round && isDataFieldNode(round) ? round.color : undefined).toBe("#6b8cff");
 });
 
 test("exported YAML quotes hex colors and keeps actor edits", () => {
@@ -258,7 +284,7 @@ describe("parse edge cases", () => {
       expect(ok.migratedFrom).toBe(1);
       expect(ok.doc.version).toBe(2);
       expect(ok.doc.assignments.s_read).toBe("h_alice");
-      expect(ok.doc.after.assignments.s_read).toBe("r_script");
+      expect(laneAssignments(ok.doc, AssignmentLane.After).s_read).toBe("r_script");
     }
     const v2cycle = parseDocument(cycleYaml());
     expect(v2cycle.ok).toBe(false);

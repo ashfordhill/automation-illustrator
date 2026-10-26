@@ -2,7 +2,7 @@
  * Drawings for Human accessories. Same ink language as human-figure.svg
  * (round caps, chunky stroke, flat fills).
  *
- * Sunglasses sit on the face using the placement from the 2026-10-23 sketch
+ * AR Vision sits on the face using the placement from the 2026-10-23 sketch
  * (viewBox 0 0 40 64). Tablet and scanner cover the right hand (31.5, 28.5).
  * Each AccessoryKind needs a figure mark and an editor glyph.
  */

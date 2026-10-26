@@ -9,6 +9,7 @@ import { useStore } from "../state/store";
 import { isTransient } from "../state/interaction";
 import { actionFor, eventKey, keyIs, type KeyAction as KeyActionT } from "./bindings";
 import { spawnForAction } from "./spawnHotkeys";
+import { laneBoard } from "../workflow/types";
 
 /** True when Delete/Backspace should edit the field instead of the board. */
 function isEditingText(el: EventTarget | null): boolean {
@@ -125,6 +126,12 @@ export function useAppKeys() {
 
       const readOnlyBoard = s.present || s.view === ViewMode.Both;
 
+      if (!readOnlyBoard && s.view === ViewMode.After && action === KeyAction.RestartAfter) {
+        e.preventDefault();
+        s.restartAfter();
+        return;
+      }
+
         if (
           !readOnlyBoard &&
           (s.interaction.kind === "plus-pull" ||
@@ -167,7 +174,7 @@ export function useAppKeys() {
       }
 
       if (!readOnlyBoard && s.selected?.type === SelectionKind.Node) {
-        const n = s.workflow.nodes.find((x) => x.id === s.selected!.id);
+        const n = laneBoard(s.workflow, s.assignmentLane()).nodes.find((x) => x.id === s.selected!.id);
         if (
           n?.type === WorkflowNodeKind.DataField &&
           (keyIs(map, KeyAction.Confirm, e) || e.key === "Enter")

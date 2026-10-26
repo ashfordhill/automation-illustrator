@@ -1,14 +1,14 @@
 /**
  * React Flow node for a Step tile (actor + task).
- * Lane in node.data chooses Before vs After assignment (actorFor).
- * After Who is lane-specific; the graph is shared with Before.
+ * Lane in node.data chooses which board to read. A following After is Before.
  */
 import { Handle, type NodeProps } from "@xyflow/react";
-import { AssignmentLane, SelectionKind } from "../../workflow/catalogs";
+import { AccessoryKind, AssignmentLane, SelectionKind } from "../../workflow/catalogs";
 import { useStore } from "../../state/store";
 import { StepTile } from "../tiles/StepTile";
 import { SimplifiedTile } from "../tiles/SimplifiedTile";
 import { PathHostFrame } from "../controls/PathHostFrame";
+import { accessoriesFor } from "../../workflow/looks";
 import { findNode } from "../../workflow/selectors";
 import { isStepNode, laneAssignments, type StepNodeDto } from "../../workflow/types";
 import { useSimplifyView } from "../simplify/SimplifyContext";
@@ -30,7 +30,7 @@ export function StepNode({ id, selected, dragging, data }: NodeProps) {
   const lookupId = payload.originId ?? id;
   const departing = useStore((s) => (s.departing?.node.id === id ? s.departing : null));
   const live = useStore((s) => {
-    const found = findNode(s.workflow, lookupId);
+    const found = findNode(s.workflow, lookupId, lane);
     if (found) return found;
     return s.departing?.node.id === id ? s.departing.node : undefined;
   });
@@ -39,6 +39,13 @@ export function StepNode({ id, selected, dragging, data }: NodeProps) {
     const whoId = laneAssignments(s.workflow, lane)[lookupId];
     return s.workflow.actors.find((a) => a.id === whoId);
   });
+  const worn = useStore((s) => {
+    const who =
+      (s.departing?.node.id === id ? s.departing.actor : undefined) ??
+      s.workflow.actors.find((a) => a.id === laneAssignments(s.workflow, lane)[lookupId]);
+    return accessoriesFor(s.workflow, lane, who).join("\0");
+  });
+  const accessories = worn ? (worn.split("\0") as AccessoryKind[]) : [];
   const focusId = useStore((s) => s.focusId);
   const storeOn = useStore(
     (s) => s.selected?.type === SelectionKind.Node && s.selected.id === id,
@@ -61,6 +68,7 @@ export function StepNode({ id, selected, dragging, data }: NodeProps) {
       ) : (
         <StepTile
           actor={actor}
+          accessories={accessories}
           kind={node.stepKind}
           title={node.title}
           detail={node.detail}

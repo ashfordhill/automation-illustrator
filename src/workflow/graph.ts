@@ -564,6 +564,19 @@ export function validateWorkflow(doc: WorkflowDoc): GraphViolation[] {
       ),
     );
   }
+  const fork = doc.after.fork;
+  if (fork) {
+    out.push(
+      ...uniqueIds([
+        ...fork.nodes.map((n) => ({ id: n.id, where: "After Node" })),
+        ...fork.edges.map((e) => ({ id: e.id, where: "After Path" })),
+      ]),
+    );
+    out.push(...edgeRefs(fork.nodes, fork.edges, "After Node"));
+    const forkStepIds = new Set(fork.nodes.filter(isStepNode).map((n) => n.id));
+    out.push(...assignmentRefs(fork.assignments, forkStepIds, actorIds, "After"));
+    out.push(...validateGraphInvariants(fork.nodes, fork.edges));
+  }
   return out;
 }
 

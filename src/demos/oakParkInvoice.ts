@@ -51,10 +51,7 @@ export function freshBoard(): WorkflowDoc {
 }
 
 export function isEmptyBoard(doc: WorkflowDoc): boolean {
-  return (
-    doc.nodes.length === 0 &&
-    doc.edges.length === 0 &&
-    doc.after.extraNodes.length === 0 &&
-    doc.after.extraEdges.length === 0
-  );
+  const afterNodes = doc.after.fork?.nodes.length ?? doc.after.extraNodes.length;
+  const afterEdges = doc.after.fork?.edges.length ?? doc.after.extraEdges.length;
+  return doc.nodes.length === 0 && doc.edges.length === 0 && afterNodes === 0 && afterEdges === 0;
 }

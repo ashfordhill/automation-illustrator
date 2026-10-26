@@ -34,8 +34,8 @@ import {
 } from "./persistence";
 import { oakParkInvoice } from "../demos/oakParkInvoice";
 import { robotMailroom, MAILROOM_IDS } from "../demos/robotMailroom";
-import { ColorScheme, SplitKind, StepKind, WorkflowNodeKind } from "../workflow/catalogs";
-import { emptyAfterOverlay, emptyWorkflow, type WorkflowDoc } from "../workflow/types";
+import { AssignmentLane, ColorScheme, SplitKind, StepKind, WorkflowNodeKind } from "../workflow/catalogs";
+import { emptyAfterOverlay, emptyWorkflow, laneAssignments, type WorkflowDoc } from "../workflow/types";
 import { workflowToYaml } from "../workflow/serialize";
 import { CHROME_THEME_DEFAULTS, ICE_THEME, mixSrgb } from "../app/theme/chromeTheme";
 
@@ -160,7 +160,7 @@ test("grouped v2 storage unfolds groups and keeps After Who", () => {
   expect(result.recovery).toBeNull();
   expect(result.unfolded).toBe(true);
   expect(result.workflow.after.groups).toEqual([]);
-  expect(result.workflow.after.assignments[MAILROOM_IDS.scan]).toBe(MAILROOM_IDS.mailbot);
+  expect(laneAssignments(result.workflow, AssignmentLane.After)[MAILROOM_IDS.scan]).toBe(MAILROOM_IDS.mailbot);
   expect(JSON.parse(storage.getItem(LS_WORKFLOW)!).after.groups).toEqual([]);
 });
 

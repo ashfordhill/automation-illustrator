@@ -41,6 +41,7 @@ export const DEFAULT_KEYMAP: Keymap = {
   [KeyAction.AddDataIn]: "a",
   [KeyAction.AddDataOut]: "d",
   [KeyAction.LinkExisting]: "3",
+  [KeyAction.RestartAfter]: "r",
 };
 
 export const ACTION_LABELS: Record<KeyAction, string> = {
@@ -61,6 +62,7 @@ export const ACTION_LABELS: Record<KeyAction, string> = {
   [KeyAction.AddDataIn]: "New Data to the left",
   [KeyAction.AddDataOut]: "New Data to the right",
   [KeyAction.LinkExisting]: "unused — pull the Path tab",
+  [KeyAction.RestartAfter]: "Restart After from Before",
 };
 
 /** Normalize a keydown into the string we store in Keymap. */

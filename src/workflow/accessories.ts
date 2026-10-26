@@ -1,5 +1,6 @@
 /**
  * Human accessories. Robots never wear them.
+ * Which items a Human wears is per lane, on the look book (looks.ts).
  *
  * To add one:
  * 1. Add a value to AccessoryKind in catalogs.ts.
@@ -27,8 +28,8 @@ export type AccessoryDef = {
 export const ACCESSORIES: readonly AccessoryDef[] = [
   {
     kind: AccessoryKind.Sunglasses,
-    label: "Sunglasses",
-    ariaLabel: "Sunglasses",
+    label: "AR Vision",
+    ariaLabel: "AR Vision",
     slot: AccessorySlot.Face,
   },
   {

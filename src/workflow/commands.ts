@@ -2,7 +2,7 @@
  * Pure structural commands. Store commits only after a successful result
  * that still passes validateWorkflow (WG-02..WG-04).
  */
-import { IdPrefix, WorkflowNodeKind } from "./catalogs";
+import { AssignmentLane, IdPrefix, WorkflowNodeKind } from "./catalogs";
 import {
   applyConnectStroke,
   dropDirectedRedundantNewPaths,
@@ -17,11 +17,11 @@ import {
   wouldCreateCycle,
 } from "./graph";
 import { nid } from "./ids";
-import { findNode } from "./selectors";
 import {
   emptyAfterOverlay,
   isDataFieldNode,
   isStepNode,
+  laneBoard,
   type AfterOverlay,
   type Assignments,
   type EdgeDto,
@@ -198,6 +198,8 @@ export function pruneAfterOverlay(
       extraEdges,
       groups: [],
       assignments: dropAssign(after.assignments, removedNodeId),
+      ...(after.fork ? { fork: after.fork } : {}),
+      ...(after.looks ? { looks: after.looks } : {}),
     },
     notices: [],
   };
@@ -250,8 +252,11 @@ export function nextTileAfterRemoval(
   remaining: WorkflowDoc,
   predecessorIds: string[],
   successorIds: string[],
+  lane?: AssignmentLane,
 ): string | null {
-  const alive = (id: string) => Boolean(findNode(remaining, id));
+  const nodes = lane ? laneBoard(remaining, lane).nodes : remaining.nodes;
+  const ids = new Set(nodes.map((n) => n.id));
+  const alive = (id: string) => ids.has(id);
   return predecessorIds.find(alive) ?? successorIds.find(alive) ?? null;
 }
 
@@ -671,7 +676,10 @@ export function applyNodeRemoval(
     nodes: remainingNodes,
     edges: remainingEdges,
     assignments: dropAssign(doc.assignments, plan.nodeId),
-    after: remainingNodes.length === 0 ? emptyAfterOverlay() : overlayEffects.after,
+    after:
+      remainingNodes.length === 0
+        ? { ...emptyAfterOverlay(), looks: doc.after.looks ?? null }
+        : overlayEffects.after,
   };
   const checked = succeed(next);
   if (!checked.ok) {

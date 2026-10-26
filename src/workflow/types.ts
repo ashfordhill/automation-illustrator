@@ -3,6 +3,7 @@
  * Runtime state lives in state/store.ts; YAML/JSON IO in serialize.ts and persistence.ts.
  * String catalogs (ActorKind, StepKind, …) live in catalogs.ts and are re-exported here.
  */
+import { normalizeAccessories } from "./accessories";
 import {
   AccessoryKind,
   ActorKind,
@@ -34,7 +35,6 @@ export {
 export const STEP_KINDS = [
   StepKind.Approve,
   StepKind.Call,
-  StepKind.Copy,
   StepKind.Drag,
   StepKind.Email,
   StepKind.File,
@@ -43,6 +43,7 @@ export const STEP_KINDS = [
   StepKind.Review,
   StepKind.Scan,
   StepKind.Search,
+  StepKind.Travel,
   StepKind.Write,
   StepKind.Other,
 ] as const;
@@ -50,13 +51,13 @@ export const STEP_KINDS = [
 /** Types offered in the inspector picker. Drag, Approve, and File stay in the schema for existing boards. */
 export const PICKER_STEP_KINDS: ReadonlySet<StepKind> = new Set([
   StepKind.Call,
-  StepKind.Copy,
   StepKind.Email,
   StepKind.Print,
   StepKind.Read,
   StepKind.Review,
   StepKind.Scan,
   StepKind.Search,
+  StepKind.Travel,
   StepKind.Write,
   StepKind.Other,
 ]);
@@ -97,9 +98,20 @@ export type HumanDto = {
   name: string;
   color: string;
   role: string;
-  /** Omitted when the Human wears nothing. Robots never have this field. */
+};
+
+/**
+ * Lane-specific presentation of one roster actor.
+ * Name, color, role, and kind stay on the actor. Add future per-lane
+ * attributes here. Do not add a second map beside this one.
+ * Accessories are Humans only; an empty look is omitted.
+ */
+export type ActorLook = {
   accessories?: AccessoryKind[];
 };
+
+/** actorId → look. A missing id wears nothing. */
+export type ActorLooks = Record<string, ActorLook>;
 
 export type RobotDto = {
   id: string;
@@ -127,6 +139,8 @@ export type DataFieldNodeDto = {
   type: typeof WorkflowNodeKind.DataField;
   position: Point;
   label: string;
+  /** Omitted to keep the theme purple mark (`--data-mark`). */
+  color?: string;
 };
 
 export type NodeDto = StepNodeDto | DataFieldNodeDto;
@@ -149,12 +163,31 @@ export type MergeGroupDto = {
   memberIds: string[];
 };
 
-/** Sparse After overlay on a v2 document (BA-01). extras/groups are load-dropped. */
+/**
+ * Independent After board. Present only after After has its own edits.
+ * While this is missing, After is the Before board.
+ */
+export type AfterFork = {
+  nodes: NodeDto[];
+  edges: EdgeDto[];
+  assignments: Assignments;
+};
+
+/**
+ * After overlay (BA-01). `fork` null means After shows the Before board.
+ * `looks` null means After shows the Before look book.
+ * Those copies are independent: editing Steps does not copy looks, and
+ * editing looks does not copy the board.
+ * `assignments` / `extraNodes` / `extraEdges` are legacy; load folds them into `fork`.
+ */
 export type AfterOverlay = {
   assignments: Assignments;
   groups: MergeGroupDto[];
   extraNodes: StepNodeDto[];
   extraEdges: EdgeDto[];
+  fork?: AfterFork | null;
+  /** Null means After wears whatever Before wears. `{}` is a copy where everyone wears nothing. */
+  looks?: ActorLooks | null;
 };
 
 /** Version 2 document: shared base workflow plus one After overlay (BA-01). */
@@ -167,6 +200,8 @@ export type WorkflowDocV2 = {
   edges: EdgeDto[];
   /** Before-lane Who for base Steps. */
   assignments: Assignments;
+  /** Before look book. Missing means nobody wears anything. */
+  looks?: ActorLooks;
   after: AfterOverlay;
 };
 
@@ -218,19 +253,46 @@ export function dropAfterOnlyOverlay(doc: WorkflowDoc): { doc: WorkflowDoc; drop
   };
 }
 
-/** Unfold groups then drop After-only extras. Idempotent. */
+/**
+ * Unfold groups, then fold a legacy After difference into a fork.
+ * Following boards stay mirrors. Idempotent. Extras are kept inside the fork.
+ */
 export function normalizeAfterOverlay(doc: WorkflowDoc): {
   doc: WorkflowDoc;
   unfolded: boolean;
   droppedAfterOnly: boolean;
 } {
   const unfolded = unfoldMergeGroups(doc);
-  const dropped = dropAfterOnlyOverlay(unfolded.doc);
   return {
-    doc: dropped.doc,
+    doc: liftLegacyAccessories(settleAfter(unfolded.doc)),
     unfolded: unfolded.unfolded,
-    droppedAfterOnly: dropped.dropped,
+    droppedAfterOnly: false,
   };
+}
+
+/**
+ * Old files stored accessories on the Human. That list becomes the Before look.
+ * After keeps following, so both lanes show it until an After look edit.
+ * An actor who already has a look keeps that look. Idempotent.
+ */
+export function liftLegacyAccessories(doc: WorkflowDoc): WorkflowDoc {
+  let looks = doc.looks ?? {};
+  let changed = false;
+  const actors = doc.actors.map((actor) => {
+    if (!isHuman(actor) || !("accessories" in actor)) return actor;
+    const worn = normalizeAccessories(
+      (actor as HumanDto & { accessories?: AccessoryKind[] }).accessories,
+    );
+    const { accessories: _drop, ...rest } = actor as HumanDto & { accessories?: AccessoryKind[] };
+    if (worn.length > 0 && !(actor.id in looks)) {
+      if (!changed) looks = { ...looks };
+      looks = { ...looks, [actor.id]: { accessories: worn } };
+    }
+    changed = true;
+    return rest;
+  });
+  if (!changed) return doc;
+  return { ...doc, actors, looks };
 }
 
 /** Notice after load/import overlay cleanup. After-only drop wins if both ran. */
@@ -249,31 +311,115 @@ export type WorkflowDocV1 = {
   assignments: Record<AssignmentLane, Assignments>;
 };
 
-/** Empty After overlay used by New boards and v1 migration. */
+/** Empty After overlay used by New boards and v1 migration. After follows Before, looks included. */
 export function emptyAfterOverlay(): AfterOverlay {
   return {
     assignments: {},
     groups: [],
     extraNodes: [],
     extraEdges: [],
+    fork: null,
+    looks: null,
   };
 }
 
-/** Who map for the active lane (Before is the base map; After is the overlay). */
-export function laneAssignments(doc: WorkflowDoc, lane: AssignmentLane): Assignments {
-  return lane === AssignmentLane.After ? doc.after.assignments : doc.assignments;
+/**
+ * Overlay rebuilt around a board copy, still wearing `source`'s look book.
+ * `fork` null keeps the board following Before.
+ */
+export function sealAfter(source: AfterOverlay, fork: AfterFork | null): AfterOverlay {
+  return {
+    ...emptyAfterOverlay(),
+    fork,
+    looks: source.looks ?? null,
+  };
 }
 
-/** Replace one lane's Who map without touching the other. */
+/** True when After has no copy of its own and is showing Before. */
+export function afterFollowsBefore(doc: WorkflowDoc): boolean {
+  return !doc.after.fork;
+}
+
+/** Nodes, Paths, and Who the lane is showing. A following After is Before. */
+export function laneBoard(doc: WorkflowDoc, lane: AssignmentLane): AfterFork {
+  if (lane === AssignmentLane.After && doc.after.fork) return doc.after.fork;
+  return { nodes: doc.nodes, edges: doc.edges, assignments: doc.assignments };
+}
+
+/** Who map for the lane being shown. */
+export function laneAssignments(doc: WorkflowDoc, lane: AssignmentLane): Assignments {
+  return laneBoard(doc, lane).assignments;
+}
+
+/**
+ * Replace one lane's Who map.
+ * An After write copies Before first when After was still following.
+ */
 export function withLaneAssignments(
   doc: WorkflowDoc,
   lane: AssignmentLane,
   assignments: Assignments,
 ): WorkflowDoc {
-  if (lane === AssignmentLane.After) {
-    return { ...doc, after: { ...doc.after, assignments } };
+  if (lane !== AssignmentLane.After) return { ...doc, assignments };
+  const base = doc.after.fork ?? {
+    nodes: structuredClone(doc.nodes),
+    edges: structuredClone(doc.edges),
+    assignments: structuredClone(doc.assignments),
+  };
+  return {
+    ...doc,
+    after: sealAfter(doc.after, { nodes: base.nodes, edges: base.edges, assignments }),
+  };
+}
+
+/** True when a legacy After Who map is not a mirror of Before. Missing keys do not count. */
+function afterWhoDiverges(before: Assignments, after: Assignments): boolean {
+  for (const [id, actorId] of Object.entries(after)) {
+    if (before[id] !== actorId) return true;
   }
-  return { ...doc, assignments };
+  return false;
+}
+
+/**
+ * One After representation. A legacy Who difference or After-only Step becomes a fork.
+ * An already-following board stays a mirror. Idempotent.
+ */
+export function settleAfter(doc: WorkflowDoc): WorkflowDoc {
+  const extras = doc.after.extraNodes;
+  const extraEdges = doc.after.extraEdges;
+  const legacyWho = afterWhoDiverges(doc.assignments, doc.after.assignments);
+  if (doc.after.fork && extras.length === 0 && extraEdges.length === 0 && !legacyWho) {
+    const clean =
+      doc.after.groups.length === 0 &&
+      Object.keys(doc.after.assignments).length === 0 &&
+      doc.after.fork;
+    if (clean) return doc;
+    return { ...doc, after: sealAfter(doc.after, doc.after.fork) };
+  }
+  if (!doc.after.fork && extras.length === 0 && extraEdges.length === 0 && !legacyWho) {
+    if (
+      doc.after.groups.length === 0 &&
+      extras.length === 0 &&
+      extraEdges.length === 0 &&
+      Object.keys(doc.after.assignments).length === 0
+    ) {
+      return doc.after.fork === null ? doc : { ...doc, after: sealAfter(doc.after, null) };
+    }
+    return { ...doc, after: sealAfter(doc.after, null) };
+  }
+  const base = doc.after.fork ?? {
+    nodes: doc.nodes,
+    edges: doc.edges,
+    assignments: { ...doc.assignments },
+  };
+  const extraIds = new Set(extras.map((n) => n.id));
+  const extraEdgeIds = new Set(extraEdges.map((e) => e.id));
+  const fork: AfterFork = {
+    nodes: [...base.nodes.filter((n) => !extraIds.has(n.id)), ...extras],
+    edges: [...base.edges.filter((e) => !extraEdgeIds.has(e.id)), ...extraEdges],
+    assignments: { ...base.assignments, ...doc.after.assignments },
+  };
+  return { ...doc, after: sealAfter(doc.after, structuredClone(fork)) };
 }
 
 /** Narrow a board tile to a Step (the human/robot + task card). */
@@ -337,7 +483,7 @@ export const STEP_KIND_META: Record<
   [StepKind.Search]: { label: "Search", defaultTitle: "" },
   [StepKind.Write]: { label: "Write", defaultTitle: "" },
   [StepKind.Review]: { label: "Review", defaultTitle: "" },
-  [StepKind.Copy]: { label: "Copy", defaultTitle: "" },
+  [StepKind.Travel]: { label: "Travel", defaultTitle: "" },
   [StepKind.Print]: { label: "Print", defaultTitle: "" },
   [StepKind.Email]: { label: "Email", defaultTitle: "" },
   [StepKind.Drag]: { label: "Drag", defaultTitle: "" },

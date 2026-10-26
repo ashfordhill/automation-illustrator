@@ -31,7 +31,7 @@ import {
   type KeyAction,
   type Keymap,
 } from "../keyboard/bindings";
-import { normalizeAccessories } from "../workflow/accessories";
+import { setActorLook } from "../workflow/looks";
 import {
   defaultActors,
   defaultHumanId,
@@ -43,6 +43,7 @@ import {
   whoForPredecessorStep,
 } from "../workflow/actors";
 import {
+  AccessoryKind,
   AssignmentLane,
   ColorScheme,
   IdPrefix,
@@ -59,11 +60,13 @@ import {
   applyNodeRemoval,
   connectNodes,
   createRootNode,
+  fail,
   fanPairings,
   insertNodeOnBundle,
   insertNodeOnPath,
   nearestPairings,
   nextTileAfterRemoval,
+  ok,
   pairingBetween,
   planNodeRemoval,
   removalNeighborhood,
@@ -81,16 +84,19 @@ import {
   validateWorkflow,
 } from "../workflow/graph";
 import { nid } from "../workflow/ids";
+import { asLaneDocument, editLane, restartAfter as restartAfterDoc } from "../workflow/lane";
 import {
+  isDataFieldNode,
   isHuman,
   isStepNode,
   STEP_KIND_META,
   titleForStepKindChange,
   laneAssignments,
-  withLaneAssignments,
+  laneBoard,
   type ActorDto,
   type ColorScheme as ColorSchemeT,
   type HumanDto,
+  type DataFieldNodeDto,
   type NodeDto,
   type PositionMap,
   type RobotDto,
@@ -188,6 +194,24 @@ export type Selection =
   | { type: typeof SelectionKind.Edge; id: string }
   | { type: typeof SelectionKind.Actor; id: string }
   | null;
+
+/** Patch for either tile kind. `Partial<NodeDto>` only keeps keys shared by Step and Data. */
+type NodePatch = Partial<StepNodeDto> & Partial<DataFieldNodeDto>;
+
+function applyNodePatch(node: NodeDto, patch: NodePatch): NodeDto {
+  if (!isDataFieldNode(node)) {
+    const { color: _ignore, ...rest } = patch;
+    return { ...node, ...rest };
+  }
+  const next: DataFieldNodeDto = { ...node, ...patch, type: node.type };
+  if (!("color" in patch)) return next;
+  const raw = patch.color?.trim() ?? "";
+  if (!raw) {
+    const { color: _omit, ...rest } = next;
+    return rest;
+  }
+  return { ...next, color: raw };
+}
 
 /** Idle inspector is the Actors roster. Deselecting a Step parks that Who on the roster. */
 function manageFieldsOnSelect(
@@ -335,7 +359,8 @@ export const useStore = create<{
   capturing: KeyAction | null;
   lastHumanId: string | null;
   manageActorsOpen: boolean;
-  manageActorsSource: "empty" | "step" | null;
+  /** `"tile"` when Actors was opened from a Step or Data editor; `"empty"` from a bare roster. */
+  manageActorsSource: "empty" | "tile" | null;
   manageActorId: string | null;
   manageActorsDeleteMode: boolean;
   focusId: string | null;
@@ -414,12 +439,14 @@ export const useStore = create<{
   closeManageActors: (opts?: { restoreFocus?: boolean }) => void;
   setManageActorId: (id: string | null) => void;
   setManageActorsDeleteMode: (on: boolean) => void;
-  updateNode: (id: string, patch: Partial<NodeDto>) => void;
+  updateNode: (id: string, patch: NodePatch) => void;
   updateEdge: (id: string, patch: { label?: string; dashed?: boolean }) => void;
   updateActor: (
     id: string,
     patch: Partial<HumanDto> & Partial<RobotDto>,
   ) => void;
+  /** Accessories for the lane on screen. After copies the Before book on the first change. */
+  setActorAccessories: (id: string, accessories: AccessoryKind[]) => void;
   assignActor: (stepId: string, actorId: string) => void;
   connect: (source: string, target: string, label?: string) => void;
   deleteSelection: () => void;
@@ -442,6 +469,8 @@ export const useStore = create<{
   beginLinkFrom: (sourceId: string) => void;
   completeLinkTo: (targetId: string) => void;
   toggleSelectedDash: () => void;
+  /** After only: drop After's copy so it shows the current Before board. */
+  restartAfter: () => void;
   focusPathLabel: () => void;
   focusDataLabel: () => void;
   beginTileTextEdit: (nodeId: string, field: TileTextField) => void;
@@ -924,8 +953,10 @@ export const useStore = create<{
   addStep: (position, kind = StepKind.Other) => {
     if (!get().canvasEditable()) return "";
     const { workflow, lastHumanId } = get();
-    if (workflow.nodes.length) {
-      if (!position && workflow.nodes.some(isStepNode)) return "";
+    const lane = get().assignmentLane();
+    const board = laneBoard(workflow, lane);
+    if (board.nodes.length) {
+      if (!position && board.nodes.some(isStepNode)) return "";
       get().setNotice(MSG.notEmpty);
       return "";
     }
@@ -942,10 +973,8 @@ export const useStore = create<{
       detail: "",
       split: SplitKind.Exclusive,
     };
-    const result = createRootNode(
-      { ...workflow, actors },
-      node,
-      hid ? { beforeId: hid, afterId: hid } : undefined,
+    const result = editLane({ ...workflow, actors }, lane, (laneDoc) =>
+      createRootNode(laneDoc, node, hid ? { beforeId: hid, afterId: hid } : undefined),
     );
     if (!result.ok) {
       get().setNotice(result.message);
@@ -963,21 +992,22 @@ export const useStore = create<{
   addField: (position) => {
     if (!get().canvasEditable()) return "";
     const { workflow } = get();
-    if (workflow.nodes.length) {
+    const lane = get().assignmentLane();
+    const board = laneBoard(workflow, lane);
+    if (board.nodes.length) {
       get().setNotice(MSG.notEmpty);
       return "";
     }
     const id = nid(IdPrefix.DataField);
     const actors = workflow.actors.length ? workflow.actors : defaultActors();
-    const pos = position ?? vacantSpot(workflow.nodes, WorkflowNodeKind.DataField, get().boardOrientation);
-    const result = createRootNode(
-      { ...workflow, actors },
-      {
+    const pos = position ?? vacantSpot(board.nodes, WorkflowNodeKind.DataField, get().boardOrientation);
+    const result = editLane({ ...workflow, actors }, lane, (laneDoc) =>
+      createRootNode(laneDoc, {
         id,
         type: WorkflowNodeKind.DataField,
         position: { x: snapToGrid(pos.x), y: snapToGrid(pos.y) },
         label: "Data",
-      },
+      }),
     );
     if (!result.ok) {
       get().setNotice(result.message);
@@ -1029,29 +1059,27 @@ export const useStore = create<{
   openManageActors: () => {
     if (get().inspectorCollapsed) get().setInspectorCollapsed(false);
     const { workflow, selected, manageActorId } = get();
-    const stepSelected = (() => {
-      if (selected?.type !== SelectionKind.Node) return false;
-      const node = findNode(workflow, selected.id);
-      return Boolean(node && isStepNode(node));
-    })();
-    const fromTile = (() => {
-      if (!stepSelected || selected?.type !== SelectionKind.Node) return null;
-      const whoId = laneAssignments(workflow, get().assignmentLane())[selected.id];
-      return whoId && workflow.actors.some((a) => a.id === whoId) ? whoId : null;
-    })();
+    const node =
+      selected?.type === SelectionKind.Node ? findNode(workflow, selected.id) : undefined;
+    const fromTile = Boolean(node && (isStepNode(node) || isDataFieldNode(node)));
+    const whoId =
+      fromTile && node && isStepNode(node)
+        ? laneAssignments(workflow, get().assignmentLane())[node.id]
+        : null;
+    const fromWho = whoId && workflow.actors.some((a) => a.id === whoId) ? whoId : null;
     const nextId =
-      fromTile ??
+      fromWho ??
       (manageActorId && workflow.actors.some((a) => a.id === manageActorId)
         ? manageActorId
         : null) ??
       workflow.actors[0]?.id ??
       null;
     set({
-      selected: null,
+      ...(fromTile ? {} : { selected: null }),
       manageActorsOpen: true,
       manageActorId: nextId,
       manageActorsDeleteMode: false,
-      manageActorsSource: stepSelected ? "step" : "empty",
+      manageActorsSource: fromTile ? "tile" : "empty",
     });
   },
   closeManageActors: (opts) => {
@@ -1069,98 +1097,66 @@ export const useStore = create<{
   updateNode: (id, patch) => {
     if (get().present || get().view === ViewMode.Both) return;
     const { workflow, commit } = get();
-    const inBase = workflow.nodes.some((n) => n.id === id);
-    const inExtra = workflow.after.extraNodes.some((n) => n.id === id);
-    if (!inBase && !inExtra) return;
-    const current = inBase
-      ? workflow.nodes.find((n) => n.id === id)
-      : workflow.after.extraNodes.find((n) => n.id === id);
-    let nextPatch = patch;
-    if (current && isStepNode(current) && !("title" in nextPatch)) {
-      const nextKind = (nextPatch as Partial<StepNodeDto>).stepKind;
-      if (nextKind) {
-        const title = titleForStepKindChange(nextKind, current.stepKind, current.title);
-        if (title !== current.title) nextPatch = { ...nextPatch, title };
+    const lane = get().assignmentLane();
+    const result = editLane(workflow, lane, (laneDoc) => {
+      const current = laneDoc.nodes.find((n) => n.id === id);
+      if (!current) return fail("missing-ref", MSG.missingNode);
+      let nextPatch = patch;
+      if (isStepNode(current) && !("title" in nextPatch)) {
+        const nextKind = nextPatch.stepKind;
+        if (nextKind) {
+          const title = titleForStepKindChange(nextKind, current.stepKind, current.title);
+          if (title !== current.title) nextPatch = { ...nextPatch, title };
+        }
       }
-    }
-    let nodes = workflow.nodes;
-    let extraNodes = workflow.after.extraNodes;
-    if (inBase) {
-      nodes = nodes.map((n) => (n.id === id ? ({ ...n, ...nextPatch } as NodeDto) : n));
-    } else {
-      extraNodes = extraNodes.map((n) =>
-        n.id === id ? ({ ...n, ...nextPatch } as typeof n) : n,
-      );
-    }
-    let edges = workflow.edges;
-    let extraEdges = workflow.after.extraEdges;
-    if ("split" in patch) {
-      const extraIds = new Set(extraEdges.map((e) => e.id));
-      const combined = applyDashForSplit([...nodes, ...extraNodes], [...edges, ...extraEdges], id);
-      edges = combined.filter((e) => !extraIds.has(e.id));
-      extraEdges = combined.filter((e) => extraIds.has(e.id));
+      const nodes = laneDoc.nodes.map((n) => (n.id === id ? applyNodePatch(n, nextPatch) : n));
+      const edges = "split" in patch ? applyDashForSplit(nodes, laneDoc.edges, id) : laneDoc.edges;
+      return ok({ ...laneDoc, nodes, edges });
+    });
+    if (!result.ok) {
+      get().setNotice(result.message);
+      return;
     }
     const textOnly =
-      !("split" in patch) && !("stepKind" in patch) && !("position" in patch);
-    commit(
-      {
-        ...workflow,
-        nodes,
-        edges,
-        after: { ...workflow.after, extraNodes, extraEdges },
-      },
-      textOnly ? "text" : "structural",
-    );
+      !("split" in patch) &&
+      !("stepKind" in patch) &&
+      !("position" in patch) &&
+      !("color" in patch);
+    commit(result.value, textOnly ? "text" : "structural");
   },
   updateEdge: (id, patch) => {
     if (get().present || get().view === ViewMode.Both) return;
     const { workflow, commit } = get();
+    const lane = get().assignmentLane();
     const kind: HistoryKind = patch.dashed !== undefined ? "structural" : "text";
-    if (workflow.edges.some((e) => e.id === id)) {
-      commit(
-        {
-          ...workflow,
-          edges: workflow.edges.map((e) => (e.id === id ? { ...e, ...patch } : e)),
-        },
-        kind,
-      );
+    const result = editLane(workflow, lane, (laneDoc) => {
+      if (!laneDoc.edges.some((e) => e.id === id)) return fail("missing-path", MSG.missingPath);
+      return ok({
+        ...laneDoc,
+        edges: laneDoc.edges.map((e) => (e.id === id ? { ...e, ...patch } : e)),
+      });
+    });
+    if (!result.ok) {
+      get().setNotice(result.message);
       return;
     }
-    if (!workflow.after.extraEdges.some((e) => e.id === id)) return;
-    commit(
-      {
-        ...workflow,
-        after: {
-          ...workflow.after,
-          extraEdges: workflow.after.extraEdges.map((e) => (e.id === id ? { ...e, ...patch } : e)),
-        },
-      },
-      kind,
-    );
+    commit(result.value, kind);
   },
   updateActor: (id, patch) => {
     if (get().present || get().view === ViewMode.Both) return;
     const { workflow, commit } = get();
-    const textOnly =
-      !("color" in patch) &&
-      !("robotKind" in patch) &&
-      !("kind" in patch) &&
-      !("accessories" in patch);
+    const textOnly = !("color" in patch) && !("robotKind" in patch) && !("kind" in patch);
     commit({
       ...workflow,
-      actors: workflow.actors.map((a) => {
-        if (a.id !== id) return a;
-        if (!isHuman(a)) {
-          const { accessories: _drop, ...rest } = patch;
-          return { ...a, ...rest };
-        }
-        const next = { ...a, ...patch };
-        if ("accessories" in patch) {
-          next.accessories = normalizeAccessories(patch.accessories);
-        }
-        return next;
-      }),
+      actors: workflow.actors.map((a) => (a.id === id ? { ...a, ...patch } : a)),
     }, textOnly ? "text" : "structural");
+  },
+  setActorAccessories: (id, accessories) => {
+    if (get().present || get().view === ViewMode.Both) return;
+    const { workflow, commit, assignmentLane } = get();
+    const next = setActorLook(workflow, assignmentLane(), id, { accessories });
+    if (next === workflow) return;
+    commit(next);
   },
   /** Who is offered in both lanes (NA-03, NA-11). lastHumanId stamps Data-spawned and root Steps. */
   assignActor: (stepId, actorId) => {
@@ -1169,13 +1165,25 @@ export const useStore = create<{
     const lane = assignmentLane();
     const actor = workflow.actors.find((a) => a.id === actorId);
     if (!actor) return;
-    commit(withLaneAssignments(workflow, lane, { ...laneAssignments(workflow, lane), [stepId]: actorId }));
+    if (laneAssignments(workflow, lane)[stepId] === actorId) return;
+    const result = editLane(workflow, lane, (laneDoc) => {
+      const step = laneDoc.nodes.find((n) => n.id === stepId);
+      if (!step || !isStepNode(step)) return fail("missing-ref", MSG.missingNode);
+      return ok({ ...laneDoc, assignments: { ...laneDoc.assignments, [stepId]: actorId } });
+    });
+    if (!result.ok) {
+      get().setNotice(result.message);
+      return;
+    }
+    commit(result.value);
     if (isHuman(actor)) set({ lastHumanId: actorId });
   },
   connect: (source, target, label = "") => {
     if (get().present || get().view === ViewMode.Both) return;
     const { workflow } = get();
-    const result = connectNodes(workflow, source, target, { label });
+    const result = editLane(workflow, get().assignmentLane(), (laneDoc) =>
+      connectNodes(laneDoc, source, target, { label }),
+    );
     if (!result.ok) {
       get().setNotice(result.message);
       return;
@@ -1215,7 +1223,7 @@ export const useStore = create<{
     ) {
       return;
     }
-    if (!findEdge(get().workflow, edgeId)) return;
+    if (!findEdge(get().workflow, edgeId, get().assignmentLane())) return;
     set({
       selected: { type: SelectionKind.Edge, id: edgeId },
       interaction: { kind: "path-menu", edgeId, x, y },
@@ -1223,7 +1231,9 @@ export const useStore = create<{
   },
   removePath: (edgeId) => {
     if (!get().canvasEditable()) return;
-    const result = removePathFromDoc(get().workflow, edgeId);
+    const result = editLane(get().workflow, get().assignmentLane(), (laneDoc) =>
+      removePathFromDoc(laneDoc, edgeId),
+    );
     if (!result.ok) {
       get().setNotice(result.message);
       return;
@@ -1290,7 +1300,9 @@ export const useStore = create<{
   insertOnPath: (nodeId, edgeId) => {
     if (get().present || get().view === ViewMode.Both) return;
     const { workflow } = get();
-    const result = insertNodeOnPath(workflow, nodeId, edgeId, get().activePositions());
+    const result = editLane(workflow, get().assignmentLane(), (laneDoc) =>
+      insertNodeOnPath(laneDoc, nodeId, edgeId, get().activePositions()),
+    );
     if (!result.ok) {
       get().setNotice(result.message);
       set({ interaction: IDLE });
@@ -1307,7 +1319,9 @@ export const useStore = create<{
   insertOnBundle: (nodeId, spec) => {
     if (get().present || get().view === ViewMode.Both) return;
     const { workflow } = get();
-    const result = insertNodeOnBundle(workflow, nodeId, spec, get().activePositions());
+    const result = editLane(workflow, get().assignmentLane(), (laneDoc) =>
+      insertNodeOnBundle(laneDoc, nodeId, spec, get().activePositions()),
+    );
     if (!result.ok) {
       get().setNotice(result.message);
       set({ interaction: IDLE });
@@ -1326,30 +1340,35 @@ export const useStore = create<{
     const inbound = side === "in";
     const dock: "out" | "in" = inbound ? "in" : "out";
     const { workflow, lastHumanId } = get();
-    const src = workflow.nodes.find((n) => n.id === sourceId);
+    const lane = get().assignmentLane();
+    const board = laneBoard(workflow, lane);
+    const src = board.nodes.find((n) => n.id === sourceId);
     if (!src) {
       set({ interaction: IDLE });
       return "";
     }
     const port = inbound
-      ? nextIncomingIndex(workflow.edges, sourceId)
-      : nextPortIndex(workflow.edges, sourceId);
+      ? nextIncomingIndex(board.edges, sourceId)
+      : nextPortIndex(board.edges, sourceId);
     const displayed = get().activePositions();
     const srcPlaced = withDisplayedPositions([src], displayed)[0]!;
-    const others = withDisplayedPositions(workflow.nodes, displayed);
+    const others = withDisplayedPositions(board.nodes, displayed);
+    const laneDoc = asLaneDocument(workflow, lane);
     const pos = clearDockPosition(srcPlaced, type, port, others, dock, get().boardOrientation);
     if (type === WorkflowNodeKind.DataField) {
       const id = nid(IdPrefix.DataField);
-      const result = addConnectedNode(
-        workflow,
-        sourceId,
-        {
-          id,
-          type: WorkflowNodeKind.DataField,
-          position: pos,
-          label: "Data",
-        },
-        { inbound },
+      const result = editLane(workflow, lane, (d) =>
+        addConnectedNode(
+          d,
+          sourceId,
+          {
+            id,
+            type: WorkflowNodeKind.DataField,
+            position: pos,
+            label: "Data",
+          },
+          { inbound },
+        ),
       );
       if (!result.ok) {
         get().setNotice(result.message);
@@ -1366,21 +1385,23 @@ export const useStore = create<{
     }
     const id = nid(IdPrefix.Step);
     const who = inbound
-      ? whoForPredecessorStep(workflow, sourceId, lastHumanId)
-      : whoForChildStep(workflow, sourceId, lastHumanId);
-    const result = addConnectedNode(
-      workflow,
-      sourceId,
-      {
-        id,
-        type: WorkflowNodeKind.Step,
-        position: pos,
-        stepKind: StepKind.Other,
-        title: STEP_KIND_META[StepKind.Other].defaultTitle,
-        detail: "",
-        split: SplitKind.Exclusive,
-      },
-      { ...who, inbound },
+      ? whoForPredecessorStep(laneDoc, sourceId, lastHumanId)
+      : whoForChildStep(laneDoc, sourceId, lastHumanId);
+    const result = editLane(workflow, lane, (d) =>
+      addConnectedNode(
+        d,
+        sourceId,
+        {
+          id,
+          type: WorkflowNodeKind.Step,
+          position: pos,
+          stepKind: StepKind.Other,
+          title: STEP_KIND_META[StepKind.Other].defaultTitle,
+          detail: "",
+          split: SplitKind.Exclusive,
+        },
+        { ...who, inbound },
+      ),
     );
     if (!result.ok) {
       get().setNotice(result.message);
@@ -1426,10 +1447,25 @@ export const useStore = create<{
     const { selected, workflow, updateEdge } = get();
     if (!get().canvasEditable()) return;
     if (selected?.type !== SelectionKind.Edge) return;
-    const edge = findEdge(workflow, selected.id);
+    const lane = get().assignmentLane();
+    const board = laneBoard(workflow, lane);
+    const edge = board.edges.find((e) => e.id === selected.id);
     if (!edge) return;
-    const graph = { nodes: workflow.nodes, edges: workflow.edges };
-    updateEdge(selected.id, { dashed: !edgeIsDotted(graph.nodes, graph.edges, edge) });
+    updateEdge(selected.id, { dashed: !edgeIsDotted(board.nodes, board.edges, edge) });
+  },
+  restartAfter: () => {
+    if (get().present || get().view !== ViewMode.After) return;
+    const next = restartAfterDoc(get().workflow);
+    if (next === get().workflow) return;
+    const before = get().workflow;
+    get().commit(next);
+    if (get().workflow === before) return;
+    const selected = get().selected;
+    const keep =
+      (selected?.type === SelectionKind.Node && next.nodes.some((n) => n.id === selected.id)) ||
+      (selected?.type === SelectionKind.Edge && next.edges.some((e) => e.id === selected.id)) ||
+      selected?.type === SelectionKind.Actor;
+    set({ interaction: IDLE, selected: keep ? selected : null });
   },
   focusPathLabel: () => {
     if (!get().canvasEditable()) return;
@@ -1447,7 +1483,7 @@ export const useStore = create<{
   },
   beginTileTextEdit: (nodeId, field) => {
     if (!get().canvasEditable()) return;
-    const found = findNode(get().workflow, nodeId);
+    const found = findNode(get().workflow, nodeId, get().assignmentLane());
     if (!found || !isStepNode(found)) return;
     set({
       selected: { type: SelectionKind.Node, id: nodeId },
@@ -1459,7 +1495,7 @@ export const useStore = create<{
   },
   beginTilePie: (nodeId, pie, x, y) => {
     if (!get().canvasEditable()) return;
-    const found = findNode(get().workflow, nodeId);
+    const found = findNode(get().workflow, nodeId, get().assignmentLane());
     if (!found || !isStepNode(found)) return;
     set({
       selected: { type: SelectionKind.Node, id: nodeId },
@@ -1480,8 +1516,9 @@ export const useStore = create<{
       manageActorId: null,
     });
     const positions = get().activePositions();
-    if (!workflow.nodes.some((n) => n.id === nodeId)) return;
-    const planned = planNodeRemoval(workflow, nodeId, positions);
+    const laneDoc = asLaneDocument(workflow, get().assignmentLane());
+    if (!laneDoc.nodes.some((n) => n.id === nodeId)) return;
+    const planned = planNodeRemoval(laneDoc, nodeId, positions);
     if (!planned.ok) {
       get().setNotice(planned.message);
       set({ interaction: IDLE, selected: { type: SelectionKind.Node, id: nodeId } });
@@ -1504,8 +1541,9 @@ export const useStore = create<{
   setPreviewSuccessorPred: (successorId, predecessorId) => {
     const { interaction, workflow } = get();
     if (interaction.kind !== "remove-preview") return;
+    const laneDoc = asLaneDocument(workflow, get().assignmentLane());
     const pairing = pairingBetween(
-      workflow,
+      laneDoc,
       interaction.plan.nodeId,
       predecessorId,
       successorId,
@@ -1527,13 +1565,14 @@ export const useStore = create<{
     const { interaction, workflow } = get();
     if (interaction.kind !== "remove-preview") return;
     const positions = get().activePositions();
-    const { incoming, outgoing } = removalNeighborhood(workflow, interaction.plan.nodeId, positions);
+    const laneDoc = asLaneDocument(workflow, get().assignmentLane());
+    const { incoming, outgoing } = removalNeighborhood(laneDoc, interaction.plan.nodeId, positions);
     set({
       interaction: {
         kind: "remove-preview",
         plan: {
           ...interaction.plan,
-          pairings: nearestPairings(workflow.nodes, workflow.edges, incoming, outgoing, positions),
+          pairings: nearestPairings(laneDoc.nodes, laneDoc.edges, incoming, outgoing, positions),
         },
       },
     });
@@ -1541,13 +1580,14 @@ export const useStore = create<{
   useFanPreviewPairings: () => {
     const { interaction, workflow } = get();
     if (interaction.kind !== "remove-preview") return;
-    const { incoming, outgoing } = removalNeighborhood(workflow, interaction.plan.nodeId);
+    const laneDoc = asLaneDocument(workflow, get().assignmentLane());
+    const { incoming, outgoing } = removalNeighborhood(laneDoc, interaction.plan.nodeId);
     set({
       interaction: {
         kind: "remove-preview",
         plan: {
           ...interaction.plan,
-          pairings: fanPairings(workflow.nodes, workflow.edges, incoming, outgoing),
+          pairings: fanPairings(laneDoc.nodes, laneDoc.edges, incoming, outgoing),
         },
       },
     });
@@ -1648,16 +1688,19 @@ function applyPlannedRemoval(
     setNotice: (message: string | null) => void;
     soundEnabled: boolean;
     activePositions: () => PositionMap | undefined;
+    assignmentLane: () => AssignmentLane;
   },
   set: (partial: Record<string, unknown>) => void,
   plan: RemovalPlan,
   pairings: RemovalPairing[],
 ) {
   const { workflow } = get();
-  const node = workflow.nodes.find((n) => n.id === plan.nodeId);
+  const lane = get().assignmentLane();
+  const laneDoc = asLaneDocument(workflow, lane);
+  const node = laneDoc.nodes.find((n) => n.id === plan.nodeId);
   const actor = node && isStepNode(node) ? get().actorFor(node.id) : undefined;
   const positions = get().activePositions();
-  const { predecessorIds, successorIds } = removalNeighborhood(workflow, plan.nodeId, positions);
+  const { predecessorIds, successorIds } = removalNeighborhood(laneDoc, plan.nodeId, positions);
   if (successorIds.length && predecessorIds.length) {
     const checked = validatePairings(pairings, predecessorIds, successorIds);
     if (!checked.ok) {
@@ -1665,12 +1708,12 @@ function applyPlannedRemoval(
       return;
     }
   }
-  const applied = applyNodeRemoval(workflow, plan, pairings, positions);
+  const applied = editLane(workflow, lane, (d) => applyNodeRemoval(d, plan, pairings, positions));
   if (!applied.ok) {
     get().setNotice(applied.message);
     return;
   }
-  commitRemovalKeepingNeighbor(get, set, applied.value, predecessorIds, successorIds, {
+  commitRemovalKeepingNeighbor(get, set, applied.value, predecessorIds, successorIds, lane, {
     node,
     actor,
     notice: plan.overlayEffects.notices[0] ?? null,
@@ -1689,12 +1732,13 @@ function commitRemovalKeepingNeighbor(
   next: WorkflowDoc,
   predecessorIds: string[],
   successorIds: string[],
+  lane: AssignmentLane,
   departing: { node?: NodeDto; actor: ActorDto | undefined; notice: string | null },
 ) {
   const { workflow, past, recovery } = get();
   const persistStatus = persistIfAllowed(next, recovery);
   const stacks = commitStructural(workflow, past, next);
-  const nextId = nextTileAfterRemoval(next, predecessorIds, successorIds);
+  const nextId = nextTileAfterRemoval(next, predecessorIds, successorIds, lane);
   playCueWhen(get().soundEnabled, "pop");
   const reduced = prefersReducedMotion();
   set({

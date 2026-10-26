@@ -3,6 +3,7 @@
  * Mounted by board/nodes/StepNode.tsx inside React Flow.
  */
 import { STEP_H, STEP_RX, STEP_W } from "../layout/tileMetrics";
+import { AccessoryKind } from "../../workflow/catalogs";
 import { StepKind, stepDisplayLabel, type ActorDto } from "../../workflow/types";
 import { ActorColumn } from "./ActorColumn";
 import { FitLabel } from "./FitLabel";
@@ -39,6 +40,7 @@ function TaskCard({
 
 export function StepTile({
   actor,
+  accessories,
   kind,
   title,
   detail,
@@ -46,6 +48,7 @@ export function StepTile({
   lifted,
 }: {
   actor: ActorDto | undefined;
+  accessories?: readonly AccessoryKind[];
   kind: StepKind;
   title: string;
   detail: string;
@@ -68,7 +71,7 @@ export function StepTile({
         transition: "transform 140ms ease",
       }}
     >
-      <ActorColumn actor={actor} />
+      <ActorColumn actor={actor} accessories={accessories} />
       <TaskCard kind={kind} title={title} detail={detail} />
     </div>
   );

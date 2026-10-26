@@ -12,10 +12,12 @@ import {
 } from "../../workflow/commands";
 import { nodeCaption } from "../../workflow/types";
 import { findNode } from "../../workflow/selectors";
+import { asLaneDocument } from "../../workflow/lane";
 
 export function RemovePickerHud() {
   const interaction = useStore((s) => s.interaction);
   const workflow = useStore((s) => s.workflow);
+  const lane = useStore((s) => s.assignmentLane());
   const present = useStore((s) => s.present);
   const confirmRef = useRef<HTMLButtonElement>(null);
 
@@ -27,8 +29,9 @@ export function RemovePickerHud() {
 
   if (present || interaction.kind !== "remove-preview") return null;
 
+  const laneDoc = asLaneDocument(workflow, lane);
   const { predecessorIds, successorIds } = removalNeighborhood(
-    workflow,
+    laneDoc,
     interaction.plan.nodeId,
   );
   const checked = validatePairings(
@@ -36,7 +39,7 @@ export function RemovePickerHud() {
     predecessorIds,
     successorIds,
   );
-  const predLabel = (id: string) => nodeCaption(findNode(workflow, id), id);
+  const predLabel = (id: string) => nodeCaption(findNode(laneDoc, id), id);
   const bySucc = new Map(interaction.plan.pairings.map((p) => [p.successorId, p.predecessorId]));
   return (
     <div className="remove-picker-hud" role="dialog" aria-label="Confirm Node removal pairings">

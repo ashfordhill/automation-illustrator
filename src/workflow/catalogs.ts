@@ -70,7 +70,7 @@ export const StepKind = {
   Search: "search",
   Write: "write",
   Review: "review",
-  Copy: "copy",
+  Travel: "travel",
   Print: "print",
   Email: "email",
   Drag: "drag",
@@ -160,5 +160,6 @@ export const KeyAction = {
   AddDataIn: "addDataIn",
   AddDataOut: "addDataOut",
   LinkExisting: "linkExisting",
+  RestartAfter: "restartAfter",
 } as const;
 export type KeyAction = (typeof KeyAction)[keyof typeof KeyAction];
