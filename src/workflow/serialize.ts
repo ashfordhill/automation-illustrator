@@ -89,10 +89,29 @@ function normalizeForFile(doc: WorkflowDoc): WorkflowDoc {
   };
 }
 
+/**
+ * How the exporter saw the board: orientation and the applied theme. Renderers
+ * draw with it; Import ignores it, so the importer's preferences stay their own.
+ */
+export type FileAppearance = {
+  orientation: "horizontal" | "vertical";
+  theme: {
+    name: string;
+    colors: Record<string, string>;
+    texture: { pattern: string; color: string };
+  };
+};
+
 /** `.illustrator` text: header first, then the document. Trailing newline so diffs stay tidy. */
-export function workflowToIllustrator(doc: WorkflowDoc): string {
+export function workflowToIllustrator(doc: WorkflowDoc, appearance?: FileAppearance): string {
   const { version, ...body } = normalizeForFile(doc);
-  const file = { type: ILLUSTRATOR_FILE_TYPE, version, source: ILLUSTRATOR_FILE_SOURCE, ...body };
+  const file = {
+    type: ILLUSTRATOR_FILE_TYPE,
+    version,
+    source: ILLUSTRATOR_FILE_SOURCE,
+    ...(appearance ? { appearance } : {}),
+    ...body,
+  };
   return `${JSON.stringify(file, null, 2)}\n`;
 }
 
@@ -114,7 +133,7 @@ export function parseWorkflowText(raw: string): unknown {
 export function stripFileHeader(data: Record<string, unknown>): Record<string, unknown> | null {
   if (!("type" in data)) return data;
   if (data.type !== ILLUSTRATOR_FILE_TYPE) return null;
-  const { type: _type, source: _source, ...doc } = data;
+  const { type: _type, source: _source, appearance: _appearance, ...doc } = data;
   return doc;
 }
 

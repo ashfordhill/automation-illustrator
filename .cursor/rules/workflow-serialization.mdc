@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Workflow serialization
 
-Workflow files are **`.illustrator`**: the versioned `WorkflowDoc` as pretty JSON behind a `type: "automation-illustrator"` / `version` / `source` header, like `.excalidraw` (`workflowToIllustrator`; Export and Save copy). Import reads `.illustrator` plus older **YAML 1.2** and `.json` files through one parser (`parseDocument`; JSON is a YAML 1.2 subset) and refuses a `type` that names another format. Demo fixtures stay YAML 1.2. Browser **localStorage stays pretty JSON** without the header.
+Workflow files are **`.illustrator`**: the versioned `WorkflowDoc` as pretty JSON behind a `type: "automation-illustrator"` / `version` / `source` / `appearance` header, like `.excalidraw` (`workflowToIllustrator`; Export and Save copy). `appearance` is the exporter's orientation and applied theme, for renderers (`src/export/appearance.ts`); Import drops it. Import reads `.illustrator` plus older **YAML 1.2** and `.json` files through one parser (`parseDocument`; JSON is a YAML 1.2 subset) and refuses a `type` that names another format. Demo fixtures stay YAML 1.2. Browser **localStorage stays pretty JSON** without the header.
 
 Files write keys in schema order (`normalizeForFile` in `src/workflow/serialize.ts`) so a board exports the same bytes however it was edited. List a new top-level or `after` field there in its schema position.
 
@@ -21,7 +21,11 @@ If you add, rename, remove, or change the meaning of a field on `WorkflowDoc` (a
 
 ## Do not serialize
 
-Derived ELK layout, viewports, interaction, undo history, theme, sound, and keybinds. Positions in the document remain creation hints only.
+Derived ELK layout, viewports, interaction, undo history, theme, orientation, sound, and keybinds stay out of the document. Theme and orientation appear only in the file header's `appearance`. Positions in the document remain creation hints only.
+
+## Images
+
+Export image and `render.html` draw from the document with `src/export/` (vector SVG, PNG from that SVG). A new stored field that changes what a tile shows needs a matching change in `src/export/BoardSvg.tsx`.
 
 ## YAML pitfalls
 

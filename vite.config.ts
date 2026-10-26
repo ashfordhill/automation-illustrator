@@ -54,6 +54,11 @@ export default defineConfig({
     __APP_VERSION__: JSON.stringify(version),
   },
   plugins: [react(), liveDemoYaml()],
+  build: {
+    rolldownOptions: {
+      input: { main: join(root, "index.html"), render: join(root, "render.html") },
+    },
+  },
   test: {
     environment: "jsdom",
     include: ["src/**/*.test.ts", "src/**/*.test.tsx"],

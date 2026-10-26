@@ -170,6 +170,26 @@ describe(".illustrator files", () => {
     expect(text).toContain('\n  "type": "automation-illustrator",\n');
   });
 
+  test("an appearance sits after source and Import drops it, even when it is unreadable", () => {
+    const appearance = {
+      orientation: "vertical" as const,
+      theme: {
+        name: "Forest",
+        colors: { chrome: "#16382b", paper: "#edf5ea" },
+        texture: { pattern: "cross", color: "#b8cdb4" },
+      },
+    };
+    const text = workflowToIllustrator(oakParkInvoice(), appearance);
+    const file = JSON.parse(text) as Record<string, unknown>;
+    expect(Object.keys(file).slice(0, 5)).toEqual(["type", "version", "source", "appearance", "name"]);
+    expect(file.appearance).toEqual(appearance);
+    const parsed = parseDocument(text);
+    expect(parsed.ok && parsed.doc).toEqual(oakParkInvoice());
+    expect(parsed.ok && parsed.doc).not.toHaveProperty("appearance");
+    expect(parseDocument(JSON.stringify({ ...file, appearance: { orientation: 7 } })).ok).toBe(true);
+    expect(workflowToIllustrator(oakParkInvoice())).not.toContain('"appearance"');
+  });
+
   test("Export and re-Import keep the demos and an empty board, without the header", () => {
     for (const doc of [oakParkInvoice(), robotMailroom(), emptyWorkflow()]) {
       const parsed = parseDocument(workflowToIllustrator(doc));

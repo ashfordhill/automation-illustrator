@@ -92,7 +92,14 @@ export function useAppKeys() {
       }
 
       if (isEscapeKey(e)) {
-        if (s.helpOpen || s.themeOpen || s.pendingReplace || s.recovery || s.importError) {
+        if (
+          s.helpOpen ||
+          s.themeOpen ||
+          s.exportImageOpen ||
+          s.pendingReplace ||
+          s.recovery ||
+          s.importError
+        ) {
           return;
         }
         if (s.present) {
@@ -117,6 +124,7 @@ export function useAppKeys() {
       if (
         s.helpOpen ||
         s.themeOpen ||
+        s.exportImageOpen ||
         s.pendingReplace ||
         s.recovery ||
         s.importError

@@ -87,6 +87,7 @@ export function Toolbar() {
                   <Menu.Item onClick={() => useStore.getState().requestNew()}>New</Menu.Item>
                   <Menu.Item onClick={() => fileRef.current?.click()}>Import</Menu.Item>
                   <Menu.Item onClick={() => useStore.getState().exportWorkflow()}>Export</Menu.Item>
+                  <Menu.Item onClick={() => useStore.getState().openExportImage()}>Export image</Menu.Item>
                   <Menu.Item onClick={() => useStore.getState().setHelp(true)}>Keybinds</Menu.Item>
                   <Menu.Item onClick={() => useStore.getState().openTheme()}>Theme</Menu.Item>
                   <Menu.Divider />

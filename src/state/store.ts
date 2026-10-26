@@ -152,6 +152,7 @@ import {
 } from "./persistence";
 import { playCue, playCueWhen } from "../app/sound/cues";
 import type { BoardOrientation } from "../board/flow/flowProfile";
+import { appearanceFor, type Appearance } from "../export/appearance";
 import {
   applySimplifyPatch,
   DEFAULT_SIMPLIFY_PREFS,
@@ -351,6 +352,7 @@ export const useStore = create<{
   keymap: Keymap;
   helpOpen: boolean;
   themeOpen: boolean;
+  exportImageOpen: boolean;
   /** Applied preset id plus user presets (persisted). Built-ins come from BUILTIN_THEMES. */
   themes: ThemesState;
   /** Exists only while the Theme window is open; the preview paints it, :root does not. */
@@ -401,11 +403,15 @@ export const useStore = create<{
   themeById: (id: string) => ThemePreset | undefined;
   /** The preset currently painted on :root. */
   appliedTheme: () => ThemePreset;
+  /** Orientation and applied theme as a `.illustrator` header and image exports record them. */
+  fileAppearance: () => Appearance;
   /** True when the draft differs from its preset's saved body. */
   themeDraftEdited: () => boolean;
   openTheme: () => void;
   /** Close without applying. Drops the draft and any nested prompt. */
   closeTheme: () => void;
+  openExportImage: () => void;
+  closeExportImage: () => void;
   /** X / Escape: asks Discard changes? when the draft is edited, else closes. */
   requestCloseTheme: () => void;
   setThemePrompt: (prompt: ThemePrompt) => void;
@@ -516,6 +522,7 @@ export const useStore = create<{
   keymap: loadKeymap(),
   helpOpen: false,
   themeOpen: false,
+  exportImageOpen: false,
   themes: loadThemes(),
   themeDraft: null,
   themePrompt: null,
@@ -768,11 +775,23 @@ export const useStore = create<{
   allThemes: () => [...BUILTIN_THEMES, ...get().themes.custom],
   themeById: (id) => get().allThemes().find((t) => t.id === id),
   appliedTheme: () => get().themeById(get().themes.selected) ?? ICE_THEME,
+  fileAppearance: () => appearanceFor(get().boardOrientation, get().appliedTheme()),
   themeDraftEdited: () => {
     const { themeDraft } = get();
     if (!themeDraft) return false;
     const saved = get().themeById(themeDraft.presetId);
     return saved ? !themeBodiesEqual(themeDraft, saved) : true;
+  },
+  openExportImage: () => {
+    if (get().recovery) return;
+    set({ exportImageOpen: true });
+  },
+  closeExportImage: () => {
+    if (!get().exportImageOpen) return;
+    set({ exportImageOpen: false });
+    window.setTimeout(() => {
+      document.querySelector<HTMLElement>('header [aria-label="Menu"]')?.focus();
+    }, 0);
   },
   openTheme: () => {
     const applied = get().appliedTheme();
@@ -1610,14 +1629,14 @@ export const useStore = create<{
   confirmReplaceSaveCopy: () => {
     const pending = get().pendingReplace;
     if (!pending) return;
-    downloadWorkflowCopy(get().workflow);
+    downloadWorkflowCopy(get().workflow, get().fileAppearance());
     get().loadDoc(documentForPending(pending), importUnfoldOpts(pending));
   },
   loadDoc: (doc, opts) => {
     get().replaceDoc(doc, opts);
   },
   exportWorkflow: () => {
-    downloadWorkflowCopy(get().workflow);
+    downloadWorkflowCopy(get().workflow, get().fileAppearance());
   },
   importRaw: (raw) => {
     const parsed = parseDocument(raw);

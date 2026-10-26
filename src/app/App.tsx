@@ -17,6 +17,7 @@ import { AssignmentLane, ColorScheme, ViewMode } from "../workflow/catalogs";
 import { flowProfile } from "../board/flow/flowProfile";
 import { CanvasHelper } from "./components/CanvasHelper";
 import { EmptyBoardCta } from "./components/EmptyBoardCta";
+import { ExportImageModal } from "./components/ExportImageModal";
 import { ImportErrorModal } from "./components/ImportErrorModal";
 import { RecoveryModal } from "./components/RecoveryModal";
 import { RemovePickerHud } from "./components/RemovePickerHud";
@@ -238,6 +239,7 @@ export default function App() {
       <ReplaceDocumentModal />
       <RecoveryModal />
       <ImportErrorModal />
+      <ExportImageModal />
     </MantineProvider>
   );
 }

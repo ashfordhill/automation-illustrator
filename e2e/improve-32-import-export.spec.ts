@@ -117,10 +117,10 @@ test.describe("Improvement 32 import and export", () => {
   test("hamburger Export downloads a .illustrator file of the open board", async ({ page }) => {
     await loadDemo(page);
     await openMenu(page);
-    await expect(page.getByRole("menuitem", { name: "Export" })).toBeVisible();
+    await expect(page.getByRole("menuitem", { name: "Export", exact: true })).toBeVisible();
     await capturePage(page, `${EVIDENCE}/hamburger-export-1440.png`);
     const downloadPromise = page.waitForEvent("download");
-    await page.getByRole("menuitem", { name: "Export" }).click();
+    await page.getByRole("menuitem", { name: "Export", exact: true }).click();
     const download = await downloadPromise;
     expect(download.suggestedFilename()).toBe("oak-park-invoice.illustrator");
     const path = await download.path();
@@ -134,7 +134,7 @@ test.describe("Improvement 32 import and export", () => {
     await loadDemo(page);
     await openMenu(page);
     const downloadPromise = page.waitForEvent("download");
-    await page.getByRole("menuitem", { name: "Export" }).click();
+    await page.getByRole("menuitem", { name: "Export", exact: true }).click();
     const exported = readFileSync((await (await downloadPromise).path())!, "utf8");
 
     await openMenu(page);
@@ -220,7 +220,7 @@ test.describe("Improvement 32 import and export", () => {
     await expect(page.getByText("This board is empty.")).toBeVisible();
     await openMenu(page);
     const downloadPromise = page.waitForEvent("download");
-    await page.getByRole("menuitem", { name: "Export" }).click();
+    await page.getByRole("menuitem", { name: "Export", exact: true }).click();
     const download = await downloadPromise;
     expect(download.suggestedFilename()).toBe("untitled.illustrator");
   });
@@ -232,7 +232,7 @@ test.describe("supported min-width", () => {
   test("Export remains in the hamburger at 1024", async ({ page }) => {
     await loadDemo(page);
     await openMenu(page);
-    await expect(page.getByRole("menuitem", { name: "Export" })).toBeVisible();
+    await expect(page.getByRole("menuitem", { name: "Export", exact: true })).toBeVisible();
     await capturePage(page, `${EVIDENCE}/hamburger-export-1024.png`);
   });
 });

@@ -1,0 +1,28 @@
+/* Export image window: the preview is the file itself, scaled to fit. */
+.export-image-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 240px;
+  height: 52vh;
+  padding: 12px;
+  box-sizing: border-box;
+  border: 3px solid var(--line);
+  border-radius: 14px;
+  background: var(--paper-deep);
+  overflow: hidden;
+}
+
+.export-image-preview img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.export-image-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

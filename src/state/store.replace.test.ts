@@ -76,6 +76,27 @@ test("Export downloads the live board without replacing it", () => {
   expect(useStore.getState().pendingReplace).toBeNull();
 });
 
+test("Export and Save copy record the current orientation and applied theme", () => {
+  const download = vi.spyOn(persist, "downloadWorkflowCopy").mockImplementation(() => undefined);
+  const themes = useStore.getState().themes;
+  try {
+    useStore.setState({ themes: { selected: "forest", custom: [] } });
+    useStore.getState().setBoardOrientation("vertical");
+    useStore.getState().exportWorkflow();
+    useStore.getState().requestDemo(DemoId.RobotMailroom);
+    useStore.getState().confirmReplaceSaveCopy();
+    expect(download).toHaveBeenCalledTimes(2);
+    for (const call of download.mock.calls) {
+      expect(call[1]).toMatchObject({
+        orientation: "vertical",
+        theme: { name: "Forest", texture: { pattern: "cross" } },
+      });
+    }
+  } finally {
+    useStore.setState({ themes });
+  }
+});
+
 test("requestNew on an empty board is a no-op", () => {
   useStore.getState().loadDoc(freshBoard());
   useStore.getState().requestNew();

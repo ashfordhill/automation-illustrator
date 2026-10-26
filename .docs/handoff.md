@@ -3317,3 +3317,31 @@ Corrections in the same chat before the next slice starts get their own short en
 - Known limitations / follow-ups: the 8 e2e failures that predate 2026-10-23; demo fixtures stay YAML in the sparse pre-copy After format (they load through the same upgrade path); `after.assignments` / `groups` / `extraNodes` / `extraEdges` are still written empty so older builds can read the shape; a render Action or CLI for `.illustrator` files needs a GOAL amendment to NG-07 (no command-line exporter).
 - Status: COMPLETE
 - Commit: `feat(improve-67): export and import .illustrator workflow files`
+
+## Improvement 68 — Export image, render page, look in .illustrator files — 2026-10-26
+
+- Starting commit: `bbbee81` (`Merge branch 'feature/add-accessories' (#1)`) on `main`, which holds Improvement 67 (`0b88b19`); same chat.
+- Working tree at start: clean
+- GOAL clauses addressed: SH-05, NG-07, SH-08, SH-13 (2026-10-26 amendments)
+- Library research and decisions: No new dependency. Considered snapshotting the live board DOM into SVG; rejected because it needs a second app instance (sharing localStorage with the open board) and copies editing chrome. The exporter instead draws each lane from the document plus the same ELK layout engine (`exportLayoutEngine`, reusing the board's cached layout when the key matches) with `react-dom/server`, reusing HumanFigure, RobotFigure, StepKindIcon, DataChip, and TextureCell. auto-text-size's `box` mode starts at (max − min) / 2, clamps to min, and stops when the auto-height box already fits, so box labels render at 11px on the board; the exporter mirrors that, and names keep auto-text-size's one-line `multiline` fit. `.actor-card`'s 1.5px border draws 1px in Chrome at DPR 1, which is what names wrap against. Font: Nunito Latin (+ Latin Extended when used) inlined via Vite `?inline`, loaded lazily with the Export image window.
+- Files changed:
+  - `src/export/` (new): `appearance.ts`, `BoardSvg.tsx`, `exportImage.tsx`, `renderFile.ts`, `textFit.ts`, `fontFace.ts`, `color.ts`, `boardTokens.ts` (+ tests for appearance, color, tokens, images)
+  - `src/render/main.ts`, `render.html` (new), `vite.config.ts` (second entry)
+  - `src/app/components/ExportImageModal.tsx` / `.css` (new), `Toolbar.tsx`, `App.tsx`
+  - `src/state/store.ts` (`fileAppearance`, `exportImageOpen`), `persistence.ts` (`downloadBlob`, appearance through `downloadWorkflowCopy`), `src/workflow/serialize.ts` (`FileAppearance`, header order), `src/keyboard/useAppKeys.ts` (keys inert while the window is open), `src/board/layout/elkClient.ts` (`exportLayoutEngine`)
+  - Tests: `serialize.test.ts`, `store.replace.test.ts`; e2e `improve-68-export-image.spec.ts`, `improve-68-render-page.spec.ts` (new); `hardening`, `improve-48-chrome` (menu list), `improve-32`, `improve-67`, `replace` (`exact` Export lookups)
+  - Rules: `.cursor/rules/workflow-serialization.mdc`; Docs: GOAL amendments, IMPROVEMENTS 68, this entry
+- Behavior implemented: Hamburger **Export image** opens a window with View (starts on the current view), Format, a live preview, and Download (`<slug>.svg`, `<slug>.before.svg`, `<slug>.after.svg`, or `.png` at 2×). `.illustrator` Export and Save copy record `appearance` (orientation and applied theme); Import ignores it. `/render.html` exposes `window.illustratorRender(text, { views, formats, scale })`.
+- Tests and exact results:
+  - `npm run build` — pass (two entries: `index.html`, `render.html`)
+  - `npm run test:unit` — 59 files, 441 tests pass
+  - `npm run test:e2e` (full) — 258 passed, 8 failed; the 8 are the set that already fails at `a950569` (axe `target-size` in `hardening` and `inspector`; `v1.0.0` in `improve-21-status-bar`, `improve-30-status-toggle-right`, `sound-redo-chrome`; `improve-06-shell`; `improve-08-plus-chrome`; `merge.spec`). New specs: 8 passed.
+  - Docker: `docker build` of this tree and of `action-illustrator-render`'s renderer; rendering three files (one vertical Forest) wrote 18 images in about 5 s, byte-identical on a second run, owned by the source files' user.
+- Evidence (`.docs/evidence/improve-68-export-image/`):
+  - `export-image-compare-1440.png` — Export image window from Compare: preview of both lanes, `oak-park-invoice.svg`
+  - `export-image-1024.png` — the window at 1024×768 (Before)
+  - `render-compare-vertical-forest-1440.png` — `render.html` output for an exported file whose header says vertical / Forest
+- Earlier-slice defects fixed: none
+- Known limitations / follow-ups: on the board, a very long Step title lets the flex row squeeze the 96px actor column (the strip can still shrink); exports keep the column at 96px. Text past FitLabel's clamp is clipped with an ellipsis rather than the board's exact overflow. Images are light-theme only (no dark toggle exists).
+- Status: COMPLETE
+- Commit: `feat(improve-68): export images and render .illustrator files headlessly`

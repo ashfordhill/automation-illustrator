@@ -33,6 +33,7 @@ test.describe("Improvement 48 — chrome Present Z and menu", () => {
       "New",
       "Import",
       "Export",
+      "Export image",
       "Keybinds",
       "Theme",
       "Oak Park Invoice",

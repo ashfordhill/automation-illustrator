@@ -187,6 +187,7 @@ test.describe("slice 12 surfaces, dialogs, and final screenshots", () => {
       "New",
       "Import",
       "Export",
+      "Export image",
       "Keybinds",
       "Theme",
       "Oak Park Invoice",

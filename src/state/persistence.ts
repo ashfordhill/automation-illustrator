@@ -15,6 +15,7 @@ import {
   WORKFLOW_JSON_MIME,
   workflowExportFilename,
   workflowToIllustrator,
+  type FileAppearance,
 } from "../workflow/serialize";
 import {
   parseBoardOrientation,
@@ -95,10 +96,13 @@ export function downloadTextFile(
   contents: string,
   mimeType: string = ILLUSTRATOR_FILE_MIME,
 ): void {
+  downloadBlob(filename, new Blob([contents], { type: mimeType }));
+}
+
+export function downloadBlob(filename: string, blob: Blob): void {
   if (typeof document === "undefined" || typeof URL.createObjectURL !== "function") {
     return;
   }
-  const blob = new Blob([contents], { type: mimeType });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
@@ -111,8 +115,12 @@ export function downloadTextFile(
 }
 
 /** Export / Save copy of the live validated v2 document as a `.illustrator` file. */
-export function downloadWorkflowCopy(doc: WorkflowDoc): void {
-  downloadTextFile(workflowExportFilename(doc), workflowToIllustrator(doc), ILLUSTRATOR_FILE_MIME);
+export function downloadWorkflowCopy(doc: WorkflowDoc, appearance?: FileAppearance): void {
+  downloadTextFile(
+    workflowExportFilename(doc),
+    workflowToIllustrator(doc, appearance),
+    ILLUSTRATOR_FILE_MIME,
+  );
 }
 
 /** Download the untouched failed startup payload (SH-10). */

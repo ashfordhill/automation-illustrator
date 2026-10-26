@@ -46,7 +46,7 @@ test.describe("slice 5 replacement and demos", () => {
     await expect(page.getByRole("menuitem", { name: "New" })).toBeVisible();
     await expect(page.getByRole("menuitem", { name: "New" })).toBeVisible();
     await expect(page.getByRole("menuitem", { name: "Import" })).toBeVisible();
-    await expect(page.getByRole("menuitem", { name: "Export" })).toBeVisible();
+    await expect(page.getByRole("menuitem", { name: "Export", exact: true })).toBeVisible();
     await expect(page.getByRole("menuitem", { name: "Oak Park Invoice" })).toBeVisible();
     await expect(page.getByRole("menuitem", { name: "Robot Mailroom" })).toBeVisible();
     await expect(page.getByRole("menuitem", { name: "Demo", exact: true })).toHaveCount(0);

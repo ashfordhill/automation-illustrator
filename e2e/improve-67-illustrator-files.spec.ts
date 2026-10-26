@@ -12,7 +12,7 @@ async function openMenu(page: Page) {
 async function exportBoard(page: Page): Promise<{ name: string; text: string }> {
   await openMenu(page);
   const downloadPromise = page.waitForEvent("download");
-  await page.getByRole("menuitem", { name: "Export" }).click();
+  await page.getByRole("menuitem", { name: "Export", exact: true }).click();
   const download = await downloadPromise;
   return { name: download.suggestedFilename(), text: readFileSync((await download.path())!, "utf8") };
 }

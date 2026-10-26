@@ -1528,3 +1528,43 @@ Append to `## Amendments` in `.docs/GOAL.md`: SH-05, SH-08, SH-13 as dated 2026-
 
 Commit: `feat(improve-67): export and import .illustrator workflow files`  
 Evidence: `.docs/evidence/improve-67-illustrator-files/`
+
+---
+
+# Improvement 68 — Export image, render page, and the look in `.illustrator` files
+
+Requested 2026-10-26 after Improvement 67. The user wants a GitHub Action (new repo `ashfordhill/action-illustrator-render`, modeled on `ashfordhill/action-excalidraw-render`) that renders committed `.illustrator` files to SVG / PNG. Decisions: a true vector SVG export built into the app (with an Export image item), all three views (Compare, Before, After), and the author's orientation and theme saved in the file so renders match what they saw.
+
+## Locked decisions
+
+### Look in the file
+
+- Export and Save copy write `appearance: { orientation, theme: { name, colors, texture } }` after `source` in the `.illustrator` header (`src/export/appearance.ts`, keys in a fixed order). Import ignores it; the importer's preferences never change. Renderers read it and fall back per field to horizontal / Ice.
+
+### Image export (`src/export/`)
+
+- `renderBoardImage(doc, view, { appearance, engine, cache })` lays each lane out with the same ELK engine as the board (reusing the board's cached layout when the key matches) and draws it with `BoardSvg.tsx`: Step tiles (actor strip, figure with that lane's accessories, name and role chips, task icon, title and detail), Data ovals with their color, condition chips, solid and dotted Paths (dash phase from `polylineDrawSegments`), paper color and texture. No selection or editing chrome.
+- Text follows what FitLabel shows: names keep one line at up to 16px and wrap at 11px; box labels (title, detail, role, Data) sit at 11px, the size auto-text-size settles on for the board's auto-height boxes. Widths come from a canvas with Nunito loaded.
+- One self-contained SVG: Nunito Latin (plus Latin Extended when needed) embedded as data URLs, CSS variables resolved to the light board colors (`boardTokens.ts`, checked against the live page in e2e), role chip `oklch(… max(0.86, l) …)` computed as hex.
+- Compare stacks like the board's Compare split (Before above After for horizontal flow, side by side for vertical) with a 3px divider and Before / After caption pills. Single lanes carry their caption too.
+- PNG is the SVG drawn on a canvas at 2×.
+- Filenames: `<slug>.svg` (Compare), `<slug>.before.svg`, `<slug>.after.svg`, same with `.png`.
+
+### Export image window
+
+- Hamburger: **Export image** right after Export. Mantine window with View (Compare / Before / After; starts on the current view), Format (SVG / PNG), a live preview of the file, the filename, Cancel, and Download. Board keys are inert while it is open. The exporter loads on first open, so the embedded font stays out of the main bundle.
+
+### Render page
+
+- `render.html` (second Vite entry, served by the Docker image) exposes `window.illustratorRender(text, { views, formats, scale })` → `{ ok, name, appearance, images: [{ view, width, height, svg?, png? (base64) }] }` or `{ ok: false, message }` with the Import messages. `data-render-ready` on `<html>` marks it ready.
+
+### Unchanged
+
+- `WORKFLOW_VERSION` 2, the document shape, localStorage, demo fixtures, theme files. No new dependency (`react-dom/server` ships with react-dom).
+
+## Contract
+
+Append to `## Amendments` in `.docs/GOAL.md`: SH-05, NG-07; NG-07; SH-08, SH-13 as dated 2026-10-26.
+
+Commit: `feat(improve-68): export images and render .illustrator files headlessly`  
+Evidence: `.docs/evidence/improve-68-export-image/`

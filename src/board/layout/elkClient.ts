@@ -65,4 +65,9 @@ function resilientElk(): ElkLike {
   };
 }
 
-export const layoutEngine = createLayoutEngine(resilientElk());
+const elk = resilientElk();
+
+export const layoutEngine = createLayoutEngine(elk);
+
+/** Image export lays lanes out on its own engine so it never supersedes a Board request. */
+export const exportLayoutEngine = createLayoutEngine(elk, { debounceMs: 0, cacheSize: 8 });
