@@ -3288,3 +3288,32 @@ Corrections in the same chat before the next slice starts get their own short en
 - Known limitations / follow-ups: axe `target-size` on adjacent Path/`+` tabs — later chrome pass; `improve-21-status-bar`, `improve-30-status-toggle-right`, `sound-redo-chrome` still assert `v1.0.0`; `merge.spec` still expects `Add human` after Remove Step; dark-mode hamburger toggle still withdrawn.
 - Status: COMPLETE
 - Commit: `feat(improve-66): theme presets, Save, theme files, paper texture`
+
+## Improvement 67 — .illustrator workflow files — 2026-10-26
+
+- Starting commit: `a950569` (`feat: add accessories for human actors`) on `feature/add-accessories`, with the 2026-10-23 work uncommitted on top. Work since Improvement 66 (v1.1.0 to v1.3.0, accessories) was committed outside the relay, so HEAD did not match the last COMPLETE entry; the user asked for this change directly. The 2026-10-23 work (After copy, look books, Travel, Data color, Actors button; GOAL amendments dated 2026-10-23) was committed first, unchanged, as `c27b7fe` (`feat: After follows Before until edited, per-lane looks, Travel, Data color`).
+- Working tree at start: 52 modified and 4 untracked files (the 2026-10-23 work); `npm run build` and 415 unit tests green.
+- GOAL clauses addressed: SH-05, SH-08, SH-13 (2026-10-26 amendment)
+- Library research and decisions: No new dependency. `.illustrator` follows `.excalidraw` (JSON with `type` / `version` / `source` first; Excalidraw uses `application/vnd.excalidraw+json`), so another repo can find and render the files by extension. `JSON.stringify` writes it and the existing `yaml` parser reads it (JSON is YAML 1.2). Export keys follow schema order so the same board writes the same bytes; before this, a project name or look book added mid-session was written last and moved after a reload.
+- Files changed:
+  - `src/workflow/serialize.ts` (+test) — `.illustrator` constants, `workflowToIllustrator`, `stripFileHeader`, schema-order `normalizeForFile`, `.illustrator` filenames
+  - `src/workflow/migrate.ts` — header check before version dispatch
+  - `src/state/persistence.ts` (+test) — Export / Save copy download `.illustrator`; localStorage round trip of an After copy and both look books
+  - `src/app/components/Toolbar.tsx` — Import accepts `.illustrator` first (`WORKFLOW_FILE_ACCEPT`)
+  - `src/app/components/ReplaceDocumentModal.tsx` — comment only
+  - `src/state/store.import.test.ts` — exported `.illustrator` restores the board exactly; `.excalidraw` refused
+  - `e2e/improve-67-illustrator-files.spec.ts` (new); `e2e/improve-32-import-export.spec.ts`, `e2e/replace.spec.ts` — `.illustrator` names and content
+  - Rules: `.cursor/rules/workflow-serialization.mdc`, `.cursor/rules/agent-handoff.mdc`
+  - Docs: GOAL amendment, IMPROVEMENTS 67, this entry
+- Behavior implemented: Export and Save copy download `<slug>.illustrator` (pretty JSON, header first). Import offers `.illustrator`, `.yaml`, `.yml`, `.json`; a file whose `type` names another format is refused with "This file is not an Automation Illustrator workflow." The 2026-10-23 fields (After `fork`, `looks` / `after.looks`, Data `color`, `travel`) round-trip through `.illustrator`, YAML, and localStorage, byte-stable on re-export; a file saved before the After copy and look book (Human `accessories`, `copy` Steps, sparse After Who) upgrades on Import and exports clean.
+- Tests and exact results:
+  - `npm run build` — pass (existing chunk-size warning)
+  - `npm run test:unit` — 55 files, 427 tests pass
+  - `npm run test:e2e` (full, before the spec updates below) — 245 passed, 13 failed. The same 13 fail at `c27b7fe` without this change. 8 also fail at `a950569`: axe `target-size` in `hardening` and `inspector`; `v1.0.0` in `improve-21-status-bar`, `improve-30-status-toggle-right`, `sound-redo-chrome`; `improve-06-shell`; `improve-08-plus-chrome`; `merge.spec`. The other 5 are fixed below. After that: `projection`, `improve-09-chrome-root`, `improve-34-reverse-add`, `canvas-helper-hints` 20 passed; `improve-67-illustrator-files` 3 passed. Chromium via `LD_LIBRARY_PATH=~/.local/pw-libs/usr/lib/x86_64-linux-gnu`. Evidence PNGs of other slices rewritten by the runs were restored.
+- Evidence (1440×900), `.docs/evidence/improve-67-illustrator-files/`:
+  - `import-illustrator-1440.png` — an exported Robot Mailroom `.illustrator` file opening the Import gate over Oak Park
+  - `refuse-excalidraw-1440.png` — an `.excalidraw` file refused: "This file is not an Automation Illustrator workflow."
+- Earlier-slice defects fixed: 5 e2e specs from before 2026-10-23 still asserted that After edits reach Before (`projection` ×2, `improve-09-chrome-root`, `improve-34-reverse-add`) or the chip DOM before `canvas-helper-side` (`canvas-helper-hints`). Updated to the amended contract in a separate commit, `test(e2e): follow the 2026-10-23 After copy contract`.
+- Known limitations / follow-ups: the 8 e2e failures that predate 2026-10-23; demo fixtures stay YAML in the sparse pre-copy After format (they load through the same upgrade path); `after.assignments` / `groups` / `extraNodes` / `extraEdges` are still written empty so older builds can read the shape; a render Action or CLI for `.illustrator` files needs a GOAL amendment to NG-07 (no command-line exporter).
+- Status: COMPLETE
+- Commit: `feat(improve-67): export and import .illustrator workflow files`

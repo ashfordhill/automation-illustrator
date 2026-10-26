@@ -8,6 +8,7 @@ import { IconMenu2 } from "@tabler/icons-react";
 import { DEMO_CHOICES } from "../../demos/catalog";
 import { prettyKey, KeyAction } from "../../keyboard/bindings";
 import { useStore } from "../../state/store";
+import { WORKFLOW_FILE_ACCEPT } from "../../workflow/serialize";
 import { ChromeToolCluster } from "./ChromeToolCluster";
 import { PersistStatusChip } from "./PersistStatusChip";
 import { PresentButton } from "./PresentButton";
@@ -63,7 +64,7 @@ export function Toolbar() {
           <input
             ref={fileRef}
             type="file"
-            accept=".yaml,.yml,.json,application/json,text/yaml,text/x-yaml,application/yaml"
+            accept={WORKFLOW_FILE_ACCEPT}
             hidden
             onChange={(e) => {
               const file = e.target.files?.[0];

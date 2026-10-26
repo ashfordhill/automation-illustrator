@@ -81,14 +81,14 @@ test.describe("slice 5 replacement and demos", () => {
     );
   });
 
-  test("Save copy downloads YAML then loads Robot Mailroom", async ({ page }) => {
+  test("Save copy downloads a .illustrator file then loads Robot Mailroom", async ({ page }) => {
     await loadDemo(page);
     await openMenu(page);
     await page.getByRole("menuitem", { name: "Robot Mailroom" }).click();
     const downloadPromise = page.waitForEvent("download");
     await page.getByRole("button", { name: "Save copy" }).click();
     const download = await downloadPromise;
-    expect(download.suggestedFilename()).toBe("oak-park-invoice.yaml");
+    expect(download.suggestedFilename()).toBe("oak-park-invoice.illustrator");
     await expect(page.getByText(MAIL_STEP).first()).toBeVisible({ timeout: 15_000 });
     await expect(page.getByText(DEMO_STEP)).toHaveCount(0);
     await capturePage(page, `${EVIDENCE}/robot-mailroom-1440.png`);

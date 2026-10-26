@@ -32,7 +32,7 @@ import {
   writeWorkflow,
   type StorageLike,
 } from "./persistence";
-import { oakParkInvoice } from "../demos/oakParkInvoice";
+import { OAK_PARK_IDS, oakParkInvoice } from "../demos/oakParkInvoice";
 import { robotMailroom, MAILROOM_IDS } from "../demos/robotMailroom";
 import { AssignmentLane, ColorScheme, SplitKind, StepKind, WorkflowNodeKind } from "../workflow/catalogs";
 import { emptyAfterOverlay, emptyWorkflow, laneAssignments, type WorkflowDoc } from "../workflow/types";
@@ -175,6 +175,19 @@ test("YAML stuffed into localStorage still hydrates and is rewritten as JSON", (
   expect(JSON.parse(saved).version).toBe(2);
 });
 
+test("an After copy and both look books survive save and reload; storage has no file header", () => {
+  const storage = new MemoryStorage();
+  const doc = oakParkInvoice();
+  doc.looks = { [OAK_PARK_IDS.alice]: { accessories: ["sunglasses"] } };
+  doc.after = { ...doc.after, looks: { [OAK_PARK_IDS.roy]: { accessories: ["tablet"] } } };
+  expect(doc.after.fork).not.toBeNull();
+  expect(writeWorkflow(doc, storage)).toBe("saved");
+  expect(JSON.parse(storage.getItem(LS_WORKFLOW)!)).not.toHaveProperty("type");
+  const result = hydratePersistedWorkflow(fallback, storage);
+  expect(result.recovery).toBeNull();
+  expect(result.workflow).toEqual(doc);
+});
+
 test("invalid graph keeps the raw key and returns recovery (SH-09, SH-10)", () => {
   const storage = new MemoryStorage();
   const raw = JSON.stringify({
@@ -232,10 +245,10 @@ test("setItem failure is unavailable; repeated writes stay a single status", () 
   expect(second).toBe("unavailable");
 });
 
-test("downloadWorkflowCopy writes a YAML attachment named from the project", () => {
+test("downloadWorkflowCopy writes a .illustrator attachment named from the project", () => {
   const click = vi.fn();
   const createObjectURL = vi.fn((blob: Blob) => {
-    expect(blob.type).toBe("text/yaml");
+    expect(blob.type).toBe("application/vnd.automation-illustrator+json");
     return "blob:test";
   });
   const revoke = vi.fn();
@@ -254,9 +267,9 @@ test("downloadWorkflowCopy writes a YAML attachment named from the project", () 
   });
   vi.spyOn(document.body, "appendChild").mockImplementation((node) => node);
   downloadWorkflowCopy(emptyWorkflow());
-  expect(anchor.download).toBe("untitled.yaml");
+  expect(anchor.download).toBe("untitled.illustrator");
   downloadWorkflowCopy(robotMailroom());
-  expect(anchor.download).toBe("robot-mailroom.yaml");
+  expect(anchor.download).toBe("robot-mailroom.illustrator");
   expect(createObjectURL).toHaveBeenCalled();
   expect(click).toHaveBeenCalledTimes(2);
   expect(revoke).toHaveBeenCalled();

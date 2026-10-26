@@ -114,7 +114,7 @@ async function importFile(
 }
 
 test.describe("Improvement 32 import and export", () => {
-  test("hamburger Export downloads YAML of the open board", async ({ page }) => {
+  test("hamburger Export downloads a .illustrator file of the open board", async ({ page }) => {
     await loadDemo(page);
     await openMenu(page);
     await expect(page.getByRole("menuitem", { name: "Export" })).toBeVisible();
@@ -122,29 +122,27 @@ test.describe("Improvement 32 import and export", () => {
     const downloadPromise = page.waitForEvent("download");
     await page.getByRole("menuitem", { name: "Export" }).click();
     const download = await downloadPromise;
-    expect(download.suggestedFilename()).toBe("oak-park-invoice.yaml");
+    expect(download.suggestedFilename()).toBe("oak-park-invoice.illustrator");
     const path = await download.path();
     expect(path).toBeTruthy();
-    const text = readFileSync(path!, "utf8");
-    expect(text).toContain("name: Oak Park Invoice");
-    expect(text).toContain("version: 2");
-    expect(text.trimStart().startsWith("{")).toBe(false);
+    const file = JSON.parse(readFileSync(path!, "utf8"));
+    expect(file).toMatchObject({ type: "automation-illustrator", version: 2, name: "Oak Park Invoice" });
     await expect(page.getByText(DEMO_STEP).first()).toBeVisible();
   });
 
-  test("Export then Import of that YAML restores the board", async ({ page }) => {
+  test("Export then Import of that file restores the board", async ({ page }) => {
     await loadDemo(page);
     await openMenu(page);
     const downloadPromise = page.waitForEvent("download");
     await page.getByRole("menuitem", { name: "Export" }).click();
-    const yaml = readFileSync((await (await downloadPromise).path())!, "utf8");
+    const exported = readFileSync((await (await downloadPromise).path())!, "utf8");
 
     await openMenu(page);
     await page.getByRole("menuitem", { name: "New" }).click();
     await page.getByRole("button", { name: "Discard" }).click();
     await expect(page.getByText("This board is empty.")).toBeVisible();
 
-    await importFile(page, "round-trip.yaml", "text/yaml", yaml);
+    await importFile(page, "round-trip.illustrator", "application/octet-stream", exported);
     await expect(page.getByRole("dialog", { name: "Import this board?" })).toBeVisible();
     await page.getByRole("button", { name: "Discard" }).click();
     await expect(page.getByText(DEMO_STEP).first()).toBeVisible({ timeout: 15_000 });
@@ -214,7 +212,7 @@ test.describe("Improvement 32 import and export", () => {
     await expect(page.getByText(DEMO_STEP).first()).toBeVisible();
   });
 
-  test("New board Export is untitled.yaml", async ({ page }) => {
+  test("New board Export is untitled.illustrator", async ({ page }) => {
     await loadDemo(page);
     await openMenu(page);
     await page.getByRole("menuitem", { name: "New" }).click();
@@ -224,7 +222,7 @@ test.describe("Improvement 32 import and export", () => {
     const downloadPromise = page.waitForEvent("download");
     await page.getByRole("menuitem", { name: "Export" }).click();
     const download = await downloadPromise;
-    expect(download.suggestedFilename()).toBe("untitled.yaml");
+    expect(download.suggestedFilename()).toBe("untitled.illustrator");
   });
 });
 

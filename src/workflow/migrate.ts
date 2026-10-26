@@ -1,9 +1,9 @@
 /**
- * Parse YAML or JSON into a validated v2 document.
+ * Parse `.illustrator`, YAML, or JSON into a validated v2 document.
  * v1 migrates deterministically; invalid graphs are rejected, not repaired (SH-09).
  */
 import { ActorKind, WorkflowNodeKind, WORKFLOW_VERSION } from "./catalogs";
-import { parseWorkflowText } from "./serialize";
+import { parseWorkflowText, stripFileHeader } from "./serialize";
 import { validateWorkflow, validateWorkflowV1, type GraphViolation } from "./graph";
 import { shapeViolations, workflowDocV1Shape, workflowDocV2Shape } from "./schema";
 import {
@@ -102,13 +102,23 @@ export function migrateV1ToV2(doc: WorkflowDocV1): WorkflowDoc {
   };
 }
 
-function parseUnknown(data: unknown): ParseResult {
-  if (!data || typeof data !== "object" || Array.isArray(data)) {
+function notAWorkflow(): ParseFailure {
+  return fail(
+    "unsupported-version",
+    "This file is not an Automation Illustrator workflow.",
+    [{ code: "invalid-shape", message: "This file is not an Automation Illustrator workflow." }],
+  );
+}
+
+function parseUnknown(raw: unknown): ParseResult {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
     return fail("invalid-shape", "Saved data is not a workflow object.", [
       { code: "invalid-shape", message: "Saved data is not a workflow object." },
     ]);
   }
-  const version = (data as { version?: unknown }).version;
+  const data = stripFileHeader(raw as Record<string, unknown>);
+  if (!data) return notAWorkflow();
+  const version = data.version;
   if (version === 1) {
     const shape = workflowDocV1Shape.safeParse(data);
     if (!shape.success) {
@@ -152,11 +162,7 @@ function parseUnknown(data: unknown): ParseResult {
       droppedAfterOnly: normalized.droppedAfterOnly,
     };
   }
-  return fail(
-    "unsupported-version",
-    "This file is not an Automation Illustrator workflow.",
-    [{ code: "invalid-shape", message: "This file is not an Automation Illustrator workflow." }],
-  );
+  return notAWorkflow();
 }
 
 function emptyFile(): ParseFailure {
