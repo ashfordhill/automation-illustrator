@@ -107,7 +107,7 @@ async function importSmallBoard(page: Page) {
     mimeType: "text/yaml",
     buffer: Buffer.from(SMALL_YAML),
   });
-  await expect(page.getByRole("dialog", { name: "Import this board?" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Open this board?" })).toBeVisible();
   await page.getByRole("button", { name: "Discard" }).click();
   await expect(page.getByText("dfsadfasdfasdfasd").first()).toBeVisible({ timeout: 15_000 });
   await waitForLayout(page);

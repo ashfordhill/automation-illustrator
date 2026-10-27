@@ -6,7 +6,6 @@
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { AssignmentLane } from "../workflow/catalogs";
-import { filenameSlug } from "../workflow/serialize";
 import { laneBoard, projectDisplayName, type WorkflowDoc } from "../workflow/types";
 import { projectLane, type LaneProjection } from "../state/projection";
 import { flowProfile } from "../board/flow/flowProfile";
@@ -19,17 +18,16 @@ import type { Appearance } from "./appearance";
 import { CAPTION_H, LaneArt, LaneCaption } from "./BoardSvg";
 import { BOARD_TOKENS, CHIP_SHADOW, TILE_SHADOW, resolveCssVars } from "./boardTokens";
 import { exportFontCss, loadExportFont } from "./fontFace";
+import { IMAGE_VIEW_LABEL, type ImageView } from "./imageFiles";
 import { EXPORT_FONT_FAMILY, resetTextMeasurer } from "./textFit";
 
-export type ImageView = "compare" | "before" | "after";
-export const IMAGE_VIEWS: readonly ImageView[] = ["compare", "before", "after"];
-export type ImageFormat = "svg" | "png";
-
-export const IMAGE_VIEW_LABEL: Record<ImageView, string> = {
-  compare: "Compare",
-  before: "Before",
-  after: "After",
-};
+export {
+  IMAGE_VIEW_LABEL,
+  IMAGE_VIEWS,
+  imageFilename,
+  type ImageFormat,
+  type ImageView,
+} from "./imageFiles";
 
 export type BoardImage = { svg: string; width: number; height: number };
 
@@ -251,16 +249,6 @@ export async function renderBoardImage(
     "--grid-dot": options.appearance.theme.texture.color,
   });
   return { svg: `${svg}\n`, width, height };
-}
-
-/** "Oak Park Invoice", after, png → oak-park-invoice.after.png. Compare has no view suffix. */
-export function imageFilename(
-  doc: Pick<WorkflowDoc, "name">,
-  view: ImageView,
-  format: ImageFormat,
-): string {
-  const slug = filenameSlug(projectDisplayName(doc)) || "untitled";
-  return `${slug}${view === "compare" ? "" : `.${view}`}.${format}`;
 }
 
 /** Draw the SVG on a canvas at `scale` and encode PNG. Browser only. */

@@ -1,5 +1,5 @@
 /**
- * Import parse failure. The live board and saved storage are left untouched.
+ * A file Open could not read. The live board and saved storage are left untouched.
  */
 import { Button, Group, Modal, Text } from "@mantine/core";
 import { useStore } from "../../state/store";
@@ -11,7 +11,7 @@ export function ImportErrorModal() {
     <Modal
       opened={importError !== null}
       onClose={() => useStore.getState().clearImportError()}
-      title="Could not import"
+      title="Could not open"
       centered
     >
       <Text size="sm" mb="md">

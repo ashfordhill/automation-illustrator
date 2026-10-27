@@ -52,6 +52,67 @@ export async function enterDarkTheme(page: Page) {
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
 }
 
+type SavedRecord = { name: string; suggestedName: string; base64: string };
+type SaveWindow = { __saves: SavedRecord[]; __saveAnswers: (string | null)[] };
+
+/**
+ * Playwright cannot drive Chromium's save dialog. Before the page loads, swap in
+ * one that answers with the name queued by `answerSaveDialog` (default: the
+ * suggested name, null cancels) and keeps the bytes the app writes.
+ */
+export async function recordSaveDialog(page: Page) {
+  await page.addInitScript(() => {
+    const w = window as unknown as SaveWindow & { showSaveFilePicker: unknown };
+    w.__saves = [];
+    w.__saveAnswers = [];
+    w.showSaveFilePicker = async (options: { suggestedName: string }) => {
+      const answer = w.__saveAnswers.length ? w.__saveAnswers.shift() : undefined;
+      if (answer === null) throw new DOMException("The user aborted a request.", "AbortError");
+      const name = answer ?? options.suggestedName;
+      const parts: Blob[] = [];
+      return {
+        name,
+        createWritable: async () => ({
+          write: async (blob: Blob) => {
+            parts.push(blob);
+          },
+          close: async () => {
+            const bytes = new Uint8Array(await new Blob(parts).arrayBuffer());
+            let binary = "";
+            for (let i = 0; i < bytes.length; i += 0x8000) {
+              binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+            }
+            w.__saves.push({ name, suggestedName: options.suggestedName, base64: btoa(binary) });
+          },
+        }),
+      };
+    };
+  });
+}
+
+export async function answerSaveDialog(page: Page, name: string | null) {
+  await page.evaluate((n) => (window as unknown as SaveWindow).__saveAnswers.push(n), name);
+}
+
+export async function savedCount(page: Page): Promise<number> {
+  return page.evaluate(() => (window as unknown as SaveWindow).__saves.length);
+}
+
+/** The `index`-th file written through the save dialog, once it exists. */
+export async function savedFile(page: Page, index = 0) {
+  await expect.poll(() => savedCount(page)).toBeGreaterThan(index);
+  const file = await page.evaluate((i) => (window as unknown as SaveWindow).__saves[i]!, index);
+  const bytes = Buffer.from(file.base64, "base64");
+  return { name: file.name, suggestedName: file.suggestedName, bytes, text: bytes.toString("utf8") };
+}
+
+/** A browser without a save dialog: the app asks for a name, then downloads. */
+export async function withoutSaveDialog(page: Page) {
+  await page.addInitScript(() => {
+    Object.defineProperty(window, "showSaveFilePicker", { value: undefined, configurable: true });
+  });
+}
+
 /** Write a PNG via buffer so a briefly locked evidence file can be retried (Windows). */
 export async function capturePage(page: Page, path: string) {
   const buf = await page.screenshot({ animations: "disabled" });

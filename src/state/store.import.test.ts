@@ -6,7 +6,7 @@ import mailroomYaml from "../demos/robot-mailroom.yaml?raw";
 import { AssignmentLane, ColorScheme, ViewMode } from "../workflow/catalogs";
 import { workflowToIllustrator, workflowToYaml } from "../workflow/serialize";
 import { laneAssignments, UNFOLD_NOTICE } from "../workflow/types";
-import * as persist from "./persistence";
+import { installFakeSaveDialog } from "./fakeSaveDialog";
 import { useStore } from "./store";
 
 function resetSession() {
@@ -32,6 +32,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.restoreAllMocks();
+  delete (window as unknown as { showSaveFilePicker?: unknown }).showSaveFilePicker;
   resetSession();
 });
 
@@ -133,13 +134,13 @@ test("import while recovery is held does not queue a replace", () => {
   expect(useStore.getState().workflow.nodes.some((n) => n.id === OAK_PARK_IDS.read)).toBe(true);
 });
 
-test("Export does not add undo history or change the document", () => {
-  const download = vi.spyOn(persist, "downloadWorkflowCopy").mockImplementation(() => undefined);
+test("Save as does not add undo history or change the document", async () => {
+  const dialog = installFakeSaveDialog();
   useStore.getState().updateNode(OAK_PARK_IDS.read, { title: "typed" });
   const past = useStore.getState().past.length;
   const before = useStore.getState().workflow;
-  useStore.getState().exportWorkflow();
-  expect(download).toHaveBeenCalledTimes(1);
+  await useStore.getState().saveWorkflowAs();
+  expect(dialog.saved).toHaveLength(1);
   expect(useStore.getState().workflow).toBe(before);
   expect(useStore.getState().past.length).toBe(past);
 });
@@ -171,13 +172,14 @@ test("Import of YAML with leftover merge groups unfolds and notices", () => {
   );
 });
 
-test("Save copy on a grouped import still unfolds and notices", () => {
-  const download = vi.spyOn(persist, "downloadWorkflowCopy").mockImplementation(() => undefined);
+test("Save copy on a grouped import still unfolds and notices", async () => {
+  const dialog = installFakeSaveDialog();
   const beforeIds = useStore.getState().workflow.nodes.map((n) => n.id);
   useStore.getState().importRaw(workflowToYaml(groupedMailroom()));
-  useStore.getState().confirmReplaceSaveCopy();
-  expect(download).toHaveBeenCalledTimes(1);
-  expect(download.mock.calls[0]?.[0].nodes.map((n) => n.id)).toEqual(beforeIds);
+  await useStore.getState().confirmReplaceSaveCopy();
+  expect(dialog.saved).toHaveLength(1);
+  const saved = JSON.parse(await dialog.saved[0]!.blob.text()) as { nodes: { id: string }[] };
+  expect(saved.nodes.map((n) => n.id)).toEqual(beforeIds);
   expect(useStore.getState().notice).toBe(UNFOLD_NOTICE);
   expect(useStore.getState().workflow.after.groups).toEqual([]);
 });

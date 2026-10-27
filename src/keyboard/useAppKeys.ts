@@ -96,6 +96,7 @@ export function useAppKeys() {
           s.helpOpen ||
           s.themeOpen ||
           s.exportImageOpen ||
+          s.saveNamePrompt ||
           s.pendingReplace ||
           s.recovery ||
           s.importError
@@ -125,6 +126,7 @@ export function useAppKeys() {
         s.helpOpen ||
         s.themeOpen ||
         s.exportImageOpen ||
+        s.saveNamePrompt ||
         s.pendingReplace ||
         s.recovery ||
         s.importError

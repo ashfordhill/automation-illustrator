@@ -1,7 +1,7 @@
 import { afterEach, expect, test, vi } from "vitest";
 import {
+  downloadBlob,
   downloadTextFile,
-  downloadWorkflowCopy,
   hydratePersistedWorkflow,
   loadBoardOrientation,
   loadInspectorCollapsed,
@@ -245,10 +245,11 @@ test("setItem failure is unavailable; repeated writes stay a single status", () 
   expect(second).toBe("unavailable");
 });
 
-test("downloadWorkflowCopy writes a .illustrator attachment named from the project", () => {
+test("downloadTextFile and downloadBlob attach a file under the given name", () => {
   const click = vi.fn();
+  const types: string[] = [];
   const createObjectURL = vi.fn((blob: Blob) => {
-    expect(blob.type).toBe("application/vnd.automation-illustrator+json");
+    types.push(blob.type);
     return "blob:test";
   });
   const revoke = vi.fn();
@@ -266,15 +267,13 @@ test("downloadWorkflowCopy writes a .illustrator attachment named from the proje
     return realCreate(tag);
   });
   vi.spyOn(document.body, "appendChild").mockImplementation((node) => node);
-  downloadWorkflowCopy(emptyWorkflow());
-  expect(anchor.download).toBe("untitled.illustrator");
-  downloadWorkflowCopy(robotMailroom());
-  expect(anchor.download).toBe("robot-mailroom.illustrator");
-  expect(createObjectURL).toHaveBeenCalled();
-  expect(click).toHaveBeenCalledTimes(2);
-  expect(revoke).toHaveBeenCalled();
   downloadTextFile(SAVE_COPY_FILENAME, "{}");
-  expect(click).toHaveBeenCalledTimes(3);
+  expect(anchor.download).toBe("untitled.illustrator");
+  downloadBlob("board.png", new Blob(["png"], { type: "image/png" }));
+  expect(anchor.download).toBe("board.png");
+  expect(types).toEqual(["application/vnd.automation-illustrator+json", "image/png"]);
+  expect(click).toHaveBeenCalledTimes(2);
+  expect(revoke).toHaveBeenCalledTimes(2);
 });
 
 test("sound preference defaults on and only 'off' disables it (SH-03)", () => {

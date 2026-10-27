@@ -1,6 +1,7 @@
 /**
- * Shared New / Demo / Import gate: Save copy, Discard, or Cancel (SH-06).
- * Cancel never mutates. Save copy downloads the current board as a `.illustrator` file first.
+ * Shared New / Demo / Open gate: Save copy, Discard, or Cancel (SH-06).
+ * Cancel never mutates. Save copy asks where to save the current board first;
+ * canceling that leaves this gate open.
  */
 import { Button, Group, Modal, Text } from "@mantine/core";
 import { demoName } from "../../demos/catalog";
@@ -21,13 +22,14 @@ function copyFor(pending: PendingReplace): { title: string; body: string } {
     };
   }
   return {
-    title: "Import this board?",
-    body: "The imported file will replace the board that is open now. Save a copy first if you want to keep it.",
+    title: "Open this board?",
+    body: "The file you opened will replace the board that is open now. Save a copy first if you want to keep it.",
   };
 }
 
 export function ReplaceDocumentModal() {
   const pending = useStore((s) => s.pendingReplace);
+  const naming = useStore((s) => s.saveNamePrompt !== null);
   const opened = pending !== null;
   const copy = pending ? copyFor(pending) : { title: "Replace this board?", body: "" };
 
@@ -37,8 +39,8 @@ export function ReplaceDocumentModal() {
       onClose={() => useStore.getState().cancelReplace()}
       title={copy.title}
       centered
-      closeOnClickOutside
-      closeOnEscape
+      closeOnClickOutside={!naming}
+      closeOnEscape={!naming}
     >
       <Text size="sm" mb="md">
         {copy.body}
@@ -50,7 +52,7 @@ export function ReplaceDocumentModal() {
         <Button color="red" variant="light" onClick={() => useStore.getState().confirmReplaceDiscard()}>
           Discard
         </Button>
-        <Button onClick={() => useStore.getState().confirmReplaceSaveCopy()}>Save copy</Button>
+        <Button onClick={() => void useStore.getState().confirmReplaceSaveCopy()}>Save copy</Button>
       </Group>
     </Modal>
   );

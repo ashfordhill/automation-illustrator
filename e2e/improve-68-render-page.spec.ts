@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 import { BUILTIN_THEMES } from "../src/app/theme/chromeTheme";
-import { loadOakPark } from "./ready";
+import { loadOakPark, recordSaveDialog, savedFile } from "./ready";
 
 const EVIDENCE = ".docs/evidence/improve-68-export-image";
 const OAK_PARK_YAML = readFileSync("src/demos/oak-park-invoice.yaml", "utf8");
@@ -16,11 +16,11 @@ type Rendered = {
 };
 
 async function exportedFile(page: Page): Promise<string> {
+  await recordSaveDialog(page);
   await loadOakPark(page);
   await page.getByRole("button", { name: "Menu" }).click();
-  const pending = page.waitForEvent("download");
-  await page.getByRole("menuitem", { name: "Export", exact: true }).click();
-  return readFileSync((await (await pending).path())!, "utf8");
+  await page.getByRole("menuitem", { name: "Save as…" }).click();
+  return (await savedFile(page)).text;
 }
 
 async function render(page: Page, text: string, request: Record<string, unknown> = {}): Promise<Rendered> {

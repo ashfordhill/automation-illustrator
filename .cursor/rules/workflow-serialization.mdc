@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Workflow serialization
 
-Workflow files are **`.illustrator`**: the versioned `WorkflowDoc` as pretty JSON behind a `type: "automation-illustrator"` / `version` / `source` / `appearance` header, like `.excalidraw` (`workflowToIllustrator`; Export and Save copy). `appearance` is the exporter's orientation and applied theme, for renderers (`src/export/appearance.ts`); Import drops it. Import reads `.illustrator` plus older **YAML 1.2** and `.json` files through one parser (`parseDocument`; JSON is a YAML 1.2 subset) and refuses a `type` that names another format. Demo fixtures stay YAML 1.2. Browser **localStorage stays pretty JSON** without the header.
+Workflow files are **`.illustrator`**: the versioned `WorkflowDoc` as pretty JSON behind a `type: "automation-illustrator"` / `version` / `source` / `appearance` header, like `.excalidraw` (`workflowToIllustrator`; Save as… and Save copy, through `src/state/fileSave.ts`). `appearance` is the exporter's orientation and applied theme, for renderers (`src/export/appearance.ts`); Open drops it. Open reads `.illustrator` plus older **YAML 1.2** and `.json` files through one parser (`parseDocument`; JSON is a YAML 1.2 subset) and refuses a `type` that names another format. Demo fixtures stay YAML 1.2. Browser **localStorage stays pretty JSON** without the header.
 
 Files write keys in schema order (`normalizeForFile` in `src/workflow/serialize.ts`) so a board exports the same bytes however it was edited. List a new top-level or `after` field there in its schema position.
 

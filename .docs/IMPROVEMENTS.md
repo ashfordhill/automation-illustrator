@@ -1568,3 +1568,26 @@ Append to `## Amendments` in `.docs/GOAL.md`: SH-05, NG-07; NG-07; SH-08, SH-13 
 
 Commit: `feat(improve-68): export images and render .illustrator files headlessly`  
 Evidence: `.docs/evidence/improve-68-export-image/`
+
+---
+
+# Improvement 69 — Open, Save as…, and naming the project
+
+Requested 2026-10-26. Import / Export become Open / Save as…. Save as… should name the file and pick the folder instead of downloading. Export image should be able to name the project (it only ever showed untitled; nothing in the app could set the name).
+
+## Locked decisions
+
+- Hamburger: New, **Open**, **Save as…**, Export image, Keybinds, Theme, Demo. Open is the same file picker. The replace question for a file reads "Open this board?"; a file it cannot read shows "Could not open".
+- `chooseSaveTarget(kind, suggestedName, askName)` in `src/state/fileSave.ts`: Chromium's `showSaveFilePicker` (suggested name, an `id` per kind so the folder is remembered, `startIn: documents`, one file type) when the page is a secure context (https or localhost). Otherwise, or when the dialog refuses to open, the in-app **Save as** prompt (`SaveNameModal`: File name with the name part selected, "This browser saves to its downloads folder.") and then a download. It asks first and writes after, so the dialog opens while the click is still being handled.
+- **Save as…** (`saveWorkflowAs`) and **Save copy** (`confirmReplaceSaveCopy`) both use it. Cancel saves nothing; a canceled Save copy keeps the replace question open. A file name typed in place of the suggestion becomes the project name: in the saved file, and on the open board after Save as…. Keeping the suggestion changes nothing.
+- `renameProject(name)`: a text edit (one undo step per keystroke); blank removes `name`, so the board is Untitled.
+- Export image: **Name** field (the project name) above View and Format. The file name follows it without redrawing the preview. **Save…** opens the same save dialog for an SVG or PNG, then draws the final file.
+- While the name prompt is up, board keys are inert and the window under it stays open; Escape closes only the prompt.
+- The Theme window's Import / Export of theme files is unchanged.
+
+## Contract
+
+Append to `## Amendments` in `.docs/GOAL.md`: SH-05; SH-06, SH-13; SH-05 as dated 2026-10-26.
+
+Commit: `feat(improve-69): Open, Save as… with a save dialog, and project names`  
+Evidence: `.docs/evidence/improve-69-open-save-as/`

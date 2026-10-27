@@ -1,15 +1,18 @@
 /**
  * Hamburger Export image: Compare, Before, or After as a vector SVG or a PNG,
- * drawn in the current orientation and theme. The preview is the exported file.
+ * drawn in the current orientation and theme. Name is the project name (it sets
+ * the file name). The preview is the exported file. Save… asks where to put it.
  * The exporter loads on first open so its embedded font stays out of the main bundle.
  */
 import { useEffect, useState } from "react";
-import { Button, Group, Modal, SegmentedControl, Stack, Text } from "@mantine/core";
+import { Button, Group, Modal, SegmentedControl, Stack, Text, TextInput } from "@mantine/core";
 import { exportLayoutEngine, layoutEngine } from "../../board/layout/elkClient";
-import { downloadBlob } from "../../state/persistence";
+import { chooseSaveTarget, PNG_FILE, SVG_FILE } from "../../state/fileSave";
 import { useStore } from "../../state/store";
 import { ViewMode } from "../../workflow/catalogs";
-import type { BoardImage, ImageFormat, ImageView } from "../../export/exportImage";
+import type { WorkflowDoc } from "../../workflow/types";
+import type { BoardImage } from "../../export/exportImage";
+import { imageFilename, type ImageFormat, type ImageView } from "../../export/imageFiles";
 import "./ExportImageModal.css";
 
 const VIEW_OPTIONS: { value: ImageView; label: string }[] = [
@@ -32,11 +35,28 @@ function viewFor(mode: ViewMode): ImageView {
   return mode === ViewMode.After ? "after" : "before";
 }
 
-type Preview = { image: BoardImage; url: string; filename: (format: ImageFormat) => string };
+async function drawBoard(doc: WorkflowDoc, view: ImageView): Promise<BoardImage> {
+  const mod = await loadExporter();
+  return mod.renderBoardImage(doc, view, {
+    appearance: useStore.getState().fileAppearance(),
+    engine: exportLayoutEngine,
+    cache: layoutEngine,
+  });
+}
+
+type Preview = { image: BoardImage; url: string };
 
 export function ExportImageModal() {
   const opened = useStore((s) => s.exportImageOpen);
-  const workflow = useStore((s) => s.workflow);
+  const naming = useStore((s) => s.saveNamePrompt !== null);
+  const name = useStore((s) => s.workflow.name ?? "");
+  /* Everything the image draws, but not the name: typing a name must not redraw the preview. */
+  const nodes = useStore((s) => s.workflow.nodes);
+  const edges = useStore((s) => s.workflow.edges);
+  const actors = useStore((s) => s.workflow.actors);
+  const assignments = useStore((s) => s.workflow.assignments);
+  const looks = useStore((s) => s.workflow.looks);
+  const after = useStore((s) => s.workflow.after);
   const orientation = useStore((s) => s.boardOrientation);
   const themeId = useStore((s) => s.themes.selected);
   const [view, setView] = useState<ImageView>("compare");
@@ -57,16 +77,11 @@ export function ExportImageModal() {
     let live = true;
     let url: string | null = null;
     setError(null);
-    void loadExporter()
-      .then(async (mod) => {
-        const image = await mod.renderBoardImage(workflow, view, {
-          appearance: useStore.getState().fileAppearance(),
-          engine: exportLayoutEngine,
-          cache: layoutEngine,
-        });
+    drawBoard(useStore.getState().workflow, view)
+      .then((image) => {
         if (!live) return;
         url = URL.createObjectURL(new Blob([image.svg], { type: "image/svg+xml" }));
-        setPreview({ image, url, filename: (f) => mod.imageFilename(workflow, view, f) });
+        setPreview({ image, url });
       })
       .catch(() => {
         if (live) setError("This board could not be drawn.");
@@ -75,32 +90,52 @@ export function ExportImageModal() {
       live = false;
       if (url) URL.revokeObjectURL(url);
     };
-  }, [opened, workflow, view, orientation, themeId]);
+  }, [opened, nodes, edges, actors, assignments, looks, after, view, orientation, themeId]);
 
   const close = () => useStore.getState().closeExportImage();
-  const filename = preview?.filename(format) ?? "";
+  const filename = imageFilename({ name }, view, format);
 
-  const download = async () => {
+  const save = async () => {
     if (!preview) return;
+    const kind = format === "svg" ? SVG_FILE : PNG_FILE;
+    const target = await chooseSaveTarget(kind, filename, useStore.getState().askSaveName);
+    if (!target) return;
     setSaving(true);
+    setError(null);
     try {
-      if (format === "svg") {
-        downloadBlob(filename, new Blob([preview.image.svg], { type: "image/svg+xml" }));
-      } else {
-        const mod = await loadExporter();
-        downloadBlob(filename, await mod.svgToPng(preview.image, PNG_SCALE));
-      }
+      const image = await drawBoard(useStore.getState().workflow, view);
+      const blob =
+        format === "svg"
+          ? new Blob([image.svg], { type: SVG_FILE.mime })
+          : await (await loadExporter()).svgToPng(image, PNG_SCALE);
+      await target.write(blob);
       close();
     } catch {
-      setError("The PNG could not be made.");
+      setError("The image could not be saved.");
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <Modal opened={opened} onClose={close} title="Export image" centered size="xl">
+    <Modal
+      opened={opened}
+      onClose={close}
+      title="Export image"
+      centered
+      size="xl"
+      closeOnEscape={!naming}
+      closeOnClickOutside={!naming}
+    >
       <Stack gap="md">
+        <TextInput
+          label="Name"
+          placeholder="Untitled"
+          value={name}
+          onChange={(e) => useStore.getState().renameProject(e.currentTarget.value)}
+          spellCheck={false}
+          autoComplete="off"
+        />
         <Group justify="space-between" wrap="nowrap">
           <SegmentedControl
             aria-label="View"
@@ -137,8 +172,8 @@ export function ExportImageModal() {
             <Button variant="default" onClick={close}>
               Cancel
             </Button>
-            <Button onClick={() => void download()} disabled={!preview} loading={saving}>
-              Download
+            <Button onClick={() => void save()} disabled={!preview} loading={saving}>
+              Save…
             </Button>
           </Group>
         </Group>

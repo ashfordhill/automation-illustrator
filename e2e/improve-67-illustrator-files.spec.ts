@@ -1,6 +1,13 @@
-import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
-import { capturePage, DEMO_STEP, loadOakPark, waitForLayout } from "./ready";
+import {
+  capturePage,
+  DEMO_STEP,
+  loadOakPark,
+  recordSaveDialog,
+  savedCount,
+  savedFile,
+  waitForLayout,
+} from "./ready";
 
 const EVIDENCE = ".docs/evidence/improve-67-illustrator-files";
 const MAIL_STEP = "Read incoming mail";
@@ -10,11 +17,10 @@ async function openMenu(page: Page) {
 }
 
 async function exportBoard(page: Page): Promise<{ name: string; text: string }> {
+  const before = await savedCount(page);
   await openMenu(page);
-  const downloadPromise = page.waitForEvent("download");
-  await page.getByRole("menuitem", { name: "Export", exact: true }).click();
-  const download = await downloadPromise;
-  return { name: download.suggestedFilename(), text: readFileSync((await download.path())!, "utf8") };
+  await page.getByRole("menuitem", { name: "Save as…" }).click();
+  return savedFile(page, before);
 }
 
 async function switchDemo(page: Page, name: "Oak Park Invoice" | "Robot Mailroom") {
@@ -35,7 +41,11 @@ async function expectDialogShown(page: Page, name: string) {
 }
 
 test.describe("Improvement 67 .illustrator files", () => {
-  test("Export writes <name>.illustrator with the type header first", async ({ page }) => {
+  test.beforeEach(async ({ page }) => {
+    await recordSaveDialog(page);
+  });
+
+  test("Save as… writes <name>.illustrator with the type header first", async ({ page }) => {
     await loadOakPark(page);
     const file = await exportBoard(page);
     expect(file.name).toBe("oak-park-invoice.illustrator");
@@ -60,7 +70,7 @@ test.describe("Improvement 67 .illustrator files", () => {
       mimeType: "application/octet-stream",
       buffer: Buffer.from(file.text),
     });
-    await expectDialogShown(page, "Import this board?");
+    await expectDialogShown(page, "Open this board?");
     await capturePage(page, `${EVIDENCE}/import-illustrator-1440.png`);
     await page.getByRole("button", { name: "Discard" }).click();
     await expect(page.getByText(MAIL_STEP).first()).toBeVisible({ timeout: 15_000 });
@@ -78,7 +88,7 @@ test.describe("Improvement 67 .illustrator files", () => {
         JSON.stringify({ type: "excalidraw", version: 2, source: "https://excalidraw.com", elements: [] }),
       ),
     });
-    await expectDialogShown(page, "Could not import");
+    await expectDialogShown(page, "Could not open");
     await expect(page.getByText("not an Automation Illustrator workflow")).toBeVisible();
     await capturePage(page, `${EVIDENCE}/refuse-excalidraw-1440.png`);
     await page.getByRole("button", { name: "OK" }).click();

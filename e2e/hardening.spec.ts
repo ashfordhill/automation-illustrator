@@ -185,8 +185,8 @@ test.describe("slice 12 surfaces, dialogs, and final screenshots", () => {
     const items = await page.getByRole("menuitem").allTextContents();
     expect(items.map((t) => t.trim())).toEqual([
       "New",
-      "Import",
-      "Export",
+      "Open",
+      "Save as…",
       "Export image",
       "Keybinds",
       "Theme",

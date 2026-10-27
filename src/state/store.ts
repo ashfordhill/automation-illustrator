@@ -10,7 +10,8 @@
  * insertOnPath / insertOnBundle — drop a tile onto a Path or a merge/split trunk
  * toggleSelectedDash — selected Path solid / dotted
  * removePath / openPathMenu — redundant Path Delete (reachability)
- * requestNew / requestDemo / importRaw / exportWorkflow — replacement gate and YAML Export
+ * requestNew / requestDemo / importRaw — replacement gate for New, Demo, and Open
+ * saveWorkflowAs / confirmReplaceSaveCopy / renameProject — Save as… a `.illustrator` file (fileSave.ts)
  * startFresh / downloadHeldRecovery — corrupt-storage recovery (SH-10)
  * setSoundEnabled — persisted Web Audio cues (SH-03, SH-04; on by default)
  * setRightClickDelete — persisted Tile right-click remove (off by default)
@@ -126,8 +127,20 @@ import {
   type TileTextField,
 } from "./interaction";
 import {
+  chooseSaveTarget,
+  WORKFLOW_FILE,
+  withoutExtension,
+  type AskFileName,
+  type FileNameRequest,
+} from "./fileSave";
+import {
+  ILLUSTRATOR_FILE_EXTENSION,
+  ILLUSTRATOR_FILE_MIME,
+  workflowExportFilename,
+  workflowToIllustrator,
+} from "../workflow/serialize";
+import {
   downloadRecoveryCopy,
-  downloadWorkflowCopy,
   hydratePersistedWorkflow,
   downloadTextFile,
   loadBoardOrientation,
@@ -272,6 +285,42 @@ export type PendingReplace =
   | { kind: "demo"; demoId: DemoId }
   | { kind: "import"; doc: WorkflowDoc; unfolded?: boolean; droppedAfterOnly?: boolean };
 
+/** Resolves the open in-app name prompt. A callback, so it lives beside the store rather than in it. */
+let answerSaveNamePrompt: ((name: string | null) => void) | null = null;
+
+type SaveAsDeps = {
+  workflow: WorkflowDoc;
+  askSaveName: AskFileName;
+  fileAppearance: () => Appearance;
+  setNotice: (message: string) => void;
+  renameProject: (name: string) => void;
+};
+
+/**
+ * Save the live board where the user chooses. A name typed in place of the
+ * suggestion goes into the saved file, and with `rename` onto the open board too.
+ */
+async function saveBoardAs(get: () => SaveAsDeps, rename: boolean): Promise<boolean> {
+  const doc = get().workflow;
+  const suggested = workflowExportFilename(doc);
+  const target = await chooseSaveTarget(WORKFLOW_FILE, suggested, get().askSaveName);
+  if (!target) return false;
+  const typed = withoutExtension(target.name, ILLUSTRATOR_FILE_EXTENSION).trim();
+  const renamed =
+    typed && typed !== withoutExtension(suggested, ILLUSTRATOR_FILE_EXTENSION) ? typed : null;
+  const saved = renamed ? { ...doc, name: renamed } : doc;
+  try {
+    await target.write(
+      new Blob([workflowToIllustrator(saved, get().fileAppearance())], { type: ILLUSTRATOR_FILE_MIME }),
+    );
+  } catch {
+    get().setNotice("The file could not be saved.");
+    return false;
+  }
+  if (rename && renamed) get().renameProject(renamed);
+  return true;
+}
+
 function documentForPending(pending: PendingReplace): WorkflowDoc {
   if (pending.kind === "new") return freshBoard();
   if (pending.kind === "demo") return workflowForDemo(pending.demoId);
@@ -373,6 +422,8 @@ export const useStore = create<{
   recovery: RecoveryState | null;
   pendingReplace: PendingReplace | null;
   importError: string | null;
+  /** In-app file name prompt, for browsers without a save dialog. */
+  saveNamePrompt: FileNameRequest | null;
   notice: string | null;
   noticeId: number;
   commit: (next: WorkflowDoc, kind?: HistoryKind) => void;
@@ -491,9 +542,18 @@ export const useStore = create<{
   requestDemo: (demoId: DemoId) => void;
   cancelReplace: () => void;
   confirmReplaceDiscard: () => void;
-  confirmReplaceSaveCopy: () => void;
+  /** Save the board where the user chooses, then replace it. Cancel keeps the board. */
+  confirmReplaceSaveCopy: () => Promise<void>;
   loadDoc: (doc: WorkflowDoc, opts?: { unfoldedNotice?: boolean; droppedAfterOnly?: boolean }) => void;
-  exportWorkflow: () => void;
+  /**
+   * Save as…: ask for a name and folder, then write the `.illustrator` file.
+   * A name typed there becomes the project name. False when canceled or failed.
+   */
+  saveWorkflowAs: () => Promise<boolean>;
+  /** Project name (status-bar title). Blank clears it back to Untitled. One undo step per keystroke. */
+  renameProject: (name: string) => void;
+  askSaveName: AskFileName;
+  answerSaveName: (name: string | null) => void;
   importRaw: (raw: string) => ParseResult;
   clearImportError: () => void;
   resetDemo: () => void;
@@ -539,6 +599,7 @@ export const useStore = create<{
   recovery: started.recovery,
   pendingReplace: null,
   importError: null,
+  saveNamePrompt: null,
   notice: started.overlayNotice,
   noticeId: 0,
 
@@ -1626,17 +1687,36 @@ export const useStore = create<{
     if (!pending) return;
     get().loadDoc(documentForPending(pending), importUnfoldOpts(pending));
   },
-  confirmReplaceSaveCopy: () => {
+  confirmReplaceSaveCopy: async () => {
+    if (!get().pendingReplace) return;
+    if (!(await saveBoardAs(get, false))) return;
     const pending = get().pendingReplace;
     if (!pending) return;
-    downloadWorkflowCopy(get().workflow, get().fileAppearance());
     get().loadDoc(documentForPending(pending), importUnfoldOpts(pending));
   },
   loadDoc: (doc, opts) => {
     get().replaceDoc(doc, opts);
   },
-  exportWorkflow: () => {
-    downloadWorkflowCopy(get().workflow, get().fileAppearance());
+  saveWorkflowAs: () => saveBoardAs(get, true),
+  renameProject: (name) => {
+    const doc = get().workflow;
+    const next = name.trim() ? name : undefined;
+    if (doc.name === next) return;
+    const { name: _previous, ...rest } = doc;
+    get().commit(next === undefined ? rest : { ...rest, name: next }, "text");
+  },
+  askSaveName: (request) => {
+    answerSaveNamePrompt?.(null);
+    return new Promise((resolve) => {
+      answerSaveNamePrompt = resolve;
+      set({ saveNamePrompt: request });
+    });
+  },
+  answerSaveName: (name) => {
+    const answer = answerSaveNamePrompt;
+    answerSaveNamePrompt = null;
+    set({ saveNamePrompt: null });
+    answer?.(name);
   },
   importRaw: (raw) => {
     const parsed = parseDocument(raw);

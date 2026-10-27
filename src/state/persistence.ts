@@ -1,22 +1,16 @@
 /**
- * Load/save the workflow document (Import / Export + localStorage).
+ * Load/save the workflow document in localStorage, plus plain file downloads.
  * Theme, keybind, sound, and inspector-fold keys live here so persist concerns stay in one module.
  *
  * Persistence status is saved / dirty / unavailable (SH-11). Failed startup
  * payloads stay under LS_WORKFLOW until the user downloads or starts fresh (SH-10).
- * localStorage is pretty JSON. Export and Save copy download a `.illustrator` file (SH-13).
+ * localStorage is pretty JSON. Save as… and Save copy go through fileSave.ts (SH-13).
  */
 import { restoreBlankActorFills } from "../workflow/actors";
 import { ColorScheme } from "../workflow/catalogs";
 import { parseDocument } from "../workflow/migrate";
 import type { GraphViolation } from "../workflow/graph";
-import {
-  ILLUSTRATOR_FILE_MIME,
-  WORKFLOW_JSON_MIME,
-  workflowExportFilename,
-  workflowToIllustrator,
-  type FileAppearance,
-} from "../workflow/serialize";
+import { ILLUSTRATOR_FILE_MIME, WORKFLOW_JSON_MIME } from "../workflow/serialize";
 import {
   parseBoardOrientation,
   type BoardOrientation,
@@ -112,15 +106,6 @@ export function downloadBlob(filename: string, blob: Blob): void {
   anchor.click();
   anchor.remove();
   URL.revokeObjectURL(url);
-}
-
-/** Export / Save copy of the live validated v2 document as a `.illustrator` file. */
-export function downloadWorkflowCopy(doc: WorkflowDoc, appearance?: FileAppearance): void {
-  downloadTextFile(
-    workflowExportFilename(doc),
-    workflowToIllustrator(doc, appearance),
-    ILLUSTRATOR_FILE_MIME,
-  );
 }
 
 /** Download the untouched failed startup payload (SH-10). */

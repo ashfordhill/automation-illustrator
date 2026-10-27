@@ -3345,3 +3345,31 @@ Corrections in the same chat before the next slice starts get their own short en
 - Known limitations / follow-ups: on the board, a very long Step title lets the flex row squeeze the 96px actor column (the strip can still shrink); exports keep the column at 96px. Text past FitLabel's clamp is clipped with an ellipsis rather than the board's exact overflow. Images are light-theme only (no dark toggle exists).
 - Status: COMPLETE
 - Commit: `feat(improve-68): export images and render .illustrator files headlessly`
+
+## Improvement 69 — Open, Save as…, and project names — 2026-10-26
+
+- Starting commit: `9673b04` (`feat(improve-68): export images and render .illustrator files headlessly`) on `main`; same chat.
+- Working tree at start: clean
+- GOAL clauses addressed: SH-05, SH-06, SH-13 (2026-10-26 amendments)
+- Library research and decisions: No new dependency. Chromium's File System Access `showSaveFilePicker` gives the native Save dialog (name and folder, `id` remembers the folder per kind); it exists only on secure pages, so Firefox, Safari, and the Docker image opened over plain HTTP from another machine get an in-app File name prompt and a download. Checked in Chromium that the picker accepts the exact options for `.illustrator`, `.svg`, and `.png` (no TypeError; headless answers AbortError). The picker opens first and the bytes are built after, because it needs the click's user activation. Nothing in the app could set `name` before this, which is why Export image always said untitled.
+- Files changed:
+  - `src/state/fileSave.ts` (new, + test), `src/state/fakeSaveDialog.ts` (new; jsdom stand-in for the save dialog)
+  - `src/state/store.ts` — `saveWorkflowAs`, async `confirmReplaceSaveCopy`, `renameProject`, `saveNamePrompt` / `askSaveName` / `answerSaveName`; `exportWorkflow` removed
+  - `src/state/persistence.ts` — `downloadWorkflowCopy` removed (no callers)
+  - `src/app/components/SaveNameModal.tsx` (new), `ExportImageModal.tsx` (Name, Save…), `Toolbar.tsx` (Open, Save as…), `ReplaceDocumentModal.tsx`, `ImportErrorModal.tsx`, `App.tsx`; `src/keyboard/useAppKeys.ts`
+  - `src/export/imageFiles.ts` (new; file names without loading the exporter), `exportImage.tsx`
+  - Tests: `store.replace.test.ts`, `store.import.test.ts`, `persistence.test.ts`; e2e `improve-69-open-save-as.spec.ts` (new), `ready.ts` (`recordSaveDialog`, `withoutSaveDialog`, `savedFile`), and the specs that saved through downloads or named Import / Export (`improve-32`, `improve-67`, `improve-68-*`, `replace`, `canvas`, `improve-57-word-web`, `improve-48-chrome`, `hardening`)
+  - Rules: `.cursor/rules/workflow-serialization.mdc`; Docs: GOAL amendments, IMPROVEMENTS 69, this entry
+- Behavior implemented: Hamburger shows **Open** and **Save as…**. Save as… and Save copy open the browser's Save dialog (or the in-app File name prompt) and write there; Cancel saves nothing and keeps the replace question. A typed file name becomes the project name. Export image has a **Name** field and **Save…**.
+- Tests and exact results:
+  - `npm run build` — pass
+  - `npm run test:unit` — 60 files, 451 tests pass
+  - `npm run test:e2e` (full) — 264 passed, 8 failed; the 8 are the set that already fails at `a950569` (axe `target-size` in `hardening` and `inspector`; `v1.0.0` in `improve-21-status-bar`, `improve-30-status-toggle-right`, `sound-redo-chrome`; `improve-06-shell`; `improve-08-plus-chrome`; `merge.spec`). New spec: 6 passed.
+- Evidence (1440×900), `.docs/evidence/improve-69-open-save-as/`:
+  - `hamburger-open-save-as-1440.png` — New, Open, Save as…, Export image
+  - `export-image-name-1440.png` — Name "Field Visit" on a new board; file name `field-visit.before.svg`
+  - `save-as-name-1440.png` — the in-app Save as prompt (no save dialog) with the name part selected
+- Earlier-slice defects fixed: none
+- Known limitations / follow-ups: there is no plain Save (overwrite the file that was opened) and no Ctrl+S; the project name shows only in Export image (the status bar does not show it); the Theme window's Import / Export still downloads directly.
+- Status: COMPLETE
+- Commit: `feat(improve-69): Open, Save as… with a save dialog, and project names`

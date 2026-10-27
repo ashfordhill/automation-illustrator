@@ -19,6 +19,7 @@ import { CanvasHelper } from "./components/CanvasHelper";
 import { EmptyBoardCta } from "./components/EmptyBoardCta";
 import { ExportImageModal } from "./components/ExportImageModal";
 import { ImportErrorModal } from "./components/ImportErrorModal";
+import { SaveNameModal } from "./components/SaveNameModal";
 import { RecoveryModal } from "./components/RecoveryModal";
 import { RemovePickerHud } from "./components/RemovePickerHud";
 import { ReplaceDocumentModal } from "./components/ReplaceDocumentModal";
@@ -240,6 +241,7 @@ export default function App() {
       <RecoveryModal />
       <ImportErrorModal />
       <ExportImageModal />
+      <SaveNameModal />
     </MantineProvider>
   );
 }

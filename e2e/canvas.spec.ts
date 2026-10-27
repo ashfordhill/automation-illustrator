@@ -174,7 +174,7 @@ test.describe("slice 6 canvas create / connect / remove", () => {
     await page.getByRole("button", { name: "Menu" }).click();
     const [chooser] = await Promise.all([
       page.waitForEvent("filechooser"),
-      page.getByRole("menuitem", { name: "Import" }).click(),
+      page.getByRole("menuitem", { name: "Open" }).click(),
     ]);
     await chooser.setFiles({
       name: "mn.json",
